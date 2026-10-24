@@ -1,0 +1,3772 @@
+{
+ "questions": [
+  {
+   "id": "q-react-001",
+   "topic": "React",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the main purpose of the `key` prop when rendering a list of elements in React?",
+   "options": [
+    "It forces the component to re-render on every update",
+    "It lets React identify which items changed, were added or removed between renders",
+    "It makes the element accessible through `document.getElementById`",
+    "It is passed to the child component as a regular prop"
+   ],
+   "answer": 1,
+   "explanation": "Keys give list items a stable identity so reconciliation can match old and new children correctly and preserve their state. Keys are not exposed to the child as a prop and do not trigger re-renders.",
+   "tags": [
+    "lists",
+    "reconciliation"
+   ],
+   "companies": [
+    "Meta",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-react-002",
+   "topic": "React",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which statement about props and state is correct?",
+   "options": [
+    "Props are owned and changed by the component itself; state is passed in from the parent",
+    "State can only hold strings and numbers",
+    "Props and state are interchangeable and both can be mutated directly",
+    "State is private data a component manages and updates; props are read-only inputs from the parent"
+   ],
+   "answer": 3,
+   "explanation": "State is owned by the component and updated via its setter. Props flow down from the parent and must be treated as read-only by the receiving component.",
+   "tags": [
+    "fundamentals"
+   ],
+   "companies": [
+    "Meta",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-react-003",
+   "topic": "React",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why must you call `setItems([...items, newItem])` instead of `items.push(newItem)` for state held with `useState`?",
+   "options": [
+    "Spreading creates a deep copy which React requires",
+    "`push` is slower than spreading",
+    "`push` is not available on arrays inside components",
+    "React compares state by reference, so mutating in place does not schedule a re-render and can break memoization"
+   ],
+   "answer": 3,
+   "explanation": "React uses `Object.is` to decide whether state changed. A mutated array keeps the same reference, so no update is scheduled and memoized children miss the change. Always create a new array or object.",
+   "tags": [
+    "state",
+    "immutability"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-react-004",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What number does the button show after ONE click?",
+   "code": "function Counter() {\n  const [count, setCount] = useState(0);\n  function onClick() {\n    setCount(count + 1);\n    setCount(count + 1);\n    setCount(count + 1);\n  }\n  return <button onClick={onClick}>{count}</button>;\n}",
+   "options": [
+    "3",
+    "1",
+    "It throws an error",
+    "0"
+   ],
+   "answer": 1,
+   "explanation": "All three calls read the same stale `count` (0) captured by the render closure, so each one enqueues the value 1 and the final state is 1. Use the functional form `setCount(c => c + 1)` to chain updates and get 3.",
+   "tags": [
+    "hooks",
+    "closures"
+   ],
+   "companies": [
+    "Meta",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-react-005",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "When does the cleanup function returned from a `useEffect` callback run?",
+   "options": [
+    "Immediately after the effect body finishes",
+    "Only in development with Strict Mode",
+    "Only when the component unmounts",
+    "Before the effect re-runs due to changed dependencies, and when the component unmounts"
+   ],
+   "answer": 3,
+   "explanation": "React runs the previous effect's cleanup before running the effect again with new dependencies and also on unmount. This is how subscriptions and timers are torn down correctly.",
+   "tags": [
+    "hooks",
+    "effects"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-react-006",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which situation is `useMemo` most appropriately used for?",
+   "options": [
+    "Avoiding recomputation of an expensive derived value when its inputs have not changed",
+    "Sharing a value with all descendants without props",
+    "Storing state that triggers re-renders when changed",
+    "Running a side effect after render"
+   ],
+   "answer": 0,
+   "explanation": "`useMemo` caches a computed value between renders as long as dependencies are unchanged. It is a performance optimization, not a semantic guarantee, and should be applied after measuring.",
+   "tags": [
+    "performance",
+    "hooks"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-react-007",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Explain controlled vs uncontrolled components and when you would choose each.",
+   "model_answer": "A controlled input has its value driven by React state: `value` plus an `onChange` handler, so React is the single source of truth. This enables validation on each keystroke, conditional disabling, formatting and syncing with other UI. An uncontrolled input keeps its value in the DOM and you read it via a ref or `FormData` on submit; `defaultValue` sets the initial value. Uncontrolled is lighter for simple forms and for large forms where re-rendering on each keystroke hurts, and is required for `<input type=file>`. In practice I use a form library (React Hook Form) that registers uncontrolled inputs for performance, and controlled inputs when the value affects other rendering. Switching an input between uncontrolled and controlled (value going from undefined to defined) triggers warnings and bugs.",
+   "explanation": "Interviewers want the tradeoff, not definitions: render cost, validation timing, single source of truth, and awareness of form libraries and file inputs.",
+   "tags": [
+    "forms"
+   ],
+   "companies": [
+    "Meta",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-react-008",
+   "topic": "React",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A child wrapped in `React.memo` still re-renders every time the parent renders. Which is the most likely cause?",
+   "options": [
+    "The parent uses the `key` prop",
+    "`React.memo` only works with class components",
+    "The child uses `useState`",
+    "The parent passes a new inline function or object literal as a prop on each render"
+   ],
+   "answer": 3,
+   "explanation": "`React.memo` does a shallow prop comparison. Inline functions and object literals create new references each render, so props always differ. Stabilize them with `useCallback`/`useMemo` or move them outside the component.",
+   "tags": [
+    "performance",
+    "memo"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "q-react-009",
+   "topic": "React",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How would you diagnose and fix a slow React screen that renders a table of 10,000 rows?",
+   "model_answer": "First measure: React DevTools Profiler to see which components render and why, and the browser Performance panel to separate render cost from layout/paint. Typical fixes in order: virtualize the list (react-window or TanStack Virtual) so only visible rows mount; paginate or filter server-side; memoize row components with stable props; move state down or split context so typing in a filter does not re-render the whole table; keep per-row state local; use `useDeferredValue` or `startTransition` for expensive filtering so input stays responsive; avoid creating columns/handlers inline. Check for expensive work in render and move it to memoized selectors or the server. Re-measure after each change to confirm the gain.",
+   "explanation": "Look for a measure-first workflow, virtualization as the primary lever, and an understanding of re-render causes rather than blanket `useMemo`.",
+   "tags": [
+    "performance",
+    "virtualization"
+   ],
+   "companies": [
+    "Meta",
+    "Airbnb"
+   ]
+  },
+  {
+   "id": "q-react-010",
+   "topic": "React",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What do the Rules of Hooks (call hooks at the top level, in the same order every render) protect?",
+   "options": [
+    "Hooks are slow when called inside loops",
+    "Hooks must be async",
+    "React stores hook state by call order per component, so conditional calls would misalign state between renders",
+    "ESLint requires it but React does not rely on it"
+   ],
+   "answer": 2,
+   "explanation": "React keeps hook state in a linked list indexed by call order. Conditional or looped hooks change the order between renders, attaching the wrong state to the wrong hook.",
+   "tags": [
+    "hooks",
+    "internals"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-react-011",
+   "topic": "React",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Compare Context, Redux-style stores and server-state libraries (React Query) for managing application state.",
+   "model_answer": "Distinguish kinds of state. Server state (cached remote data) belongs in React Query/SWR: caching, dedupe, background refetch, retries, invalidation. UI/local state stays in `useState`/`useReducer` close to where it is used. Context is a dependency-injection mechanism good for low-frequency global values (theme, auth user, locale); any change re-renders all consumers, so it is a poor fit for fast-changing state unless split or paired with selectors. Redux Toolkit/Zustand/Jotai suit complex client state needing predictable updates, devtools, middleware and selector-based subscriptions. I start with local state plus React Query, add a store only when cross-cutting client state appears, and avoid copying server data into Redux by hand.",
+   "explanation": "Strong candidates separate server state from client state and explain Context's re-render behavior instead of declaring one tool best.",
+   "tags": [
+    "state-management"
+   ],
+   "companies": [
+    "Meta",
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-react-012",
+   "topic": "React",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "In React 18, what does wrapping a state update in `startTransition` do?",
+   "options": [
+    "Marks the update as non-urgent so React can interrupt and render it in the background, keeping urgent updates like typing responsive",
+    "Batches the update with network requests",
+    "Delays the update by a fixed timeout",
+    "Makes the update synchronous and uninterruptible"
+   ],
+   "answer": 0,
+   "explanation": "Transitions are lower priority updates. With concurrent rendering React can pause or discard the in-progress render if a higher priority update (input) arrives, then resume. It is priority scheduling, not a timer.",
+   "tags": [
+    "concurrent",
+    "scheduling"
+   ],
+   "companies": [
+    "Meta",
+    "Vercel"
+   ]
+  },
+  {
+   "id": "q-react-013",
+   "topic": "React",
+   "level": "Expert",
+   "type": "open",
+   "question": "Explain React's reconciliation algorithm and how Fiber enables concurrent rendering.",
+   "model_answer": "Reconciliation diffs the new element tree against the previous one using two heuristics: elements of different types produce different trees (unmount and remount), and `key`s identify stable children across reorders. This makes diffing O(n) rather than O(n^3). Fiber reimplemented the reconciler as a linked structure of work units (fibers) holding type, props, state, effect flags and pointers to parent/child/sibling. Because work is a heap-allocated loop instead of recursive stack calls, React can pause between fibers, yield to the browser, assign lanes (priorities) to updates, abandon a render in progress and restart from the current tree, and commit atomically. The render phase is pure and may run multiple times (hence Strict Mode double-invoking), while the commit phase applies DOM mutations and runs layout effects synchronously. Practical consequences: render functions must be pure, effects must be idempotent and cleaned up, and tearing with external stores is solved by `useSyncExternalStore`.",
+   "explanation": "Expect mention of the two diff heuristics, fibers as pausable units, lanes/priorities, render vs commit phases, and why purity and Strict Mode matter.",
+   "tags": [
+    "fiber",
+    "reconciliation",
+    "concurrent"
+   ],
+   "companies": [
+    "Meta",
+    "Vercel"
+   ]
+  },
+  {
+   "id": "q-node-001",
+   "topic": "Node.js",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which statement best describes Node.js's execution model?",
+   "options": [
+    "Each request gets its own OS thread",
+    "Single-threaded JavaScript execution with an event loop and non-blocking I/O",
+    "Multi-threaded by default with shared memory",
+    "It compiles JavaScript to Java bytecode"
+   ],
+   "answer": 1,
+   "explanation": "Your JavaScript runs on one thread; I/O is delegated to the OS or libuv's thread pool and callbacks run through the event loop. That makes I/O-bound workloads efficient but CPU-bound code blocks everything.",
+   "tags": [
+    "event-loop"
+   ],
+   "companies": [
+    "Netflix",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-node-002",
+   "topic": "Node.js",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the difference between `require()` and `import` in Node.js?",
+   "options": [
+    "`require` supports tree shaking, `import` does not",
+    "`require` is CommonJS and loads synchronously at runtime; `import` is ES modules, statically analyzable and loaded asynchronously",
+    "There is none",
+    "`import` works only in browsers"
+   ],
+   "answer": 1,
+   "explanation": "CommonJS `require` is synchronous and can be called conditionally. ES modules have static imports, top-level await and enable tree shaking. Node picks the system via `.mjs`/`.cjs` or the `type` field in package.json.",
+   "tags": [
+    "modules"
+   ],
+   "companies": [
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-node-003",
+   "topic": "Node.js",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does `process.nextTick(fn)` do?",
+   "options": [
+    "Queues `fn` to run right after the current operation completes, before the event loop continues to other phases",
+    "Runs `fn` after all timers",
+    "Runs `fn` on a worker thread",
+    "Runs `fn` after 1 ms"
+   ],
+   "answer": 0,
+   "explanation": "`nextTick` callbacks run in a queue that is drained right after the current JS operation, before promise microtasks and before the loop moves on. Recursive use can starve I/O.",
+   "tags": [
+    "event-loop"
+   ],
+   "companies": [
+    "Netflix",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-node-004",
+   "topic": "Node.js",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is the output order?",
+   "code": "setTimeout(() => console.log('timeout'), 0);\nPromise.resolve().then(() => console.log('promise'));\nprocess.nextTick(() => console.log('tick'));",
+   "options": [
+    "timeout, promise, tick",
+    "tick, timeout, promise",
+    "promise, tick, timeout",
+    "tick, promise, timeout"
+   ],
+   "answer": 3,
+   "explanation": "`nextTick` callbacks run first, then promise microtasks, and only then does the event loop reach the timers phase for the `setTimeout` callback.",
+   "tags": [
+    "event-loop"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-node-005",
+   "topic": "Node.js",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why prefer streams over `fs.readFile` for serving a 2 GB file over HTTP?",
+   "options": [
+    "Streams are always faster for small files",
+    "`readFile` cannot read files above 1 MB",
+    "Streams process data in chunks with backpressure, keeping memory use constant instead of buffering the entire file",
+    "Streams use multiple CPU cores"
+   ],
+   "answer": 2,
+   "explanation": "`readFile` loads everything into memory. `pipeline(fs.createReadStream(...), res)` sends chunks as the client drains them, handles backpressure and propagates errors.",
+   "tags": [
+    "streams",
+    "memory"
+   ],
+   "companies": [
+    "Netflix",
+    "Uber"
+   ]
+  },
+  {
+   "id": "q-node-006",
+   "topic": "Node.js",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you handle errors correctly in async Node.js code, and what happens with unhandled rejections?",
+   "model_answer": "Use `async/await` with `try/catch` around awaited calls, and propagate errors with meaningful classes (operational vs programmer errors). In Express 4 wrap async handlers (or use v5) so rejections reach the error middleware. Listen for `unhandledRejection` and `uncaughtException` only to log and exit: since Node 15 an unhandled rejection crashes the process by default, and after an uncaught exception state is unknown so a supervisor (systemd, Kubernetes) should restart the process. Never swallow errors in `.catch(() => {})`, always attach `.catch` to floating promises, use `Promise.allSettled` when partial failure is acceptable, and add timeouts/AbortController to outbound calls. Centralize logging with request IDs.",
+   "explanation": "Look for distinguishing operational vs programmer errors, fail-fast with a supervisor, and awareness that Node 15+ crashes on unhandled rejections.",
+   "tags": [
+    "errors",
+    "async"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-node-007",
+   "topic": "Node.js",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which module lets you run CPU-heavy JavaScript on other threads inside one process and share memory via `SharedArrayBuffer`?",
+   "options": [
+    "`child_process.exec`",
+    "`os`",
+    "`worker_threads`",
+    "`cluster`"
+   ],
+   "answer": 2,
+   "explanation": "`worker_threads` runs JS in separate threads in the same process and can share memory. `cluster` forks separate processes to scale HTTP servers across cores without shared memory.",
+   "tags": [
+    "concurrency"
+   ],
+   "companies": [
+    "Netflix"
+   ]
+  },
+  {
+   "id": "q-node-008",
+   "topic": "Node.js",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How would you scale a Node.js HTTP service across cores and machines?",
+   "model_answer": "Node runs one JS thread per process, so run one process per core: `cluster`, PM2, or more commonly one container per core/pod behind a load balancer, which also gives isolation and easy autoscaling. Keep services stateless: sessions in Redis or signed tokens, uploads to object storage, no in-memory caches that must be consistent. Use graceful shutdown (stop accepting, drain in-flight requests, close pools on SIGTERM), health and readiness probes, and connection pooling to databases sized per process. Offload CPU work to worker threads or a queue (BullMQ/SQS) with separate worker deployments. Watch event-loop lag, p99 latency and heap via metrics, and apply backpressure and rate limiting at the edge.",
+   "explanation": "Interviewers want stateless design, process-per-core, graceful shutdown, offloading CPU work and observability, not just 'use cluster'.",
+   "tags": [
+    "scaling",
+    "cluster"
+   ],
+   "companies": [
+    "Netflix",
+    "Uber",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-node-009",
+   "topic": "Node.js",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A route handler computes a SHA-256 over a 200 MB buffer synchronously. What is the main consequence?",
+   "options": [
+    "Node automatically moves it to a worker thread",
+    "The event loop is blocked, so every other request stalls until it finishes",
+    "A memory leak",
+    "Only that request is slow"
+   ],
+   "answer": 1,
+   "explanation": "Synchronous CPU work on the main thread blocks the loop. Use the async `crypto` APIs (which use the thread pool), streaming hash updates, or a worker thread.",
+   "tags": [
+    "event-loop",
+    "performance"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-node-010",
+   "topic": "Node.js",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which libuv phase runs `setImmediate` callbacks?",
+   "options": [
+    "check",
+    "timers",
+    "poll",
+    "close callbacks"
+   ],
+   "answer": 0,
+   "explanation": "Phases in order: timers, pending callbacks, idle/prepare, poll, check, close callbacks. `setImmediate` callbacks run in the check phase right after poll; `setTimeout` runs in timers.",
+   "tags": [
+    "event-loop",
+    "libuv"
+   ],
+   "companies": [
+    "Netflix"
+   ]
+  },
+  {
+   "id": "q-node-011",
+   "topic": "Node.js",
+   "level": "Advanced",
+   "type": "open",
+   "question": "A Node service's memory grows steadily until it is OOM-killed. How do you investigate?",
+   "model_answer": "Confirm it is a leak and not load: track RSS, heap used and external memory over time. Distinguish JS heap growth from Buffers/native memory (`process.memoryUsage()`). Reproduce under load, take heap snapshots with `--inspect` and Chrome DevTools (or `v8.writeHeapSnapshot`) at two points and compare retained objects by constructor and retainer path. Typical culprits: unbounded caches or Maps keyed by request data, event listeners added per request and never removed, closures holding large objects, timers never cleared, global arrays of logs, unbounded promise queues. Fix by bounding caches (LRU/TTL), removing listeners, using WeakMap where suitable, and adding a regression check with a soak test. Set `--max-old-space-size` appropriately but treat it as a stopgap.",
+   "explanation": "The evaluation is on method: snapshots and diffing, knowing common leak sources, and separating heap from native memory.",
+   "tags": [
+    "memory",
+    "debugging"
+   ],
+   "companies": [
+    "Uber",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "q-node-012",
+   "topic": "Node.js",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does backpressure mean in Node streams and how does `pipeline` help?",
+   "options": [
+    "Automatically retrying failed reads",
+    "A flag that makes streams synchronous",
+    "A technique to compress data",
+    "Signals from a slow consumer (via `write()` returning false and `drain`) telling the producer to pause; `pipeline` wires this up and destroys all streams on error"
+   ],
+   "answer": 3,
+   "explanation": "Without respecting backpressure, a fast producer buffers unbounded data in memory. `pipeline` manages pausing/resuming, error propagation and cleanup, which manual `.pipe()` chains do not do reliably.",
+   "tags": [
+    "streams",
+    "backpressure"
+   ],
+   "companies": [
+    "Netflix",
+    "Uber"
+   ]
+  },
+  {
+   "id": "q-node-013",
+   "topic": "Node.js",
+   "level": "Expert",
+   "type": "open",
+   "question": "Walk through the Node.js event loop phases and where microtasks, `nextTick` and the thread pool fit.",
+   "model_answer": "libuv loops through: timers (expired setTimeout/setInterval), pending callbacks, idle/prepare (internal), poll (retrieve new I/O events and run their callbacks; blocks here if nothing else is scheduled), check (`setImmediate`), and close callbacks. Between each callback (since Node 11) the `nextTick` queue is drained first, then the promise microtask queue, before the next callback runs. So microtasks always run before the loop advances, and a recursive `nextTick` or promise chain can starve I/O. The poll phase computes how long it may block based on pending timers and immediates. Network I/O uses epoll/kqueue/IOCP non-blockingly, while file system, DNS lookup (`getaddrinfo`), some crypto and zlib run in libuv's thread pool (default 4, `UV_THREADPOOL_SIZE`), which can become a bottleneck for heavy fs/crypto. Worker threads are separate isolates with their own loops.",
+   "explanation": "An expert answer names all phases, the nextTick/microtask ordering, and the thread pool's role and limits, and relates it to starvation and latency.",
+   "tags": [
+    "event-loop",
+    "libuv"
+   ],
+   "companies": [
+    "Netflix",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-web-001",
+   "topic": "Web & HTTP",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which HTTP method is defined as idempotent and is normally used to fully replace a resource at a known URL?",
+   "options": [
+    "PATCH",
+    "POST",
+    "PUT",
+    "CONNECT"
+   ],
+   "answer": 2,
+   "explanation": "`PUT` replaces the target resource and repeating the same request leaves the same end state. `POST` typically creates or triggers processing and is not idempotent; `PATCH` may or may not be.",
+   "tags": [
+    "http-methods"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-web-002",
+   "topic": "Web & HTTP",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which status code family indicates the client made a bad request?",
+   "options": [
+    "2xx",
+    "5xx",
+    "4xx",
+    "3xx"
+   ],
+   "answer": 2,
+   "explanation": "4xx are client errors (400, 401, 403, 404, 429). 5xx are server errors, 3xx redirection and 2xx success.",
+   "tags": [
+    "status-codes"
+   ],
+   "companies": [
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-web-003",
+   "topic": "Web & HTTP",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the difference between `401 Unauthorized` and `403 Forbidden`?",
+   "options": [
+    "They are identical",
+    "401 is for servers, 403 for clients",
+    "403 means the resource does not exist",
+    "401 means authentication is missing or invalid; 403 means the authenticated identity is not allowed to do this"
+   ],
+   "answer": 3,
+   "explanation": "401 says 'who are you?' (credentials missing/invalid), 403 says 'I know who you are, you may not do this'.",
+   "tags": [
+    "status-codes",
+    "auth"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-web-004",
+   "topic": "Web & HTTP",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does the response header `Cache-Control: no-store` instruct caches to do?",
+   "options": [
+    "Never store any part of the response",
+    "Store only in the browser, not CDNs",
+    "Revalidate with the origin every time but store the body",
+    "Store for one year"
+   ],
+   "answer": 0,
+   "explanation": "`no-store` forbids storing the response at all. `no-cache` allows storing but requires revalidation before reuse, a common point of confusion.",
+   "tags": [
+    "caching"
+   ],
+   "companies": [
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "q-web-005",
+   "topic": "Web & HTTP",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A browser sends a request with `If-None-Match: \"abc123\"` and the resource has not changed. What should the server return?",
+   "options": [
+    "204 No Content",
+    "412 Precondition Failed",
+    "304 Not Modified with no body",
+    "200 with the full body"
+   ],
+   "answer": 2,
+   "explanation": "A matching ETag lets the server answer 304, saving bandwidth; the client reuses its cached copy.",
+   "tags": [
+    "caching",
+    "etag"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-web-006",
+   "topic": "Web & HTTP",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which statement about CORS is correct?",
+   "options": [
+    "CORS is required for server-to-server calls",
+    "CORS protects against CSRF completely",
+    "CORS is enforced by the server and blocks requests from reaching it",
+    "CORS is enforced by browsers; the server opts in via response headers such as `Access-Control-Allow-Origin`"
+   ],
+   "answer": 3,
+   "explanation": "The browser blocks JS from reading cross-origin responses unless the server permits it. Non-browser clients ignore CORS and simple requests may still reach the server, so CORS is not an authorization mechanism.",
+   "tags": [
+    "cors",
+    "browser"
+   ],
+   "companies": [
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-web-007",
+   "topic": "Web & HTTP",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "What happens between typing a URL in the browser and seeing the page?",
+   "model_answer": "The browser checks its caches, then resolves the hostname via DNS (recursive resolver, root/TLD/authoritative) to an IP. It opens a TCP connection (or QUIC for HTTP/3), performs the TLS handshake (certificate validation, key exchange, ALPN picks h2/h3), and sends the HTTP request with cookies and headers. The request may pass a CDN edge, load balancer and reverse proxy before the app server responds; redirects and HSTS may apply. The browser streams the HTML, builds the DOM, discovers CSS/JS/images, builds the CSSOM, executes scripts (parser-blocking unless async/defer), computes layout, paints and composites. Performance levers: DNS prefetch, connection reuse, CDN caching, compression, critical CSS, deferring JS, preloading key resources.",
+   "explanation": "Candidates should cover DNS, TCP/TLS, HTTP, server path and the rendering pipeline with a sense of where latency hides, not just recite steps.",
+   "tags": [
+    "networking",
+    "browser"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-web-008",
+   "topic": "Web & HTTP",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What is the key benefit of HTTP/2 multiplexing over HTTP/1.1?",
+   "options": [
+    "Requests are encrypted",
+    "Headers are never sent",
+    "It removes the need for TLS",
+    "Many concurrent request/response streams share one TCP connection, removing HTTP-level head-of-line blocking"
+   ],
+   "answer": 3,
+   "explanation": "HTTP/2 multiplexes streams over a single connection and compresses headers with HPACK. TCP-level head-of-line blocking remains, which HTTP/3 over QUIC addresses.",
+   "tags": [
+    "http2",
+    "performance"
+   ],
+   "companies": [
+    "Google",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "q-web-009",
+   "topic": "Web & HTTP",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which cookie attribute combination best limits cookie theft via XSS and cross-site request forgery for a session cookie?",
+   "options": [
+    "`Secure; SameSite=None`",
+    "`Path=/; Domain=.example.com`",
+    "`HttpOnly; Secure; SameSite=Lax` (or Strict)",
+    "`Max-Age=31536000`"
+   ],
+   "answer": 2,
+   "explanation": "`HttpOnly` stops JS from reading the cookie, `Secure` limits it to HTTPS and `SameSite=Lax/Strict` stops it being sent on most cross-site requests.",
+   "tags": [
+    "cookies",
+    "security"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-web-010",
+   "topic": "Web & HTTP",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design the caching strategy for a content site served through a CDN, with static assets and personalized API data.",
+   "model_answer": "Fingerprint static assets (`app.3f9a.js`) and serve with `Cache-Control: public, max-age=31536000, immutable`, so deploys just change filenames. HTML gets a short TTL or `no-cache` with ETag so it revalidates cheaply, optionally `stale-while-revalidate` for speed. Public API responses use `s-maxage` for the CDN with surrogate keys for targeted purge on updates. Personalized responses use `private` or `no-store`, and `Vary` carefully (Vary: Cookie destroys hit rate, so split personalized fragments or fetch them client-side). Add compression (Brotli), CDN origin shield to protect the origin, and collapsed forwarding for thundering herds. Monitor hit ratio and TTFB, and plan invalidation for emergencies.",
+   "explanation": "Look for fingerprinting + immutable, correct `no-cache` vs `no-store` use, `Vary` pitfalls and purge strategy.",
+   "tags": [
+    "caching",
+    "cdn"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon",
+    "Vercel"
+   ]
+  },
+  {
+   "id": "q-web-011",
+   "topic": "Web & HTTP",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does HSTS (`Strict-Transport-Security`) do?",
+   "options": [
+    "Blocks mixed content in iframes only",
+    "Pins the server IP address",
+    "Encrypts cookies",
+    "Tells the browser to only contact the site over HTTPS for a given period, upgrading http:// requests automatically"
+   ],
+   "answer": 3,
+   "explanation": "After the first secure response, the browser refuses plain HTTP to that host (and optionally subdomains) for `max-age`, defeating SSL stripping. Preload lists cover the very first visit.",
+   "tags": [
+    "tls",
+    "security"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-web-012",
+   "topic": "Web & HTTP",
+   "level": "Expert",
+   "type": "open",
+   "question": "Explain how TLS 1.3 establishes a secure connection and why it is faster and safer than TLS 1.2.",
+   "model_answer": "In TLS 1.3 the client sends ClientHello with supported ciphers and key shares (ephemeral ECDHE) in the first flight. The server replies with its key share, certificate and a Finished message, already encrypted with handshake keys derived from the shared secret. That takes one round trip (1-RTT), and 0-RTT resumption is possible with PSK but replayable, so only for idempotent requests. TLS 1.3 removed weak or legacy features (RSA key exchange, static DH, CBC, RC4, compression, renegotiation), mandates forward secrecy so past traffic stays safe if the long-term key leaks, and encrypts more of the handshake including the certificate. Clients validate the chain, hostname, validity and revocation (OCSP stapling). ALPN negotiates h2/h3 in the same handshake.",
+   "explanation": "Expect 1-RTT flow, forward secrecy, removed legacy features, and nuance on 0-RTT replay risk.",
+   "tags": [
+    "tls",
+    "networking"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "q-web-013",
+   "topic": "Web & HTTP",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "Why does HTTP/3 use QUIC over UDP instead of TCP?",
+   "options": [
+    "QUIC implements reliable streams in user space with independent per-stream loss recovery, faster handshakes and connection migration, avoiding TCP head-of-line blocking",
+    "UDP removes the need for encryption",
+    "UDP is more reliable",
+    "To bypass firewalls"
+   ],
+   "answer": 0,
+   "explanation": "A lost packet in TCP stalls all streams behind it. QUIC retransmits per stream, integrates TLS 1.3 into the handshake and identifies connections by ID so they survive network changes (Wi-Fi to cellular).",
+   "tags": [
+    "http3",
+    "quic"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "q-api-001",
+   "topic": "API Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which URL best follows common REST conventions for fetching order 42 of customer 7?",
+   "options": [
+    "GET /customer_order_42",
+    "GET /customers/7/orders/42",
+    "GET /getOrder?customer=7&id=42",
+    "POST /customers/7/orders/42/fetch"
+   ],
+   "answer": 1,
+   "explanation": "REST models nouns as hierarchical resources and uses the HTTP method for the action. Verbs in paths are a smell.",
+   "tags": [
+    "rest",
+    "naming"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-api-002",
+   "topic": "API Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which response status is the best fit for a successful `POST` that created a new resource?",
+   "options": [
+    "200 OK",
+    "202 Accepted",
+    "204 No Content",
+    "201 Created with a `Location` header"
+   ],
+   "answer": 3,
+   "explanation": "201 signals creation and `Location` points at the new resource. 202 is for accepted-but-not-finished async work.",
+   "tags": [
+    "rest",
+    "status-codes"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-api-003",
+   "topic": "API Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the purpose of API versioning?",
+   "options": [
+    "To introduce breaking changes without breaking existing clients",
+    "To speed up responses",
+    "To make URLs longer",
+    "To enforce authentication"
+   ],
+   "answer": 0,
+   "explanation": "Versioning (URL, header, or media type) lets old clients keep working while new behavior evolves. Prefer additive, backward-compatible changes and deprecation windows.",
+   "tags": [
+    "versioning"
+   ],
+   "companies": [
+    "Stripe",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-api-004",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why is offset pagination (`?page=500&limit=20`) problematic on large, frequently changing tables?",
+   "options": [
+    "It requires a cursor",
+    "It is not supported by SQL",
+    "The database must scan and skip all earlier rows, and inserts/deletes between requests cause duplicate or missing items",
+    "It cannot return JSON"
+   ],
+   "answer": 2,
+   "explanation": "Keyset (cursor) pagination uses `WHERE id > :last ORDER BY id LIMIT n`, which is index-friendly and stable under concurrent writes.",
+   "tags": [
+    "pagination",
+    "performance"
+   ],
+   "companies": [
+    "Stripe",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-api-005",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you make a `POST /payments` endpoint safe to retry?",
+   "model_answer": "Use an idempotency key: the client sends a unique `Idempotency-Key` header per logical operation. The server stores the key with a hash of the request and the resulting response (status and body) in a table with a unique constraint, ideally in the same transaction as the side effect. On a retry with the same key it returns the stored response instead of charging again; if the same key arrives with a different payload, it returns 422/409. Handle concurrent duplicates with a lock or by marking the key 'in progress' and returning 409. Keys expire after a retention window (e.g. 24h). Downstream calls to the payment provider also carry derived idempotency keys.",
+   "explanation": "Stripe-style answer: key storage with request fingerprint, concurrency handling, and storing the response rather than just a flag.",
+   "tags": [
+    "idempotency",
+    "payments"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-api-006",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A client receives `429 Too Many Requests` with `Retry-After: 30`. What is the correct behavior?",
+   "options": [
+    "Switch to a different endpoint",
+    "Treat it as a permanent failure",
+    "Wait at least 30 seconds (with jitter) before retrying",
+    "Retry immediately with exponential growth"
+   ],
+   "answer": 2,
+   "explanation": "`Retry-After` tells the client when to try again. Clients should honor it and add jitter to avoid synchronized retry storms.",
+   "tags": [
+    "rate-limiting",
+    "resilience"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-api-007",
+   "topic": "API Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "When would you choose GraphQL or gRPC over REST? Discuss tradeoffs.",
+   "model_answer": "REST is simple, cacheable with HTTP semantics, and universally supported: the right default for public APIs. GraphQL fits clients with varied data needs (mobile and web) because the client selects fields and fetches a graph in one round trip, avoiding over/under-fetching; costs are caching difficulty (single POST endpoint, need persisted queries), N+1 resolvers (fix with DataLoader), query complexity attacks (depth/cost limits), and harder authorization per field. gRPC uses HTTP/2 and Protobuf for compact, strongly typed, streaming internal service-to-service calls with generated clients and deadlines; it is awkward in browsers (needs gRPC-web) and less human-debuggable. A common architecture is gRPC or REST between services, GraphQL as a BFF/aggregation layer for frontends, REST for public partner APIs.",
+   "explanation": "Seniors justify with context and name costs of each (caching, N+1, complexity limits, browser support) instead of picking a favorite.",
+   "tags": [
+    "graphql",
+    "grpc",
+    "rest"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-api-008",
+   "topic": "API Design",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "In a REST API using optimistic concurrency, what is the typical mechanism to prevent lost updates?",
+   "options": [
+    "ETag/version in the response and `If-Match` on update, returning 412 on mismatch",
+    "Locking rows for the duration of the HTTP session",
+    "Using GET to check first",
+    "Always last-write-wins"
+   ],
+   "answer": 0,
+   "explanation": "The client sends `If-Match: \"v7\"`. If the stored version differs the server returns 412 Precondition Failed, letting the client re-read and merge.",
+   "tags": [
+    "concurrency",
+    "etag"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-api-009",
+   "topic": "API Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Describe how you would design webhooks for an API platform.",
+   "model_answer": "Customers register endpoint URLs and event types; each event has a stable ID, type, timestamp and versioned payload. Delivery is at-least-once through a queue: the sender POSTs with a signature header (HMAC-SHA256 of timestamp + body with a per-endpoint secret) so receivers verify authenticity and reject replays via timestamp tolerance. Receivers must respond 2xx quickly and process asynchronously; the sender retries with exponential backoff and jitter for days, then disables failing endpoints and alerts. Because duplicates and reordering occur, consumers dedupe by event ID and treat events as notifications, fetching current state via the API. Provide a delivery log UI, replay, test events, IP allowlist or mTLS option, and SSRF protection (block private IP ranges) on the sender side.",
+   "explanation": "Look for signatures, at-least-once semantics with idempotent consumers, retry policy and SSRF awareness.",
+   "tags": [
+    "webhooks",
+    "reliability"
+   ],
+   "companies": [
+    "Stripe",
+    "Twilio",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "q-api-010",
+   "topic": "API Design",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does the OpenAPI specification primarily provide?",
+   "options": [
+    "A language-agnostic machine-readable description of HTTP APIs for docs, client/server codegen, validation and mocking",
+    "A database schema",
+    "A runtime server framework",
+    "An authentication protocol"
+   ],
+   "answer": 0,
+   "explanation": "A contract-first OpenAPI document enables generated SDKs, request validation, contract tests and living documentation.",
+   "tags": [
+    "openapi",
+    "contracts"
+   ],
+   "companies": [
+    "Toptal",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-api-011",
+   "topic": "API Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How would you evolve a widely used public API without breaking clients?",
+   "model_answer": "Prefer additive changes: new optional fields, new endpoints, new enum values documented as 'clients must tolerate unknown values'. Never remove or repurpose fields in an existing version. For breaking changes introduce a new version (date-based like Stripe, or `/v2`) pinned per API key so clients upgrade on their schedule. Use the Sunset and Deprecation headers, changelogs, and emails; measure per-version usage and contact heavy users before retiring. Maintain contract tests and consumer-driven tests (Pact) against old versions, and implement versions as transformation layers over one core to avoid code forks. Feature flags allow staged rollout.",
+   "explanation": "The strong answer shows empathy for integrators: pinning, deprecation signals, usage metrics, and architectural way to support multiple versions cheaply.",
+   "tags": [
+    "versioning",
+    "compatibility"
+   ],
+   "companies": [
+    "Stripe",
+    "Twilio"
+   ]
+  },
+  {
+   "id": "q-api-012",
+   "topic": "API Design",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "A client times out after sending `POST /transfers` and retries without an idempotency key. What failure mode is the server exposed to?",
+   "options": [
+    "A 404 error",
+    "Transfer ordering is lost only",
+    "None, POST is idempotent",
+    "Duplicate transfers, because the first request may have succeeded after the client gave up"
+   ],
+   "answer": 3,
+   "explanation": "A timeout does not mean failure: the operation may have completed. Without server-side deduplication, retries cause double effects. This is why exactly-once effects require idempotency keys or natural unique constraints.",
+   "tags": [
+    "idempotency",
+    "distributed-systems"
+   ],
+   "companies": [
+    "Stripe",
+    "PayPal"
+   ]
+  },
+  {
+   "id": "q-api-013",
+   "topic": "API Design",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design the API and contract for a long-running operation such as video transcoding or a bulk export.",
+   "model_answer": "Accept the job with `POST /exports` returning `202 Accepted`, a job resource ID and `Location: /exports/{id}`, with an idempotency key. The job resource exposes `status` (queued, running, succeeded, failed, canceled), progress, timestamps, error details and, on success, a result link (pre-signed URL with expiry). Clients poll with `Retry-After` hints, or register a webhook / subscribe via SSE for completion. Support `DELETE` or `POST /cancel`, retention and cleanup of results, per-tenant concurrency quotas, and priorities. Internally use a durable queue with visibility timeouts, retries with backoff, a dead-letter queue and idempotent workers that checkpoint progress. Document error codes and make state transitions monotonic.",
+   "explanation": "The asynchronous request-reply pattern, a first-class job resource, delivery options (polling/webhook), and operational concerns (quotas, retries, DLQ, expiry).",
+   "tags": [
+    "async",
+    "jobs"
+   ],
+   "companies": [
+    "Amazon",
+    "Netflix",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "q-sd-001",
+   "topic": "System Design",
+   "level": "Basic",
+   "type": "open",
+   "question": "Design a URL shortener like bit.ly.",
+   "model_answer": "Requirements: create short link from long URL, redirect fast, optional custom alias and expiry, analytics; read-heavy (~100:1), e.g. 100M new URLs/month and 10B redirects/month, so about 40 writes/s and ~4k reads/s average, with peaks higher. API: `POST /urls {longUrl, alias?, ttl?}` returns the short code; `GET /{code}` returns 301/302 (302 if you need analytics or edits). Data model: `urls(code PK, long_url, user_id, created_at, expires_at)`; a key-value store (DynamoDB/Cassandra) or sharded SQL by code fits since access is by key. Code generation: base62 of a unique ID (counter ranges handed to app servers, or Snowflake-style IDs) with 7 chars giving 62^7 = 3.5T codes; avoids collisions versus hashing and truncating. Scaling: stateless app servers behind a load balancer, Redis/CDN cache in front for hot codes (LRU, high hit rate because traffic is skewed), read replicas, async click events via Kafka into an analytics store. Trade-offs: 301 vs 302, predictable IDs vs random (enumeration risk), custom alias collision handling, abuse and malware checks, rate limiting.",
+   "explanation": "Interviewers check that you clarify scale first, derive QPS and storage, choose ID generation deliberately (not just MD5), and use caching for a read-heavy path.",
+   "tags": [
+    "url-shortener",
+    "caching"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-sd-002",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Design a distributed rate limiter for an API gateway.",
+   "model_answer": "Requirements: limit per user/API key/IP (e.g. 100 req/min) with low latency overhead (<2 ms), accuracy tolerable within a few percent, works across many gateway nodes, fails open or closed by policy, returns 429 with `Retry-After` and rate headers. Algorithms: token bucket (allows bursts, two numbers per key: tokens and last refill), sliding window counter (cheap and smooth), fixed window (simple but boundary spikes), leaky bucket (smooth output). Implementation: central Redis with a Lua script performing atomic read-refill-decrement per key, keys sharded by hash with TTL; to cut latency use local in-memory buckets that sync or take a slice of quota ('batching'), accepting slight over-admission. Rules are stored in a config service and cached. Multi-region: per-region limits or eventually consistent global counters. Trade-offs: strict accuracy vs latency, hot keys, Redis failure (fail open for non-critical, closed for sensitive), clock skew, and observability of rejected traffic.",
+   "explanation": "Look for algorithm trade-offs, atomicity (Lua), the local-vs-central accuracy tradeoff, and failure mode decisions.",
+   "tags": [
+    "rate-limiting",
+    "redis"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "q-sd-003",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design a chat system like WhatsApp or Slack supporting 1:1 and group messaging.",
+   "model_answer": "Requirements: 1:1 and group chats (up to a few hundred or thousands), delivery receipts, online presence, message history, offline delivery, media, multi-device; low latency, no message loss, per-chat ordering. Connection layer: clients keep WebSocket connections to stateful chat gateways; a session registry in Redis maps user to gateway. Send path: client sends message with client-generated ID (idempotency) to gateway, which writes to a durable log (Kafka partitioned by conversation ID, giving per-conversation ordering), persists to storage, then fans out: online recipients via their gateway, offline via push notification (APNs/FCM) and stored for sync on reconnect. Storage: wide-column (Cassandra/ScyllaDB/HBase) keyed `(conversation_id, message_id/time)` for range reads; metadata (users, memberships) in SQL; media in object storage plus CDN with thumbnails. IDs: per-conversation monotonic sequence or Snowflake IDs. Groups: fan-out on write for small groups, on read for very large channels. Presence uses heartbeats with TTL in Redis, with throttled broadcasts. Receipts are small messages in the same pipeline. Security: TLS, optionally end-to-end encryption (Signal protocol) which complicates server search and multi-device. Scale and trade-offs: connection counts per gateway (~100k+), sharding, backpressure, retries with dedupe, history sync, regional deployments.",
+   "explanation": "Candidates must discuss persistent connections, ordering and idempotency, offline delivery, fan-out choices, and storage layout rather than just 'use WebSockets'.",
+   "tags": [
+    "chat",
+    "websockets",
+    "messaging"
+   ],
+   "companies": [
+    "Meta",
+    "Slack",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-sd-004",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design a news feed (Facebook/Twitter timeline).",
+   "model_answer": "Requirements: users post, follow others, and see a reverse-chronological or ranked feed with low latency (<200 ms); read-heavy, high fan-out accounts exist (celebrities). Data: `posts` store sharded by author, `follows` graph, feed cache per user (Redis sorted set of post IDs by time/score). Fan-out on write (push): when a user posts, async workers push the post ID into each follower's feed cache; fast reads but expensive for celebrities. Fan-out on read (pull): at read time merge recent posts of followees; cheap writes, slow reads. Hybrid: push for normal users, pull for celebrities merged at read time. Read path: fetch feed IDs from cache, hydrate posts/user data via batch lookups (with caching), apply ranking service (features, ML model) and filters (blocks, privacy), paginate with cursors. Supporting: media via CDN, counters (likes) as eventually consistent aggregated counts, Kafka for events, backfill when cache is cold. Trade-offs: freshness vs cost, ranking vs chronology, memory for cached feeds (cap length to ~1000), consistency of deletions.",
+   "explanation": "Look for the push/pull/hybrid reasoning tied to follower distribution, cache design, and hydration/ranking steps.",
+   "tags": [
+    "feed",
+    "fan-out",
+    "caching"
+   ],
+   "companies": [
+    "Meta",
+    "Twitter",
+    "LinkedIn"
+   ]
+  },
+  {
+   "id": "q-sd-005",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design a notification system that sends push, SMS and email at scale.",
+   "model_answer": "Requirements: multi-channel, user preferences and quiet hours, templating/localization, priority (OTP vs marketing), at-least-once delivery with dedupe, rate limiting, millions per hour, analytics. Architecture: producers call a Notification API (or publish events); a service validates, checks preferences/opt-outs, renders templates and enqueues to per-channel, per-priority queues (Kafka/SQS). Channel workers call providers (APNs, FCM, Twilio, SES) with retries using exponential backoff and a dead-letter queue, circuit breakers and provider failover. Idempotency key per notification prevents duplicates. Track state (queued, sent, delivered, opened, failed) from provider callbacks/webhooks in a store for analytics and user history. Throttling per user and per provider limits (rate limits), batching for marketing, scheduled sends via delay queues. Keep OTP traffic isolated so a marketing blast cannot delay it. Handle token invalidation (remove bad device tokens) and compliance (unsubscribe, GDPR).",
+   "explanation": "Seniors isolate priority traffic, handle provider failure, dedupe, and respect user preferences/compliance.",
+   "tags": [
+    "notifications",
+    "queues"
+   ],
+   "companies": [
+    "Amazon",
+    "Uber",
+    "Airbnb"
+   ]
+  },
+  {
+   "id": "q-sd-006",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design a ride-hailing dispatch system (matching riders and drivers).",
+   "model_answer": "Requirements: riders request rides, nearby drivers are matched in seconds, live location tracking, ETA and pricing, high availability in each city. Location ingestion: drivers send GPS every ~4s via a lightweight channel to a location service writing into an in-memory geo-index (geohash/S2/H3 cells) in Redis or a custom store sharded by city/cell. Matching: on request, query nearby cells ordered by distance/ETA (road-network ETA service), filter by availability, offer to the best driver with a timeout, then cascade; to avoid double-booking use an atomic state transition (driver `available -> offered -> assigned`) with a lock or compare-and-set in a strongly consistent store. Trips: a state machine (requested, matched, arrived, in-progress, completed) persisted in a sharded database with events on Kafka for payments, notifications, analytics. Surge pricing: demand/supply per cell aggregated in streaming jobs. Real-time updates to riders via WebSockets or push. Scaling and trade-offs: shard by geography, global matching batches (batch every few seconds for better global optimum vs greedy nearest), handling GPS noise, degraded mode when the location store fails, and consistency of assignment vs availability.",
+   "explanation": "The core is geospatial indexing, preventing double assignment, and balancing greedy vs batched matching.",
+   "tags": [
+    "geospatial",
+    "matching"
+   ],
+   "companies": [
+    "Uber",
+    "Lyft",
+    "DoorDash"
+   ]
+  },
+  {
+   "id": "q-sd-007",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design a distributed cache (like a managed Redis/Memcached cluster).",
+   "model_answer": "Requirements: sub-millisecond reads, horizontal scale, high availability, eviction, TTL. Partitioning: consistent hashing with virtual nodes (or hash slots like Redis Cluster's 16384) so adding/removing nodes moves only a fraction of keys. Replication: each shard has a primary and replicas with async replication; failure detection via gossip/heartbeats and automatic failover through leader election, accepting that async replication can lose recent writes. Eviction: LRU/LFU approximations with memory limits, plus TTL expiry (lazy plus periodic sampling). Client: smart clients or a proxy tier that routes requests, retries, and supports connection pooling and pipelining. Consistency patterns for users: cache-aside (read through, invalidate on write), write-through, write-behind; discuss stampede protection (request coalescing, jittered TTLs, probabilistic early refresh), hot key mitigation (local L1 cache, key replication), and penetration (negative caching, Bloom filters). Operations: resharding with live migration, monitoring hit rate and evictions, persistence (RDB/AOF) optional.",
+   "explanation": "Expect consistent hashing with vnodes, replication/failover trade-offs, and cache stampede/hot-key mitigations.",
+   "tags": [
+    "cache",
+    "consistent-hashing"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "q-sd-008",
+   "topic": "System Design",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design a payment processing system that never double-charges and stays correct under failures.",
+   "model_answer": "Requirements: authorize/capture/refund cards via external PSPs, correctness over availability, auditability, PCI scope minimization, idempotency, reconciliation. Principles: never store raw card data (use tokenization from the PSP/vault); every request carries an idempotency key persisted with request hash and result. Model each payment as a state machine (created, authorized, captured, failed, refunded) with transitions stored as append-only ledger entries; double-entry bookkeeping ensures money in equals money out. Flow: API validates, writes the payment intent and an outbox record in one DB transaction; a worker calls the PSP with a deterministic idempotency key, and records the outcome; PSP webhooks update status and are deduplicated. Timeouts are 'unknown' outcomes, so reconcile by querying the PSP rather than blindly retrying. Use the transactional outbox + Kafka for downstream events (orders, email), sagas with compensations for multi-step flows instead of distributed transactions. Data: strongly consistent relational DB (serializable or row locks on account balances), partitioned by merchant. Daily reconciliation against PSP and bank settlement files finds drift. Operational: retries with backoff, circuit breakers, multi-PSP routing/fallback, fraud scoring, audit logs, encryption, and monitoring of auth rate and latency.",
+   "explanation": "What matters: idempotency, state machine + ledger, handling unknown outcomes through reconciliation, outbox/saga, and PCI awareness.",
+   "tags": [
+    "payments",
+    "idempotency",
+    "consistency"
+   ],
+   "companies": [
+    "Stripe",
+    "PayPal",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-sd-009",
+   "topic": "System Design",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design a video streaming platform like YouTube or Netflix.",
+   "model_answer": "Requirements: upload, transcode, adaptive playback worldwide, search/recommendations, high availability, cost control. Upload: client uploads chunks to object storage via pre-signed URLs (resumable); an event triggers the pipeline. Transcoding: a DAG of workers (queue-based) splits video into segments, encodes multiple resolutions/bitrates and codecs (H.264/VP9/AV1), generates thumbnails and manifests, running in parallel on spot capacity; outputs HLS/DASH segments (2-6 s) in object storage. Delivery: CDN with multi-tier caching; popular content pre-positioned at ISP edges (Netflix Open Connect-style) during off-peak; the player uses adaptive bitrate selection based on throughput/buffer. Metadata in SQL/NoSQL, search with Elasticsearch, recommendations from offline ML pipelines plus real-time signals, view counts aggregated via streaming (approximate, batched). DRM and signed URLs protect content. Trade-offs: storage cost (tiering cold content, per-title encoding), start-up latency vs quality, live streaming differs (low-latency HLS, ingest via RTMP/WebRTC, no pre-transcode), regional failover.",
+   "explanation": "Look for separating control plane vs data plane, segmenting for ABR, CDN strategy as the main scale lever, and cost-awareness.",
+   "tags": [
+    "video",
+    "cdn",
+    "streaming"
+   ],
+   "companies": [
+    "Netflix",
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-sd-010",
+   "topic": "System Design",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design a globally distributed key-value store like DynamoDB. Discuss consistency and availability choices.",
+   "model_answer": "Requirements: low latency at any scale, high availability across regions, tunable consistency, partition tolerance. Partitioning: consistent hashing of keys into partitions that split as they grow; each partition replicated N=3 across availability zones. Replication and consistency: quorum reads/writes (W + R > N gives strong consistency on one region; W=1/R=1 gives eventual consistency and low latency); leader-based replication (Raft/Paxos) per partition gives linearizable writes at the cost of cross-AZ latency. Multi-region: active-active with asynchronous replication needs conflict resolution (last-write-wins with synchronized/hybrid clocks, vector clocks, or CRDTs) and clients must accept stale reads; per CAP, during a partition you choose availability (AP) or consistency (CP) per operation. Storage engine: LSM tree with write-ahead log, memtable, SSTables, compaction, Bloom filters for reads. Additional mechanisms: hinted handoff and read repair, anti-entropy using Merkle trees, gossip membership, admission control and throttling per partition for hot keys, adaptive capacity, secondary indexes (local vs global, global being eventually consistent), TTL, backups with point-in-time recovery. Trade-offs: single-key transactions vs cross-partition (2PC cost), schema design driven by access patterns.",
+   "explanation": "Expert answer covers quorum math, leader vs leaderless replication, conflict resolution, LSM storage and explicit CAP/PACELC positioning.",
+   "tags": [
+    "distributed-systems",
+    "consistency",
+    "cap"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-sd-011",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "In a cache-aside pattern, what is the standard approach on a write to the database?",
+   "options": [
+    "Never touch the cache on writes, rely on TTL only",
+    "Write only to the cache",
+    "Update the cache, then the database asynchronously",
+    "Update the database, then invalidate (delete) the cached entry so the next read repopulates it"
+   ],
+   "answer": 3,
+   "explanation": "Invalidating after a successful DB write is the common, simple approach that minimizes stale data and race complexity versus updating the cache directly. TTL provides a safety net.",
+   "tags": [
+    "caching"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-sd-012",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which statement best describes the CAP theorem for a system experiencing a network partition?",
+   "options": [
+    "You can have all of consistency, availability and partition tolerance",
+    "CAP only applies to SQL databases",
+    "You must choose between consistency (reject or delay some requests) and availability (serve possibly stale data)",
+    "Partitions can be avoided with enough replicas"
+   ],
+   "answer": 2,
+   "explanation": "Partitions are unavoidable in distributed systems, so during one you pick CP (some operations fail) or AP (answers may be stale). PACELC adds the latency vs consistency tradeoff when no partition exists.",
+   "tags": [
+    "cap",
+    "consistency"
+   ],
+   "companies": [
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "q-sd-013",
+   "topic": "System Design",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "A service uses consistent hashing with one point per node and nodes have different capacity. What technique best balances load?",
+   "options": [
+    "Sort keys alphabetically",
+    "Use modulo hashing",
+    "Virtual nodes: place many points per physical node, proportional to capacity",
+    "Add more clients"
+   ],
+   "answer": 2,
+   "explanation": "Virtual nodes smooth out the uneven arcs of the ring and let you weight bigger machines with more tokens; failure of a node spreads its load across many peers.",
+   "tags": [
+    "consistent-hashing"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-cloud-001",
+   "topic": "Cloud & DevOps",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the main advantage of containers over virtual machines?",
+   "options": [
+    "They need no images",
+    "Share the host kernel, so they start faster and use fewer resources",
+    "Stronger isolation",
+    "They include a full guest OS"
+   ],
+   "answer": 1,
+   "explanation": "Containers package an app and its dependencies on a shared kernel, giving lightweight, fast-starting, portable units. VMs virtualize hardware and run a full OS each.",
+   "tags": [
+    "containers",
+    "docker"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-cloud-002",
+   "topic": "Cloud & DevOps",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In CI/CD, what does 'continuous delivery' guarantee?",
+   "options": [
+    "Every commit is automatically released to users",
+    "Every change is built, tested and kept in a releasable state, with deployment a one-click decision",
+    "Tests are optional",
+    "Servers never change"
+   ],
+   "answer": 1,
+   "explanation": "Continuous delivery keeps the main branch always deployable; continuous deployment goes further and releases automatically.",
+   "tags": [
+    "ci-cd"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-cloud-003",
+   "topic": "Cloud & DevOps",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does Infrastructure as Code (IaC) achieve?",
+   "options": [
+    "Reproducible, version-controlled, reviewable infrastructure definitions",
+    "Manual console configuration",
+    "Removal of cloud providers",
+    "Faster hardware"
+   ],
+   "answer": 0,
+   "explanation": "Tools such as Terraform, Pulumi and CloudFormation describe infrastructure declaratively, enabling reviews, drift detection, and consistent environments.",
+   "tags": [
+    "iac",
+    "terraform"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-cloud-004",
+   "topic": "Cloud & DevOps",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which Kubernetes object ensures a specified number of identical Pod replicas is running and supports rolling updates?",
+   "options": [
+    "ConfigMap",
+    "Ingress",
+    "Pod",
+    "Deployment"
+   ],
+   "answer": 3,
+   "explanation": "A Deployment manages ReplicaSets, rolling out new versions gradually and enabling rollback. A bare Pod is not rescheduled if its node dies.",
+   "tags": [
+    "kubernetes"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-cloud-005",
+   "topic": "Cloud & DevOps",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is the difference between a liveness probe and a readiness probe in Kubernetes?",
+   "options": [
+    "Both only run at startup",
+    "Readiness restarts the Pod; liveness only logs",
+    "Liveness failures restart the container; readiness failures remove the Pod from Service endpoints without restarting it",
+    "No difference"
+   ],
+   "answer": 2,
+   "explanation": "Readiness controls whether traffic is routed to a Pod; liveness detects deadlocks and triggers a restart. Startup probes protect slow-starting apps.",
+   "tags": [
+    "kubernetes",
+    "probes"
+   ],
+   "companies": [
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-cloud-006",
+   "topic": "Cloud & DevOps",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Compare blue-green, canary and rolling deployments. When would you use each?",
+   "model_answer": "Rolling replaces instances gradually; simple and resource-cheap but old and new versions coexist, so both must be compatible and rollback is slower. Blue-green runs a complete second environment and switches traffic atomically via load balancer or DNS; instant rollback and clean cutover, at double infrastructure cost and care for database migrations. Canary routes a small percentage of traffic (1%, 5%, 25%) to the new version while watching error rate, latency and business metrics, with automated promotion or rollback (Argo Rollouts, Flagger, service mesh); best for risky changes at scale. Pair all with backward-compatible expand/contract database migrations and feature flags to decouple deploy from release.",
+   "explanation": "Interviewers want trade-offs, metric-driven promotion, and database migration compatibility, not just definitions.",
+   "tags": [
+    "deployment",
+    "release"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "q-cloud-007",
+   "topic": "Cloud & DevOps",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why is it unsafe to store secrets in a Docker image or Git repository?",
+   "options": [
+    "Git cannot store text",
+    "Anyone with image or repo access (or history) can extract them, and rotating them requires rebuilds",
+    "Docker forbids environment variables",
+    "Images are too large"
+   ],
+   "answer": 1,
+   "explanation": "Use a secrets manager (Vault, AWS Secrets Manager, Kubernetes Secrets with KMS encryption) injected at runtime, scan repos for leaked secrets, and rotate regularly.",
+   "tags": [
+    "secrets",
+    "security"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-cloud-008",
+   "topic": "Cloud & DevOps",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How would you design observability for a microservices platform?",
+   "model_answer": "Use the three pillars plus context. Metrics (Prometheus/CloudWatch) with RED for services (rate, errors, duration) and USE for resources (utilization, saturation, errors), alerting on SLO burn rate rather than raw thresholds. Structured JSON logs with correlation/trace IDs shipped to a central store (Loki/ELK/Datadog), sampled sensibly and scrubbed of PII. Distributed tracing with OpenTelemetry propagating W3C trace context across services and queues to find latency sources. Define SLIs/SLOs and error budgets with product, build dashboards by user journey, and add synthetic checks. Alerting should be actionable with runbooks, deduplicated and routed by ownership. Control cardinality and cost with sampling and retention tiers, and include deploy markers to correlate changes with incidents.",
+   "explanation": "Look for SLO-based alerting, trace propagation, cardinality/cost awareness, and actionable alerts.",
+   "tags": [
+    "observability",
+    "sre"
+   ],
+   "companies": [
+    "Netflix",
+    "Google",
+    "Datadog"
+   ]
+  },
+  {
+   "id": "q-cloud-009",
+   "topic": "Cloud & DevOps",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which Terraform practice prevents two engineers from corrupting shared infrastructure state?",
+   "options": [
+    "A remote backend with state locking (e.g., S3 + DynamoDB, or Terraform Cloud)",
+    "Running `apply` only on laptops",
+    "Deleting state after each run",
+    "Committing the state file to Git"
+   ],
+   "answer": 0,
+   "explanation": "Remote state with locking serializes operations and avoids conflicting writes; state may contain secrets so it must be encrypted and access-controlled.",
+   "tags": [
+    "terraform",
+    "iac"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-cloud-010",
+   "topic": "Cloud & DevOps",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "In AWS, what is the safest way for an EC2 instance or Lambda function to access S3?",
+   "options": [
+    "Use the root account credentials",
+    "Make the bucket public",
+    "Attach an IAM role with least-privilege permissions so it receives short-lived credentials",
+    "Embed an access key in the code"
+   ],
+   "answer": 2,
+   "explanation": "Roles provide temporary credentials via the metadata service/STS, no long-lived keys to leak. Scope policies to the specific bucket and actions.",
+   "tags": [
+    "aws",
+    "iam"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-cloud-011",
+   "topic": "Cloud & DevOps",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Describe how you would respond to and learn from a production incident.",
+   "model_answer": "Detect via alerts and declare an incident with a commander, a scribe and a comms lead. Prioritize mitigation over root cause: roll back the last change, fail over, shed load or disable a feature flag, then confirm via metrics. Communicate status regularly to stakeholders and a status page. After recovery, run a blameless postmortem within days: timeline, impact (users, duration, revenue), contributing factors (not 'human error'), what went well, detection and response gaps. Produce prioritized, owned action items (better alerts, tests, guardrails, runbooks, automation) and track them to completion; share the writeup widely. Measure MTTD/MTTR and review error budget policy.",
+   "explanation": "Seniors separate mitigation from root cause, show blameless culture, and drive action items to closure.",
+   "tags": [
+    "incident",
+    "sre"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "q-cloud-012",
+   "topic": "Cloud & DevOps",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does the Kubernetes scheduler do when a Pod is created?",
+   "options": [
+    "Assigns a Service IP",
+    "Filters nodes that satisfy resource requests, taints/tolerations, affinity rules, then scores candidates and binds the Pod to one; the kubelet then runs it",
+    "Starts the container on the node",
+    "Pulls the image"
+   ],
+   "answer": 1,
+   "explanation": "The scheduler only chooses a node (writing `spec.nodeName` via binding). The kubelet on that node watches the API server and starts containers via the container runtime. Requests (not limits) drive scheduling.",
+   "tags": [
+    "kubernetes",
+    "internals"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-cloud-013",
+   "topic": "Cloud & DevOps",
+   "level": "Expert",
+   "type": "open",
+   "question": "Explain Kubernetes' control-plane architecture and how a `kubectl apply` of a Deployment ends in running containers.",
+   "model_answer": "`kubectl` sends the manifest to the API server, which authenticates, authorizes (RBAC), runs admission controllers, validates and persists the object in etcd (Raft-replicated source of truth). Every component only talks to the API server and uses watches. The Deployment controller (in controller-manager) sees the new Deployment and creates a ReplicaSet; the ReplicaSet controller creates Pod objects; the scheduler watches unbound Pods, filters/scores nodes and writes a binding. The kubelet on the chosen node sees the Pod, asks the container runtime (containerd via CRI) to pull images and start containers, sets up networking via the CNI plugin, mounts volumes via CSI, runs probes and reports status back. kube-proxy (or eBPF dataplane) programs Service routing so endpoints that become Ready receive traffic. The design is level-triggered reconciliation: controllers continually drive observed state toward desired state, which is why the system self-heals. Failure modes: etcd latency or quorum loss stops changes but running Pods continue; admission webhooks can block everything if misconfigured.",
+   "explanation": "Expert candidates explain the reconcile loop model, etcd as the only store, and the role of each component rather than listing names.",
+   "tags": [
+    "kubernetes",
+    "control-plane"
+   ],
+   "companies": [
+    "Google",
+    "Red Hat",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-sec-001",
+   "topic": "Security",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which technique is the primary defense against SQL injection?",
+   "options": [
+    "Hiding database error messages only",
+    "Escaping quotes manually in every query",
+    "Parameterized queries (prepared statements)",
+    "Using a longer database password"
+   ],
+   "answer": 2,
+   "explanation": "Parameterized queries keep user input as data, never as SQL syntax. Manual escaping is error-prone; hiding errors and strong passwords help other things but do not stop injection.",
+   "tags": [
+    "injection",
+    "owasp"
+   ],
+   "companies": [
+    "Microsoft",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-sec-002",
+   "topic": "Security",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "How should user passwords be stored?",
+   "options": [
+    "Encrypted with AES using a key in the same database",
+    "Hashed with plain SHA-256",
+    "Hashed with a slow, salted algorithm such as bcrypt, scrypt or Argon2",
+    "Stored in plain text behind access control"
+   ],
+   "answer": 2,
+   "explanation": "Password hashes must be slow and salted to resist brute force and rainbow tables. Reversible encryption or fast hashes make breaches far worse.",
+   "tags": [
+    "passwords",
+    "hashing"
+   ],
+   "companies": [
+    "Google",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-sec-003",
+   "topic": "Security",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is Cross-Site Scripting (XSS)?",
+   "options": [
+    "An attack on DNS",
+    "Attacker injecting script into a page viewed by other users, executing in their browser with the site's privileges",
+    "A script that scans open ports",
+    "Stealing the database password"
+   ],
+   "answer": 1,
+   "explanation": "XSS happens when untrusted data is rendered as HTML/JS. Defend with context-aware output encoding, frameworks' auto-escaping, a strict CSP, and `HttpOnly` cookies.",
+   "tags": [
+    "xss",
+    "owasp"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-sec-004",
+   "topic": "Security",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does a CSRF token protect against?",
+   "options": [
+    "A malicious site causing a victim's browser to submit authenticated state-changing requests to your site",
+    "SQL injection",
+    "Passwords being guessed",
+    "Packet sniffing"
+   ],
+   "answer": 0,
+   "explanation": "Browsers attach cookies automatically to cross-site requests. A per-session unguessable token (plus SameSite cookies) proves the request originated from your own pages.",
+   "tags": [
+    "csrf"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-sec-005",
+   "topic": "Security",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is an Insecure Direct Object Reference (IDOR) / broken object-level authorization?",
+   "options": [
+    "An expired certificate",
+    "Using HTTP instead of HTTPS",
+    "A weak cipher",
+    "Letting a user access another user's object by changing an ID in the request because ownership isn't checked server-side"
+   ],
+   "answer": 3,
+   "explanation": "Every request for an object must verify the caller is allowed to access that specific object. Unpredictable IDs help but are not authorization.",
+   "tags": [
+    "authorization",
+    "owasp"
+   ],
+   "companies": [
+    "Meta",
+    "Uber"
+   ]
+  },
+  {
+   "id": "q-sec-006",
+   "topic": "Security",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How would you secure a REST API that serves a single-page app and mobile clients?",
+   "model_answer": "Terminate TLS everywhere and set HSTS. Authenticate using OAuth 2.0 / OIDC with short-lived access tokens (JWT or opaque) and refresh token rotation; SPAs use Authorization Code with PKCE and keep tokens out of localStorage where possible (BFF with HttpOnly cookies is safer). Authorize on the server at the object and function level (RBAC/ABAC), never trusting client claims. Validate all input with schemas, use parameterized queries, limit payload size, and return generic errors. Add rate limiting and bot protection, CORS with an explicit allowlist, security headers (CSP, X-Content-Type-Options), audit logging, dependency scanning, secrets in a vault, and least-privilege database accounts. Test with threat modeling, SAST/DAST and periodic penetration tests.",
+   "explanation": "Seniors cover authN vs authZ, token storage trade-offs, PKCE, and defense in depth.",
+   "tags": [
+    "api-security",
+    "oauth"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-sec-007",
+   "topic": "Security",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why is a JWT's signature not enough to treat it as safe?",
+   "options": [
+    "Signatures can be removed",
+    "You must also validate algorithm, issuer, audience, expiry and not-before claims, and handle revocation",
+    "JWTs are always encrypted",
+    "Signatures expire daily"
+   ],
+   "answer": 1,
+   "explanation": "Common bugs: accepting `alg: none`, algorithm confusion (RS256 vs HS256), not checking `aud`/`iss`/`exp`. Pin allowed algorithms and validate every claim.",
+   "tags": [
+    "jwt",
+    "auth"
+   ],
+   "companies": [
+    "Google",
+    "Okta"
+   ]
+  },
+  {
+   "id": "q-sec-008",
+   "topic": "Security",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which flow should a public single-page application use to obtain tokens from an OAuth 2.0 authorization server?",
+   "options": [
+    "Authorization Code flow with PKCE",
+    "Client Credentials",
+    "Resource Owner Password Credentials",
+    "Implicit flow"
+   ],
+   "answer": 0,
+   "explanation": "PKCE binds the authorization code to a one-time verifier so intercepted codes are useless. Implicit and password flows are deprecated in current best practice (OAuth 2.1).",
+   "tags": [
+    "oauth",
+    "pkce"
+   ],
+   "companies": [
+    "Google",
+    "Okta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-sec-009",
+   "topic": "Security",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Explain Server-Side Request Forgery (SSRF), a real-world impact, and how to prevent it.",
+   "model_answer": "SSRF occurs when an attacker makes the server fetch an attacker-chosen URL (image fetchers, webhooks, URL previews, PDF generators). The server sits inside the trusted network, so the attacker can reach internal services and cloud metadata endpoints (169.254.169.254) to steal IAM credentials, which was the root of major breaches. Prevention: avoid fetching user-supplied URLs; otherwise allowlist domains/schemes, resolve DNS and block private, loopback and link-local ranges after resolution (re-check on redirects and defend against DNS rebinding by pinning the resolved IP), disable redirects, run fetchers in an isolated network segment with egress filtering, require IMDSv2 on AWS, and give the workload minimal IAM permissions.",
+   "explanation": "Strong answers include cloud metadata, DNS rebinding/redirect bypasses, and network-level controls beyond string filtering.",
+   "tags": [
+    "ssrf",
+    "cloud"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Capital One"
+   ]
+  },
+  {
+   "id": "q-sec-010",
+   "topic": "Security",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which header best mitigates the impact of XSS by restricting where scripts may load from?",
+   "options": [
+    "`Content-Security-Policy`",
+    "`X-Frame-Options`",
+    "`Cache-Control`",
+    "`Referrer-Policy`"
+   ],
+   "answer": 0,
+   "explanation": "A strict CSP (nonces or hashes, no `unsafe-inline`) limits what script can execute even if injection occurs. It is defense in depth, not a replacement for output encoding.",
+   "tags": [
+    "csp",
+    "xss"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-sec-011",
+   "topic": "Security",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Describe how you would design secure multi-tenant data isolation in a SaaS application.",
+   "model_answer": "Start with a threat model: cross-tenant data leaks are the worst failure. Choose an isolation model: separate database per tenant (strongest, costlier), schema per tenant, or shared tables with a `tenant_id` column. For shared tables enforce isolation in depth: derive tenant from the authenticated token (never request parameters), use a data-access layer that always adds the tenant filter, and enable database row-level security (Postgres RLS) with the tenant set per connection/transaction. Isolate caches and object storage prefixes per tenant, encrypt with per-tenant keys (KMS) for sensitive customers, scope background jobs and search indexes by tenant, and include tenant in rate limits and logs. Test with automated cross-tenant authorization tests and penetration tests, and consider noisy-neighbour controls. Document data residency and deletion procedures.",
+   "explanation": "Look for defense in depth (not just a WHERE clause), RLS, key isolation, and testing of tenant boundaries.",
+   "tags": [
+    "multi-tenant",
+    "authorization"
+   ],
+   "companies": [
+    "Salesforce",
+    "Microsoft",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-sec-012",
+   "topic": "Security",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "In the OAuth 2.0 authorization code flow, what attack does the `state` parameter mitigate?",
+   "options": [
+    "SQL injection",
+    "Phishing the user's password",
+    "Login CSRF / forged authorization responses, by binding the response to the user's initiating session",
+    "Token replay on the resource server"
+   ],
+   "answer": 2,
+   "explanation": "The client generates an unguessable `state`, stores it in the session and verifies it on the redirect. Otherwise an attacker can make a victim's browser complete the attacker's authorization and link accounts. OIDC `nonce` similarly binds the ID token to the session to prevent replay.",
+   "tags": [
+    "oauth",
+    "oidc",
+    "csrf"
+   ],
+   "companies": [
+    "Okta",
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-sec-013",
+   "topic": "Security",
+   "level": "Expert",
+   "type": "open",
+   "question": "Describe known attacks on OAuth 2.0 / OpenID Connect deployments and the countermeasures.",
+   "model_answer": "Authorization code interception (mobile custom schemes, malicious apps): mitigate with PKCE and claimed HTTPS redirect URIs. Open redirect / redirect URI manipulation: require exact-match registered redirect URIs, no wildcards. Login CSRF and mix-up attacks (multi-IdP clients getting a code from the wrong server): use `state`, per-IdP redirect URIs, and the `iss` response parameter. Token leakage through referrer, logs or browser history: use code flow not implicit, short-lived tokens, and `Referrer-Policy`. ID token replay: validate `nonce`, `aud`, `iss`, `exp`, `azp` and signature with keys from JWKS. Confused deputy and over-broad scopes: least-privilege scopes, audience-restricted tokens, sender-constrained tokens (DPoP / mTLS). Refresh token theft: rotation with reuse detection, binding to client. Consent phishing: verify app publishers and restrict consent. Also verify the client authenticates correctly (private_key_jwt for confidential clients) and never uses ROPC.",
+   "explanation": "Expert candidates name concrete attacks (mix-up, redirect URI, code interception, replay) with the specific mitigating spec features.",
+   "tags": [
+    "oauth",
+    "oidc",
+    "attacks"
+   ],
+   "companies": [
+    "Okta",
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-git-001",
+   "topic": "Git",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does `git fetch` do compared to `git pull`?",
+   "options": [
+    "`fetch` pushes commits",
+    "They are identical",
+    "`fetch` downloads remote changes without merging; `pull` is fetch followed by merge (or rebase) into the current branch",
+    "`pull` only works on main"
+   ],
+   "answer": 2,
+   "explanation": "`fetch` updates remote-tracking branches safely. `pull` also integrates the changes into your working branch.",
+   "tags": [
+    "basics"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-git-002",
+   "topic": "Git",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which command shows the changes you have staged but not yet committed?",
+   "options": [
+    "`git log`",
+    "`git diff --staged`",
+    "`git diff`",
+    "`git status -s`"
+   ],
+   "answer": 1,
+   "explanation": "`git diff` compares working tree to index (unstaged changes); `git diff --staged` (or `--cached`) compares index to HEAD.",
+   "tags": [
+    "basics",
+    "staging"
+   ],
+   "companies": [
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-git-003",
+   "topic": "Git",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the purpose of a `.gitignore` file?",
+   "options": [
+    "Encrypt files",
+    "Tell Git which untracked files or patterns to leave out of version control",
+    "Speed up clone",
+    "Delete files from the remote"
+   ],
+   "answer": 1,
+   "explanation": "Ignore build output, dependencies and secrets. Files already tracked stay tracked until removed with `git rm --cached`.",
+   "tags": [
+    "basics"
+   ],
+   "companies": [
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-git-004",
+   "topic": "Git",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is the key difference between `git merge` and `git rebase`?",
+   "options": [
+    "They are the same",
+    "Merge creates a merge commit preserving history; rebase replays your commits on top of another base, producing linear history with new commit hashes",
+    "Rebase works only remotely",
+    "Merge rewrites history; rebase does not"
+   ],
+   "answer": 1,
+   "explanation": "Rebase rewrites commits, so avoid rebasing branches others already pulled. Merge is non-destructive and preserves the true branching history.",
+   "tags": [
+    "merge",
+    "rebase"
+   ],
+   "companies": [
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-git-005",
+   "topic": "Git",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You committed to the wrong branch locally (not pushed). Which approach moves the commit to the right branch?",
+   "options": [
+    "Delete the repo",
+    "`git switch correct-branch`, `git cherry-pick <sha>`, then on the wrong branch `git reset --hard HEAD~1`",
+    "`git stash drop`",
+    "`git push --force`"
+   ],
+   "answer": 1,
+   "explanation": "Cherry-pick copies the commit to the right branch; reset removes it from the wrong one. Verify with `git reflog` if anything goes wrong.",
+   "tags": [
+    "cherry-pick",
+    "reset"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-git-006",
+   "topic": "Git",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Compare `git reset --soft`, `--mixed` and `--hard`, and `git revert`. When do you use each?",
+   "model_answer": "`reset` moves the current branch pointer. `--soft` keeps changes staged, `--mixed` (default) keeps them in the working tree unstaged, `--hard` discards them from index and working tree (dangerous, recoverable only via reflog). These rewrite local history, fine on unpublished work, to squash or redo commits. `git revert <sha>` creates a new commit that undoes a prior commit's changes without altering history, so it is the safe way to undo something already pushed to a shared branch. `git restore` handles file-level changes. Always check `git status` and `git reflog` before destructive commands.",
+   "explanation": "The distinction between rewriting and non-rewriting undo, and safety on shared branches.",
+   "tags": [
+    "reset",
+    "revert"
+   ],
+   "companies": [
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-git-007",
+   "topic": "Git",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does `git stash` do?",
+   "options": [
+    "Pushes to a stash remote",
+    "Temporarily shelves uncommitted changes so you can switch tasks, and lets you reapply them later",
+    "Squashes commits",
+    "Deletes uncommitted work"
+   ],
+   "answer": 1,
+   "explanation": "`git stash push -u` includes untracked files; `git stash pop` reapplies and drops the entry, `apply` keeps it.",
+   "tags": [
+    "stash"
+   ],
+   "companies": [
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-git-008",
+   "topic": "Git",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Compare trunk-based development with Git Flow. Which would you recommend for a team deploying many times a day?",
+   "model_answer": "Git Flow uses long-lived `develop`, `release`, `hotfix` and feature branches; it suits versioned/packaged software with scheduled releases but causes big merges and delayed integration. Trunk-based development has everyone integrating small changes into `main` at least daily (short-lived branches under ~1-2 days), hiding unfinished work behind feature flags, with strong CI, fast code review and automated tests so main is always releasable. For daily or hourly deployments I'd choose trunk-based: it reduces merge conflicts, enables continuous delivery, and measurably correlates with high delivery performance (DORA metrics). Requirements: reliable test suite, feature flag hygiene, branch protection, and release branches only when supporting multiple released versions.",
+   "explanation": "Candidates should tie branching strategy to release cadence and mention flags/CI prerequisites.",
+   "tags": [
+    "workflow",
+    "trunk-based"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-git-009",
+   "topic": "Git",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "You need to find which commit introduced a regression between a known good tag and HEAD. Which tool is best?",
+   "options": [
+    "`git gc`",
+    "`git bisect` with a test script",
+    "`git blame` on every file",
+    "`git shortlog`"
+   ],
+   "answer": 1,
+   "explanation": "`git bisect run ./test.sh` binary-searches history, finding the culprit in O(log n) steps.",
+   "tags": [
+    "bisect",
+    "debugging"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-git-010",
+   "topic": "Git",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "After a mistaken `git reset --hard`, you lost recent commits. How can you usually recover them?",
+   "options": [
+    "Use `git reflog` to find the previous HEAD position and `git reset --hard <sha>` or create a branch from it",
+    "Re-clone from scratch always",
+    "Run `git gc --prune=now`",
+    "They are gone forever"
+   ],
+   "answer": 0,
+   "explanation": "The reflog records where HEAD and branches pointed, typically for 90 days for reachable entries, so commits are recoverable until garbage collected.",
+   "tags": [
+    "reflog",
+    "recovery"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-git-011",
+   "topic": "Git",
+   "level": "Advanced",
+   "type": "open",
+   "question": "A large file with credentials was committed and pushed to a shared repository. What do you do?",
+   "model_answer": "Treat the secret as compromised: rotate/revoke it immediately, because removing it from history does not undo exposure (forks, clones, caches, CI logs). Then remove it from history with `git filter-repo` (or BFG), force-push all affected branches and tags, ask collaborators to re-clone or rebase onto the cleaned history, and ask the host (GitHub support) to purge cached views and PR refs if needed. Add the file pattern to `.gitignore`, enable secret scanning and push protection plus a pre-commit hook (gitleaks), and move secrets to a manager. Audit access logs for use of the leaked credential and write a short postmortem.",
+   "explanation": "Rotation first is the key signal; history rewrite is cleanup. Mention prevention tooling.",
+   "tags": [
+    "secrets",
+    "history"
+   ],
+   "companies": [
+    "Microsoft",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-git-012",
+   "topic": "Git",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "How does Git store a commit internally?",
+   "options": [
+    "As a zip archive",
+    "As an object containing a tree hash (snapshot), parent commit hashes, author/committer and message, identified by the SHA of its content",
+    "As a row in a database",
+    "As a diff against the previous commit"
+   ],
+   "answer": 1,
+   "explanation": "Git is a content-addressable store of blobs, trees, commits and tags. Commits point to full tree snapshots; packfiles later delta-compress them for storage. Changing any content or parent changes the hash, which is why rebase produces new commits.",
+   "tags": [
+    "internals"
+   ],
+   "companies": [
+    "Google",
+    "GitHub"
+   ]
+  },
+  {
+   "id": "q-git-013",
+   "topic": "Git",
+   "level": "Expert",
+   "type": "open",
+   "question": "How would you manage a large monorepo with hundreds of engineers using Git?",
+   "model_answer": "Scale issues are clone/fetch size, status speed, CI cost and ownership. Mitigations: partial clone (`--filter=blob:none`) and sparse-checkout so developers materialize only needed directories; shallow clones in CI; commit-graph, multi-pack-index, `fsmonitor` and Scalar/`git maintenance` for background optimization; Git LFS or an external store for large binaries. Use CODEOWNERS and path-based review rules, a merge queue to keep main green under heavy concurrency, and a build system with remote caching and affected-target detection (Bazel, Nx, Turborepo) so CI runs only impacted tests. Enforce conventions through linting and trunk-based flow with feature flags, tag releases per package, and consider tools like Sapling or Perforce-style virtual file systems for very large scale.",
+   "explanation": "Look for partial clone/sparse checkout, merge queues, affected-only builds, and ownership policies.",
+   "tags": [
+    "monorepo",
+    "scaling"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-test-001",
+   "topic": "Testing & QA",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which best describes the testing pyramid?",
+   "options": [
+    "Many slow end-to-end tests, few unit tests",
+    "Only manual tests",
+    "Many fast unit tests, fewer integration tests, and fewest end-to-end tests",
+    "Equal numbers of every type"
+   ],
+   "answer": 2,
+   "explanation": "Fast, isolated unit tests give quick feedback and are cheap to maintain; slower, broader tests cover wiring and critical journeys.",
+   "tags": [
+    "strategy"
+   ],
+   "companies": [
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-test-002",
+   "topic": "Testing & QA",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the difference between a bug's severity and priority?",
+   "options": [
+    "Severity is the impact of the defect on the system; priority is how soon it should be fixed",
+    "Severity is the age of the bug",
+    "Priority is set by QA, severity by sales",
+    "They are the same"
+   ],
+   "answer": 0,
+   "explanation": "A typo on the CEO's landing page can be low severity but high priority; a crash in a rarely used admin export may be high severity but lower priority.",
+   "tags": [
+    "qa",
+    "bugs"
+   ],
+   "companies": [
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-test-003",
+   "topic": "Testing & QA",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In a unit test, what is the purpose of a mock or stub?",
+   "options": [
+    "Speed up the CPU",
+    "Generate random data only",
+    "Encrypt the test",
+    "Replace a real dependency (network, database, clock) with a controlled test double so the unit is tested in isolation"
+   ],
+   "answer": 3,
+   "explanation": "Test doubles make tests deterministic and fast. Over-mocking couples tests to implementation, so prefer fakes and real in-memory collaborators when cheap.",
+   "tags": [
+    "unit-testing",
+    "mocks"
+   ],
+   "companies": [
+    "Microsoft",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-test-004",
+   "topic": "Testing & QA",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What makes a test 'flaky' and what is the correct response?",
+   "options": [
+    "Using too many assertions",
+    "It only fails on Fridays",
+    "It passes and fails without code changes (timing, shared state, order dependence, external services); find and fix the root cause or quarantine it",
+    "Passing always; ignore it"
+   ],
+   "answer": 2,
+   "explanation": "Flaky tests erode trust. Remove sleeps in favor of explicit waits, isolate state, control clocks and randomness, and track flake rates. Quarantine with an owner and deadline, never just retry blindly.",
+   "tags": [
+    "flaky",
+    "ci"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-test-005",
+   "topic": "Testing & QA",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How would you decide what to automate and what to test manually?",
+   "model_answer": "Automate what is repetitive, stable, high-value and deterministic: regression checks, API contract tests, critical user journeys (login, checkout), data-driven cases, smoke tests in CI. Keep manual or exploratory testing for new features still changing, usability, visual polish, complex scenarios needing human judgment, and one-off checks where automation cost exceeds value. Weigh ROI: frequency of execution, cost to write and maintain, stability of the UI, and risk if it breaks. Put most automation at the unit/API level and keep a thin set of UI end-to-end tests. Review the suite regularly, delete low-value tests, and track escaped defects to adjust the balance.",
+   "explanation": "Interviewers want risk-based reasoning and the pyramid, not 'automate everything'.",
+   "tags": [
+    "automation",
+    "strategy"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-test-006",
+   "topic": "Testing & QA",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does consumer-driven contract testing (e.g., Pact) verify?",
+   "options": [
+    "Database indexes",
+    "Browser compatibility",
+    "That a provider service still satisfies the exact requests and responses its consumers depend on, without running both together",
+    "UI layout"
+   ],
+   "answer": 2,
+   "explanation": "Consumers publish expectations as contracts; providers verify them in CI, catching breaking changes early and replacing slow, brittle integrated tests.",
+   "tags": [
+    "contract-testing",
+    "microservices"
+   ],
+   "companies": [
+    "Thoughtworks",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-test-007",
+   "topic": "Testing & QA",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design a test strategy for a new payment checkout feature.",
+   "model_answer": "Start with risk analysis: money movement, PCI, third-party dependencies, edge cases. Unit tests for pricing, tax, discount and state machine logic including rounding and currency. Contract tests with the PSP using its sandbox and recorded fixtures; integration tests for the order/payment/inventory flow with a real database in containers. Property-based tests for calculations (totals never negative, sum of parts equals total). A small set of end-to-end browser tests for the happy path, failed card, 3-D Secure, and retry/idempotency (double-click, network drop). Non-functional: load test for peak, security tests (authorization, tampering of price in request), accessibility, localization. Operational: feature flag with staged rollout, synthetic monitoring of checkout, alerting on conversion and error rate, and reconciliation reports. Test data management uses PSP test cards.",
+   "explanation": "Look for risk-driven layering, idempotency/failure scenarios, and production monitoring as part of quality.",
+   "tags": [
+    "strategy",
+    "payments"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-test-008",
+   "topic": "Testing & QA",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does mutation testing measure?",
+   "options": [
+    "Test suite effectiveness: whether tests fail when small deliberate changes (mutants) are introduced into the code",
+    "Performance under load",
+    "Code coverage percentage",
+    "Memory usage"
+   ],
+   "answer": 0,
+   "explanation": "High line coverage can still miss assertions. Surviving mutants reveal weak or missing assertions; tools include Stryker, PIT and mutmut.",
+   "tags": [
+    "mutation-testing",
+    "quality"
+   ],
+   "companies": [
+    "Google"
+   ]
+  },
+  {
+   "id": "q-test-009",
+   "topic": "Testing & QA",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which practice makes end-to-end browser tests the most reliable?",
+   "options": [
+    "Waiting on observable conditions (auto-waiting), stable `data-testid` selectors, isolated test data per test, and no dependence on test order",
+    "Selecting by CSS position",
+    "Sharing one user account across all tests",
+    "Fixed `sleep(5)` calls"
+   ],
+   "answer": 0,
+   "explanation": "Playwright/Cypress auto-wait on actionability. Independent, idempotent tests with their own data can run in parallel without interference.",
+   "tags": [
+    "e2e",
+    "playwright"
+   ],
+   "companies": [
+    "Microsoft",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-test-010",
+   "topic": "Testing & QA",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Your CI pipeline takes 50 minutes and developers dread it. How do you speed it up without reducing confidence?",
+   "model_answer": "Profile first: break down time by stage and by slowest tests. Parallelize and shard tests across runners; cache dependencies and build artifacts (remote cache); run only affected tests using dependency graphs; split fast checks (lint, unit) into an early gate with fail-fast, and move slow suites to post-merge or nightly with merge queue protection. Fix slow test causes (real sleeps, heavy setup, database per test) using transactions/rollbacks or testcontainers reuse, and use test impact analysis. Reduce flakiness so retries aren't needed. Use faster hardware where ROI is clear and track pipeline duration as a metric with a target (e.g., PR feedback under 10 min).",
+   "explanation": "Evidence-driven profiling, sharding, caching, test impact analysis, and a layered gate.",
+   "tags": [
+    "ci",
+    "performance"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-test-011",
+   "topic": "Testing & QA",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "Which property-based testing result is most valuable?",
+   "options": [
+    "Always passing quickly",
+    "100% line coverage",
+    "A faster test run",
+    "A shrunk minimal failing input found among many generated cases, revealing an edge case you did not think of"
+   ],
+   "answer": 3,
+   "explanation": "Tools like Hypothesis and fast-check generate many inputs against invariants, then shrink failures to a minimal reproducible example.",
+   "tags": [
+    "property-based",
+    "hypothesis"
+   ],
+   "companies": [
+    "Jane Street",
+    "Google"
+   ]
+  },
+  {
+   "id": "q-test-012",
+   "topic": "Testing & QA",
+   "level": "Expert",
+   "type": "open",
+   "question": "How do you test a distributed system for resilience (timeouts, partial failures, partitions)?",
+   "model_answer": "Combine layers. Unit-level: inject failures into dependencies via fakes, verify retries, timeouts, backoff with jitter, circuit breakers and idempotency. Integration: use Toxiproxy or similar to add latency, drops and connection resets between real services; test that queues redeliver and consumers dedupe. System-level: chaos engineering in staging then production with a hypothesis, a blast-radius limit and abort conditions (kill instances, zone failure, dependency black-holing, clock skew), measuring SLOs. For correctness under concurrency use deterministic simulation or Jepsen-style tests with a history checker (linearizability) and model-based or property-based tests. Load and soak tests reveal resource leaks and tail latency; game days train responders. Verify observability so failures are detected and diagnosable.",
+   "explanation": "Experts propose hypothesis-driven chaos, fault injection at multiple layers, and consistency checkers.",
+   "tags": [
+    "chaos",
+    "resilience"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "q-test-013",
+   "topic": "Testing & QA",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "Test coverage on a module is 95%, yet a serious bug shipped. Which explanation is MOST plausible?",
+   "options": [
+    "The bug was in the test framework",
+    "Coverage shows lines executed, not that behavior was asserted or that interesting inputs, interactions and states were tested",
+    "Coverage over 90% guarantees no bugs",
+    "Coverage tools are broken"
+   ],
+   "answer": 1,
+   "explanation": "Executing code without meaningful assertions, ignoring boundary values, concurrency and integration paths all let bugs hide. Use coverage to find untested code, not as proof of quality.",
+   "tags": [
+    "coverage",
+    "quality"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "q-ml-001",
+   "topic": "Machine Learning",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is overfitting?",
+   "options": [
+    "The model performs poorly on both training and test data",
+    "The model trains too fast",
+    "The model fits training data (including noise) very well but generalizes poorly to unseen data",
+    "The dataset is too small to load"
+   ],
+   "answer": 2,
+   "explanation": "Overfitting means high variance: low training error, high validation error. Remedies: more data, regularization, simpler models, early stopping, dropout, cross-validation.",
+   "tags": [
+    "generalization"
+   ],
+   "companies": [
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-ml-002",
+   "topic": "Machine Learning",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why do we split data into training, validation and test sets?",
+   "options": [
+    "Only for neural networks",
+    "To increase accuracy artificially",
+    "To make training faster",
+    "Training fits parameters, validation tunes hyperparameters and selects models, and the untouched test set gives an unbiased final estimate"
+   ],
+   "answer": 3,
+   "explanation": "Repeatedly tuning on the test set leaks information and yields optimistic estimates. Keep it for one final evaluation.",
+   "tags": [
+    "evaluation"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-ml-003",
+   "topic": "Machine Learning",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A fraud dataset has 0.5% positives. A model that always predicts 'not fraud' has 99.5% accuracy. What does this show?",
+   "options": [
+    "Accuracy is misleading on imbalanced data; use precision, recall, F1, PR-AUC or cost-based metrics",
+    "The data is mislabeled",
+    "The model is excellent",
+    "Fraud cannot be modeled"
+   ],
+   "answer": 0,
+   "explanation": "Accuracy hides failure on the minority class. Choose metrics aligned with business cost of false positives vs false negatives.",
+   "tags": [
+    "metrics",
+    "imbalance"
+   ],
+   "companies": [
+    "Stripe",
+    "PayPal"
+   ]
+  },
+  {
+   "id": "q-ml-004",
+   "topic": "Machine Learning",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does L2 regularization (ridge) do?",
+   "options": [
+    "Sets many weights exactly to zero",
+    "Increases the learning rate",
+    "Removes outliers",
+    "Adds a penalty on the squared magnitude of weights, shrinking them and reducing variance"
+   ],
+   "answer": 3,
+   "explanation": "L1 (lasso) tends to produce sparse solutions; L2 shrinks weights smoothly. Both trade a little bias for lower variance.",
+   "tags": [
+    "regularization"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-ml-005",
+   "topic": "Machine Learning",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You compute feature scaling statistics (mean, std) on the whole dataset before splitting into train and test. What is the problem?",
+   "options": [
+    "Data leakage: information from the test set influences preprocessing, giving optimistic results",
+    "It breaks cross-validation only for trees",
+    "It makes the model slower",
+    "None"
+   ],
+   "answer": 0,
+   "explanation": "Fit transformers on training data only, then apply to validation/test. Use pipelines so each CV fold fits preprocessing within the fold.",
+   "tags": [
+    "leakage",
+    "preprocessing"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-ml-006",
+   "topic": "Machine Learning",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which statement about bias and variance is correct?",
+   "options": [
+    "Bias is reduced by adding regularization",
+    "High bias means the model is too complex",
+    "High bias (underfitting) means a model too simple to capture the pattern; high variance means it is too sensitive to the training sample",
+    "Variance is the same as noise"
+   ],
+   "answer": 2,
+   "explanation": "Total error = bias^2 + variance + irreducible noise. Increasing model complexity lowers bias but raises variance; regularization does the reverse.",
+   "tags": [
+    "bias-variance"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-ml-007",
+   "topic": "Machine Learning",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Explain precision, recall and the ROC vs PR curve. When would you choose each metric?",
+   "model_answer": "Precision = TP/(TP+FP): of predicted positives, how many are correct. Recall = TP/(TP+FN): of actual positives, how many we catch. They trade off via the decision threshold. Favor recall when misses are costly (cancer screening, fraud review queue) and precision when false alarms are costly (auto-blocking accounts, spam in inbox). F1 is their harmonic mean; F-beta weights recall more. ROC-AUC measures ranking quality across thresholds using TPR vs FPR and is insensitive to class prior, which can look good under heavy imbalance because FPR stays small with many negatives. Precision-recall curves and PR-AUC focus on the positive class and are more informative with rare positives. In practice I pick the threshold from the business cost matrix, check calibration, and monitor the metric by segment.",
+   "explanation": "Interviewers look for threshold thinking, imbalance awareness, and tying metrics to business cost.",
+   "tags": [
+    "metrics",
+    "evaluation"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-ml-008",
+   "topic": "Machine Learning",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Why can gradient boosted trees (XGBoost/LightGBM) outperform deep networks on typical tabular data?",
+   "options": [
+    "Networks cannot process numbers",
+    "Boosting uses GPUs only",
+    "Trees are always better",
+    "Tabular data has heterogeneous features and limited rows; trees handle mixed types, missing values and non-smooth interactions with little tuning, while networks need more data and preprocessing"
+   ],
+   "answer": 3,
+   "explanation": "Empirical benchmarks repeatedly show tree ensembles as strong baselines on tabular data, though deep models can win with large data, embeddings or multimodal inputs.",
+   "tags": [
+    "tabular",
+    "boosting"
+   ],
+   "companies": [
+    "Amazon",
+    "Uber"
+   ]
+  },
+  {
+   "id": "q-ml-009",
+   "topic": "Machine Learning",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Walk through how you would take a model from notebook to production and keep it healthy.",
+   "model_answer": "Define the business metric and offline metrics, then build a reproducible pipeline: versioned data, feature definitions shared between training and serving (feature store) to avoid training-serving skew, tracked experiments (MLflow/W&B) and registered model artifacts. Validate with time-aware splits, slice analysis and fairness checks, and compare against a simple baseline. Deploy via containerized service or batch job; start with shadow mode, then canary or A/B test measuring business impact. Monitor input data drift, prediction distributions, latency, and delayed-label performance; alert and retrain on schedule or trigger. Keep rollback, model cards, reproducibility (seeds, environment), and CI tests for data schemas and model quality gates. Consider cost, latency budgets, explainability needs and privacy.",
+   "explanation": "Look for training-serving skew, monitoring/drift, staged rollout, and baselines, not just 'wrap in Flask'.",
+   "tags": [
+    "mlops",
+    "deployment"
+   ],
+   "companies": [
+    "Uber",
+    "Netflix",
+    "Google"
+   ]
+  },
+  {
+   "id": "q-ml-010",
+   "topic": "Machine Learning",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What problem do residual connections in deep networks mainly address?",
+   "options": [
+    "Class imbalance",
+    "Overfitting",
+    "Slow data loading",
+    "Degradation and vanishing gradients in very deep networks, by giving gradients a direct path via identity shortcuts"
+   ],
+   "answer": 3,
+   "explanation": "Learning residual functions F(x) = H(x) - x makes optimization easier; gradients flow through the skip path. This enabled ResNets with hundreds of layers and is fundamental to Transformers.",
+   "tags": [
+    "deep-learning"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-ml-011",
+   "topic": "Machine Learning",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Explain the Transformer attention mechanism and its computational cost.",
+   "model_answer": "For each token the model computes query, key and value vectors via learned projections. Attention scores are Q K^T scaled by sqrt(d_k), passed through softmax to get weights, and used to take a weighted sum of values, letting each token aggregate information from all others in parallel. Multi-head attention runs several of these in separate subspaces and concatenates results, capturing different relations. Positional information is added via positional encodings or rotary embeddings, and decoder models use a causal mask. Cost: time and memory O(n^2 d) for sequence length n because of the n x n score matrix, which limits long contexts; mitigations include FlashAttention (IO-aware exact kernel), sparse/sliding-window attention, KV caching for decoding, grouped-query attention and linear attention approximations. Compared to RNNs, attention enables parallel training and direct long-range dependencies.",
+   "explanation": "Check the Q/K/V math, masking, why quadratic cost matters, and practical optimizations such as KV cache.",
+   "tags": [
+    "transformers",
+    "attention"
+   ],
+   "companies": [
+    "Google",
+    "OpenAI",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-ml-012",
+   "topic": "Machine Learning",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "A model's validation score is great with random K-fold CV, but performs badly after deployment on a time-series demand forecast. What is the likely cause?",
+   "options": [
+    "Too few trees",
+    "The learning rate",
+    "Temporal leakage: random folds let the model train on the future relative to validation points; use forward-chaining (time-based) splits and features available at prediction time",
+    "Using Python"
+   ],
+   "answer": 2,
+   "explanation": "Autocorrelated data violates the i.i.d. assumption of random CV. Use expanding or sliding window validation with gaps, and compute lag features only from past data.",
+   "tags": [
+    "leakage",
+    "time-series"
+   ],
+   "companies": [
+    "Amazon",
+    "Uber"
+   ]
+  },
+  {
+   "id": "q-ml-013",
+   "topic": "Machine Learning",
+   "level": "Expert",
+   "type": "open",
+   "question": "How do you detect and handle bias, leakage and unreliable evaluation in an ML system that approves loans?",
+   "model_answer": "Leakage: audit features for post-outcome information (e.g., collections status, later-updated fields), split by time and by customer/group to avoid entity leakage, fit preprocessing within folds, and check suspiciously strong features via importance and ablations. Evaluation: use out-of-time validation, calibration plots (is a 10% score really 10%?), cost-sensitive thresholds, confidence intervals via bootstrap, and compare against a simple baseline and the incumbent policy; beware selection bias since we only observe outcomes for approved applicants (reject inference, or exploration/randomized approvals). Fairness: define the fairness criterion with legal/policy input (demographic parity, equal opportunity, calibration within groups cannot all hold simultaneously when base rates differ), measure error rates by protected group and proxies (ZIP code), mitigate via data, constraints, post-processing thresholds, and document with model cards. Governance: explainability (SHAP, reason codes for adverse action), monitoring for drift and disparate impact, human review, and audit trails. Bias-variance and regularization choices should be tested per segment, not only globally.",
+   "explanation": "Expert answers surface selection bias, incompatibility among fairness metrics, calibration, and time/entity-aware splits.",
+   "tags": [
+    "fairness",
+    "leakage",
+    "evaluation"
+   ],
+   "companies": [
+    "Google",
+    "Capital One",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "q-ds-001",
+   "topic": "Data Science",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which measure of central tendency is least affected by extreme outliers?",
+   "options": [
+    "Variance",
+    "Range",
+    "Median",
+    "Mean"
+   ],
+   "answer": 2,
+   "explanation": "The median depends on rank, not magnitude, so a single huge value hardly moves it. The mean is pulled toward outliers.",
+   "tags": [
+    "statistics"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-ds-002",
+   "topic": "Data Science",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In pandas, which call best counts missing values per column?",
+   "options": [
+    "`df.missing()`",
+    "`df.isna().sum()`",
+    "`len(df.dropna())`",
+    "`df.count_na()`"
+   ],
+   "answer": 1,
+   "explanation": "`isna()` yields a boolean frame; summing treats True as 1. `dropna()` drops rows rather than counting.",
+   "tags": [
+    "pandas",
+    "cleaning"
+   ],
+   "companies": [
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-ds-003",
+   "topic": "Data Science",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does a p-value represent?",
+   "options": [
+    "The effect size",
+    "The probability of replication",
+    "The probability the null hypothesis is true",
+    "The probability of observing data at least as extreme as ours if the null hypothesis were true"
+   ],
+   "answer": 3,
+   "explanation": "A p-value is conditional on the null; it is not the probability that the hypothesis is true, and says nothing about practical significance.",
+   "tags": [
+    "statistics",
+    "hypothesis-testing"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-ds-004",
+   "topic": "Data Science",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You run an A/B test and check results daily, stopping as soon as p < 0.05. What is the problem?",
+   "options": [
+    "A/B tests need exactly two users",
+    "Repeated peeking inflates the false-positive rate; fix the sample size in advance or use sequential testing methods",
+    "None",
+    "The p-value gets smaller"
+   ],
+   "answer": 1,
+   "explanation": "Optional stopping breaks the fixed-horizon assumption. Use power analysis to size the test, or alpha-spending / always-valid inference.",
+   "tags": [
+    "ab-testing"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix",
+    "Airbnb"
+   ]
+  },
+  {
+   "id": "q-ds-005",
+   "topic": "Data Science",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How would you design an A/B test for a new checkout page, including metrics and sample size?",
+   "model_answer": "Define the hypothesis and a primary metric (checkout conversion rate), guardrails (revenue per visitor, latency, refund rate) and a decision rule. Choose the randomization unit (user, not session) to avoid contamination and ensure consistency; consider network effects. Estimate baseline rate and minimum detectable effect, then compute sample size from power (80%) and alpha (5%); derive duration to cover full weekly cycles. Check for sample ratio mismatch, run an A/A test to validate the pipeline, pre-register analysis, avoid peeking, and correct for multiple comparisons if many metrics or segments. Analyze with confidence intervals, check novelty effects and heterogeneous effects by segment, then decide on launch with practical significance, not only statistical. Use CUPED for variance reduction if useful.",
+   "explanation": "Interviewers want unit of randomization, power analysis, guardrails, SRM checks and discipline against peeking.",
+   "tags": [
+    "ab-testing",
+    "experimentation"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix",
+    "Airbnb"
+   ]
+  },
+  {
+   "id": "q-ds-006",
+   "topic": "Data Science",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which technique is best for deciding whether two categorical variables are associated?",
+   "options": [
+    "Chi-square test of independence",
+    "Pearson correlation",
+    "Paired t-test",
+    "Linear regression with no intercept"
+   ],
+   "answer": 0,
+   "explanation": "A chi-square test compares observed counts in a contingency table to those expected under independence. Check expected cell counts (>= 5) or use Fisher's exact test.",
+   "tags": [
+    "statistics"
+   ],
+   "companies": [
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-ds-007",
+   "topic": "Data Science",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why can correlation not be taken as causation? Which scenario illustrates a confounder?",
+   "options": [
+    "Ice cream sales and drowning both rise because of hot weather",
+    "A small sample",
+    "Two variables with different units",
+    "A perfectly linear relationship"
+   ],
+   "answer": 0,
+   "explanation": "A confounder (temperature) influences both variables producing a spurious association. Randomized experiments or causal methods (adjustment, instrumental variables, difference-in-differences) are needed for causal claims.",
+   "tags": [
+    "causality"
+   ],
+   "companies": [
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "q-ds-008",
+   "topic": "Data Science",
+   "level": "Advanced",
+   "type": "open",
+   "question": "A key business metric dropped 8% week over week. How do you investigate?",
+   "model_answer": "First validate the data: check pipeline failures, logging changes, definition changes, tracking bugs and late-arriving data, and compare with an independent source. Then check whether the drop is within normal variation using seasonality (day of week, holidays) and historical volatility. Decompose the metric (e.g., revenue = traffic x conversion x average order value) and slice by dimensions: platform, geo, channel, new vs returning users, product, app version, time, to localize the drop. Correlate with events: releases, experiments, outages, campaigns, competitor moves, pricing changes. Form hypotheses and test them with data, quantify impact per cause, then communicate findings with confidence levels, recommended actions and monitoring added to catch it earlier.",
+   "explanation": "Look for data-quality checks first, structured decomposition, and clear communication, not guessing at causes.",
+   "tags": [
+    "analytics",
+    "root-cause"
+   ],
+   "companies": [
+    "Meta",
+    "Uber",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-ds-009",
+   "topic": "Data Science",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "How does SQL's window function `ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ts DESC)` help get each user's latest event?",
+   "options": [
+    "It numbers rows per user from newest to oldest; filtering on row number = 1 returns each user's most recent event",
+    "It groups rows into one",
+    "It deletes older rows",
+    "It sorts the whole table once"
+   ],
+   "answer": 0,
+   "explanation": "Window functions compute across related rows without collapsing them. Wrap in a subquery/CTE and filter `rn = 1`.",
+   "tags": [
+    "sql",
+    "window-functions"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon",
+    "Airbnb"
+   ]
+  },
+  {
+   "id": "q-ds-010",
+   "topic": "Data Science",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Explain how you would handle missing data and when each approach is appropriate.",
+   "model_answer": "First understand the mechanism: MCAR (random), MAR (depends on observed variables) or MNAR (depends on the missing value itself). Deleting rows is acceptable only when missingness is small and MCAR. Simple imputation (mean/median/mode) is quick but shrinks variance and can bias; add a missing-indicator feature when missingness is informative. Better: model-based imputation (KNN, iterative/MICE) or multiple imputation to carry uncertainty into inference. Tree-based models like XGBoost handle missing values natively. For time series use forward-fill or interpolation carefully. Always fit imputers on training data only to avoid leakage, compare approaches via validation, and document assumptions. For MNAR, consider modeling the missingness or collecting more data.",
+   "explanation": "Strong answers start from the missingness mechanism and mention leakage and indicator features.",
+   "tags": [
+    "cleaning",
+    "imputation"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-ds-011",
+   "topic": "Data Science",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which situation calls for a non-parametric test such as Mann-Whitney U rather than a t-test?",
+   "options": [
+    "Large normally distributed samples",
+    "When you want a smaller p-value",
+    "Small samples with strongly skewed data or ordinal outcomes where normality is not plausible",
+    "Paired data only"
+   ],
+   "answer": 2,
+   "explanation": "Non-parametric tests rely on ranks and make fewer distributional assumptions; with large samples the t-test is often still robust due to the central limit theorem.",
+   "tags": [
+    "statistics"
+   ],
+   "companies": [
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-ds-012",
+   "topic": "Data Science",
+   "level": "Expert",
+   "type": "open",
+   "question": "Explain the bootstrap and use it to quantify uncertainty for a ratio metric such as revenue per user.",
+   "model_answer": "The bootstrap approximates the sampling distribution of a statistic by resampling the observed data with replacement many times (e.g., 10,000), recomputing the statistic on each resample, and using the distribution of results for standard errors and confidence intervals (percentile or BCa). For revenue per user, resample users (the independent unit) not rows or sessions, recompute total revenue / number of users per resample, and report the 2.5th and 97.5th percentiles. It handles awkward statistics like ratios, medians and percentiles where closed forms are messy, and heavy-tailed revenue distributions. Limitations: needs i.i.d. observations (use block bootstrap for time series, cluster bootstrap for grouped data), struggles with extreme quantiles and tiny samples, and is computationally heavier. Compare to the delta method for ratios, which is faster for large samples.",
+   "explanation": "Check understanding of the resampling unit, assumptions, variants, and limitations.",
+   "tags": [
+    "bootstrap",
+    "statistics"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "q-ds-013",
+   "topic": "Data Science",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "Simpson's paradox appears when:",
+   "options": [
+    "Aggregated data show a trend that reverses or vanishes when data are split by a lurking grouping variable",
+    "The mean equals the median",
+    "A sample is too small",
+    "Two variables are perfectly correlated"
+   ],
+   "answer": 0,
+   "explanation": "Group sizes differ across subgroups, so the pooled association can have the opposite sign of the within-group associations. Always examine confounders and the causal structure before choosing aggregated or stratified analysis.",
+   "tags": [
+    "statistics",
+    "causality"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "q-mob-001",
+   "topic": "Mobile Development",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why should network calls never run on the main (UI) thread in Android or iOS apps?",
+   "options": [
+    "The network is too slow to use",
+    "It uses more battery on Wi-Fi",
+    "Mobile OSs forbid networking",
+    "Blocking the main thread freezes the UI, causing jank, ANRs on Android and watchdog kills"
+   ],
+   "answer": 3,
+   "explanation": "The main thread renders and handles input. Use coroutines/async-await, URLSession or Retrofit on background threads and update the UI on the main thread.",
+   "tags": [
+    "threading",
+    "performance"
+   ],
+   "companies": [
+    "Google",
+    "Apple",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-mob-002",
+   "topic": "Mobile Development",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the main difference between native and cross-platform (React Native/Flutter) development?",
+   "options": [
+    "Cross-platform is always faster",
+    "There is no difference",
+    "Native uses each platform's language and SDK for best performance and API access; cross-platform shares a single codebase across platforms with some abstraction trade-offs",
+    "Native apps cannot be published"
+   ],
+   "answer": 2,
+   "explanation": "Cross-platform reduces duplicated work, while native gives immediate access to new platform features and best performance and UX fidelity. The choice depends on team skills, performance needs and product scope.",
+   "tags": [
+    "architecture"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "q-mob-003",
+   "topic": "Mobile Development",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Where should sensitive data such as auth tokens be stored on a mobile device?",
+   "options": [
+    "In external storage",
+    "The platform secure store (Android Keystore / iOS Keychain)",
+    "In app source code",
+    "SharedPreferences/UserDefaults in plain text"
+   ],
+   "answer": 1,
+   "explanation": "The Keychain and Keystore provide hardware-backed encrypted storage. Never hard-code secrets in the app binary; they can be extracted.",
+   "tags": [
+    "security",
+    "storage"
+   ],
+   "companies": [
+    "Apple",
+    "Google"
+   ]
+  },
+  {
+   "id": "q-mob-004",
+   "topic": "Mobile Development",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "An Android Activity is destroyed and recreated on screen rotation. What is the recommended way to preserve UI state across it?",
+   "options": [
+    "ViewModel for in-memory UI state plus `rememberSaveable`/saved state for small data that must survive process death",
+    "Global static variables",
+    "Disable rotation permanently",
+    "Write to a log file"
+   ],
+   "answer": 0,
+   "explanation": "ViewModel survives configuration changes but not process death; use SavedStateHandle or persistent storage for what must survive.",
+   "tags": [
+    "android",
+    "lifecycle"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "q-mob-005",
+   "topic": "Mobile Development",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "In iOS, which pattern avoids a retain cycle between a view controller and a closure it stores?",
+   "options": [
+    "Using `[weak self]` (or `unowned`) in the closure's capture list",
+    "Making every property static",
+    "Calling `deinit` manually",
+    "Using a global variable"
+   ],
+   "answer": 0,
+   "explanation": "Strong reference cycles prevent deallocation under ARC. Capture `self` weakly when the closure outlives or is owned by self.",
+   "tags": [
+    "ios",
+    "memory"
+   ],
+   "companies": [
+    "Apple",
+    "Uber"
+   ]
+  },
+  {
+   "id": "q-mob-006",
+   "topic": "Mobile Development",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you design an offline-first mobile app that syncs data with a backend?",
+   "model_answer": "Treat the local database (SQLite/Room/Core Data/Realm) as the source of truth for the UI; the UI observes it reactively. Writes go to the local DB and an outbox/queue with idempotent operations (client-generated IDs) that a sync worker (WorkManager, BackgroundTasks) flushes when connectivity returns, with retry and exponential backoff. Pull changes with incremental sync tokens (`updated_since` cursors) and handle deletes through tombstones. Resolve conflicts by a defined policy: last-write-wins with server timestamps, field-level merges, or CRDT/operation-based merges for collaborative data; surface unresolved conflicts to users. Handle partial failures, schema migrations, encryption of local data, and data expiry. Show sync state in UI, test with network conditioning, and minimize battery by batching.",
+   "explanation": "Look for local source of truth, outbox with idempotency, delta sync, tombstones and explicit conflict policy.",
+   "tags": [
+    "offline",
+    "sync"
+   ],
+   "companies": [
+    "Uber",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-mob-007",
+   "topic": "Mobile Development",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is the best practice for requesting runtime permissions (camera, location)?",
+   "options": [
+    "Hide the app settings",
+    "Request all permissions at first launch",
+    "Ask in context when the feature is needed, explain why, and degrade gracefully if denied",
+    "Never ask; just use the API"
+   ],
+   "answer": 2,
+   "explanation": "In-context requests have much higher grant rates and respect user trust; handle denial and 'don't ask again' with a path to settings.",
+   "tags": [
+    "permissions",
+    "ux"
+   ],
+   "companies": [
+    "Apple",
+    "Google"
+   ]
+  },
+  {
+   "id": "q-mob-008",
+   "topic": "Mobile Development",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Your React Native app drops frames when scrolling a long list. How do you fix it?",
+   "model_answer": "Profile first (Flipper/React DevTools profiler, systrace, Perf Monitor) to see whether the JS thread or UI thread is the bottleneck. Use `FlatList`/`FlashList` instead of ScrollView for virtualization; provide `keyExtractor`, `getItemLayout` when heights are fixed, tune `windowSize`, `initialNumToRender`, `removeClippedSubviews`. Memoize row components and stable callbacks, avoid anonymous functions and inline styles in `renderItem`, avoid heavy work during scroll, and move animation to the native driver or Reanimated worklets. Optimize images (resize server-side, cache with FastImage/expo-image, correct dimensions), and with the new architecture (Fabric/JSI) reduce bridge overhead. Offload expensive computation to background tasks and verify improvements on a low-end physical device in release mode.",
+   "explanation": "Expect profiling first, list virtualization, row memoization, native-driver animation and low-end device testing.",
+   "tags": [
+    "react-native",
+    "performance"
+   ],
+   "companies": [
+    "Meta",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "q-mob-009",
+   "topic": "Mobile Development",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Why is certificate pinning used in mobile apps, and what is its main operational risk?",
+   "options": [
+    "It encrypts local storage; risk is battery",
+    "It speeds up TLS; risk is none",
+    "It restricts trusted servers to specific certificates/public keys, defeating rogue CAs and MITM proxies; the risk is breaking all clients when certificates rotate without a backup pin or update path",
+    "It validates user identity"
+   ],
+   "answer": 2,
+   "explanation": "Pin the public key (SPKI) with backup pins and a rollout plan for rotation; consider remote kill-switch or config. Pinning can also be bypassed on rooted devices, so it is defense in depth.",
+   "tags": [
+    "security",
+    "tls"
+   ],
+   "companies": [
+    "Google",
+    "Apple"
+   ]
+  },
+  {
+   "id": "q-mob-010",
+   "topic": "Mobile Development",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How would you structure a large mobile codebase for testability and team scalability?",
+   "model_answer": "Use a clear architecture such as MVVM/MVI (or Clean Architecture) separating UI, presentation state, domain use-cases and data repositories, with dependency injection (Hilt/Koin on Android, protocol-based DI on iOS) so units are testable with fakes. Modularize by feature and layer (feature modules, shared core/design-system modules) to enable parallel work, faster incremental builds and enforced dependency direction. Define unidirectional data flow and immutable UI state; keep platform APIs behind interfaces. Testing: unit tests for domain/ViewModels, screenshot tests for UI components, a few UI/instrumentation end-to-end flows. Add CI with lint, static analysis, build caching, feature flags for gradual rollout, staged store releases, crash reporting and analytics, and clear code ownership.",
+   "explanation": "Look for modularization, DI, unidirectional state, and release practices unique to mobile (staged rollouts, flags).",
+   "tags": [
+    "architecture",
+    "modularization"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Airbnb"
+   ]
+  },
+  {
+   "id": "q-mob-011",
+   "topic": "Mobile Development",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Why is the iOS App Transport Security (ATS) requirement relevant for your networking code?",
+   "options": [
+    "It limits app size",
+    "It encrypts the UI",
+    "It requires HTTPS connections with modern TLS by default; exceptions must be declared and justified",
+    "It disables push notifications"
+   ],
+   "answer": 2,
+   "explanation": "ATS blocks cleartext HTTP unless an exception is configured in Info.plist. Android has an equivalent in Network Security Config / cleartext traffic restrictions.",
+   "tags": [
+    "ios",
+    "security"
+   ],
+   "companies": [
+    "Apple"
+   ]
+  },
+  {
+   "id": "q-mob-012",
+   "topic": "Mobile Development",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "Which approach best reduces app startup time on Android?",
+   "options": [
+    "Adding more splash screens",
+    "Increasing the heap size",
+    "Initializing every SDK in `Application.onCreate` synchronously",
+    "Deferring non-critical initialization, using Baseline Profiles/App Startup, avoiding heavy work on the main thread, and measuring with Macrobenchmark"
+   ],
+   "answer": 3,
+   "explanation": "Cold start time is dominated by process creation, Application init and first-frame rendering. Baseline Profiles ahead-of-time compile hot paths, and lazy initialization removes needless work.",
+   "tags": [
+    "android",
+    "performance"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "q-mob-013",
+   "topic": "Mobile Development",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design the push notification architecture for a messaging app with millions of devices, including token management and delivery guarantees.",
+   "model_answer": "Clients register for APNs (iOS) and FCM (Android) tokens and upload them with device ID and user ID to a Devices service, refreshing on token rotation; stale or invalid tokens are removed when providers return unregistered errors. A notification service consumes message events from a queue, looks up user preferences, presence and active devices, and skips push if the user is online and the message was delivered over the socket. It builds platform payloads (alert vs silent/data push, collapse keys/thread IDs, TTL and priority), sends via HTTP/2 to APNs and FCM with batching, connection pooling and retries with backoff, honoring provider rate limits. Delivery is best-effort: providers may drop or delay, so the app syncs missed messages on launch and via background fetch; the push is a hint to sync, and payloads avoid sensitive content (use notification service extensions to decrypt for E2EE). Track send, delivered and open metrics, dedupe through message IDs, localize content, and respect quiet hours and OS limits (iOS background budget, Android Doze and app standby buckets).",
+   "explanation": "Expert answers treat push as unreliable hints, manage token lifecycle, and respect platform constraints and privacy.",
+   "tags": [
+    "push",
+    "apns",
+    "fcm"
+   ],
+   "companies": [
+    "Meta",
+    "Uber",
+    "Slack"
+   ]
+  },
+  {
+   "id": "q-hr-001",
+   "topic": "Behavioral & HR",
+   "level": "Basic",
+   "type": "open",
+   "question": "Tell me about yourself.",
+   "model_answer": "Use a present-past-future structure in about 90 seconds. Present: 'I'm a backend engineer with six years of experience, currently leading payments APIs at a fintech startup, where I own services processing about 2M transactions a day.' Past: two or three relevant highlights, such as moving from a monolith to services and cutting p99 latency by 40%. Future: why this role fits, for example 'I'm looking for a remote, product-focused team where I can work on reliability at scale, which is why this role caught my eye.' Keep it relevant to the job, quantify results, and end with a hook that invites a follow-up.",
+   "explanation": "Interviewers (and remote vetting screens at Toptal, Turing, Lemon.io, A.Team and Braintrust) use this to judge clarity, seniority and relevance in the first minute. Avoid reciting a resume, personal history from childhood, or negativity about past employers.",
+   "tags": [
+    "intro",
+    "communication"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-hr-002",
+   "topic": "Behavioral & HR",
+   "level": "Basic",
+   "type": "open",
+   "question": "Why do you want to work for this company, and why this role?",
+   "model_answer": "Show research and connect it to your strengths. Example: 'I've followed your engineering blog on moving to event-driven architecture, and the problem of reconciling payments across regions is exactly the type of distributed-systems challenge I enjoy. In my last role I built an idempotent ledger service, so I can contribute quickly. I also value your remote-first culture and written communication, which is where I do my best work.' Mention product, mission, tech and team, be specific and honest, and tie to what you can give, not only what you get.",
+   "explanation": "Hiring managers want genuine motivation and evidence you did homework. Generic flattery or answers focused only on salary and perks signal low commitment. For remote networks, mention how you work well asynchronously.",
+   "tags": [
+    "motivation"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-hr-003",
+   "topic": "Behavioral & HR",
+   "level": "Basic",
+   "type": "open",
+   "question": "What are your strengths and weaknesses?",
+   "model_answer": "Strengths: pick two that matter for the job and prove them with evidence. 'I'm strong at debugging production issues methodically; last year I traced an intermittent timeout to connection pool exhaustion and cut errors by 90%.' Weakness: choose a real, non-critical one with active improvement. 'I used to take on too much myself instead of delegating or asking for help early. I now timebox problems to two hours before asking, and I write down risks in standups; it has reduced my blockers noticeably.' Avoid fake weaknesses like 'perfectionism' or ones fatal to the role.",
+   "explanation": "Interviewers assess self-awareness and coachability. They look for honesty, a concrete example and evidence of improvement.",
+   "tags": [
+    "self-awareness"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-hr-004",
+   "topic": "Behavioral & HR",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Tell me about a time you had a conflict with a teammate. How did you resolve it?",
+   "model_answer": "Situation: A senior colleague and I disagreed on whether to adopt a new message queue for an order pipeline, and review comments were getting tense. Task: I needed to unblock the project while keeping the relationship healthy. Action: I proposed a 30-minute call rather than continuing in comments, listened to understand their concerns (operational burden, team inexperience), acknowledged them, and suggested we define decision criteria together: reliability, cost, on-call load. We ran a 2-day spike on both options and compared results. Result: We chose the simpler managed queue, shipped two weeks earlier, and our collaboration improved; we later paired on the runbook. Lesson: separate people from the problem and use data.",
+   "explanation": "Show empathy, ownership and a constructive outcome, not winning. Remote companies especially value moving from text conflict to a call and documenting the decision. Avoid blaming or painting the other person as incompetent.",
+   "tags": [
+    "conflict",
+    "star"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-hr-005",
+   "topic": "Behavioral & HR",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Describe a time you failed or made a significant mistake.",
+   "model_answer": "Situation: I deployed a database migration on a Friday that locked a large table and slowed checkout for 12 minutes. Task: Restore service and prevent repeat. Action: I rolled back within minutes, posted updates in the incident channel, then led a blameless postmortem. I identified that I had tested on a small dataset and skipped a staging rehearsal. We introduced an online-migration checklist (pt-osc/gh-ost style, lock timeouts), production-sized staging data, and a no-risky-deploy-Friday guideline with exceptions needing approval. Result: no migration incidents in the following year, and the checklist was adopted by two other teams. I own mistakes quickly and turn them into process.",
+   "explanation": "Interviewers look for accountability, speed of mitigation and systemic learning. Avoid 'no failures', blaming others, or stories with no lesson.",
+   "tags": [
+    "failure",
+    "ownership"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-hr-006",
+   "topic": "Behavioral & HR",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Tell me about a time you disagreed with your manager or a technical decision.",
+   "model_answer": "Situation: My manager wanted to ship a feature using an in-house cache layer to meet a deadline. Task: Voice concerns about maintainability without blocking the team. Action: I wrote a one-page comparison with risks and effort estimates (3 days for Redis vs 1 day in-house but ongoing maintenance), asked clarifying questions about the deadline's flexibility and presented it privately. My manager chose the in-house path for the launch but agreed to a follow-up ticket to migrate. Result: We hit the date, migrated within the next sprint and avoided a later outage. I learned to disagree with data, respect the final call, and commit fully once decided ('disagree and commit').",
+   "explanation": "They want respectful, evidence-based pushback and commitment afterwards. Red flags are passive aggression, going around your manager, or never disagreeing.",
+   "tags": [
+    "disagreement",
+    "leadership"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-hr-007",
+   "topic": "Behavioral & HR",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Tell me about a time you had to meet a tight deadline with incomplete requirements.",
+   "model_answer": "Situation: A client needed a reporting dashboard in three weeks, but requirements were vague. Task: Deliver value on time while reducing the risk of building the wrong thing. Action: I ran a 60-minute discovery call, wrote down assumptions and a prioritized scope (must/should/could), and shared clickable mockups within two days for feedback. We shipped a thin end-to-end slice by week one and iterated weekly. I flagged two items that would not fit and negotiated them into phase two. Result: Delivered on time, the client approved with only minor changes, and renewed the contract. Key was making assumptions explicit and delivering incrementally.",
+   "explanation": "Look for proactive clarification, prioritization, scope negotiation and communication. For contract/remote roles this shows client-facing maturity.",
+   "tags": [
+    "deadlines",
+    "ambiguity"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-hr-008",
+   "topic": "Behavioral & HR",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Tell me about a time you mentored or led someone without formal authority.",
+   "model_answer": "Situation: A junior engineer was struggling with code reviews and slow delivery. Task: Help them grow while keeping the team on track. Action: I set up a weekly 30-minute 1:1, agreed on goals with them, paired on two features, and taught them to break work into small PRs with clear descriptions. I gave specific, kind feedback and let them present the next design doc. Result: Their PR cycle time dropped from five days to two, they took ownership of a service, and were promoted within a year. I also documented onboarding tips that the team reused.",
+   "explanation": "Seniors are expected to multiply others. Interviewers want a concrete method, measurable growth and humility; not just 'I helped when asked'.",
+   "tags": [
+    "mentoring",
+    "leadership"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-hr-009",
+   "topic": "Behavioral & HR",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Describe a time you influenced a technical direction across teams.",
+   "model_answer": "Situation: Three teams each implemented their own authentication handling with inconsistent bugs. Task: Propose a shared approach without authority over those teams. Action: I gathered incident data showing two security issues and duplicated effort, drafted an RFC with options (shared library vs gateway), socialized it individually with each tech lead to address concerns, and ran a proof of concept. I measured benefits: 40% less code and unified audit logs. Result: The RFC was approved, and we migrated in two quarters, with an owner team for ongoing maintenance. I learned to build alignment before the formal meeting and to make adoption easy.",
+   "explanation": "Look for written proposals, stakeholder management, data-driven persuasion and follow-through. Staff-level signals.",
+   "tags": [
+    "influence",
+    "rfc"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "q-hr-010",
+   "topic": "Behavioral & HR",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Tell me about a time you made a decision with incomplete data. How did you de-risk it?",
+   "model_answer": "Situation: We had to choose a database for a new analytics feature before load patterns were known. Task: Decide within a week without stalling the team. Action: I identified key unknowns (write rate, query shape), wrote an expected-range model, chose a boring, well-understood option (Postgres with partitioning) behind a repository interface, and defined metrics and a trigger for revisiting (p95 query time or storage growth). I documented the decision in an ADR as a reversible, 'two-way door' choice. Result: It handled 10x the initial estimate and we avoided premature complexity. Lesson: make reversible decisions quickly, instrument, and revisit with data.",
+   "explanation": "They evaluate judgment: reversibility, assumptions made explicit, metrics to trigger a rethink. Avoid analysis paralysis or reckless guessing.",
+   "tags": [
+    "decision-making"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-hr-011",
+   "topic": "Behavioral & HR",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How do you handle receiving critical feedback you disagree with?",
+   "model_answer": "I first listen without defending and ask for specific examples to understand the impact. Then I separate delivery from content, reflect for a day if needed, and look for data supporting or refuting it, perhaps asking a trusted peer. If it is valid, I thank them, commit to a change and follow up later to show progress. If I still disagree, I explain my perspective calmly with evidence and ask what outcome they want. Example: A reviewer said my PRs were too large; I disagreed at first but measured that review time scaled with size, so I split work into stacked PRs and review turnaround improved by half.",
+   "explanation": "Interviewers test coachability and maturity. Defensive reactions are red flags; so is accepting everything uncritically.",
+   "tags": [
+    "feedback",
+    "growth"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "q-hr-012",
+   "topic": "Behavioral & HR",
+   "level": "Expert",
+   "type": "open",
+   "question": "Tell me about a time you had to deliver a difficult message to leadership or a client, such as a missed deadline.",
+   "model_answer": "Situation: Midway through a quarter-long migration, we discovered a data-quality issue that would push delivery back by three weeks. Task: Inform the VP and client early and maintain trust. Action: I verified the cause and impact, prepared options (cut scope, add a contractor, move the date) with costs and risks and a recommendation, and requested a short meeting the same day rather than hiding it in a status report. I owned the miss, avoided excuses and set weekly updates. Result: Leadership chose the scope cut, the client appreciated the transparency, and we delivered the reduced scope on the new date. Bad news early with options beats surprises late.",
+   "explanation": "Strong candidates bring bad news early, with facts, options and a recommendation. For remote contractors this builds the trust that long-term engagements depend on.",
+   "tags": [
+    "communication",
+    "stakeholders"
+   ],
+   "companies": [
+    "Toptal",
+    "Amazon",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "q-hr-013",
+   "topic": "Behavioral & HR",
+   "level": "Expert",
+   "type": "open",
+   "question": "Where do you see yourself in five years, and what are your salary expectations?",
+   "model_answer": "Career: 'I want to deepen my expertise in distributed systems and grow into a technical lead who shapes architecture and mentors others, whether through a staff IC path or engineering management depending on opportunities. In five years I'd like to have delivered a few large systems and helped grow a team.' Show alignment with the role without promising to stay forever. Salary: research market ranges (levels.fyi, regional data, remote band rates), and answer with a range based on value, not need: 'Based on my research for senior backend roles with my experience, I'm targeting $X-$Y total compensation, and I'm flexible depending on scope, equity and benefits. Could you share the budgeted range?' For remote networks, clarify hourly vs monthly, contract vs employment and currency.",
+   "explanation": "Interviewers check ambition, realism and negotiation maturity. Remote networks screen for professional rate-setting; give researched ranges, not evasion or extreme numbers.",
+   "tags": [
+    "career",
+    "compensation"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-001",
+   "topic": "Remote Work & Communication",
+   "level": "Basic",
+   "type": "open",
+   "question": "How do you stay productive and organized when working remotely?",
+   "model_answer": "I structure the day around a consistent schedule that overlaps core hours with my team, plan weekly goals and daily priorities in a task tool, and block deep-work time for coding with notifications off. I keep a dedicated workspace, take scheduled breaks, and share a brief end-of-day update so teammates know status without asking. Example: working with a team nine hours apart, I documented handoff notes so the next person could continue immediately, and our cycle time dropped. I track my own output via completed tickets and review it weekly.",
+   "explanation": "Remote networks like Toptal, Turing, Lemon.io, A.Team and Braintrust and their clients look for self-management, reliability, predictable availability and proactive status sharing instead of needing supervision.",
+   "tags": [
+    "productivity",
+    "self-management"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-002",
+   "topic": "Remote Work & Communication",
+   "level": "Basic",
+   "type": "open",
+   "question": "What does asynchronous communication mean, and when do you choose it over a meeting?",
+   "model_answer": "Asynchronous communication means people do not need to respond immediately or be online at the same time: written updates, documents, recorded demos, PR comments, and threads. I default to async for status updates, design proposals, code review and decisions that benefit from thinking time or cross time zones, writing clearly with context, the ask, deadline and links so a reader can act without a follow-up question. I switch to a synchronous call when the topic is ambiguous, emotional, blocked by back-and-forth, or needs real-time brainstorming, then summarize the outcome in writing. This preserves focus and creates a searchable record.",
+   "explanation": "US/UK/EU product companies hiring remotely want engineers who write well, minimize meetings, and know when a call is appropriate. Weak answers equate async with slow or with no communication.",
+   "tags": [
+    "async",
+    "communication"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-003",
+   "topic": "Remote Work & Communication",
+   "level": "Basic",
+   "type": "open",
+   "question": "How do you handle working across time zones with a team in the US or Europe?",
+   "model_answer": "I agree on a core overlap window (for example 3-4 hours) for standups and pairing, publish my working hours on my calendar and Slack profile, and keep the rest async. I write handoff notes at the end of the day with status, blockers and next steps, use clear PR descriptions and recorded Loom walkthroughs, and avoid decisions that require everyone online by using RFCs with a deadline for comments. I am explicit about response times, and I flex occasionally for critical releases or incidents when needed, with notice. Result in a previous role: we shipped daily across an 8-hour gap with no idle waiting.",
+   "explanation": "Clients on the US/EU side value predictable overlap and strong handoffs. A.Team and Braintrust especially look for engineers who reduce coordination cost across time zones.",
+   "tags": [
+    "timezones"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-004",
+   "topic": "Remote Work & Communication",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Write (describe) a good status update for a client or manager when a task is blocked.",
+   "model_answer": "Structure: 1) Headline: 'Payment export is blocked; at risk for Thursday.' 2) Context: what was done and what is blocking, for instance the sandbox API returns 500 for refunds (ticket link, logs). 3) Impact: affects 2 stories, deadline risk. 4) What I tried: three actions with results. 5) Ask and owner: 'Can you ask the vendor to fix the sandbox, or approve mocking refunds? I need an answer by tomorrow 10:00 UTC.' 6) Plan B and next update time: 'Meanwhile I'm working on the reporting UI and will update again at 16:00.' It is concise, specific, forward-looking and makes it easy to respond with one action.",
+   "explanation": "Interviewers evaluate clarity, proactivity and ownership. Remote clients read many updates; a blocked update that includes the ask, deadline and fallback shows seniority.",
+   "tags": [
+    "status-updates",
+    "written-communication"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-005",
+   "topic": "Remote Work & Communication",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you give effective code review feedback remotely?",
+   "model_answer": "I review promptly (within a working day) so teammates are not blocked, start by understanding the intent from the description, and separate must-fix issues from suggestions and nits using labels ('blocking:', 'nit:'). I explain the why, link to docs or examples, ask questions instead of issuing commands ('what happens if this list is empty?'), and praise good solutions. For complex disagreements, I propose a short call and then write down the decision in the PR. I use automation for style so humans focus on design and correctness, and keep tone kind and unambiguous because text lacks tone cues.",
+   "explanation": "They look for empathy in text, speed, and a distinction between blocking and optional feedback; harsh or vague comments signal a poor remote collaborator.",
+   "tags": [
+    "code-review",
+    "collaboration"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-006",
+   "topic": "Remote Work & Communication",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "A client's requirements keep changing mid-sprint. How do you handle it?",
+   "model_answer": "I stay calm and make the impact visible. First I clarify what changed and why, then estimate the effect on scope, timeline and cost, and present options: swap items of equal size, move to the next sprint, extend the timeline or adjust budget. I get written confirmation of the agreed change, update the backlog and acceptance criteria, and keep a changelog. To reduce churn, I propose short demo cycles and a regular backlog refinement so the client sees progress and decides earlier. I protect the team from constant context switching but remain flexible for urgent priorities.",
+   "explanation": "Contract/freelance networks (Toptal, Lemon.io, Braintrust) want professionals who manage scope respectfully, protect the schedule, and get things in writing without being rigid or adversarial.",
+   "tags": [
+    "clients",
+    "scope"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-007",
+   "topic": "Remote Work & Communication",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you onboard yourself quickly onto a new codebase and team remotely?",
+   "model_answer": "In week one I read the README, architecture docs and ADRs, set up the environment and record gaps in setup docs (then fix them via PR). I ask for a short walkthrough call with a buddy, list the key systems and owners, run the tests, trace one request end to end, and pick a small starter ticket to ship in the first days. I schedule 1:1s with the manager and teammates to learn expectations and norms (code review, on-call, communication channels), keep a learning log, and share questions in public channels so answers help others. By day 30 I aim to own a small feature and have a plan for improvements.",
+   "explanation": "Clients want engineers who ramp up with minimal hand-holding. Showing documentation contributions and early shipping stands out.",
+   "tags": [
+    "onboarding"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-008",
+   "topic": "Remote Work & Communication",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How do you build trust with a new client or team you have never met in person?",
+   "model_answer": "Trust comes from reliability and transparency. I do what I say by the dates I give; I communicate early about risks; I provide visible progress through demos, short written updates and working software every few days; and I own mistakes fast. I establish clear working agreements: channels, response times, definition of done. I take interest in their business context and ask why behind tasks, make proactive suggestions, and show up prepared to meetings with camera on when appropriate. I keep documentation public and deliver on small commitments consistently, which compounds into confidence.",
+   "explanation": "Remote engagements fail for lack of trust and visibility. Interviewers listen for concrete habits that make a distributed relationship feel safe.",
+   "tags": [
+    "trust",
+    "clients"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-009",
+   "topic": "Remote Work & Communication",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Describe how you would run an effective remote technical design discussion.",
+   "model_answer": "Start with a written design doc or RFC shared 2-3 days ahead, containing context, goals/non-goals, options with trade-offs, risks and a recommendation. Collect async comments first so that the meeting only covers open disagreements. In the meeting, assign a facilitator and note-taker, timebox topics, use a shared diagram, and make sure quieter or different-time-zone participants have input (round-robin or pre-submitted comments). Record the decision, owners and next steps in the doc and publish it as an ADR. Follow up with a summary message and set a review date. This yields inclusive, auditable decisions with fewer meetings.",
+   "explanation": "Seniors demonstrate doc-driven decision making and inclusivity across time zones, valued by US/EU product companies.",
+   "tags": [
+    "design-review",
+    "rfc"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-010",
+   "topic": "Remote Work & Communication",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How do you handle an urgent production issue while the rest of your team is offline in another time zone?",
+   "model_answer": "Follow the on-call/escalation process: acknowledge the alert, assess severity and blast radius using dashboards, and mitigate first (rollback, feature flag, scale up) while keeping a running timeline in the incident channel. If beyond my authority or knowledge, I page the designated escalation contact rather than waiting. I communicate status at regular intervals to stakeholders and clients in plain language: impact, what we are doing, next update time. Afterward I write a handoff note and contribute to a blameless postmortem with action items. I also advocate for runbooks and sensible on-call coverage so isolated responders are not the single point of failure.",
+   "explanation": "They look for calm prioritization, communication, and knowing when to escalate. Heroics without process is a red flag.",
+   "tags": [
+    "incident",
+    "on-call"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-011",
+   "topic": "Remote Work & Communication",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How do you explain a complex technical concept or trade-off to a non-technical stakeholder?",
+   "model_answer": "Start with their goal and the decision they must make, then use plain language, analogies and concrete impacts on cost, risk, time and users, avoiding jargon. For example, explaining technical debt: 'Skipping the cleanup is like deferring maintenance on a building: we ship this feature a week sooner but each later change takes about 20% longer, which costs roughly two engineer-weeks per quarter.' Offer two or three options with a recommendation, use a simple diagram, check understanding by asking them to restate the decision, and follow up in writing. I avoid condescension and invite questions.",
+   "explanation": "Client-facing remote engineers must translate engineering into business terms; interviewers evaluate clarity, structure, and confirmation of understanding.",
+   "tags": [
+    "stakeholders",
+    "explaining"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-012",
+   "topic": "Remote Work & Communication",
+   "level": "Expert",
+   "type": "open",
+   "question": "How do you maintain team culture and avoid burnout in a fully remote team you lead or influence?",
+   "model_answer": "Set explicit norms: working hours, response-time expectations (not instant), no after-hours pings except real incidents, and public recognition of async contributions. Keep a regular rhythm of 1:1s, small social rituals (virtual coffees, demo sessions), and a couple of annual or quarterly in-person meetups if budget allows. Watch signals of burnout: cameras off, shorter replies, late-night commits, missed vacation; ask directly and adjust workload. Protect focus time with meeting-free blocks, document knowledge to avoid hero dependency, rotate on-call fairly, and mentor newer members. Use retrospectives to refine working practices and measure team health with short pulse surveys.",
+   "explanation": "Leadership-level answers show proactive norms and measurable team health practices; US/UK/EU companies value inclusive, sustainable remote cultures.",
+   "tags": [
+    "culture",
+    "burnout",
+    "leadership"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  },
+  {
+   "id": "q-rw-013",
+   "topic": "Remote Work & Communication",
+   "level": "Expert",
+   "type": "open",
+   "question": "Describe how you set up and manage your remote work environment for security and reliability when handling client data.",
+   "model_answer": "Use a company-approved or dedicated work device with full-disk encryption, automatic updates, a password manager and hardware-key MFA, and separate work from personal profiles. Connect through a VPN or zero-trust access where required, avoid public Wi-Fi without a VPN, and lock the screen when away. Follow least privilege and never store client credentials or data in personal clouds, chats or repositories; use secrets managers, and sign commits where required. Sign NDAs and follow the client's security policies and data-residency rules, report loss or suspicious activity immediately. For reliability: backup internet (mobile hotspot), UPS or laptop battery, backup headset, and a plan to notify the team if connectivity fails.",
+   "explanation": "Remote networks and clients vet security hygiene and professionalism; weak answers ignore device security, MFA or incident reporting.",
+   "tags": [
+    "security",
+    "environment"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io",
+    "A.Team",
+    "Braintrust"
+   ]
+  }
+ ]
+}

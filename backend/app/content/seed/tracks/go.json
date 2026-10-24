@@ -1,0 +1,1616 @@
+{
+ "tracks": [
+  {
+   "id": "go",
+   "title": "Go",
+   "icon": "🐹",
+   "color": "#06b6d4",
+   "available": true,
+   "order": 500,
+   "description": "Learn Go from syntax and slices to goroutines, channels, generics and the gotchas interviewers love.",
+   "units": [
+    {
+     "id": "go-u1",
+     "title": "Go Foundations",
+     "description": "Syntax, control flow, strings",
+     "level": "Basic"
+    },
+    {
+     "id": "go-u2",
+     "title": "Data & Types",
+     "description": "Slices, maps, structs, pointers",
+     "level": "Intermediate"
+    },
+    {
+     "id": "go-u3",
+     "title": "Abstraction & Errors",
+     "description": "Interfaces, embedding, errors, defer",
+     "level": "Intermediate"
+    },
+    {
+     "id": "go-u4",
+     "title": "Concurrency",
+     "description": "Goroutines, channels, select, sync, context",
+     "level": "Advanced"
+    },
+    {
+     "id": "go-u5",
+     "title": "Expert Go",
+     "description": "Generics, testing, memory and interview gotchas",
+     "level": "Expert"
+    }
+   ]
+  }
+ ],
+ "lessons": [
+  {
+   "id": "go-syntax-types",
+   "track_id": "go",
+   "unit_id": "go-u1",
+   "title": "Syntax, Types & Zero Values",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Variables and zero values",
+     "body": "Go is statically typed with inference. `var x int` declares with the zero value (`0`, `\"\"`, `false`, `nil`). Inside functions, `x := 5` declares and infers. Every declared local variable must be used, and every import must be used, or the compiler errors. There are no implicit numeric conversions: `int` and `int64` are different types.",
+     "code": "var n int        // 0\nvar s string     // \"\"\nvar p *int       // nil\nx := 3.5         // float64\ny := int(x)      // explicit conversion, truncates to 3"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens here?",
+     "options": [
+      "Prints 3.5",
+      "Compile error: mismatched types int and float64",
+      "Prints 3",
+      "Prints 4"
+     ],
+     "answer": 1,
+     "explanation": "Go does no implicit numeric conversion between `int` and `float64`; you must write `float64(a) + b`.",
+     "code": "a := 3\nb := 0.5\nfmt.Println(a + b)"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the zero value of a slice, map, pointer and interface?",
+     "options": [
+      "Empty, empty, 0, empty",
+      "`nil` for all four",
+      "`nil`, `{}`, `nil`, `nil`",
+      "Slices are `[]`, maps are `{}`"
+     ],
+     "answer": 1,
+     "explanation": "All four have `nil` as their zero value. A nil slice is usable with `len`, `append` and `range`; writing to a nil map panics."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the short variable declaration operator.",
+     "code": "x ____ 10",
+     "answer": [
+      ":="
+     ],
+     "explanation": "`:=` declares and initialises with an inferred type (only inside functions)."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `const big = 1 << 40; var x int32 = big` do?",
+     "options": [
+      "Compiles; wraps around",
+      "Compile error: constant overflows int32",
+      "Runtime panic",
+      "Compiles; x = 0"
+     ],
+     "answer": 1,
+     "explanation": "Constants are arbitrary precision at compile time, but assigning one that doesn't fit the target type is a compile error."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Declare a variable of each type without initialising, then print `i`, `b`, `f` and `p` on one line (the pointer should print `<nil>`).",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\t// declare i int, b bool, f float64, p *int\n\t// and print them with fmt.Println\n\tfmt.Println()\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar i int\n\tvar b bool\n\tvar f float64\n\tvar p *int\n\tfmt.Println(i, b, f, p)\n}\n",
+     "expected_output": "0 false 0 <nil>"
+    }
+   ]
+  },
+  {
+   "id": "go-control-funcs",
+   "track_id": "go",
+   "unit_id": "go-u1",
+   "title": "Control Flow & Functions",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "for is the only loop",
+     "body": "Go has just `for`: C-style, while-style (`for cond {}`), infinite (`for {}`) and `range`. `if` and `switch` may have an init statement. `switch` cases don't fall through (use `fallthrough` to force it) and can be expression-less. Functions can return multiple values, named results, and be variadic.",
+     "code": "func divmod(a, b int) (q, r int) {\n\tq = a / b\n\tr = a % b\n\treturn\n}\nsum := func(xs ...int) (t int) {\n\tfor _, x := range xs { t += x }\n\treturn\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `switch` do when a case matches?",
+     "options": [
+      "Falls through to the next case",
+      "Runs that case only, then exits",
+      "Runs all following cases",
+      "Requires `break`"
+     ],
+     "answer": 1,
+     "explanation": "Go's switch breaks automatically; `fallthrough` is explicit and rare."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "options": [
+      "`0 1 2`",
+      "`3`",
+      "`0 1 2 3`",
+      "Infinite loop"
+     ],
+     "answer": 0,
+     "explanation": "`range n` (Go 1.22) iterates 0..n-1. Before 1.22 you'd write `for i := 0; i < n; i++`.",
+     "code": "for i := range 3 {\n\tfmt.Print(i, \" \")\n}"
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the keyword that lets a function accept any number of ints.",
+     "code": "func sum(nums ...____) int { return 0 }",
+     "answer": [
+      "int"
+     ],
+     "explanation": "The variadic parameter `...int` becomes an `[]int` inside the function."
+    },
+    {
+     "type": "mcq",
+     "question": "How do you ignore the second return value of `strconv.Atoi`?",
+     "options": [
+      "`n := strconv.Atoi(s)`",
+      "`n, _ := strconv.Atoi(s)`",
+      "`n, nil := strconv.Atoi(s)`",
+      "`n = strconv.Atoi(s)[0]`"
+     ],
+     "answer": 1,
+     "explanation": "The blank identifier `_` discards a value. Ignoring errors is possible but usually a smell."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Write `divmod(a, b int) (int, int)` returning quotient and remainder; print the results for 17 and 5 as `3 2`.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc divmod(a, b int) (int, int) {\n\treturn 0, 0\n}\n\nfunc main() {\n\tq, r := divmod(17, 5)\n\tfmt.Println(q, r)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc divmod(a, b int) (int, int) {\n\treturn a / b, a % b\n}\n\nfunc main() {\n\tq, r := divmod(17, 5)\n\tfmt.Println(q, r)\n}\n",
+     "expected_output": "3 2"
+    },
+    {
+     "type": "mcq",
+     "question": "What does a `defer` inside a `for` loop body do?",
+     "options": [
+      "Runs at the end of each iteration",
+      "Runs when the surrounding function returns, not at the end of the iteration",
+      "Is a compile error",
+      "Runs immediately"
+     ],
+     "answer": 1,
+     "explanation": "`defer` is function-scoped. Deferring in a long loop accumulates calls (e.g. open files) until the function exits; wrap the body in a function instead."
+    }
+   ]
+  },
+  {
+   "id": "go-strings-runes",
+   "track_id": "go",
+   "unit_id": "go-u1",
+   "title": "Strings, Bytes & Runes",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Strings are immutable byte sequences",
+     "body": "A Go `string` is an immutable sequence of bytes, conventionally UTF-8. `len(s)` counts **bytes**. `s[i]` is a `byte`. `for i, r := range s` iterates **runes** (Unicode code points), where `i` is the byte offset. Convert with `[]rune(s)` to index by character. Use `strings.Builder` for efficient concatenation.",
+     "code": "s := \"héllo\"\nlen(s)          // 6 bytes (é is 2 bytes)\nlen([]rune(s))  // 5 runes\ns[1]            // 195, the first byte of é"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `len(\"héllo\")` return?",
+     "options": [
+      "5",
+      "6",
+      "7",
+      "4"
+     ],
+     "answer": 1,
+     "explanation": "`é` is two bytes in UTF-8, so the string has 6 bytes."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the type of `r` in `for _, r := range \"abc\"`?",
+     "options": [
+      "`byte`",
+      "`rune` (`int32`)",
+      "`string`",
+      "`uint8`"
+     ],
+     "answer": 1,
+     "explanation": "`range` over a string yields runes."
+    },
+    {
+     "type": "mcq",
+     "question": "Why is concatenating in a loop with `+=` slow for big inputs?",
+     "options": [
+      "Strings are mutable",
+      "Each `+=` allocates and copies a new string, making it O(n^2)",
+      "`+=` is not allowed",
+      "It races"
+     ],
+     "answer": 1,
+     "explanation": "Strings are immutable, so each concatenation copies. Use `strings.Builder`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the function that converts a string to a rune slice so it can be reversed.",
+     "code": "r := ____(s)",
+     "answer": [
+      "[]rune"
+     ],
+     "explanation": "`[]rune(s)` decodes the UTF-8 into code points."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Reverse the string `héllo, 世界` by runes (not bytes) and print it.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc reverse(s string) string {\n\t// reverse by runes\n\treturn s\n}\n\nfunc main() {\n\tfmt.Println(reverse(\"héllo, 世界\"))\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc reverse(s string) string {\n\tr := []rune(s)\n\tfor i, j := 0, len(r)-1; i < j; i, j = i+1, j-1 {\n\t\tr[i], r[j] = r[j], r[i]\n\t}\n\treturn string(r)\n}\n\nfunc main() {\n\tfmt.Println(reverse(\"héllo, 世界\"))\n}\n",
+     "expected_output": "界世 ,olléh",
+     "hint": "Swap elements from both ends."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `string(65)` produce (and what does `go vet` say)?",
+     "options": [
+      "`\"65\"`",
+      "`\"A\"`, and vet warns about int-to-string conversion",
+      "Compile error",
+      "`\"\\x41\"`"
+     ],
+     "answer": 1,
+     "explanation": "Converting an integer to string yields the Unicode code point as text, `\"A\"`. It is a common bug (people expect \"65\"); use `strconv.Itoa`."
+    }
+   ]
+  },
+  {
+   "id": "go-slices",
+   "track_id": "go",
+   "unit_id": "go-u2",
+   "title": "Slices: len, cap & Aliasing",
+   "minutes": 11,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Slice header",
+     "body": "A slice is a small struct: pointer to an array, length, and capacity. Slicing `s[a:b]` shares the underlying array. `append` writes in place if `len < cap`, otherwise allocates a bigger array and copies, so the result may or may not alias the original. Always use the returned slice: `s = append(s, x)`.",
+     "code": "a := []int{1, 2, 3, 4}\nb := a[1:3]   // len 2, cap 3, shares memory\nb[0] = 99     // a is now [1 99 3 4]\nc := append(b, 100) // cap allows: overwrites a[3]!"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "`[1 2 3] [1 2 3 4]`",
+      "`[1 2 3] [1 2 3]`",
+      "`[1 2 3 4] [1 2 3 4]`",
+      "`[1 2 3] [1 2 3 5]`"
+     ],
+     "answer": 0,
+     "explanation": "`append(a, 4)` exceeds cap 3, so it allocates a new array. `a` is unchanged and `b` is a copy.",
+     "code": "a := []int{1, 2, 3}\nb := append(a, 4)\nfmt.Println(a, b)"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "`[1 2 3 99] [99]`",
+      "`[1 2 3 4] [99]`",
+      "`[1 2 3] [99]`",
+      "`[1 2 99 4] [99]`"
+     ],
+     "answer": 0,
+     "explanation": "`b := a[:3]` has cap 4, so `append(b, 99)` writes into a's 4th slot in place.",
+     "code": "a := []int{1, 2, 3, 4}\nb := a[:3]\nb = append(b, 99)\nfmt.Println(a, b[3:])"
+    },
+    {
+     "type": "fill",
+     "prompt": "Use the full slice expression to cap capacity so a later append cannot overwrite the parent.",
+     "code": "b := a[1:3:____]",
+     "answer": [
+      "3"
+     ],
+     "explanation": "`a[low:high:max]` sets capacity to `max-low`; here cap = 2, so append reallocates."
+    },
+    {
+     "type": "mcq",
+     "question": "How do you safely copy a slice?",
+     "options": [
+      "`b := a`",
+      "`b := a[:]`",
+      "`b := append([]int(nil), a...)` or `copy`",
+      "`b = &a`"
+     ],
+     "answer": 2,
+     "explanation": "Plain assignment and reslicing share the backing array. `append([]T(nil), a...)` or `copy(dst, a)` make independent copies."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Fix the aliasing gotcha: print `a` and `b` where `b` is a modified copy, leaving `a` as `[1 2 3 4]` and `b` as `[100 2 3 4]`.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := []int{1, 2, 3, 4}\n\tb := a // alias!\n\tb[0] = 100\n\tfmt.Println(a, b)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := []int{1, 2, 3, 4}\n\tb := make([]int, len(a))\n\tcopy(b, a)\n\tb[0] = 100\n\tfmt.Println(a, b)\n}\n",
+     "expected_output": "[1 2 3 4] [100 2 3 4]",
+     "hint": "Use copy into a new slice."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Predict-and-print: show len and cap after each append starting from an empty slice with `make([]int, 0, 2)`; append 1,2,3 and print `len cap` after each.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ts := make([]int, 0, 2)\n\tfor i := 1; i <= 3; i++ {\n\t\ts = append(s, i)\n\t\t// print len and cap\n\t}\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ts := make([]int, 0, 2)\n\tfor i := 1; i <= 3; i++ {\n\t\ts = append(s, i)\n\t\tfmt.Println(len(s), cap(s))\n\t}\n}\n",
+     "expected_output": "1 2\n2 2\n3 4"
+    },
+    {
+     "type": "mcq",
+     "question": "A function `func add(s []int) { s = append(s, 1) }` is called with a slice of len 0, cap 0. Does the caller see the change?",
+     "options": [
+      "Yes, slices are references",
+      "No: the callee appended to its own copy of the slice header",
+      "Yes, only if capacity > 0",
+      "It panics"
+     ],
+     "answer": 1,
+     "explanation": "Slice headers are passed by value. The callee's append changes its local header; the caller's length is unchanged. Return the new slice or pass `*[]int`."
+    }
+   ]
+  },
+  {
+   "id": "go-maps",
+   "track_id": "go",
+   "unit_id": "go-u2",
+   "title": "Maps",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Maps",
+     "body": "`map[K]V` is a hash table; keys must be comparable (no slices, maps, or funcs). Reading a missing key returns the zero value; use the comma-ok form `v, ok := m[k]` to distinguish. Writing to a **nil** map panics; reading is fine. Iteration order is **randomised**. Maps are not safe for concurrent writes.",
+     "code": "m := map[string]int{\"a\": 1}\nv, ok := m[\"z\"]   // 0, false\ndelete(m, \"a\")    // safe even if absent\nvar nm map[string]int\n_ = nm[\"x\"]       // ok, 0\n// nm[\"x\"] = 1    // panic: assignment to entry in nil map"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens?",
+     "options": [
+      "Compile error",
+      "Panics at runtime",
+      "Prints 0",
+      "Creates the map"
+     ],
+     "answer": 1,
+     "explanation": "A nil map can be read but not written: `panic: assignment to entry in nil map`.",
+     "code": "var m map[string]int\nm[\"a\"] = 1"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `m[k]++` do if `k` is absent?",
+     "options": [
+      "Panic",
+      "Sets `m[k]` to 1",
+      "No-op",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "Missing key reads 0, `++` writes 1. This makes counting idioms concise."
+    },
+    {
+     "type": "mcq",
+     "question": "Which key type is NOT allowed?",
+     "options": [
+      "`[3]int`",
+      "`struct{a int}`",
+      "`[]int`",
+      "`*int`"
+     ],
+     "answer": 2,
+     "explanation": "Slices aren't comparable; arrays, structs of comparable fields, and pointers are."
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the comma-ok idiom.",
+     "code": "v, ____ := m[\"key\"]",
+     "answer": [
+      "ok"
+     ],
+     "explanation": "The second value reports presence."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Count word frequencies in `a b a c b a` and print them in sorted key order as `a=3`, `b=2`, `c=1` on separate lines (map order is random, so sort the keys).",
+     "starter": "package main\n\nimport (\n\t\"fmt\"\n\t\"sort\"\n\t\"strings\"\n)\n\nfunc main() {\n\twords := strings.Fields(\"a b a c b a\")\n\tcounts := map[string]int{}\n\t_ = words\n\t_ = counts\n\t_ = sort.Strings\n\tfmt.Println()\n}\n",
+     "solution": "package main\n\nimport (\n\t\"fmt\"\n\t\"sort\"\n\t\"strings\"\n)\n\nfunc main() {\n\twords := strings.Fields(\"a b a c b a\")\n\tcounts := map[string]int{}\n\tfor _, w := range words {\n\t\tcounts[w]++\n\t}\n\tkeys := make([]string, 0, len(counts))\n\tfor k := range counts {\n\t\tkeys = append(keys, k)\n\t}\n\tsort.Strings(keys)\n\tfor _, k := range keys {\n\t\tfmt.Printf(\"%s=%d\\n\", k, counts[k])\n\t}\n}\n",
+     "expected_output": "a=3\nb=2\nc=1",
+     "hint": "Collect keys, sort, then print."
+    },
+    {
+     "type": "mcq",
+     "question": "Why can't you take the address of a map element, e.g. `&m[\"a\"]`?",
+     "options": [
+      "Maps are immutable",
+      "Entries may move when the map grows",
+      "Keys are strings",
+      "It is allowed"
+     ],
+     "answer": 1,
+     "explanation": "The runtime may relocate entries during growth, so the address would be unstable; the compiler forbids it. For struct values, `m[k].field = x` is also illegal."
+    }
+   ]
+  },
+  {
+   "id": "go-structs-methods",
+   "track_id": "go",
+   "unit_id": "go-u2",
+   "title": "Structs & Methods",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Structs and method receivers",
+     "body": "Methods are functions with a receiver. A **value receiver** (`func (p Point) Dist()`) operates on a copy; a **pointer receiver** (`func (p *Point) Move()`) can mutate and avoids copying. Mixing receiver kinds on one type is discouraged. Go auto-takes the address when calling a pointer method on an addressable variable. Struct fields starting with an uppercase letter are exported.",
+     "code": "type Counter struct{ n int }\nfunc (c *Counter) Inc()      { c.n++ }\nfunc (c Counter) Value() int { return c.n }\n\nvar c Counter\nc.Inc()            // (&c).Inc() automatically\nfmt.Println(c.Value())"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "`1`",
+      "`0`",
+      "Compile error",
+      "`2`"
+     ],
+     "answer": 1,
+     "explanation": "`Inc` has a value receiver, so it increments a copy.",
+     "code": "type C struct{ n int }\nfunc (c C) Inc() { c.n++ }\nfunc main() {\n\tc := C{}\n\tc.Inc()\n\tfmt.Println(c.n)\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Why does `m[\"a\"].Inc()` fail when `Inc` has a pointer receiver and `m` is `map[string]C`?",
+     "options": [
+      "Map values are not addressable",
+      "Inc is private",
+      "Maps can't hold structs",
+      "Receivers must be values"
+     ],
+     "answer": 0,
+     "explanation": "Pointer-receiver calls need an addressable operand; map elements aren't addressable. Store pointers (`map[string]*C`) instead."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the zero-value-constructed struct literal that sets only `Name`.",
+     "code": "u := User{____: \"ann\"}",
+     "answer": [
+      "Name"
+     ],
+     "explanation": "Field names in a keyed literal: other fields take zero values."
+    },
+    {
+     "type": "mcq",
+     "question": "Which comparison is valid?",
+     "options": [
+      "Comparing two structs with only comparable fields using `==`",
+      "Comparing two structs containing a slice using `==`",
+      "Comparing structs with `.equals`",
+      "Structs cannot be compared"
+     ],
+     "answer": 0,
+     "explanation": "Structs are comparable with `==` when all fields are comparable. A slice field makes `==` a compile error (use `reflect.DeepEqual` or custom code)."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Define a `Rect` with `W, H float64` and a method `Area()`; add `Scale(f float64)` with a pointer receiver that multiplies both sides. Scale a 2x3 rect by 2 and print its area (`24`).",
+     "starter": "package main\n\nimport \"fmt\"\n\ntype Rect struct{ W, H float64 }\n\nfunc main() {\n\tr := Rect{2, 3}\n\tfmt.Println(r)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\ntype Rect struct{ W, H float64 }\n\nfunc (r Rect) Area() float64 { return r.W * r.H }\n\nfunc (r *Rect) Scale(f float64) {\n\tr.W *= f\n\tr.H *= f\n}\n\nfunc main() {\n\tr := Rect{2, 3}\n\tr.Scale(2)\n\tfmt.Println(r.Area())\n}\n",
+     "expected_output": "24"
+    },
+    {
+     "type": "mcq",
+     "question": "Method value `f := c.Value` where `Value` has a value receiver: when is the receiver copied?",
+     "options": [
+      "On each call to `f`",
+      "When `f` is created (bound at evaluation time)",
+      "Never",
+      "At function return"
+     ],
+     "answer": 1,
+     "explanation": "A method value binds the receiver at evaluation; later changes to `c` are not seen by a value-receiver method value."
+    }
+   ]
+  },
+  {
+   "id": "go-pointers",
+   "track_id": "go",
+   "unit_id": "go-u2",
+   "title": "Pointers",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Pointers",
+     "body": "`&x` takes an address, `*p` dereferences. Go has no pointer arithmetic. Everything is passed by value, including pointers (the address is copied). Taking the address of a local is safe; the compiler moves it to the heap if it escapes. `new(T)` allocates a zero `T` and returns `*T`. Dereferencing a nil pointer panics.",
+     "code": "x := 10\np := &x\n*p = 20\nfmt.Println(x) // 20\nvar q *int\n// *q = 1 // panic: nil pointer dereference"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "`1`",
+      "`2`",
+      "Compile error",
+      "`0`"
+     ],
+     "answer": 0,
+     "explanation": "The function receives a copy of the int; the caller's value is unchanged.",
+     "code": "func inc(n int) { n++ }\nfunc main() {\n\tx := 1\n\tinc(x)\n\tfmt.Println(x)\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Is it valid to return `&local` from a function?",
+     "options": [
+      "No, dangling pointer",
+      "Yes: escape analysis allocates it on the heap",
+      "Only with `new`",
+      "Only in unsafe"
+     ],
+     "answer": 1,
+     "explanation": "Go is garbage collected; the compiler detects escape and heap-allocates."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the operator to dereference.",
+     "code": "fmt.Println(____p)",
+     "answer": [
+      "*"
+     ],
+     "explanation": "`*p` reads the value that `p` points at."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Write `swap(a, b *int)` and use it to swap 1 and 2; print `2 1`.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc swap(a, b *int) {\n}\n\nfunc main() {\n\tx, y := 1, 2\n\tswap(&x, &y)\n\tfmt.Println(x, y)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc swap(a, b *int) {\n\t*a, *b = *b, *a\n}\n\nfunc main() {\n\tx, y := 1, 2\n\tswap(&x, &y)\n\tfmt.Println(x, y)\n}\n",
+     "expected_output": "2 1"
+    },
+    {
+     "type": "mcq",
+     "question": "When is a pointer receiver mandatory in practice?",
+     "options": [
+      "Never",
+      "When the method mutates the receiver, the type is large, or contains a sync.Mutex that must not be copied",
+      "Always for interfaces",
+      "When the struct has strings"
+     ],
+     "answer": 1,
+     "explanation": "Mutate/avoid-copy/no-copy-locks are the usual reasons; `go vet` flags copying a Mutex."
+    }
+   ]
+  },
+  {
+   "id": "go-interfaces",
+   "track_id": "go",
+   "unit_id": "go-u3",
+   "title": "Interfaces & the Nil Gotcha",
+   "minutes": 10,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Implicit interfaces",
+     "body": "A type satisfies an interface by having the methods; there is no `implements`. Accept interfaces, return concrete types. The empty interface `any` holds anything. Method sets matter: type `T` has value-receiver methods only; `*T` has both. An interface value is a pair `(dynamic type, dynamic value)`; it is `nil` only when **both** are nil.",
+     "code": "type Shape interface{ Area() float64 }\ntype Sq struct{ s float64 }\nfunc (q Sq) Area() float64 { return q.s * q.s }\n\nvar s Shape = Sq{2}        // ok\ntype Dog struct{}\nfunc (d *Dog) Speak() {}\n// var sp Speaker = Dog{}  // error: Speak has pointer receiver"
+    },
+    {
+     "type": "mcq",
+     "question": "Does `var s Speaker = Dog{}` compile when `Speak` has a pointer receiver?",
+     "options": [
+      "Yes",
+      "No: `Dog` doesn't have `Speak` in its method set; `*Dog` does",
+      "Yes with a warning",
+      "Only for empty interfaces"
+     ],
+     "answer": 1,
+     "explanation": "The method set of `Dog` includes value-receiver methods only. Use `&Dog{}`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "`true`",
+      "`false`",
+      "Panics",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "The interface holds a typed nil pointer `(*MyErr, nil)`, which is not equal to nil. This is the classic nil-interface bug.",
+     "code": "type MyErr struct{}\nfunc (*MyErr) Error() string { return \"x\" }\nfunc f() error {\n\tvar e *MyErr = nil\n\treturn e\n}\nfunc main() { fmt.Println(f() == nil) }"
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the type assertion form that does not panic.",
+     "code": "s, ____ := v.(string)",
+     "answer": [
+      "ok"
+     ],
+     "explanation": "The comma-ok form returns the zero value and false on mismatch instead of panicking."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the best fix for the nil-interface bug above?",
+     "options": [
+      "Return `nil` explicitly when there is no error",
+      "Compare with reflect",
+      "Use `any`",
+      "Add a `String` method"
+     ],
+     "answer": 0,
+     "explanation": "Return an untyped `nil` for the `error` result; never return a typed nil pointer wrapped in an interface."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Implement `Shape` with `Area()` for `Circle` (radius, use 3 as pi to keep it exact) and `Rect`; sum areas of a `[]Shape{Circle{2}, Rect{3,4}}` and print `24`.",
+     "starter": "package main\n\nimport \"fmt\"\n\ntype Shape interface{ Area() float64 }\n\ntype Circle struct{ R float64 }\ntype Rect struct{ W, H float64 }\n\nfunc main() {\n\tshapes := []Shape{}\n\ttotal := 0.0\n\tfor _, s := range shapes {\n\t\ttotal += s.Area()\n\t}\n\tfmt.Println(total)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\ntype Shape interface{ Area() float64 }\n\ntype Circle struct{ R float64 }\ntype Rect struct{ W, H float64 }\n\nfunc (c Circle) Area() float64 { return 3 * c.R * c.R }\nfunc (r Rect) Area() float64   { return r.W * r.H }\n\nfunc main() {\n\tshapes := []Shape{Circle{2}, Rect{3, 4}}\n\ttotal := 0.0\n\tfor _, s := range shapes {\n\t\ttotal += s.Area()\n\t}\n\tfmt.Println(total)\n}\n",
+     "expected_output": "24"
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Use a type switch to print the kind of each value in `[]any{1, \"a\", 2.5, nil}` as `int`, `string`, `float64`, `nil`.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvals := []any{1, \"a\", 2.5, nil}\n\tfor _, v := range vals {\n\t\t_ = v\n\t}\n\tfmt.Println()\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvals := []any{1, \"a\", 2.5, nil}\n\tfor _, v := range vals {\n\t\tswitch v.(type) {\n\t\tcase int:\n\t\t\tfmt.Println(\"int\")\n\t\tcase string:\n\t\t\tfmt.Println(\"string\")\n\t\tcase float64:\n\t\t\tfmt.Println(\"float64\")\n\t\tcase nil:\n\t\t\tfmt.Println(\"nil\")\n\t\t}\n\t}\n}\n",
+     "expected_output": "int\nstring\nfloat64\nnil"
+    }
+   ]
+  },
+  {
+   "id": "go-embedding",
+   "track_id": "go",
+   "unit_id": "go-u3",
+   "title": "Embedding & Composition",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Embedding",
+     "body": "Embedding a type in a struct (`type B struct{ A }`) promotes its fields and methods. It is composition, not inheritance: there's no virtual dispatch, so when an embedded method calls another method on its own receiver it calls the embedded type's version, not the outer override. Embedding an interface in a struct is a common trick for partial implementations and decorators.",
+     "code": "type Animal struct{ Name string }\nfunc (a Animal) Hello() string { return \"I am \" + a.Name }\ntype Dog struct{ Animal }\nd := Dog{Animal{\"rex\"}}\nd.Hello()  // promoted"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "`Base`",
+      "`Derived`",
+      "Compile error",
+      "Both"
+     ],
+     "answer": 0,
+     "explanation": "`Describe` is defined on `Base` and calls `b.Name()` on its own receiver, which is `Base`. There is no virtual dispatch to `Derived.Name`.",
+     "code": "type Base struct{}\nfunc (b Base) Name() string     { return \"Base\" }\nfunc (b Base) Describe() string { return b.Name() }\ntype Derived struct{ Base }\nfunc (d Derived) Name() string  { return \"Derived\" }\nfunc main() { fmt.Println(Derived{}.Describe()) }"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens if two embedded types promote the same method name at the same depth?",
+     "options": [
+      "The first one wins",
+      "Ambiguous selector: compile error only when you use it",
+      "Runtime panic",
+      "The last one wins"
+     ],
+     "answer": 1,
+     "explanation": "The ambiguity is an error at the use site, unless the outer type defines its own method."
+    },
+    {
+     "type": "fill",
+     "prompt": "Embed the interface so `Logged` gets the `Store` methods automatically.",
+     "code": "type Logged struct {\n\t____\n}",
+     "answer": [
+      "Store"
+     ],
+     "explanation": "Embedding an interface field promotes its methods; the struct satisfies the interface once the field is set."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Create `Animal` with `Name` and `Speak()` returning `\"...\"`. Create `Dog` embedding `Animal` and overriding `Speak` to return `\"woof\"`. Print `d.Speak()` and `d.Animal.Speak()` on separate lines.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println()\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\ntype Animal struct{ Name string }\n\nfunc (a Animal) Speak() string { return \"...\" }\n\ntype Dog struct{ Animal }\n\nfunc (d Dog) Speak() string { return \"woof\" }\n\nfunc main() {\n\td := Dog{Animal{\"rex\"}}\n\tfmt.Println(d.Speak())\n\tfmt.Println(d.Animal.Speak())\n}\n",
+     "expected_output": "woof\n..."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is idiomatic for decorating behaviour (e.g. a logging wrapper around an `io.Reader`)?",
+     "options": [
+      "Inheritance",
+      "A struct embedding the interface and overriding the methods of interest",
+      "Reflection",
+      "Global variables"
+     ],
+     "answer": 1,
+     "explanation": "Embedding the interface gives all methods; override only the ones you need."
+    },
+    {
+     "type": "mcq",
+     "question": "Is `Dog` assignable to `Animal` type (e.g. `var a Animal = dog`)?",
+     "options": [
+      "Yes (subtyping)",
+      "No: embedding is not inheritance; use `dog.Animal` or an interface",
+      "Yes, with a cast",
+      "Only with generics"
+     ],
+     "answer": 1,
+     "explanation": "Embedding does not create subtype relations; interfaces are the polymorphism mechanism."
+    }
+   ]
+  },
+  {
+   "id": "go-errors",
+   "track_id": "go",
+   "unit_id": "go-u3",
+   "title": "Errors: Wrapping, Is & As",
+   "minutes": 10,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Errors are values",
+     "body": "`error` is an interface with `Error() string`. Return errors, don't throw. Wrap with `fmt.Errorf(\"ctx: %w\", err)` to keep the chain. Inspect with `errors.Is(err, target)` (identity or `Is` method along the chain) and `errors.As(err, &target)` (type match). Define sentinel errors with `errors.New`, and custom types for rich data. `errors.Join` combines several.",
+     "code": "var ErrNotFound = errors.New(\"not found\")\nfunc find() error { return fmt.Errorf(\"find user: %w\", ErrNotFound) }\nerr := find()\nerrors.Is(err, ErrNotFound) // true\nerrors.Unwrap(err) == ErrNotFound // true"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `errors.Is(err, ErrA)`?",
+     "options": [
+      "`false`: it wraps with %v",
+      "`true`: %w preserves the chain",
+      "`true`: any wrapped error matches",
+      "Compile error"
+     ],
+     "answer": 0,
+     "explanation": "`%v` formats the text but breaks the chain; only `%w` wraps. (Here the chain is broken.)",
+     "code": "var ErrA = errors.New(\"a\")\nerr := fmt.Errorf(\"ctx: %v\", ErrA)\nfmt.Println(errors.Is(err, ErrA))"
+    },
+    {
+     "type": "mcq",
+     "question": "Which is correct for matching a custom error type `*ParseError` in the chain?",
+     "options": [
+      "`err.(*ParseError)`",
+      "`var pe *ParseError; errors.As(err, &pe)`",
+      "`errors.Is(err, &ParseError{})`",
+      "`err == &ParseError{}`"
+     ],
+     "answer": 1,
+     "explanation": "`errors.As` walks the chain and assigns the first match; a plain type assertion fails if the error is wrapped."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the verb that wraps an error.",
+     "code": "fmt.Errorf(\"read config: ____\", err)",
+     "answer": [
+      "%w"
+     ],
+     "explanation": "`%w` records the wrapped error so `Is`/`As`/`Unwrap` can see it."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Wrap `ErrNotFound` twice and show `errors.Is` still finds it. Print the final message and then `true`.",
+     "starter": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\nvar ErrNotFound = errors.New(\"not found\")\n\nfunc main() {\n\tfmt.Println()\n}\n",
+     "solution": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\nvar ErrNotFound = errors.New(\"not found\")\n\nfunc main() {\n\te1 := fmt.Errorf(\"db: %w\", ErrNotFound)\n\te2 := fmt.Errorf(\"service: %w\", e1)\n\tfmt.Println(e2)\n\tfmt.Println(errors.Is(e2, ErrNotFound))\n}\n",
+     "expected_output": "service: db: not found\ntrue"
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Define `type CodeErr struct{ Code int }` implementing `error`. Wrap it, then use `errors.As` to extract the code and print `code=404`.",
+     "starter": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\nfunc main() {\n\tfmt.Println()\n}\n",
+     "solution": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\ntype CodeErr struct{ Code int }\n\nfunc (c *CodeErr) Error() string { return fmt.Sprintf(\"code %d\", c.Code) }\n\nfunc main() {\n\terr := fmt.Errorf(\"handler: %w\", &CodeErr{404})\n\tvar ce *CodeErr\n\tif errors.As(err, &ce) {\n\t\tfmt.Printf(\"code=%d\\n\", ce.Code)\n\t}\n}\n",
+     "expected_output": "code=404"
+    },
+    {
+     "type": "mcq",
+     "question": "Should library functions panic on bad input?",
+     "options": [
+      "Yes, always",
+      "Prefer returning errors; reserve panic for programmer errors / unrecoverable states",
+      "Never use errors",
+      "Only in goroutines"
+     ],
+     "answer": 1,
+     "explanation": "Idiomatic Go returns errors for expected failures; panic signals bugs or impossible states."
+    }
+   ]
+  },
+  {
+   "id": "go-defer-panic",
+   "track_id": "go",
+   "unit_id": "go-u3",
+   "title": "defer, panic & recover",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Deferred calls",
+     "body": "`defer` schedules a call to run when the surrounding function returns, in LIFO order. Arguments are evaluated at the `defer` statement, not at execution. Deferred closures can read and modify **named results**. `recover()` returns the panic value only when called directly by a deferred function; it stops the panic. A panic in a goroutine that is not recovered crashes the whole program.",
+     "code": "func f() (n int) {\n\tdefer func() { n *= 2 }()\n\treturn 21   // n = 21, then deferred sets 42\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "`0 1 2`",
+      "`2 1 0`",
+      "`3 3 3`",
+      "`0`"
+     ],
+     "answer": 1,
+     "explanation": "Defers run last-in-first-out, and `i` is evaluated at defer time.",
+     "code": "for i := 0; i < 3; i++ {\n\tdefer fmt.Print(i, \" \")\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `f()` return?",
+     "options": [
+      "`21`",
+      "`42`",
+      "`0`",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "The deferred closure runs after `return 21` assigns to the named result `n`, then doubles it.",
+     "code": "func f() (n int) {\n\tdefer func() { n *= 2 }()\n\treturn 21\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Where must `recover()` be called to work?",
+     "options": [
+      "Anywhere in the goroutine",
+      "Directly inside a deferred function",
+      "In `main` only",
+      "After the panic line"
+     ],
+     "answer": 1,
+     "explanation": "`recover` only stops a panic when called directly by a deferred function (not a helper it calls)."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the built-in that stops a panic.",
+     "code": "defer func() {\n\tif r := ____(); r != nil { fmt.Println(\"recovered\", r) }\n}()",
+     "answer": [
+      "recover"
+     ],
+     "explanation": "`recover()` returns the panic value (or nil)."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Write `safeDiv(a, b int) (res int, err error)` that recovers from the divide-by-zero panic and returns an error. Print `err=runtime error: integer divide by zero` for `safeDiv(1, 0)`.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc safeDiv(a, b int) (res int, err error) {\n\treturn a / b, nil\n}\n\nfunc main() {\n\t_, err := safeDiv(1, 0)\n\tfmt.Println(\"err=\" + err.Error())\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc safeDiv(a, b int) (res int, err error) {\n\tdefer func() {\n\t\tif r := recover(); r != nil {\n\t\t\terr = fmt.Errorf(\"%v\", r)\n\t\t}\n\t}()\n\treturn a / b, nil\n}\n\nfunc main() {\n\t_, err := safeDiv(1, 0)\n\tfmt.Println(\"err=\" + err.Error())\n}\n",
+     "expected_output": "err=runtime error: integer divide by zero"
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Show defer argument evaluation: set `x := 1`, `defer fmt.Println(\"deferred\", x)`, then set `x = 2` and print `now`, `x`. Output: `now 2` then `deferred 1`.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tx := 1\n\tx = 2\n\tfmt.Println(\"now\", x)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tx := 1\n\tdefer fmt.Println(\"deferred\", x)\n\tx = 2\n\tfmt.Println(\"now\", x)\n}\n",
+     "expected_output": "now 2\ndeferred 1"
+    }
+   ]
+  },
+  {
+   "id": "go-goroutines-wg",
+   "track_id": "go",
+   "unit_id": "go-u4",
+   "title": "Goroutines & WaitGroup",
+   "minutes": 10,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Goroutines",
+     "body": "`go f()` starts a goroutine: a lightweight, runtime-scheduled thread. `main` returning ends the program regardless of other goroutines. Use `sync.WaitGroup` to wait: `Add` before launching, `Done` inside, `Wait` to block. Since Go 1.22, each loop iteration has its own copy of the loop variable, fixing the classic capture bug; with older `go.mod` versions you must pass the variable as an argument.",
+     "code": "var wg sync.WaitGroup\nfor i := 0; i < 3; i++ {\n\twg.Add(1)\n\tgo func() {\n\t\tdefer wg.Done()\n\t\tfmt.Println(i)\n\t}()\n}\nwg.Wait()"
+    },
+    {
+     "type": "mcq",
+     "question": "What is wrong?",
+     "options": [
+      "Nothing",
+      "`main` may exit before the goroutine prints",
+      "`Println` is not thread-safe",
+      "Goroutines need a name"
+     ],
+     "answer": 1,
+     "explanation": "Nothing waits for the goroutine, so the program usually exits first and prints nothing.",
+     "code": "func main() {\n\tgo fmt.Println(\"hi\")\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Why must `wg.Add(1)` be called *before* `go`, not inside the goroutine?",
+     "options": [
+      "It's a style rule",
+      "`Wait` might run before the goroutine's `Add`, returning too early",
+      "Add is not safe in goroutines",
+      "Go requires it"
+     ],
+     "answer": 1,
+     "explanation": "If `Add` happens inside the goroutine, the main goroutine may reach `Wait` while the counter is still 0."
+    },
+    {
+     "type": "mcq",
+     "question": "Before Go 1.22, what did `for i := 0; i < 3; i++ { go func(){ fmt.Println(i) }() }` typically print?",
+     "options": [
+      "`0 1 2` in order",
+      "Usually `3 3 3` (all goroutines share `i`)",
+      "Compile error",
+      "Nothing"
+     ],
+     "answer": 1,
+     "explanation": "All closures captured the same variable; by the time they run the loop ended with i == 3. Go 1.22+ gives each iteration its own `i`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the WaitGroup method that blocks until the counter is zero.",
+     "code": "wg.____()",
+     "answer": [
+      "Wait"
+     ],
+     "explanation": "`Wait` blocks until all `Done` calls match the `Add` count."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Launch 5 goroutines that each write `i*i` into `results[i]` (distinct indexes, so no race), wait with a WaitGroup, then print the slice (`[0 1 4 9 16]`).",
+     "starter": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tresults := make([]int, 5)\n\tvar wg sync.WaitGroup\n\t_ = &wg\n\tfmt.Println(results)\n}\n",
+     "solution": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tresults := make([]int, 5)\n\tvar wg sync.WaitGroup\n\tfor i := 0; i < 5; i++ {\n\t\twg.Add(1)\n\t\tgo func(i int) {\n\t\t\tdefer wg.Done()\n\t\t\tresults[i] = i * i\n\t\t}(i)\n\t}\n\twg.Wait()\n\tfmt.Println(results)\n}\n",
+     "expected_output": "[0 1 4 9 16]"
+    },
+    {
+     "type": "mcq",
+     "question": "Writing to different slice indexes from different goroutines is:",
+     "options": [
+      "A data race always",
+      "Safe: distinct memory locations, as long as the slice header isn't modified",
+      "Safe only with a Mutex",
+      "Impossible"
+     ],
+     "answer": 1,
+     "explanation": "Distinct elements are distinct memory locations; appending, however, modifies the header and would race."
+    }
+   ]
+  },
+  {
+   "id": "go-channels",
+   "track_id": "go",
+   "unit_id": "go-u4",
+   "title": "Channels",
+   "minutes": 11,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Channels",
+     "body": "`ch := make(chan T)` is unbuffered: send blocks until a receiver is ready (synchronisation point). `make(chan T, n)` buffers up to n values. `close(ch)` signals no more values; receivers get the zero value and `ok == false` afterwards. Only the sender should close; sending on a closed channel panics, closing twice panics, and closing nil panics. `range ch` loops until close. Receiving from a nil channel blocks forever.",
+     "code": "ch := make(chan int, 2)\nch <- 1\nch <- 2\nclose(ch)\nfor v := range ch { fmt.Println(v) }\nv, ok := <-ch // 0, false"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens?",
+     "options": [
+      "Prints 1",
+      "Deadlock: `fatal error: all goroutines are asleep`",
+      "Prints 0",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "An unbuffered send blocks forever with no receiver; the runtime detects the deadlock.",
+     "code": "func main() {\n\tch := make(chan int)\n\tch <- 1\n\tfmt.Println(<-ch)\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does a receive from a closed, drained channel return?",
+     "options": [
+      "Blocks",
+      "Panics",
+      "The zero value and `ok == false`",
+      "The last value"
+     ],
+     "answer": 2,
+     "explanation": "Receives on a closed channel never block; they yield zero values after buffered data is drained."
+    },
+    {
+     "type": "mcq",
+     "question": "What does sending on a closed channel do?",
+     "options": [
+      "Drops the value",
+      "Blocks",
+      "Panics",
+      "Returns an error"
+     ],
+     "answer": 2,
+     "explanation": "`panic: send on closed channel`. Therefore the owner/sender should close."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the channel direction type for a function that may only send.",
+     "code": "func produce(out ____ int) { out <- 1 }",
+     "answer": [
+      "chan<-"
+     ],
+     "explanation": "`chan<- T` is send-only; `<-chan T` is receive-only. They document and enforce intent."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Producer/consumer: a goroutine sends 1..5 on a channel and closes it; main ranges and prints the sum (`15`).",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan int)\n\tsum := 0\n\t_ = ch\n\tfmt.Println(sum)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan int)\n\tgo func() {\n\t\tfor i := 1; i <= 5; i++ {\n\t\t\tch <- i\n\t\t}\n\t\tclose(ch)\n\t}()\n\tsum := 0\n\tfor v := range ch {\n\t\tsum += v\n\t}\n\tfmt.Println(sum)\n}\n",
+     "expected_output": "15"
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Worker pool: 3 workers read jobs 1..6 from `jobs`, send `job*10` to `results`. Collect all results, sort them and print `[10 20 30 40 50 60]`.",
+     "starter": "package main\n\nimport (\n\t\"fmt\"\n\t\"sort\"\n\t\"sync\"\n)\n\nfunc main() {\n\tjobs := make(chan int, 6)\n\tresults := make(chan int, 6)\n\tvar wg sync.WaitGroup\n\t_ = jobs\n\t_ = &wg\n\tvar out []int\n\tsort.Ints(out)\n\tfmt.Println(out)\n\t_ = results\n}\n",
+     "solution": "package main\n\nimport (\n\t\"fmt\"\n\t\"sort\"\n\t\"sync\"\n)\n\nfunc main() {\n\tjobs := make(chan int, 6)\n\tresults := make(chan int, 6)\n\tvar wg sync.WaitGroup\n\tfor w := 0; w < 3; w++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor j := range jobs {\n\t\t\t\tresults <- j * 10\n\t\t\t}\n\t\t}()\n\t}\n\tfor i := 1; i <= 6; i++ {\n\t\tjobs <- i\n\t}\n\tclose(jobs)\n\twg.Wait()\n\tclose(results)\n\tvar out []int\n\tfor r := range results {\n\t\tout = append(out, r)\n\t}\n\tsort.Ints(out)\n\tfmt.Println(out)\n}\n",
+     "expected_output": "[10 20 30 40 50 60]",
+     "hint": "Results order depends on scheduling, so sort."
+    },
+    {
+     "type": "mcq",
+     "question": "Why sort the results in the worker pool?",
+     "options": [
+      "Channels reorder values",
+      "Workers finish in nondeterministic order",
+      "`range` sorts",
+      "Required by WaitGroup"
+     ],
+     "answer": 1,
+     "explanation": "Which worker finishes first is up to the scheduler, so output order varies."
+    }
+   ]
+  },
+  {
+   "id": "go-select-deadlocks",
+   "track_id": "go",
+   "unit_id": "go-u4",
+   "title": "select, Timeouts & Deadlocks",
+   "minutes": 11,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "select",
+     "body": "`select` waits on multiple channel operations and runs one that is ready (random if several). A `default` case makes it non-blocking. Combine with `time.After` or `context` for timeouts. A `select {}` blocks forever. Typical deadlock sources: unbuffered send with no receiver, forgetting to close a channel being ranged over, WaitGroup counts that never reach zero, and lock-ordering cycles. A nil channel in `select` is never ready, useful for disabling a case.",
+     "code": "select {\ncase v := <-ch:\n\tfmt.Println(v)\ncase <-time.After(time.Second):\n\tfmt.Println(\"timeout\")\ndefault:\n\tfmt.Println(\"nothing ready\")\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `select` do when multiple cases are ready?",
+     "options": [
+      "Picks the first in source order",
+      "Picks one uniformly at random",
+      "Runs all",
+      "Panics"
+     ],
+     "answer": 1,
+     "explanation": "The choice is pseudo-random to avoid starvation."
+    },
+    {
+     "type": "mcq",
+     "question": "Why does this deadlock?",
+     "options": [
+      "`range` on an unclosed channel never ends after the producer finishes",
+      "Unbuffered channels can't be ranged",
+      "The goroutine panics",
+      "`wg` is unused"
+     ],
+     "answer": 0,
+     "explanation": "The consumer keeps waiting for more values; without `close(ch)` the main goroutine blocks forever (`all goroutines are asleep`).",
+     "code": "func main() {\n\tch := make(chan int)\n\tgo func() {\n\t\tch <- 1\n\t\tch <- 2\n\t}()\n\tfor v := range ch {\n\t\tfmt.Println(v)\n\t}\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does a `select` with only a `default` and an empty channel do?",
+     "options": [
+      "Blocks",
+      "Runs `default` immediately",
+      "Panics",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "A default makes select non-blocking."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the case so the select gives up after the timer fires.",
+     "code": "select {\ncase v := <-ch: fmt.Println(v)\ncase <-time.____(50 * time.Millisecond): fmt.Println(\"timeout\")\n}",
+     "answer": [
+      "After"
+     ],
+     "explanation": "`time.After(d)` returns a channel that fires once after d."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Write a `select` over `ready` (buffered with 1 value `7`) and `empty` (nothing sent) using `default`. Loop twice, printing `got 7` the first time and `none` the second.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tready := make(chan int, 1)\n\tready <- 7\n\tfor i := 0; i < 2; i++ {\n\t\t_ = ready\n\t}\n\tfmt.Println()\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tready := make(chan int, 1)\n\tready <- 7\n\tfor i := 0; i < 2; i++ {\n\t\tselect {\n\t\tcase v := <-ready:\n\t\t\tfmt.Println(\"got\", v)\n\t\tdefault:\n\t\t\tfmt.Println(\"none\")\n\t\t}\n\t}\n}\n",
+     "expected_output": "got 7\nnone"
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Timeout pattern: a goroutine sleeps 200ms before sending; `select` waits at most 20ms. Print `timeout`.",
+     "starter": "package main\n\nimport (\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc main() {\n\tch := make(chan string)\n\tgo func() {\n\t\ttime.Sleep(200 * time.Millisecond)\n\t\tch <- \"late\"\n\t}()\n\t_ = ch\n\tfmt.Println()\n\t_ = time.Second\n}\n",
+     "solution": "package main\n\nimport (\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc main() {\n\tch := make(chan string, 1)\n\tgo func() {\n\t\ttime.Sleep(200 * time.Millisecond)\n\t\tch <- \"late\"\n\t}()\n\tselect {\n\tcase v := <-ch:\n\t\tfmt.Println(v)\n\tcase <-time.After(20 * time.Millisecond):\n\t\tfmt.Println(\"timeout\")\n\t}\n}\n",
+     "expected_output": "timeout"
+    },
+    {
+     "type": "mcq",
+     "question": "Why is the channel buffered (size 1) in the timeout solution?",
+     "options": [
+      "Required by select",
+      "So a late sender does not block forever (goroutine leak) after the receiver gave up",
+      "To speed up",
+      "To close it"
+     ],
+     "answer": 1,
+     "explanation": "With an unbuffered channel the late sender would block forever once nobody receives, leaking the goroutine."
+    }
+   ]
+  },
+  {
+   "id": "go-sync-context",
+   "track_id": "go",
+   "unit_id": "go-u4",
+   "title": "sync Primitives & context",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Mutex, Once and context",
+     "body": "`sync.Mutex` protects shared state (`Lock`/`defer Unlock`); `RWMutex` allows many readers. `sync.Once` runs an init exactly once. `sync/atomic` offers lock-free counters. Never copy a Mutex after first use. `context.Context` carries cancellation, deadlines and request-scoped values: pass it as the first parameter, derive with `WithCancel`/`WithTimeout`, call `cancel()` (usually `defer`), and select on `ctx.Done()`.",
+     "code": "var mu sync.Mutex\nmu.Lock()\ndefer mu.Unlock()\n\nctx, cancel := context.WithTimeout(context.Background(), time.Second)\ndefer cancel()\nselect {\ncase <-ctx.Done():\n\treturn ctx.Err()\ncase res := <-work:\n\t_ = res\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the main problem here?",
+     "options": [
+      "Nothing",
+      "Data race on `n`: unsynchronised increments are lost",
+      "`wg` is unused",
+      "Deadlock"
+     ],
+     "answer": 1,
+     "explanation": "`n++` is read-modify-write. Concurrent goroutines race (the final value is usually less than 1000). Guard with a Mutex or use `atomic.AddInt64`.",
+     "code": "var n int\nvar wg sync.WaitGroup\nfor i := 0; i < 1000; i++ {\n\twg.Add(1)\n\tgo func() { defer wg.Done(); n++ }()\n}\nwg.Wait()"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `ctx.Err()` return after a `WithTimeout` expires?",
+     "options": [
+      "nil",
+      "`context.DeadlineExceeded`",
+      "`context.Canceled`",
+      "`io.EOF`"
+     ],
+     "answer": 1,
+     "explanation": "On timeout `Err()` is `DeadlineExceeded`; after `cancel()` it is `Canceled`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the sync type that guarantees a function runs only once.",
+     "code": "var once sync.____",
+     "answer": [
+      "Once"
+     ],
+     "explanation": "`sync.Once.Do(f)` runs f once even from many goroutines."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Protect a counter with a Mutex: 100 goroutines each increment 100 times. Print the total (`10000`).",
+     "starter": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar wg sync.WaitGroup\n\tcount := 0\n\t_ = &wg\n\tfmt.Println(count)\n}\n",
+     "solution": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar wg sync.WaitGroup\n\tvar mu sync.Mutex\n\tcount := 0\n\tfor i := 0; i < 100; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor j := 0; j < 100; j++ {\n\t\t\t\tmu.Lock()\n\t\t\t\tcount++\n\t\t\t\tmu.Unlock()\n\t\t\t}\n\t\t}()\n\t}\n\twg.Wait()\n\tfmt.Println(count)\n}\n",
+     "expected_output": "10000"
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Use `sync.Once` so `setup` prints `init` once even though 3 goroutines call it. Then print `done` after waiting.",
+     "starter": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar wg sync.WaitGroup\n\t_ = &wg\n\tfmt.Println(\"done\")\n}\n",
+     "solution": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar once sync.Once\n\tvar wg sync.WaitGroup\n\tfor i := 0; i < 3; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tonce.Do(func() { fmt.Println(\"init\") })\n\t\t}()\n\t}\n\twg.Wait()\n\tfmt.Println(\"done\")\n}\n",
+     "expected_output": "init\ndone"
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Cancel with context: a worker loops until `ctx.Done()`. Cancel after it has been started and print the error `context canceled`.",
+     "starter": "package main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n)\n\nfunc main() {\n\tctx, cancel := context.WithCancel(context.Background())\n\tcancel()\n\tfmt.Println(ctx)\n}\n",
+     "solution": "package main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n)\n\nfunc main() {\n\tctx, cancel := context.WithCancel(context.Background())\n\tdone := make(chan struct{})\n\tgo func() {\n\t\t<-ctx.Done()\n\t\tclose(done)\n\t}()\n\tcancel()\n\t<-done\n\tfmt.Println(ctx.Err())\n}\n",
+     "expected_output": "context canceled"
+    },
+    {
+     "type": "mcq",
+     "question": "Why `defer cancel()` right after `WithTimeout`?",
+     "options": [
+      "To avoid leaking the context's timer/resources until it expires",
+      "Required for compile",
+      "To reset the clock",
+      "To free memory of Background"
+     ],
+     "answer": 0,
+     "explanation": "Not calling cancel leaks resources until the deadline; `go vet` has a lostcancel check."
+    }
+   ]
+  },
+  {
+   "id": "go-generics",
+   "track_id": "go",
+   "unit_id": "go-u5",
+   "title": "Generics & Constraints",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Type parameters",
+     "body": "Go 1.18+ supports generics: `func Map[T, U any](xs []T, f func(T) U) []U`. Constraints are interfaces; they can list **type sets** (`~int | ~float64`, where `~` includes defined types whose underlying type matches) and `comparable` (usable with `==`, map keys). `cmp.Ordered` covers ordered types. Type arguments are usually inferred. Methods cannot have their own type parameters, and there is no specialisation; the implementation uses GC shape stenciling with dictionaries.",
+     "code": "type Number interface{ ~int | ~int64 | ~float64 }\nfunc Sum[T Number](xs []T) (t T) {\n\tfor _, x := range xs { t += x }\n\treturn\n}\ntype MyInt int\nSum([]MyInt{1, 2})  // ok because of ~int"
+    },
+    {
+     "type": "mcq",
+     "question": "Why does `Sum([]MyInt{1,2})` fail if the constraint is `int | float64` (no tilde)?",
+     "options": [
+      "It doesn't fail",
+      "`MyInt` is not exactly `int`; without `~` only the exact types are in the set",
+      "Generics can't take slices",
+      "`MyInt` has no methods"
+     ],
+     "answer": 1,
+     "explanation": "`~int` means 'any type whose underlying type is int'. Without it, defined types like `MyInt` are excluded."
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement is true?",
+     "options": [
+      "Methods can declare their own type parameters",
+      "A generic type's methods use the receiver's type parameters but cannot add new ones",
+      "Generic functions can be specialised",
+      "Type parameters exist at runtime as values"
+     ],
+     "answer": 1,
+     "explanation": "Methods only use the type's parameters (`func (s *Stack[T]) Push(v T)`); add a standalone generic function if you need more."
+    },
+    {
+     "type": "mcq",
+     "question": "Which constraint allows `a == b` and use as a map key?",
+     "options": [
+      "`any`",
+      "`comparable`",
+      "`Number`",
+      "`fmt.Stringer`"
+     ],
+     "answer": 1,
+     "explanation": "`any` allows no operators; `comparable` permits `==` and `!=`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the keyword in the constraint that means 'any type whose underlying type is int'.",
+     "code": "type Int interface{ ____int }",
+     "answer": [
+      "~"
+     ],
+     "explanation": "The tilde operator widens the set to all types with underlying type int."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Write generic `Map[T, U any](xs []T, f func(T) U) []U` and `Filter[T any](xs []T, pred func(T) bool) []T`. Square `[1..5]`, keep evens and print `[4 16]`.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tnums := []int{1, 2, 3, 4, 5}\n\tfmt.Println(nums)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc Map[T, U any](xs []T, f func(T) U) []U {\n\tout := make([]U, 0, len(xs))\n\tfor _, x := range xs {\n\t\tout = append(out, f(x))\n\t}\n\treturn out\n}\n\nfunc Filter[T any](xs []T, pred func(T) bool) []T {\n\tvar out []T\n\tfor _, x := range xs {\n\t\tif pred(x) {\n\t\t\tout = append(out, x)\n\t\t}\n\t}\n\treturn out\n}\n\nfunc main() {\n\tnums := []int{1, 2, 3, 4, 5}\n\tsq := Map(nums, func(n int) int { return n * n })\n\tev := Filter(sq, func(n int) bool { return n%2 == 0 })\n\tfmt.Println(ev)\n}\n",
+     "expected_output": "[4 16]"
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Implement a generic `Stack[T any]` with `Push`, `Pop() (T, bool)`. Push 1,2,3 as ints, pop all and print `3 2 1 false`-style: print each popped value on one line separated by spaces, then the `ok` of a final pop on the empty stack (`3 2 1 false`).",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println()\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\ntype Stack[T any] struct{ items []T }\n\nfunc (s *Stack[T]) Push(v T) { s.items = append(s.items, v) }\n\nfunc (s *Stack[T]) Pop() (T, bool) {\n\tvar zero T\n\tif len(s.items) == 0 {\n\t\treturn zero, false\n\t}\n\tv := s.items[len(s.items)-1]\n\ts.items = s.items[:len(s.items)-1]\n\treturn v, true\n}\n\nfunc main() {\n\tvar s Stack[int]\n\ts.Push(1)\n\ts.Push(2)\n\ts.Push(3)\n\tfor i := 0; i < 3; i++ {\n\t\tv, _ := s.Pop()\n\t\tfmt.Print(v, \" \")\n\t}\n\t_, ok := s.Pop()\n\tfmt.Println(ok)\n}\n",
+     "expected_output": "3 2 1 false",
+     "hint": "Return the zero value of T with `var zero T`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this generic function return for an empty slice?",
+     "options": [
+      "Panics",
+      "The zero value `0`",
+      "Compile error",
+      "`nil`"
+     ],
+     "answer": 1,
+     "explanation": "`var zero T` is the zero value of T (0 for ints), a typical idiom in generic code.",
+     "code": "func Max[T cmp.Ordered](xs []T) T {\n\tvar m T\n\tfor i, x := range xs {\n\t\tif i == 0 || x > m { m = x }\n\t}\n\treturn m\n}\n// Max([]int{})"
+    }
+   ]
+  },
+  {
+   "id": "go-testing",
+   "track_id": "go",
+   "unit_id": "go-u5",
+   "title": "Testing, Benchmarks & the Race Detector",
+   "minutes": 10,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Testing in Go",
+     "body": "Tests live in `_test.go` files: `func TestXxx(t *testing.T)`. Idiomatic style is table-driven tests with `t.Run` subtests; call `t.Helper()` in assertion helpers, `t.Cleanup` for teardown, `t.Parallel()` to run in parallel, and `t.TempDir()` for files. Benchmarks use `for b.Loop()` (1.24+) or `for i := 0; i < b.N; i++`. Fuzz tests use `testing.F`. `go test -race` detects data races at runtime; `-cover` reports coverage; `-count=1` bypasses the test cache.",
+     "code": "func TestAdd(t *testing.T) {\n\tcases := []struct{ name string; a, b, want int }{\n\t\t{\"zero\", 0, 0, 0},\n\t\t{\"pos\", 1, 2, 3},\n\t}\n\tfor _, tc := range cases {\n\t\tt.Run(tc.name, func(t *testing.T) {\n\t\t\tif got := Add(tc.a, tc.b); got != tc.want {\n\t\t\t\tt.Errorf(\"Add(%d,%d)=%d want %d\", tc.a, tc.b, got, tc.want)\n\t\t\t}\n\t\t})\n\t}\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the difference between `t.Errorf` and `t.Fatalf`?",
+     "options": [
+      "None",
+      "`Errorf` marks failure and continues; `Fatalf` marks failure and stops the test immediately",
+      "`Fatalf` only logs",
+      "`Errorf` stops the test"
+     ],
+     "answer": 1,
+     "explanation": "`Fatal*` calls `runtime.Goexit` on the test goroutine; do not call it from other goroutines."
+    },
+    {
+     "type": "mcq",
+     "question": "Which file name is picked up by `go test`?",
+     "options": [
+      "`add.test.go`",
+      "`add_test.go`",
+      "`test_add.go`",
+      "`addtest.go`"
+     ],
+     "answer": 1,
+     "explanation": "Only files ending in `_test.go` are compiled as tests."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `go test -race` do?",
+     "options": [
+      "Runs tests faster",
+      "Builds with the race detector, reporting unsynchronised accesses seen at runtime",
+      "Randomises test order",
+      "Runs tests in parallel"
+     ],
+     "answer": 1,
+     "explanation": "It instruments memory accesses; it only reports races that actually occur during the run, so it needs good coverage."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the method that marks a helper so failures are reported at the caller's line.",
+     "code": "func assertEq(t *testing.T, got, want int) {\n\tt.____()\n}",
+     "answer": [
+      "Helper"
+     ],
+     "explanation": "`t.Helper()` makes `t.Errorf` report the caller's file and line."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Emulate a table-driven test in `main`: for each case run `Abs` and print `PASS name` or `FAIL name`. Cases: (`neg`,-3,3), (`zero`,0,0), (`pos`,5,5).",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc Abs(n int) int {\n\treturn n\n}\n\nfunc main() {\n\tcases := []struct {\n\t\tname       string\n\t\tin, want int\n\t}{\n\t\t{\"neg\", -3, 3},\n\t\t{\"zero\", 0, 0},\n\t\t{\"pos\", 5, 5},\n\t}\n\tfor _, tc := range cases {\n\t\t_ = tc\n\t}\n\tfmt.Println()\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc Abs(n int) int {\n\tif n < 0 {\n\t\treturn -n\n\t}\n\treturn n\n}\n\nfunc main() {\n\tcases := []struct {\n\t\tname     string\n\t\tin, want int\n\t}{\n\t\t{\"neg\", -3, 3},\n\t\t{\"zero\", 0, 0},\n\t\t{\"pos\", 5, 5},\n\t}\n\tfor _, tc := range cases {\n\t\tif got := Abs(tc.in); got == tc.want {\n\t\t\tfmt.Println(\"PASS\", tc.name)\n\t\t} else {\n\t\t\tfmt.Println(\"FAIL\", tc.name)\n\t\t}\n\t}\n}\n",
+     "expected_output": "PASS neg\nPASS zero\nPASS pos",
+     "hint": "Fix Abs, then print per case."
+    },
+    {
+     "type": "mcq",
+     "question": "Why prefer small interfaces defined by the consumer for testability?",
+     "options": [
+      "Compilers require it",
+      "They let you fake dependencies in tests without heavy mocking frameworks",
+      "Interfaces are faster",
+      "They avoid generics"
+     ],
+     "answer": 1,
+     "explanation": "A one- or two-method interface at the point of use is trivially faked by a struct in the test."
+    }
+   ]
+  },
+  {
+   "id": "go-memory-escape",
+   "track_id": "go",
+   "unit_id": "go-u5",
+   "title": "Memory, Escape Analysis & GC",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Stack vs heap and the GC",
+     "body": "The compiler uses **escape analysis** to decide whether a variable lives on the goroutine stack (cheap, freed on return) or the heap (GC-managed). Values escape when their address outlives the function (returned pointers, stored in globals/interfaces, captured by escaping closures, sent on channels), or are too large or of unknown size. Inspect with `go build -gcflags=-m`. Reduce allocations by preallocating (`make([]T, 0, n)`), reusing buffers (`sync.Pool`), avoiding unnecessary interface boxing, and passing values for small structs. The GC is concurrent, tri-colour mark-sweep; tune with `GOGC` and `GOMEMLIMIT`.",
+     "code": "func newPoint() *Point { return &Point{1, 2} }  // escapes to heap\nfunc sum() int { p := Point{1, 2}; return p.X + p.Y } // stays on stack"
+    },
+    {
+     "type": "mcq",
+     "question": "Which usually causes a variable to escape to the heap?",
+     "options": [
+      "Being an int",
+      "Returning its address or storing it in a global/interface that outlives the function",
+      "Being used in a for loop",
+      "Having a short name"
+     ],
+     "answer": 1,
+     "explanation": "If the compiler cannot prove the value's lifetime ends with the function, it allocates on the heap."
+    },
+    {
+     "type": "mcq",
+     "question": "A slice `small := big[:10]` keeps a 1 GB array alive. How do you release the rest?",
+     "options": [
+      "Set `big = nil` only",
+      "Copy the 10 elements to a new slice, drop references to `big`",
+      "Call `runtime.GC()`",
+      "Nothing: the GC slices memory"
+     ],
+     "answer": 1,
+     "explanation": "A sub-slice holds the entire backing array. Copy out the needed part (`append([]T(nil), small...)`) to let the GC reclaim the rest."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `sync.Pool` give you?",
+     "options": [
+      "Guaranteed object reuse",
+      "A cache of temporary objects that may be dropped at any GC, to reduce allocation pressure",
+      "A connection pool with limits",
+      "A thread pool"
+     ],
+     "answer": 1,
+     "explanation": "Pool items can disappear at any GC; never rely on them for state."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the build flag that prints escape analysis decisions.",
+     "code": "go build -gcflags=____ ./...",
+     "answer": [
+      "-m"
+     ],
+     "explanation": "`-gcflags=-m` prints inlining and escape decisions; `-m -m` is more verbose."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Measure allocations with `testing.AllocsPerRun`: one function stores a new int in a global sink (escapes), the other sums two local ints. Print the two averages (`1` then `0`).",
+     "starter": "package main\n\nimport (\n\t\"fmt\"\n\t\"testing\"\n)\n\nvar sink *int\n\nfunc main() {\n\ta := testing.AllocsPerRun(100, func() {\n\t\t// allocate an int and store it in sink\n\t})\n\tb := testing.AllocsPerRun(100, func() {\n\t\t// only local arithmetic\n\t})\n\tfmt.Println(a)\n\tfmt.Println(b)\n}\n",
+     "solution": "package main\n\nimport (\n\t\"fmt\"\n\t\"testing\"\n)\n\nvar sink *int\nvar sinkInt int\n\nfunc main() {\n\ta := testing.AllocsPerRun(100, func() {\n\t\tv := new(int)\n\t\t*v = 42\n\t\tsink = v\n\t})\n\tb := testing.AllocsPerRun(100, func() {\n\t\tx, y := 3, 4\n\t\tsinkInt = x + y\n\t})\n\tfmt.Println(a)\n\tfmt.Println(b)\n}\n",
+     "expected_output": "1\n0",
+     "hint": "Assigning to a package-level pointer forces a heap allocation."
+    },
+    {
+     "type": "mcq",
+     "question": "Why can boxing a value into `any` allocate?",
+     "options": [
+      "Interfaces are always pointers to arrays",
+      "Non-pointer values larger than a word (or non-constant) typically need a heap copy for the interface's data word",
+      "Boxing is free",
+      "Only strings allocate"
+     ],
+     "answer": 1,
+     "explanation": "The interface data word holds a pointer; the runtime may allocate to hold a copy of the value (small ints and constants have optimisations)."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the effect of raising `GOGC` from 100 to 200?",
+     "options": [
+      "Higher GOGC means fewer GCs and lower CPU overhead but higher memory use",
+      "Higher GOGC reduces memory",
+      "GOGC only affects stack size",
+      "It disables escape analysis"
+     ],
+     "answer": 0,
+     "explanation": "`GOGC=200` lets the heap grow to 3x live data before collecting: less GC work, more memory. `GOMEMLIMIT` adds a soft cap."
+    }
+   ]
+  },
+  {
+   "id": "go-gotchas",
+   "track_id": "go",
+   "unit_id": "go-u5",
+   "title": "Interview Gotchas Gauntlet",
+   "minutes": 14,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The classics",
+     "body": "Interviewers love these: (1) loop-variable capture (fixed per-iteration in 1.22); (2) typed-nil in an interface; (3) `append` aliasing; (4) writing to a nil map; (5) copying a `sync.Mutex`; (6) `defer` in loops and argument evaluation time; (7) shadowing with `:=` in `if err := ...` or inner scopes; (8) unbuffered channel deadlocks and goroutine leaks; (9) comparing interfaces holding uncomparable dynamic types panics at runtime; (10) `time.After` in a loop retains timers until they fire; (11) map iteration order is random; (12) range copies array operands and evaluates the slice once.",
+     "code": "x := 1\nif true {\n\tx := 2   // shadows\n\t_ = x\n}\nfmt.Println(x) // 1"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "`1 2 3`",
+      "`3 3 3`",
+      "`0 1 2`",
+      "`2 1 0`"
+     ],
+     "answer": 0,
+     "explanation": "`range` evaluates the slice once; appending inside the loop doesn't extend iteration, and `v` is the element copy.",
+     "code": "s := []int{1, 2, 3}\nfor _, v := range s {\n\ts = append(s, v*10)\n\tfmt.Print(v, \" \")\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens?",
+     "options": [
+      "Prints `true`",
+      "Prints `false`",
+      "Panics: comparing uncomparable type",
+      "Compile error"
+     ],
+     "answer": 2,
+     "explanation": "Both interfaces hold `[]int`; `==` on interfaces compares dynamic types and, if equal, the values, which panics for uncomparable dynamic types like slices.",
+     "code": "var a, b any = []int{1}, []int{1}\nfmt.Println(a == b)"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "`3`",
+      "`100`",
+      "`2`",
+      "Compile error"
+     ],
+     "answer": 0,
+     "explanation": "`range` over an array evaluates a copy of the array first, so `v` at index 2 is the original 3 even though `arr[2]` was changed. (Ranging over a slice or `&arr` would show 100.)",
+     "code": "arr := [3]int{1, 2, 3}\nfor i, v := range arr {\n\tarr[2] = 100\n\tif i == 2 {\n\t\tfmt.Println(v)\n\t}\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Which program leaks a goroutine?",
+     "options": [
+      "Producer sends on unbuffered channel; the consumer returns early without reading",
+      "A goroutine closes its own channel",
+      "`wg.Wait()` after Done",
+      "Using `defer`"
+     ],
+     "answer": 0,
+     "explanation": "The producer blocks forever on its send, and nothing ever collects it. Fix with buffering, `context`, or a `done` channel."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fix the shadowing bug: complete the line so the outer `err` is assigned (use plain assignment).",
+     "code": "var err error\nif cond {\n\tvar r int\n\tr, err ____ f()\n\t_ = r\n}",
+     "answer": [
+      "="
+     ],
+     "explanation": "With `:=` in the new scope `err` would be a fresh variable and the outer one stays nil; `=` assigns the outer."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Fix the typed-nil bug: `find` must return a true nil `error` when ok. Print `nil error: true`.",
+     "starter": "package main\n\nimport \"fmt\"\n\ntype MyErr struct{}\n\nfunc (*MyErr) Error() string { return \"boom\" }\n\nfunc find(ok bool) error {\n\tvar e *MyErr\n\tif !ok {\n\t\te = &MyErr{}\n\t}\n\treturn e\n}\n\nfunc main() {\n\tfmt.Println(\"nil error:\", find(true) == nil)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\ntype MyErr struct{}\n\nfunc (*MyErr) Error() string { return \"boom\" }\n\nfunc find(ok bool) error {\n\tif !ok {\n\t\treturn &MyErr{}\n\t}\n\treturn nil\n}\n\nfunc main() {\n\tfmt.Println(\"nil error:\", find(true) == nil)\n}\n",
+     "expected_output": "nil error: true",
+     "hint": "Return the literal nil for the success path."
+    },
+    {
+     "type": "code",
+     "language": "go",
+     "prompt": "Demonstrate the sub-slice append gotcha and fix it with a full slice expression. Setup: `a := []int{1,2,3,4}`; `b := a[:3]`; `b = append(b, 99)`. Print `a, b` (buggy: `a` is overwritten, giving `[1 2 3 99] [1 2 3 99]`), then repeat with a fresh `a` and `b := a[:3:3]` so `a` is untouched, printing `[1 2 3 4] [1 2 3 99]`.",
+     "starter": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := []int{1, 2, 3, 4}\n\tb := a[:3]\n\tb = append(b, 99)\n\tfmt.Println(a, b)\n}\n",
+     "solution": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := []int{1, 2, 3, 4}\n\tb := a[:3]\n\tb = append(b, 99)\n\tfmt.Println(a, b)\n\n\ta = []int{1, 2, 3, 4}\n\tb = a[:3:3]\n\tb = append(b, 99)\n\tfmt.Println(a, b)\n}\n",
+     "expected_output": "[1 2 3 99] [1 2 3 99]\n[1 2 3 4] [1 2 3 99]",
+     "hint": "The fix: a[:3:3] caps capacity so append reallocates."
+    }
+   ]
+  }
+ ]
+}

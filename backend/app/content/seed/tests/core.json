@@ -1,0 +1,251 @@
+{
+ "tests": [
+  {
+   "id": "python-dev-assessment",
+   "title": "Python Developer Assessment",
+   "style": "Turing-style",
+   "description": "Language knowledge plus two timed coding problems — the format used by many remote talent networks for their first technical screen.",
+   "duration_minutes": 35,
+   "pass_mark": 70,
+   "languages": [
+    "python",
+    "javascript"
+   ],
+   "mcq": [
+    {
+     "id": "p1",
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(a)",
+     "options": [
+      "[1, 2, 3, 4]",
+      "[1, 2, 3]",
+      "Error",
+      "None"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "p2",
+     "type": "mcq",
+     "question": "Which data structure gives O(1) average membership checks?",
+     "options": [
+      "list",
+      "tuple",
+      "set",
+      "str"
+     ],
+     "answer": 2
+    },
+    {
+     "id": "p3",
+     "type": "mcq",
+     "question": "What does `def f(x=[]):` risk?",
+     "options": [
+      "Nothing",
+      "The default list is shared across calls",
+      "SyntaxError",
+      "x is always None"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "p4",
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "print(*range(3))",
+     "options": [
+      "0 1 2",
+      "1 2 3",
+      "0 1 2 3",
+      "Nothing"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "p5",
+     "type": "mcq",
+     "question": "Which keyword creates a generator?",
+     "options": [
+      "return",
+      "async",
+      "yield",
+      "lambda"
+     ],
+     "answer": 2
+    },
+    {
+     "id": "p6",
+     "type": "mcq",
+     "question": "Time complexity of sorting with `sorted()`?",
+     "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(n²)",
+      "O(log n)"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "p7",
+     "type": "mcq",
+     "question": "What does `{**a, **b}` do with two dicts?",
+     "options": [
+      "Raises TypeError",
+      "Merges them; b wins on conflicts",
+      "Merges them; a wins on conflicts",
+      "Creates a set"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "p8",
+     "type": "mcq",
+     "question": "What is `bool([])`?",
+     "options": [
+      "True",
+      "False",
+      "None",
+      "Error"
+     ],
+     "answer": 1
+    }
+   ],
+   "coding": [
+    "two-sum",
+    "valid-parentheses"
+   ],
+   "difficulty": "Medium"
+  },
+  {
+   "id": "algorithms-sprint",
+   "title": "Algorithms Sprint",
+   "style": "Codility-style",
+   "description": "Three algorithm problems against the clock, scored on hidden test cases for correctness and edge cases.",
+   "duration_minutes": 45,
+   "pass_mark": 65,
+   "languages": [
+    "python",
+    "javascript"
+   ],
+   "mcq": [],
+   "coding": [
+    "best-time-to-buy-and-sell-stock",
+    "longest-substring-without-repeating",
+    "merge-intervals"
+   ],
+   "difficulty": "Medium"
+  },
+  {
+   "id": "javascript-fundamentals",
+   "title": "JavaScript Fundamentals",
+   "style": "Skill test",
+   "description": "Core JavaScript knowledge that frontend and Node.js screens test first.",
+   "duration_minutes": 15,
+   "pass_mark": 75,
+   "languages": [],
+   "mcq": [
+    {
+     "id": "j1",
+     "type": "mcq",
+     "question": "What is logged?",
+     "code": "for (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i));\n}",
+     "options": [
+      "0 1 2",
+      "3 3 3",
+      "undefined",
+      "Error"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "j2",
+     "type": "mcq",
+     "question": "Which comparison avoids type coercion?",
+     "options": [
+      "==",
+      "===",
+      "=",
+      "!="
+     ],
+     "answer": 1
+    },
+    {
+     "id": "j3",
+     "type": "mcq",
+     "question": "What does `[1, 2, 3].map(n => n * 2)` return?",
+     "options": [
+      "[2, 4, 6]",
+      "undefined",
+      "[1, 2, 3]",
+      "6"
+     ],
+     "answer": 0
+    },
+    {
+     "id": "j4",
+     "type": "mcq",
+     "question": "What is `typeof NaN`?",
+     "options": [
+      "\"NaN\"",
+      "\"number\"",
+      "\"undefined\"",
+      "\"object\""
+     ],
+     "answer": 1
+    },
+    {
+     "id": "j5",
+     "type": "mcq",
+     "question": "Which runs first?",
+     "code": "setTimeout(() => log('timeout'));\nPromise.resolve().then(() => log('promise'));",
+     "options": [
+      "setTimeout callback",
+      "Promise.then callback",
+      "They run together",
+      "It depends on the browser"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "j6",
+     "type": "mcq",
+     "question": "What does `const` prevent?",
+     "options": [
+      "Mutating objects",
+      "Reassigning the binding",
+      "Hoisting",
+      "Garbage collection"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "j7",
+     "type": "mcq",
+     "question": "What does the spread in `[...a, ...b]` produce?",
+     "options": [
+      "A nested array",
+      "A new merged array",
+      "A string",
+      "An object"
+     ],
+     "answer": 1
+    },
+    {
+     "id": "j8",
+     "type": "mcq",
+     "question": "Arrow functions differ from regular functions because they…",
+     "options": [
+      "Can't take parameters",
+      "Don't bind their own `this`",
+      "Are always async",
+      "Can't return values"
+     ],
+     "answer": 1
+    }
+   ],
+   "coding": [],
+   "difficulty": "Medium"
+  }
+ ]
+}

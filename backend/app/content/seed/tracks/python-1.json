@@ -1,0 +1,1853 @@
+{
+ "lessons": [
+  {
+   "id": "py-u1-variables",
+   "track_id": "python",
+   "unit_id": "py-u1",
+   "title": "Variables, Names & Types",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Variables are names, not boxes",
+     "body": "In Python a variable is a **name bound to an object**. Assignment never copies the object; it just makes the name point at it. Every object has an identity, a type and a value, and the *type belongs to the object*, not the name. That is why `x = 5` then `x = \"five\"` is legal: the name was simply rebound.\n\nThis model explains most Python surprises (aliasing, mutability, argument passing), so interviewers love it.",
+     "code": "x = 5\nprint(type(x))\nx = \"five\"\nprint(type(x))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "a = [1, 2]\nb = a\nb.append(3)\nprint(a)\n",
+     "options": [
+      "[1, 2]",
+      "[1, 2, 3]",
+      "[1, 2, 3] then [1, 2]",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "`b = a` binds a second name to the *same* list. Appending through `b` mutates that one object, so `a` sees it. No copy was made."
+    },
+    {
+     "type": "concept",
+     "title": "Built-in types and mutability",
+     "body": "Core types: `int`, `float`, `bool`, `str`, `None`, `list`, `tuple`, `dict`, `set`. **Immutable**: int, float, bool, str, tuple, frozenset, None. **Mutable**: list, dict, set.\n\nImmutable objects can never change in place, so operations like `s += \"x\"` create a *new* object and rebind the name. Mutable objects change in place, so every name referring to them sees the change. Only immutable (hashable) objects can be dict keys or set members, because their hash must never change.",
+     "code": "s = \"hi\"\nt = s\ns += \"!\"\nprint(s, t)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement is true?",
+     "options": [
+      "Tuples are fully mutable because they can hold lists",
+      "A `str` can be modified with `s[0] = 'X'`",
+      "`bool` is a subclass of `int`",
+      "`None` is the same object as `0`"
+     ],
+     "answer": 2,
+     "explanation": "`True == 1` and `isinstance(True, int)` is `True`: bool subclasses int. Strings reject item assignment (TypeError). A tuple's *own* slots are fixed even if it contains a mutable element. `None` is its own singleton."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "t = (1, 2, [3])\ntry:\n    t[2] += [4]\nexcept TypeError:\n    pass\nprint(t)\n",
+     "options": [
+      "(1, 2, [3, 4])",
+      "TypeError and the list is unchanged",
+      "(1, 2, [3, 4]) after catching an error",
+      "(1, 2, [3])"
+     ],
+     "answer": 2,
+     "explanation": "`t[2] += [4]` first runs `list.__iadd__` (mutating the list in place), then tries to assign the result back to `t[2]`, which fails with TypeError. So you get the error *and* the mutation. A classic gotcha."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the built-in that reports an object's type.",
+     "code": "x = 3.14\nprint(____(x))",
+     "answer": [
+      "type"
+     ],
+     "explanation": "`type(x)` returns the class, here `<class 'float'>`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Swap `a` and `b` using tuple unpacking (no temp variable), then print `a b`.",
+     "starter": "a = 1\nb = 2\n# swap here\nprint(a, b)\n",
+     "solution": "a = 1\nb = 2\na, b = b, a\nprint(a, b)\n",
+     "expected_output": "2 1",
+     "hint": "The right side is evaluated fully before assignment: `a, b = b, a`."
+    }
+   ]
+  },
+  {
+   "id": "py-u1-is-vs-eq",
+   "track_id": "python",
+   "unit_id": "py-u1",
+   "title": "is vs ==, Identity & Integer Caching",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Equality vs identity",
+     "body": "`==` asks \"do these have equal *values*?\" (calls `__eq__`). `is` asks \"are these the *same object*?\" (compares `id()`). Two equal lists are different objects, so `==` is `True` and `is` is `False`.\n\nUse `is` only for singletons: `None`, `True`, `False`. Write `if x is None`, never `x == None`, because a class can override `__eq__` but nothing can override `is`.",
+     "code": "a = [1, 2]\nb = [1, 2]\nprint(a == b, a is b)\nc = a\nprint(a is c)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "x = [0]\ny = [0]\nprint(x == y, x is y)\n",
+     "options": [
+      "True False",
+      "True True",
+      "False False",
+      "False True"
+     ],
+     "answer": 0,
+     "explanation": "Equal contents, distinct objects: `==` is True, `is` is False. Each list literal builds a new list."
+    },
+    {
+     "type": "concept",
+     "title": "Small-integer caching",
+     "body": "CPython pre-creates the integers **-5 to 256** and reuses them, so two names bound to e.g. `100` usually point at the same object. Larger ints computed at runtime are typically separate objects. Likewise, some short strings are *interned*.\n\nThis is an **implementation detail**, not a language guarantee. Interview takeaway: never rely on `is` for numbers or strings; use `==`. If asked, explain the cache but say it should not be depended on.",
+     "code": "a = 256\nb = 256\nprint(a is b)\nc = int(\"1000\")\nd = int(\"1000\")\nprint(c is d, c == d)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Why is `x is None` preferred over `x == None`?",
+     "options": [
+      "It is faster for every type",
+      "`==` can be overridden by `__eq__` and return something surprising; `is` cannot",
+      "`None` is a string",
+      "`==` raises an error on None"
+     ],
+     "answer": 1,
+     "explanation": "`None` is a singleton, so identity is exact and cannot be fooled by a custom `__eq__`. Speed is a minor side benefit, not the reason."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output in CPython?",
+     "code": "def f():\n    a = int('5'); b = int('5')\n    c = int('257'); d = int('257')\n    return a is b, c is d\nprint(*f())\n",
+     "options": [
+      "True False",
+      "False False",
+      "True True",
+      "False True"
+     ],
+     "answer": 0,
+     "explanation": "5 is in the cached range so both calls return the same object; 257 is outside -5..256, so `int('257')` builds a new object each call. Values are equal either way. Treat this as an illustration of the cache, not a guarantee."
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the safe None check.",
+     "code": "def show(v):\n    if v ____ None:\n        return \"empty\"\n    return v",
+     "answer": [
+      "is"
+     ],
+     "explanation": "Compare to `None` with the identity operator `is`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Print the results of `a == b`, `a is b`, and `id(a) == id(c)` (c is an alias of a) on three separate lines.",
+     "starter": "a = [1, 2, 3]\nb = [1, 2, 3]\nc = a\n# print the three results\n",
+     "solution": "a = [1, 2, 3]\nb = [1, 2, 3]\nc = a\nprint(a == b)\nprint(a is b)\nprint(id(a) == id(c))\n",
+     "expected_output": "True\nFalse\nTrue"
+    }
+   ]
+  },
+  {
+   "id": "py-u1-strings",
+   "track_id": "python",
+   "unit_id": "py-u1",
+   "title": "Strings, Methods & Slicing",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Strings are immutable sequences",
+     "body": "A `str` is an immutable sequence of Unicode characters. Indexing starts at 0; negative indexes count from the end (`s[-1]` is the last char). Because strings are immutable, every method (`upper`, `replace`, `strip`...) *returns a new string*; forgetting to use the return value is a very common bug.\n\nFrequent methods: `split`, `join`, `strip`, `lower`, `startswith`, `find`, `replace`, `count`.",
+     "code": "s = \"  Hello  \"\ns.strip()\nprint(repr(s))\nprint(repr(s.strip()))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "s = \"python\"\ns.upper()\nprint(s)\n",
+     "options": [
+      "python",
+      "PYTHON",
+      "Error",
+      "None"
+     ],
+     "answer": 0,
+     "explanation": "`upper()` returns a new string and `s` is never rebound, so `s` is unchanged."
+    },
+    {
+     "type": "concept",
+     "title": "Slicing: [start:stop:step]",
+     "body": "`s[a:b]` takes characters from index `a` up to but **not including** `b`. Omitted bounds default to the ends; out-of-range bounds are clamped, never an error. A negative step walks backwards, so `s[::-1]` reverses. Slicing returns a new object and takes O(k) time for k items.",
+     "code": "s = \"abcdef\"\nprint(s[1:4])\nprint(s[:-2])\nprint(s[::2])\nprint(s[::-1])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `\"interview\"[2:6:2]` return?",
+     "options": [
+      "\"te\"",
+      "\"trv\"",
+      "\"ter\"",
+      "\"tr\""
+     ],
+     "answer": 3,
+     "explanation": "'interview' = i0 n1 t2 e3 r4 v5 i6 e7 w8. Start 2, step 2, stop 6 (excluded): indexes 2 and 4 give 't' and 'r', i.e. \"tr\"."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is the idiomatic, efficient way to build one string from a list of many strings?",
+     "options": [
+      "Repeated `+=` in a loop",
+      "`\"\".join(parts)`",
+      "`str(parts)`",
+      "`parts.sum()`"
+     ],
+     "answer": 1,
+     "explanation": "`join` computes the total size once, so it is O(n). Repeated concatenation may copy the growing string each time, which can be O(n^2) in the worst case."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill the method that splits `\"a,b,c\"` into a list.",
+     "code": "parts = \"a,b,c\".____(\",\")\nprint(parts)",
+     "answer": [
+      "split"
+     ],
+     "explanation": "`str.split(sep)` returns a list of pieces."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Print whether the word `racecar` is a palindrome by comparing it with its reverse slice. Print `True`.",
+     "starter": "word = \"racecar\"\n# print(...)\n",
+     "solution": "word = \"racecar\"\nprint(word == word[::-1])\n",
+     "expected_output": "True"
+    }
+   ]
+  },
+  {
+   "id": "py-u1-fstrings-numbers",
+   "track_id": "python",
+   "unit_id": "py-u1",
+   "title": "f-strings & Numbers",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "f-strings",
+     "body": "Prefix a string with `f` to embed expressions: `f\"{name} is {age}\"`. After a colon you give a **format spec**: `{x:.2f}` (2 decimals), `{n:05d}` (zero-pad), `{n:,}` (thousands separator), `{x:>8}` (right-align), `{x!r}` (use `repr`). In Python 3.8+ `{x=}` prints `x=value`, handy for debugging. f-strings are evaluated at runtime and are faster and clearer than `%` or `.format`.",
+     "code": "pi = 3.14159\nn = 1234567\nprint(f\"{pi:.2f}\")\nprint(f\"{n:,}\")\nprint(f\"{7:03d}\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "print(16 / 2)\n",
+     "options": [
+      "8.0",
+      "8",
+      "7.9999",
+      "Error"
+     ],
+     "answer": 0,
+     "explanation": "`/` is always true division and returns a float, even for exact divisions. Use `//` for floor division."
+    },
+    {
+     "type": "concept",
+     "title": "Numbers: int, float, division",
+     "body": "`int` has arbitrary precision (no overflow). `float` is a 64-bit IEEE double, so `0.1 + 0.2 != 0.3`. Compare floats with `math.isclose`, and use `decimal.Decimal` for money.\n\n`//` floors toward negative infinity and `%` takes the sign of the divisor, so `-7 // 2 == -4` and `-7 % 2 == 1`. The identity `a == (a // b) * b + a % b` always holds. `divmod(a, b)` returns both.",
+     "code": "print(0.1 + 0.2 == 0.3)\nprint(-7 // 2, -7 % 2)\nprint(divmod(17, 5))\nprint(2 ** 100)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `-7 // 2`?",
+     "options": [
+      "-3",
+      "-4",
+      "3",
+      "-3.5"
+     ],
+     "answer": 1,
+     "explanation": "Floor division rounds toward negative infinity: -3.5 floors to -4. It is not truncation toward zero as in C."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is true about `round(2.5)` in Python 3?",
+     "options": [
+      "Returns 3",
+      "Returns 2 (banker's rounding)",
+      "Returns 2.5",
+      "Raises ValueError"
+     ],
+     "answer": 1,
+     "explanation": "Python 3 rounds half to even, so `round(2.5) == 2` and `round(3.5) == 4`. This reduces systematic bias."
+    },
+    {
+     "type": "fill",
+     "prompt": "Format `x` with exactly two decimal places.",
+     "code": "x = 3.14159\nprint(f\"{x:____}\")",
+     "answer": [
+      ".2f"
+     ],
+     "explanation": "`.2f` means fixed-point with 2 digits after the decimal point."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Compute the total price `19.99 * 3` and print it as `Total: $59.97` using an f-string with 2 decimals.",
+     "starter": "price = 19.99\nqty = 3\n# print using an f-string\n",
+     "solution": "price = 19.99\nqty = 3\nprint(f\"Total: ${price * qty:.2f}\")\n",
+     "expected_output": "Total: $59.97",
+     "hint": "Put `:.2f` after the expression inside the braces."
+    }
+   ]
+  },
+  {
+   "id": "py-u2-conditionals-truthiness",
+   "track_id": "python",
+   "unit_id": "py-u2",
+   "title": "Conditionals & Truthiness",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "if / elif / else and truthiness",
+     "body": "Python conditions accept *any* object. Falsy values: `None`, `False`, `0`, `0.0`, `\"\"`, `[]`, `()`, `{}`, `set()`, `range(0)`. Almost everything else is truthy (including user objects, unless they define `__bool__` or `__len__`).\n\nThis lets you write `if items:` instead of `if len(items) > 0:`. But beware: `0` and `[]` are both falsy, so `if not x` cannot distinguish \"missing\" from \"empty\"; use `is None` when that matters.",
+     "code": "items = []\nif items:\n    print(\"has items\")\nelse:\n    print(\"empty\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "x = 0\nif x:\n    print(\"a\")\nelif []:\n    print(\"b\")\nelse:\n    print(\"c\")\n",
+     "options": [
+      "a",
+      "b",
+      "c",
+      "nothing"
+     ],
+     "answer": 2,
+     "explanation": "`0` is falsy and `[]` is falsy, so neither branch runs and the `else` prints c."
+    },
+    {
+     "type": "concept",
+     "title": "Boolean operators short-circuit and return operands",
+     "body": "`and` / `or` do not return `True`/`False`; they return one of their **operands**. `a or b` gives `a` if `a` is truthy else `b`. `a and b` gives `a` if `a` is falsy else `b`. They stop evaluating as soon as the result is known (short-circuit), so `x and x.attr` guards against None.\n\nThat is why `name = user_input or \"guest\"` works as a default.",
+     "code": "print(0 or \"default\")\nprint(\"x\" and \"y\")\nprint([] and 1/0)\nprint(repr(None or 0 or \"\"))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output of `print(1 < 2 < 3, 1 < 3 < 2)`?",
+     "options": [
+      "True True",
+      "True False",
+      "False False",
+      "SyntaxError"
+     ],
+     "answer": 1,
+     "explanation": "Comparisons chain: `1 < 2 < 3` means `1 < 2 and 2 < 3`. The second is `1 < 3 and 3 < 2` which is False."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `print(\"\" or [] or 0)` print?",
+     "options": [
+      "''",
+      "[]",
+      "0",
+      "False"
+     ],
+     "answer": 2,
+     "explanation": "All three are falsy, so `or` returns the *last* operand, `0`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the ternary expression.",
+     "code": "age = 20\nlabel = \"adult\" ____ age >= 18 else \"minor\"\nprint(label)",
+     "answer": [
+      "if"
+     ],
+     "explanation": "The conditional expression form is `value_if_true if cond else value_if_false`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Using a conditional expression, build labels for n in 1..5 and print them on one line separated by spaces, e.g. `odd even odd even odd`.",
+     "starter": "labels = []\nfor n in range(1, 6):\n    pass\nprint(\" \".join(labels))\n",
+     "solution": "labels = []\nfor n in range(1, 6):\n    labels.append(\"even\" if n % 2 == 0 else \"odd\")\nprint(\" \".join(labels))\n",
+     "expected_output": "odd even odd even odd"
+    }
+   ]
+  },
+  {
+   "id": "py-u2-loops",
+   "track_id": "python",
+   "unit_id": "py-u2",
+   "title": "Loops, break/continue & loop-else",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "for and while",
+     "body": "`for` iterates over any *iterable* (list, str, dict, range, file...). `while` repeats while a condition is truthy. `break` exits the loop, `continue` skips to the next iteration. `range(start, stop, step)` is lazy: it stores only three numbers and `range(10**9)` costs no memory.",
+     "code": "for i in range(3):\n    print(i)\n\nn = 3\nwhile n:\n    n -= 1\nprint(n)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "for i in range(5):\n    if i == 3:\n        break\n    print(i, end=\" \")\n",
+     "options": [
+      "0 1 2 3 4",
+      "0 1 2",
+      "1 2",
+      "0 1 2 3"
+     ],
+     "answer": 1,
+     "explanation": "`break` leaves the loop when `i` becomes 3, so only 0, 1, 2 were printed."
+    },
+    {
+     "type": "concept",
+     "title": "The else clause on loops",
+     "body": "A loop's `else` block runs **only if the loop finished without hitting `break`**. It is the idiomatic way to write search loops: if you find the item you `break`; the `else` handles 'not found' without a flag variable. Read `else` as \"no break\".",
+     "code": "for n in [3, 5, 7]:\n    if n % 2 == 0:\n        print(\"found even\")\n        break\nelse:\n    print(\"no even numbers\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "for x in [1, 2, 3]:\n    if x == 4:\n        print(\"found\")\n        break\nelse:\n    print(\"not found\")\n",
+     "options": [
+      "found",
+      "not found",
+      "found then not found",
+      "nothing"
+     ],
+     "answer": 1,
+     "explanation": "The loop exhausts without `break` (4 is not in the list), so the `else` branch executes."
+    },
+    {
+     "type": "concept",
+     "title": "enumerate and zip",
+     "body": "Avoid `for i in range(len(xs))`. Use `enumerate(xs, start=0)` for index+value pairs and `zip(a, b)` to walk sequences in lockstep (it stops at the shortest). Both are lazy iterators.",
+     "code": "names = [\"a\", \"b\"]\nfor i, name in enumerate(names, start=1):\n    print(i, name)\nfor x, y in zip([1, 2, 3], \"xy\"):\n    print(x, y)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "How many lines does `for x, y in zip([1,2,3], \"ab\"): print(x, y)` print?",
+     "options": [
+      "3",
+      "2",
+      "5",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "`zip` stops at the shortest iterable, here length 2."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Use a for/else loop to find the first number in the list divisible by 7. Print it, or `none` if absent. The list has no multiple of 7, so print `none`.",
+     "starter": "nums = [10, 15, 22, 30]\n# for/else\n",
+     "solution": "nums = [10, 15, 22, 30]\nfor n in nums:\n    if n % 7 == 0:\n        print(n)\n        break\nelse:\n    print(\"none\")\n",
+     "expected_output": "none"
+    }
+   ]
+  },
+  {
+   "id": "py-u2-range-patterns",
+   "track_id": "python",
+   "unit_id": "py-u2",
+   "title": "Looping Patterns & Pitfalls",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Never mutate a list while iterating it",
+     "body": "Removing items from a list inside `for x in lst:` shifts later items left under the iterator's index, so elements get skipped. Safe alternatives: iterate over a copy (`for x in lst[:]`), build a new list (comprehension), or iterate backwards. For dicts, changing size during iteration raises `RuntimeError`.",
+     "code": "nums = [1, 2, 2, 3]\nfor n in nums:\n    if n == 2:\n        nums.remove(n)\nprint(nums)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does the snippet in the concept (removing 2 from [1,2,2,3] while iterating) leave?",
+     "options": [
+      "[1, 3]",
+      "[1, 2, 3]",
+      "[1, 2, 2, 3]",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "After removing the first 2, the list shifts and the iterator advances past the second 2, so one 2 survives: [1, 2, 3]."
+    },
+    {
+     "type": "concept",
+     "title": "Counting and accumulating",
+     "body": "Common interview loops: sum/product accumulators, frequency counting with a dict (`counts[ch] = counts.get(ch, 0) + 1`), tracking a max/min, and two-pointer scans. `sum`, `max`, `min`, `any`, `all` replace many hand-written loops. `any`/`all` short-circuit.",
+     "code": "text = \"banana\"\ncounts = {}\nfor ch in text:\n    counts[ch] = counts.get(ch, 0) + 1\nprint(counts)\nprint(any(c > 2 for c in counts.values()))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `all([])` return?",
+     "options": [
+      "True",
+      "False",
+      "None",
+      "Error"
+     ],
+     "answer": 0,
+     "explanation": "`all` of an empty iterable is vacuously True; `any([])` is False. Edge-case favourite."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the range stop value to count down 3, 2, 1.",
+     "code": "for i in range(3, ____, -1):\n    print(i)",
+     "answer": [
+      "0"
+     ],
+     "explanation": "The stop value is exclusive, so stopping at 0 gives 3, 2, 1."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Count how many times each letter occurs in `\"mississippi\"` with a dict and print `sorted(counts.items())`.",
+     "starter": "word = \"mississippi\"\ncounts = {}\n# fill counts\nprint(sorted(counts.items()))\n",
+     "solution": "word = \"mississippi\"\ncounts = {}\nfor ch in word:\n    counts[ch] = counts.get(ch, 0) + 1\nprint(sorted(counts.items()))\n",
+     "expected_output": "[('i', 4), ('m', 1), ('p', 2), ('s', 4)]"
+    }
+   ]
+  },
+  {
+   "id": "py-u2-match",
+   "track_id": "python",
+   "unit_id": "py-u2",
+   "title": "Structural Pattern Matching (match)",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "match / case",
+     "body": "Python 3.10 added `match`. It is *structural pattern matching*, much more than a switch: patterns can destructure sequences and dicts, bind names, and check types. The first matching `case` runs; there is no fall-through. `_` is the wildcard. Use `|` for alternatives.",
+     "code": "def kind(code):\n    match code:\n        case 200 | 201:\n            return \"ok\"\n        case 404:\n            return \"missing\"\n        case _:\n            return \"other\"\nprint(kind(201), kind(404), kind(500))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `kind(418)` return?",
+     "code": "def kind(code):\n    match code:\n        case 200 | 201:\n            return \"ok\"\n        case 404:\n            return \"missing\"\n        case _:\n            return \"other\"\nprint(kind(418))\n",
+     "options": [
+      "\"ok\"",
+      "\"missing\"",
+      "\"other\"",
+      "None"
+     ],
+     "answer": 2,
+     "explanation": "No earlier case matches so the wildcard `_` catches it."
+    },
+    {
+     "type": "concept",
+     "title": "Destructuring and guards",
+     "body": "Sequence patterns like `[x, y]` match lists/tuples of that length and bind names. `[first, *rest]` captures the tail. Mapping patterns `{\"type\": \"circle\", \"r\": r}` match dicts containing those keys. A guard `case [x, y] if x == y:` adds a condition. A bare name in a pattern is a *capture*, not a comparison: to compare against a constant use a literal or a dotted name.",
+     "code": "def describe(p):\n    match p:\n        case []:\n            return \"empty\"\n        case [x]:\n            return f\"one: {x}\"\n        case [x, *rest] if x == 0:\n            return f\"starts with zero, {len(rest)} more\"\n        case [x, *rest]:\n            return f\"first {x}, rest {rest}\"\nprint(describe([]))\nprint(describe([0, 1, 2]))\nprint(describe([5, 6]))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Why is `case RED:` (a bare name) dangerous?",
+     "options": [
+      "It's a syntax error",
+      "It captures anything into a new variable `RED` and always matches",
+      "It compares with a constant RED",
+      "It matches only strings"
+     ],
+     "answer": 1,
+     "explanation": "Bare names in patterns are capture patterns, so they match everything and rebind the name. Use `Color.RED` (dotted) or a literal to compare."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "point = (3, 3)\nmatch point:\n    case (a, b) if a == b:\n        print(\"pair\", a)\n    case _:\n        print(\"other\")\n",
+     "options": [
+      "pair 3",
+      "other",
+      "pair (3, 3)",
+      "Error"
+     ],
+     "answer": 0,
+     "explanation": "The first case `(a, b) if a == b` matches the tuple and the guard is true, binding a and b to 3."
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the wildcard case.",
+     "code": "match 7:\n    case 1:\n        print(\"one\")\n    case ____:\n        print(\"many\")",
+     "answer": [
+      "_"
+     ],
+     "explanation": "`_` is the wildcard pattern that matches anything without binding."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write `shape_area(s)` using match on a dict: `{\"kind\": \"square\", \"side\": n}` returns n*n; `{\"kind\": \"rect\", \"w\": w, \"h\": h}` returns w*h; anything else returns 0. Print the areas for a square of side 4 and a rect 2x5 on separate lines.",
+     "starter": "def shape_area(s):\n    pass\n\nprint(shape_area({\"kind\": \"square\", \"side\": 4}))\nprint(shape_area({\"kind\": \"rect\", \"w\": 2, \"h\": 5}))\n",
+     "solution": "def shape_area(s):\n    match s:\n        case {\"kind\": \"square\", \"side\": n}:\n            return n * n\n        case {\"kind\": \"rect\", \"w\": w, \"h\": h}:\n            return w * h\n        case _:\n            return 0\n\nprint(shape_area({\"kind\": \"square\", \"side\": 4}))\nprint(shape_area({\"kind\": \"rect\", \"w\": 2, \"h\": 5}))\n",
+     "expected_output": "16\n10"
+    }
+   ]
+  },
+  {
+   "id": "py-u3-lists",
+   "track_id": "python",
+   "unit_id": "py-u3",
+   "title": "Lists, Slicing & Complexity",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Lists: dynamic arrays",
+     "body": "A `list` is an ordered, mutable, dynamically-sized array of references. Because it is an array, index access `lst[i]` and `append` are O(1) (amortized for append), while `insert(0, x)`, `pop(0)` and `x in lst` are O(n). If you need fast pops from the left, use `collections.deque`; if you need fast membership tests, use a `set`.\n\nKey methods: `append`, `extend`, `insert`, `pop`, `remove`, `sort`, `reverse`, `index`, `count`.",
+     "code": "nums = [3, 1, 2]\nnums.append(4)\nnums.extend([5, 6])\nprint(nums, nums.pop(), len(nums))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "nums = [3, 1, 2]\nprint(nums.sort())\n",
+     "options": [
+      "None",
+      "[1, 2, 3]",
+      "Error",
+      "[3, 2, 1]"
+     ],
+     "answer": 0,
+     "explanation": "`list.sort()` sorts **in place** and returns `None`. Use `sorted(lst)` when you want a new sorted list."
+    },
+    {
+     "type": "concept",
+     "title": "Slices and copies",
+     "body": "`lst[a:b]` returns a **new list** (a shallow copy of that range). `lst[:]` or `lst.copy()` copies the whole list. Slice assignment can replace, grow or shrink a range: `lst[1:3] = [9]`. `del lst[1:3]` deletes a range. Negative and out-of-range indexes behave like they do for strings, but a single out-of-range *index* (`lst[10]`) raises `IndexError` whereas a slice does not.",
+     "code": "a = [0, 1, 2, 3, 4]\nb = a[1:4]\nb[0] = 99\nprint(a, b)\na[1:3] = [\"x\"]\nprint(a)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which operation is O(n) for a list of length n?",
+     "options": [
+      "`lst[5]`",
+      "`lst.append(1)`",
+      "`lst.insert(0, 1)`",
+      "`len(lst)`"
+     ],
+     "answer": 2,
+     "explanation": "Inserting at the front shifts every element right, O(n). Indexing, append (amortized) and len are O(1)."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "grid = [[0] * 2] * 2\ngrid[0][0] = 1\nprint(grid)\n",
+     "options": [
+      "[[0, 0], [0, 0]]",
+      "[[1, 0], [0, 0]]",
+      "[[1, 0], [1, 0]]",
+      "Error"
+     ],
+     "answer": 2,
+     "explanation": "`[[0] * 2] * 2` repeats a *reference* to the same inner list, so both rows are one object. Build independent rows with a comprehension: `[[0] * 2 for _ in range(2)]`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the method that adds all items of another list.",
+     "code": "a = [1, 2]\na.____([3, 4])\nprint(a)",
+     "answer": [
+      "extend"
+     ],
+     "explanation": "`extend` adds each element; `append` would add the whole list as one nested item."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Build a 3x3 grid of zeros with independent rows, set the centre cell to 1, and print the grid.",
+     "starter": "grid = None  # build it\n# set centre to 1\nprint(grid)\n",
+     "solution": "grid = [[0] * 3 for _ in range(3)]\ngrid[1][1] = 1\nprint(grid)\n",
+     "expected_output": "[[0, 0, 0], [0, 1, 0], [0, 0, 0]]",
+     "hint": "Use a list comprehension so each row is a separate list."
+    }
+   ]
+  },
+  {
+   "id": "py-u3-tuples-unpacking",
+   "track_id": "python",
+   "unit_id": "py-u3",
+   "title": "Tuples & Unpacking",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Tuples",
+     "body": "A `tuple` is an immutable, ordered sequence. Use it for fixed-size records (a point, an RGB colour) and as dict keys when all elements are hashable. Immutability makes tuples slightly lighter and faster than lists and safe to share.\n\nGotcha: the comma makes the tuple, not the parentheses. `(5)` is just an int; `(5,)` is a one-element tuple.",
+     "code": "a = (5)\nb = (5,)\nprint(type(a), type(b))\npoint = (3, 4)\nprint(point[0])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `type((1))`?",
+     "options": [
+      "tuple",
+      "int",
+      "list",
+      "SyntaxError"
+     ],
+     "answer": 1,
+     "explanation": "Parentheses alone just group an expression. You need a trailing comma, `(1,)`, for a one-element tuple."
+    },
+    {
+     "type": "concept",
+     "title": "Unpacking",
+     "body": "You can unpack any iterable into names: `x, y = point`. The counts must match unless you use a starred name, which collects the rest into a **list**: `first, *middle, last = seq`. Unpacking powers swaps, multiple return values (a function that `return a, b` actually returns a tuple), and loops like `for k, v in d.items()`. Use `_` for values you ignore.",
+     "code": "first, *middle, last = [1, 2, 3, 4, 5]\nprint(first, middle, last)\n\ndef min_max(xs):\n    return min(xs), max(xs)\nlo, hi = min_max([4, 9, 2])\nprint(lo, hi)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `a, *b = \"xyz\"` make `b`?",
+     "options": [
+      "\"yz\"",
+      "(\"y\", \"z\")",
+      "[\"y\", \"z\"]",
+      "Error"
+     ],
+     "answer": 2,
+     "explanation": "A starred target always receives a list of the remaining items, regardless of the source type."
+    },
+    {
+     "type": "mcq",
+     "question": "Which can be a dictionary key?",
+     "options": [
+      "`[1, 2]`",
+      "`(1, 2)`",
+      "`{1, 2}`",
+      "`{\"a\": 1}`"
+     ],
+     "answer": 1,
+     "explanation": "Keys must be hashable. Tuples of hashables are; lists, sets and dicts are mutable and unhashable. A tuple containing a list is also unhashable."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the missing symbol so `rest` collects the remaining items.",
+     "code": "head, ____rest = [10, 20, 30]\nprint(rest)",
+     "answer": [
+      "*"
+     ],
+     "explanation": "`*rest` is the starred target that gathers leftovers into a list."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write `stats(nums)` that returns `(min, max, sum)` as a tuple, unpack the result into three names and print them on one line.",
+     "starter": "def stats(nums):\n    pass\n\n# unpack and print\n",
+     "solution": "def stats(nums):\n    return min(nums), max(nums), sum(nums)\n\nlo, hi, total = stats([4, 9, 2, 7])\nprint(lo, hi, total)\n",
+     "expected_output": "2 9 22"
+    }
+   ]
+  },
+  {
+   "id": "py-u3-dicts",
+   "track_id": "python",
+   "unit_id": "py-u3",
+   "title": "Dictionaries",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Dicts: hash maps",
+     "body": "A `dict` maps hashable keys to values using a hash table: lookup, insert and delete are **O(1) on average**. Since Python 3.7 dicts preserve insertion order. Access a missing key with `d[k]` and you get `KeyError`; use `d.get(k, default)` to avoid it, `d.setdefault(k, default)` to insert-if-missing, and `k in d` to test membership (O(1)).\n\nIterate with `d` (keys), `d.values()`, or `d.items()`.",
+     "code": "d = {\"a\": 1, \"b\": 2}\nd[\"c\"] = 3\nprint(d.get(\"z\", 0), \"a\" in d)\nfor k, v in d.items():\n    print(k, v)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens with `{\"a\": 1}[\"b\"]`?",
+     "options": [
+      "Returns None",
+      "Returns 0",
+      "Raises KeyError",
+      "Returns an empty string"
+     ],
+     "answer": 2,
+     "explanation": "Subscripting a missing key raises `KeyError`. Only `.get()` returns a default."
+    },
+    {
+     "type": "concept",
+     "title": "Merging, counting, grouping",
+     "body": "Merge with `a | b` (3.9+) or `{**a, **b}`; later keys win. Update in place with `a.update(b)`. For counting use `collections.Counter`; for grouping use `collections.defaultdict(list)`. Dict comprehensions build maps concisely: `{w: len(w) for w in words}`.\n\nRemoving while iterating raises `RuntimeError: dictionary changed size during iteration`; iterate over `list(d)` instead.",
+     "code": "a = {\"x\": 1, \"y\": 2}\nb = {\"y\": 20, \"z\": 30}\nprint(a | b)\n\nfrom collections import defaultdict\ngroups = defaultdict(list)\nfor w in [\"apple\", \"avocado\", \"banana\"]:\n    groups[w[0]].append(w)\nprint(dict(groups))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "a = {\"x\": 1, \"y\": 2}\nb = {\"y\": 20, \"z\": 30}\nprint({**a, **b})\n",
+     "options": [
+      "{'x': 1, 'y': 2}",
+      "{'x': 1, 'y': 20, 'z': 30}",
+      "{'y': 20, 'z': 30}",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "Later dicts override earlier ones on key conflicts, and keys from both are kept."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the average-case time complexity of `key in my_dict`?",
+     "options": [
+      "O(1)",
+      "O(log n)",
+      "O(n)",
+      "O(n log n)"
+     ],
+     "answer": 0,
+     "explanation": "Hash-table lookup. Worst case with many collisions degrades to O(n), which is why keys need good hashes."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the method that returns a default instead of raising.",
+     "code": "scores = {\"ann\": 3}\nprint(scores.____(\"bob\", 0))",
+     "answer": [
+      "get"
+     ],
+     "explanation": "`dict.get(key, default)` never raises KeyError."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Invert the dict `{\"a\": 1, \"b\": 2, \"c\": 3}` into `{1: \"a\", 2: \"b\", 3: \"c\"}` with a dict comprehension and print it.",
+     "starter": "d = {\"a\": 1, \"b\": 2, \"c\": 3}\n# invert\n",
+     "solution": "d = {\"a\": 1, \"b\": 2, \"c\": 3}\ninv = {v: k for k, v in d.items()}\nprint(inv)\n",
+     "expected_output": "{1: 'a', 2: 'b', 3: 'c'}"
+    }
+   ]
+  },
+  {
+   "id": "py-u3-sets-copying",
+   "track_id": "python",
+   "unit_id": "py-u3",
+   "title": "Sets & Shallow vs Deep Copy",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Sets",
+     "body": "A `set` is an unordered collection of unique, hashable items backed by a hash table. Membership, add and remove are O(1) average, which makes `x in some_set` vastly faster than `x in some_list` for large data. Operators: `a | b` union, `a & b` intersection, `a - b` difference, `a ^ b` symmetric difference. The literal `{}` is an **empty dict**; make an empty set with `set()`.",
+     "code": "a = {1, 2, 3}\nb = {3, 4}\nprint(a | b, a & b, a - b, a ^ b)\nprint(type({}), type(set()))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the cheapest way to remove duplicates while you don't care about order?",
+     "options": [
+      "`sorted(lst)`",
+      "`list(set(lst))`",
+      "`lst.unique()`",
+      "`dict(lst)`"
+     ],
+     "answer": 1,
+     "explanation": "Converting to a set drops duplicates in O(n). Use `list(dict.fromkeys(lst))` if you need to keep first-seen order."
+    },
+    {
+     "type": "concept",
+     "title": "Shallow vs deep copy",
+     "body": "`b = a` makes an alias. `b = a.copy()` / `a[:]` / `list(a)` / `copy.copy(a)` make a **shallow copy**: a new outer container whose items are the *same objects*. Mutating a nested list through the copy therefore changes the original too. `copy.deepcopy(a)` recursively copies everything, so the two are fully independent.",
+     "code": "import copy\na = [[1, 2], [3]]\nshallow = a.copy()\ndeep = copy.deepcopy(a)\na[0].append(99)\nprint(shallow)\nprint(deep)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "a = [[1], [2]]\nb = list(a)\nb[0].append(5)\nprint(a)\n",
+     "options": [
+      "[[1], [2]]",
+      "[[1, 5], [2]]",
+      "[[1], [2], 5]",
+      "[[1, 5], [2, 5]]"
+     ],
+     "answer": 1,
+     "explanation": "`list(a)` is shallow: the inner list `[1]` is shared, so appending to `b[0]` shows up in `a[0]`. (b itself is a new outer list, so appending to the outer wouldn't.) Note this prints `a`."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is true?",
+     "options": [
+      "Sets keep insertion order",
+      "`{1, 2} == {2, 1}` is True",
+      "Sets can hold lists",
+      "`set()` and `{}` are the same type"
+     ],
+     "answer": 1,
+     "explanation": "Set equality ignores order. Sets are unordered, cannot hold unhashable items like lists, and `{}` is a dict."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the function to make a fully independent copy.",
+     "code": "import copy\nb = copy.____(a)",
+     "answer": [
+      "deepcopy"
+     ],
+     "explanation": "`copy.deepcopy` recursively copies nested objects."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Given two lists, print the sorted list of elements that appear in both (use sets).",
+     "starter": "a = [1, 2, 3, 4, 5]\nb = [4, 5, 6, 7, 1]\n# print(...)\n",
+     "solution": "a = [1, 2, 3, 4, 5]\nb = [4, 5, 6, 7, 1]\nprint(sorted(set(a) & set(b)))\n",
+     "expected_output": "[1, 4, 5]"
+    }
+   ]
+  },
+  {
+   "id": "py-u4-args-kwargs",
+   "track_id": "python",
+   "unit_id": "py-u4",
+   "title": "Functions, *args & **kwargs",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Parameters and arguments",
+     "body": "Python passes **object references** by assignment (\"pass by object reference\"). Inside the function the parameter is a new name bound to the caller's object, so mutating a mutable argument is visible to the caller while rebinding the name is not.\n\nParameter kinds: positional, keyword, defaults (`def f(a, b=2)`), `*args` (extra positionals as a **tuple**), `**kwargs` (extra keywords as a **dict**), keyword-only (after `*`), and positional-only (before `/`).",
+     "code": "def add_item(lst):\n    lst.append(1)\n\ndef rebind(lst):\n    lst = [99]\n\nxs = []\nadd_item(xs)\nrebind(xs)\nprint(xs)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `xs` after the snippet in the concept?",
+     "options": [
+      "[]",
+      "[1]",
+      "[99]",
+      "[1, 99]"
+     ],
+     "answer": 1,
+     "explanation": "`add_item` mutated the shared list. `rebind` only pointed its local name at a new list, leaving the caller's list alone."
+    },
+    {
+     "type": "concept",
+     "title": "*args and **kwargs",
+     "body": "`*args` collects extra positional arguments into a tuple; `**kwargs` collects extra keyword arguments into a dict. At the call site, `*` and `**` do the reverse: they *unpack* an iterable or mapping into arguments. Order in a signature: positional, defaults, `*args`, keyword-only, `**kwargs`. They are how wrappers and decorators forward arguments unchanged.",
+     "code": "def show(a, *args, sep=\"-\", **kwargs):\n    print(a, args, sep, kwargs)\n\nshow(1, 2, 3, sep=\"+\", x=9)\nnums = [4, 5]\nopts = {\"sep\": \"|\"}\nshow(0, *nums, **opts)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "def f(*args):\n    return args\nprint(f(1, 2, 3))\n",
+     "options": [
+      "(1, 2, 3)",
+      "[1, 2, 3]",
+      "1 2 3",
+      "3"
+     ],
+     "answer": 0,
+     "explanation": "`*args` is always a tuple."
+    },
+    {
+     "type": "mcq",
+     "question": "Which call is a SyntaxError?",
+     "options": [
+      "`f(1, b=2)`",
+      "`f(a=1, 2)`",
+      "`f(*[1, 2])`",
+      "`f(**{'a': 1})`"
+     ],
+     "answer": 1,
+     "explanation": "Positional arguments cannot follow keyword arguments in a call."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the symbol that makes `flag` keyword-only.",
+     "code": "def connect(host, ____, flag=False):\n    return host, flag",
+     "answer": [
+      "*"
+     ],
+     "explanation": "A bare `*` in the signature forces every parameter after it to be passed by keyword."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write `total(*nums, scale=1)` that returns `sum(nums) * scale`. Print `total(1, 2, 3)` and `total(1, 2, 3, scale=10)` on separate lines.",
+     "starter": "def total(*nums, scale=1):\n    pass\n\nprint(total(1, 2, 3))\nprint(total(1, 2, 3, scale=10))\n",
+     "solution": "def total(*nums, scale=1):\n    return sum(nums) * scale\n\nprint(total(1, 2, 3))\nprint(total(1, 2, 3, scale=10))\n",
+     "expected_output": "6\n60"
+    }
+   ]
+  },
+  {
+   "id": "py-u4-default-args",
+   "track_id": "python",
+   "unit_id": "py-u4",
+   "title": "The Mutable Default Argument Gotcha",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Defaults are evaluated once",
+     "body": "Default values are evaluated **once, when the `def` statement runs**, and stored on the function object. If the default is mutable (a list, dict, set) every call that omits the argument shares that one object, so state leaks between calls. This is among the most asked Python interview questions.",
+     "code": "def add(x, bucket=[]):\n    bucket.append(x)\n    return bucket\n\nprint(add(1))\nprint(add(2))\nprint(add.__defaults__)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does the second call print?",
+     "options": [
+      "[2]",
+      "[1, 2]",
+      "[1]",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "Both calls reuse the same default list. The first call stored 1 in it, the second appends 2, giving [1, 2]."
+    },
+    {
+     "type": "concept",
+     "title": "The fix: None sentinel",
+     "body": "Use `None` as the default and create the fresh object inside the function. Reserve mutable defaults for the rare case where you really want shared state (e.g. a cache). Immutable defaults (numbers, strings, tuples, None) are always safe.",
+     "code": "def add(x, bucket=None):\n    if bucket is None:\n        bucket = []\n    bucket.append(x)\n    return bucket\n\nprint(add(1))\nprint(add(2))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which default is safe?",
+     "options": [
+      "`def f(x=[])`",
+      "`def f(x={})`",
+      "`def f(x=set())`",
+      "`def f(x=None)`"
+     ],
+     "answer": 3,
+     "explanation": "`None` is immutable; the others create a single shared mutable object at definition time."
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the sentinel check.",
+     "code": "def f(items=None):\n    if items ____ None:\n        items = []\n    return items",
+     "answer": [
+      "is"
+     ],
+     "explanation": "Use identity comparison with None."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Fix the function so that each call without `seen` starts with a fresh list. The two prints should show `['a']` and `['b']`.",
+     "starter": "def record(name, seen=[]):\n    seen.append(name)\n    return seen\n\nprint(record(\"a\"))\nprint(record(\"b\"))\n",
+     "solution": "def record(name, seen=None):\n    if seen is None:\n        seen = []\n    seen.append(name)\n    return seen\n\nprint(record(\"a\"))\nprint(record(\"b\"))\n",
+     "expected_output": "['a']\n['b']"
+    }
+   ]
+  },
+  {
+   "id": "py-u4-scope-closures",
+   "track_id": "python",
+   "unit_id": "py-u4",
+   "title": "Scope, LEGB & Closures",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "LEGB rule",
+     "body": "Name lookup goes **L**ocal, **E**nclosing (outer functions), **G**lobal (module), **B**uilt-in, in that order. Assigning to a name inside a function makes it local for the *whole* function body, so reading it before assignment raises `UnboundLocalError`. Use `global x` or `nonlocal x` to rebind a name from an outer scope; mutating an outer mutable object needs neither.",
+     "code": "x = \"global\"\n\ndef outer():\n    x = \"enclosing\"\n    def inner():\n        return x\n    return inner()\n\nprint(outer())\nprint(x)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens when `f()` runs?",
+     "code": "x = 1\ndef f():\n    x += 1\n    print(x)\nf()\n",
+     "options": [
+      "Prints 1",
+      "Prints 2",
+      "UnboundLocalError",
+      "Prints None"
+     ],
+     "answer": 2,
+     "explanation": "`x += 1` assigns to `x`, so Python treats `x` as local throughout `f`. Reading it before it has a value raises `UnboundLocalError`; the global is not consulted. Fix with `global x`."
+    },
+    {
+     "type": "concept",
+     "title": "Closures",
+     "body": "A **closure** is a function that remembers variables from the scope where it was defined, even after that scope has finished. They are the basis of decorators and factory functions. The captured variable is shared and looked up *when the inner function is called* (late binding), not when it was created.",
+     "code": "def make_counter():\n    count = 0\n    def inc():\n        nonlocal count\n        count += 1\n        return count\n    return inc\n\nc = make_counter()\nprint(c(), c(), c())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "fs = [lambda: i for i in range(3)]\nprint([f() for f in fs])\n",
+     "options": [
+      "[0, 1, 2]",
+      "[2, 2, 2]",
+      "[0, 0, 0]",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "All three lambdas capture the same variable `i`, which is 2 after the loop ends (late binding). Fix with a default argument: `lambda i=i: i`."
+    },
+    {
+     "type": "mcq",
+     "question": "Which keyword lets an inner function rebind a variable of the enclosing function?",
+     "options": [
+      "global",
+      "nonlocal",
+      "static",
+      "outer"
+     ],
+     "answer": 1,
+     "explanation": "`nonlocal` binds to the nearest enclosing function scope; `global` targets the module scope."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the keyword so `total` is rebound in the enclosing scope.",
+     "code": "def make():\n    total = 0\n    def add(n):\n        ____ total\n        total += n\n        return total\n    return add",
+     "answer": [
+      "nonlocal"
+     ],
+     "explanation": "Without it, `total += n` would make `total` local to `add` and raise UnboundLocalError."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write `make_multiplier(n)` returning a function that multiplies its argument by `n`. Create `double` and `triple` and print `double(5)` and `triple(5)` on separate lines.",
+     "starter": "def make_multiplier(n):\n    pass\n\ndouble = make_multiplier(2)\ntriple = make_multiplier(3)\nprint(double(5))\nprint(triple(5))\n",
+     "solution": "def make_multiplier(n):\n    def mul(x):\n        return x * n\n    return mul\n\ndouble = make_multiplier(2)\ntriple = make_multiplier(3)\nprint(double(5))\nprint(triple(5))\n",
+     "expected_output": "10\n15"
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Fix the late-binding bug: build a list of three functions that return 0, 1, 2 respectively (use a default argument) and print their results as a list.",
+     "starter": "fs = [lambda: i for i in range(3)]\nprint([f() for f in fs])\n",
+     "solution": "fs = [lambda i=i: i for i in range(3)]\nprint([f() for f in fs])\n",
+     "expected_output": "[0, 1, 2]"
+    }
+   ]
+  },
+  {
+   "id": "py-u4-recursion",
+   "track_id": "python",
+   "unit_id": "py-u4",
+   "title": "Recursion & Call Stack",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Anatomy of recursion",
+     "body": "A recursive function solves a problem by calling itself on a smaller input. It needs a **base case** (stops recursion) and a **recursive case** that moves toward it. Each call gets a stack frame; CPython caps depth at about 1000 (`sys.getrecursionlimit()`) and raises `RecursionError` beyond that. Python does **not** optimise tail calls, so deep recursion should be turned into a loop or an explicit stack.",
+     "code": "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)\n\nprint(factorial(5))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens with a recursive function that has no base case?",
+     "options": [
+      "Returns None",
+      "Infinite loop forever",
+      "RecursionError",
+      "It runs fine"
+     ],
+     "answer": 2,
+     "explanation": "Each call consumes a frame; at the recursion limit Python raises `RecursionError` instead of crashing."
+    },
+    {
+     "type": "concept",
+     "title": "Overlapping subproblems and memoization",
+     "body": "Naive Fibonacci recomputes the same values over and over: O(2^n). Caching results with `functools.lru_cache` (or a dict) makes it O(n) time and O(n) space. Memoization requires hashable arguments and pure functions.",
+     "code": "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef fib(n):\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nprint(fib(50))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the time complexity of naive recursive `fib(n)` (no caching)?",
+     "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(2^n)",
+      "O(1)"
+     ],
+     "answer": 2,
+     "explanation": "Each call spawns two more, so the call tree roughly doubles at each level."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "def sum_to(n):\n    return 0 if n == 0 else n + sum_to(n - 1)\nprint(sum_to(3))\n",
+     "options": [
+      "3",
+      "6",
+      "10",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "sum_to(3) = 3 + sum_to(2) = 3 + 2 + sum_to(1) = 3 + 2 + 1 = 6."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the base case condition.",
+     "code": "def countdown(n):\n    if n ____ 0:\n        return\n    print(n)\n    countdown(n - 1)",
+     "answer": [
+      "<=",
+      "=="
+     ],
+     "explanation": "Stop at zero (or below) so the recursion terminates."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write a recursive `power(base, exp)` for non-negative integer `exp` (use `power(base, exp - 1)`; `power(b, 0) == 1`). Print `power(2, 10)`.",
+     "starter": "def power(base, exp):\n    pass\n\nprint(power(2, 10))\n",
+     "solution": "def power(base, exp):\n    if exp == 0:\n        return 1\n    return base * power(base, exp - 1)\n\nprint(power(2, 10))\n",
+     "expected_output": "1024"
+    }
+   ]
+  },
+  {
+   "id": "py-u5-classes",
+   "track_id": "python",
+   "unit_id": "py-u5",
+   "title": "Classes, Instances & Attributes",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Classes and __init__",
+     "body": "A class is a blueprint; calling it creates an instance. `__init__(self, ...)` initialises the new instance (the object already exists when it runs; `__new__` creates it). `self` is simply the first parameter: Python passes the instance automatically, so `obj.method(x)` is sugar for `Class.method(obj, x)`.\n\nInstance attributes live in `obj.__dict__`; attributes defined in the class body are **class attributes**, shared by all instances.",
+     "code": "class Dog:\n    species = \"canine\"\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return f\"{self.name} says woof\"\n\nd = Dog(\"Rex\")\nprint(d.speak(), d.species)\nprint(Dog.speak(d))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "class Box:\n    items = []\na, b = Box(), Box()\na.items.append(1)\nprint(a.items, b.items)\n",
+     "options": [
+      "[1] [1]",
+      "[1] []",
+      "[] []",
+      "Error"
+     ],
+     "answer": 0,
+     "explanation": "`items` is a class attribute: one list shared by every instance. `a.items.append(1)` mutates that shared list, so `b` sees it. Create per-instance state in `__init__` with `self.items = []`."
+    },
+    {
+     "type": "concept",
+     "title": "Attribute lookup and rebinding",
+     "body": "`obj.x` looks in the instance `__dict__` first, then the class, then base classes. Assigning `obj.x = v` always writes to the **instance**, creating a shadow of any class attribute of the same name. That means `a.count += 1` on a class-level int creates an instance attribute, not a change to the class.",
+     "code": "class C:\n    n = 0\n\na = C()\na.n += 1\nprint(a.n, C.n)\nprint(a.__dict__)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "After the snippet above, what are `a.n` and `C.n`?",
+     "options": [
+      "1 and 1",
+      "1 and 0",
+      "0 and 1",
+      "0 and 0"
+     ],
+     "answer": 1,
+     "explanation": "`a.n += 1` reads the class value 0, adds one, and stores 1 on the instance only. The class attribute remains 0."
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement about `self` is true?",
+     "options": [
+      "It is a reserved keyword",
+      "It is just a naming convention for the first parameter",
+      "It must be passed explicitly when calling",
+      "It refers to the class"
+     ],
+     "answer": 1,
+     "explanation": "`self` is not a keyword; Python binds the instance to the first parameter automatically."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the special method that initialises new instances.",
+     "code": "class P:\n    def ____(self, x):\n        self.x = x",
+     "answer": [
+      "__init__"
+     ],
+     "explanation": "`__init__` runs right after the instance is created."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Create a `Counter` class with a `value` starting at 0, an `increment()` method, and print the value after three increments.",
+     "starter": "class Counter:\n    pass\n\nc = Counter()\nc.increment()\nc.increment()\nc.increment()\nprint(c.value)\n",
+     "solution": "class Counter:\n    def __init__(self):\n        self.value = 0\n    def increment(self):\n        self.value += 1\n\nc = Counter()\nc.increment()\nc.increment()\nc.increment()\nprint(c.value)\n",
+     "expected_output": "3"
+    }
+   ]
+  },
+  {
+   "id": "py-u5-inheritance",
+   "track_id": "python",
+   "unit_id": "py-u5",
+   "title": "Inheritance, super() & MRO",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Inheritance and overriding",
+     "body": "`class Child(Parent)` inherits all attributes of `Parent`. A child can **override** methods and extend them by calling `super().method(...)`. `super()` does not mean \"the parent\"; it means \"the next class in the MRO\" (method resolution order), which matters with multiple inheritance. Always call `super().__init__(...)` in a subclass `__init__` when the parent sets up state.",
+     "code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return \"...\"\n\nclass Dog(Animal):\n    def __init__(self, name, breed):\n        super().__init__(name)\n        self.breed = breed\n    def speak(self):\n        return \"Woof\"\n\nd = Dog(\"Rex\", \"lab\")\nprint(d.name, d.breed, d.speak())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens if `Dog.__init__` does not call `super().__init__(name)`?",
+     "options": [
+      "Python calls it automatically",
+      "`self.name` is never set, so using it raises AttributeError",
+      "The class cannot be created",
+      "`name` becomes None"
+     ],
+     "answer": 1,
+     "explanation": "Python does not auto-call the parent initialiser. Skipping it leaves parent-set attributes missing."
+    },
+    {
+     "type": "concept",
+     "title": "MRO and multiple inheritance",
+     "body": "Python uses the **C3 linearisation** to compute the MRO, visible via `Class.__mro__`. Each class appears once, children before parents, and the order of bases is respected. `super()` follows this chain, which is what makes cooperative multiple inheritance (and the diamond problem) work without calling a shared base twice.",
+     "code": "class A:\n    def hi(self):\n        return \"A\"\nclass B(A):\n    def hi(self):\n        return \"B\" + super().hi()\nclass C(A):\n    def hi(self):\n        return \"C\" + super().hi()\nclass D(B, C):\n    def hi(self):\n        return \"D\" + super().hi()\n\nprint(D().hi())\nprint([k.__name__ for k in D.__mro__])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `D().hi()` in the diamond above?",
+     "options": [
+      "\"DBA\"",
+      "\"DBCA\"",
+      "\"DCBA\"",
+      "\"DA\""
+     ],
+     "answer": 1,
+     "explanation": "The MRO is D, B, C, A, so each `super()` call steps to the next class: D then B then C then A, giving \"DBCA\"."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `isinstance(Dog(\"r\", \"l\"), Animal)` return?",
+     "options": [
+      "True",
+      "False",
+      "TypeError",
+      "Depends on __init__"
+     ],
+     "answer": 0,
+     "explanation": "`isinstance` is True for the class and any of its ancestors. Prefer it over `type(x) == Animal`, which rejects subclasses."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the call that delegates to the next class in the MRO.",
+     "code": "class Child(Base):\n    def __init__(self):\n        ____().__init__()",
+     "answer": [
+      "super"
+     ],
+     "explanation": "`super()` returns a proxy to the next class in the MRO."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Define `Shape` with `area()` returning 0 and subclasses `Square(side)` and `Circle(r)` overriding it (use `3` for pi to keep integers: `3 * r * r`). Print the areas of `Square(4)` and `Circle(2)` on separate lines.",
+     "starter": "class Shape:\n    def area(self):\n        return 0\n\n# add Square and Circle\n\nprint(Square(4).area())\nprint(Circle(2).area())\n",
+     "solution": "class Shape:\n    def area(self):\n        return 0\n\nclass Square(Shape):\n    def __init__(self, side):\n        self.side = side\n    def area(self):\n        return self.side * self.side\n\nclass Circle(Shape):\n    def __init__(self, r):\n        self.r = r\n    def area(self):\n        return 3 * self.r * self.r\n\nprint(Square(4).area())\nprint(Circle(2).area())\n",
+     "expected_output": "16\n12"
+    }
+   ]
+  },
+  {
+   "id": "py-u5-dunder",
+   "track_id": "python",
+   "unit_id": "py-u5",
+   "title": "Dunder Methods: repr, eq, len & more",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Dunder (magic) methods",
+     "body": "Methods named `__like_this__` let your class plug into Python syntax. The common ones: `__repr__` (unambiguous developer string, used in the REPL and by containers), `__str__` (friendly string used by `print`/`str`, falls back to `__repr__`), `__eq__` (`==`), `__len__` (`len()`, also truthiness when no `__bool__`), `__getitem__` (indexing and iteration), `__add__` (`+`), `__contains__` (`in`), `__iter__`, `__call__`.",
+     "code": "class Point:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n    def __repr__(self):\n        return f\"Point({self.x}, {self.y})\"\n\nprint(Point(1, 2))\nprint([Point(0, 0)])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which method does `print(obj)` call first?",
+     "options": [
+      "__repr__",
+      "__str__",
+      "__format__",
+      "__print__"
+     ],
+     "answer": 1,
+     "explanation": "`print` calls `str()`, which uses `__str__` and falls back to `__repr__` if `__str__` is not defined. Containers use `repr` of their items."
+    },
+    {
+     "type": "concept",
+     "title": "__eq__ and __hash__",
+     "body": "Defining `__eq__` without `__hash__` makes instances **unhashable** (Python sets `__hash__` to None) so they can't be put in sets or used as dict keys. If you define equality, define a hash consistent with it: objects that compare equal must have equal hashes. Base the hash on immutable fields: `hash((self.x, self.y))`. Without `__eq__`, the default is identity comparison.",
+     "code": "class P:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n    def __eq__(self, other):\n        return isinstance(other, P) and (self.x, self.y) == (other.x, other.y)\n    def __hash__(self):\n        return hash((self.x, self.y))\n\nprint(P(1, 2) == P(1, 2), len({P(1, 2), P(1, 2)}))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the result of `{Q(1), Q(1)}` when `Q` defines `__eq__` but not `__hash__`?",
+     "options": [
+      "A set with one element",
+      "A set with two elements",
+      "TypeError: unhashable type",
+      "An empty set"
+     ],
+     "answer": 2,
+     "explanation": "Defining `__eq__` sets `__hash__ = None` implicitly, so the instances can't be hashed or put in a set."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "class Bag:\n    def __init__(self, n):\n        self.n = n\n    def __len__(self):\n        return self.n\nb = Bag(3)\nprint(len(b), bool(b))\n",
+     "options": [
+      "3 True",
+      "3 False",
+      "0 True",
+      "Error"
+     ],
+     "answer": 0,
+     "explanation": "`__len__` powers `len()` and truthiness: a non-zero length is truthy."
+    },
+    {
+     "type": "mcq",
+     "question": "Which should return a string that ideally lets you recreate the object?",
+     "options": [
+      "__str__",
+      "__repr__",
+      "__init__",
+      "__format__"
+     ],
+     "answer": 1,
+     "explanation": "`__repr__` is meant to be unambiguous, ideally `eval`-able like `Point(1, 2)`; `__str__` is for readable display."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the dunder that makes `a + b` work.",
+     "code": "class V:\n    def ____(self, other):\n        return V(self.x + other.x)",
+     "answer": [
+      "__add__"
+     ],
+     "explanation": "`a + b` calls `a.__add__(b)`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Create a `Vec` class with `x`, `y`, `__add__` (component-wise sum), `__eq__`, and `__repr__` returning `Vec(x, y)`. Print `Vec(1, 2) + Vec(3, 4)` and then `Vec(1, 1) == Vec(1, 1)` on separate lines.",
+     "starter": "class Vec:\n    pass\n\nprint(Vec(1, 2) + Vec(3, 4))\nprint(Vec(1, 1) == Vec(1, 1))\n",
+     "solution": "class Vec:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n    def __add__(self, other):\n        return Vec(self.x + other.x, self.y + other.y)\n    def __eq__(self, other):\n        return isinstance(other, Vec) and (self.x, self.y) == (other.x, other.y)\n    def __repr__(self):\n        return f\"Vec({self.x}, {self.y})\"\n\nprint(Vec(1, 2) + Vec(3, 4))\nprint(Vec(1, 1) == Vec(1, 1))\n",
+     "expected_output": "Vec(4, 6)\nTrue"
+    }
+   ]
+  },
+  {
+   "id": "py-u5-properties-methods",
+   "track_id": "python",
+   "unit_id": "py-u5",
+   "title": "Properties, classmethod & staticmethod",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Properties",
+     "body": "`@property` lets you expose a computed or validated attribute with plain attribute syntax. Start with a public attribute; if you later need validation, switch to a property without changing callers. A setter is declared with `@name.setter`. Leading underscore (`_x`) is a convention for \"internal\"; there is no true privacy in Python.",
+     "code": "class Temp:\n    def __init__(self, c):\n        self._c = c\n    @property\n    def fahrenheit(self):\n        return self._c * 9 / 5 + 32\n    @property\n    def celsius(self):\n        return self._c\n    @celsius.setter\n    def celsius(self, v):\n        if v < -273.15:\n            raise ValueError(\"below absolute zero\")\n        self._c = v\n\nt = Temp(100)\nprint(t.fahrenheit)\nt.celsius = 0\nprint(t.fahrenheit)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens on `t.fahrenheit = 50` if `fahrenheit` has only a getter?",
+     "options": [
+      "It sets the value",
+      "AttributeError (can't set attribute)",
+      "It is ignored silently",
+      "It creates a new attribute"
+     ],
+     "answer": 1,
+     "explanation": "A property without a setter is read-only; assignment raises AttributeError."
+    },
+    {
+     "type": "concept",
+     "title": "classmethod vs staticmethod",
+     "body": "A normal method receives the instance (`self`). A `@classmethod` receives the **class** (`cls`), making it ideal for alternative constructors that also work for subclasses. A `@staticmethod` receives neither: it is a plain function namespaced inside the class, used for helpers that don't need the instance or class.",
+     "code": "class User:\n    def __init__(self, name):\n        self.name = name\n    @classmethod\n    def from_email(cls, email):\n        return cls(email.split(\"@\")[0])\n    @staticmethod\n    def is_valid(email):\n        return \"@\" in email\n\nu = User.from_email(\"ann@example.com\")\nprint(u.name, User.is_valid(\"nope\"))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Why use `cls(...)` instead of `User(...)` in a classmethod constructor?",
+     "options": [
+      "It's faster",
+      "Subclasses calling it get instances of the subclass",
+      "`User` is not defined there",
+      "It avoids __init__"
+     ],
+     "answer": 1,
+     "explanation": "`cls` is whatever class the method was called on, so `Admin.from_email(...)` returns an `Admin`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "class A:\n    count = 0\n    @classmethod\n    def bump(cls):\n        cls.count += 1\nA.bump(); A.bump()\nprint(A().count, A.count)\n",
+     "options": [
+      "1 1",
+      "2 2",
+      "1 2",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "The classmethod modifies the class attribute through `cls`, which both instances read."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the decorator that makes the method callable without an instance and receive the class.",
+     "code": "class A:\n    @____\n    def make(cls):\n        return cls()",
+     "answer": [
+      "classmethod"
+     ],
+     "explanation": "`@classmethod` binds the class as the first argument."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Build a `Circle` class with `radius` stored privately and a read-only `diameter` property (2 * radius). Also add a `from_diameter(d)` classmethod. Print the diameter of `Circle(5)` and the `radius` of `Circle.from_diameter(8)` on separate lines.",
+     "starter": "class Circle:\n    pass\n\nprint(Circle(5).diameter)\nprint(Circle.from_diameter(8).radius)\n",
+     "solution": "class Circle:\n    def __init__(self, radius):\n        self.radius = radius\n    @property\n    def diameter(self):\n        return 2 * self.radius\n    @classmethod\n    def from_diameter(cls, d):\n        return cls(d / 2)\n\nprint(Circle(5).diameter)\nprint(Circle.from_diameter(8).radius)\n",
+     "expected_output": "10\n4.0"
+    }
+   ]
+  },
+  {
+   "id": "py-u6-exceptions",
+   "track_id": "python",
+   "unit_id": "py-u6",
+   "title": "try / except / else / finally",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Handling exceptions",
+     "body": "Wrap risky code in `try`. `except SomeError as e:` handles that type (and subclasses). `else` runs only if **no exception** occurred. `finally` **always** runs, even after `return`, which makes it the place for cleanup. Catch the most specific exception you can; a bare `except:` also swallows `KeyboardInterrupt` and `SystemExit`, and `except Exception` still hides bugs if too broad.",
+     "code": "def parse(s):\n    try:\n        n = int(s)\n    except ValueError:\n        print(\"bad number\")\n        return None\n    else:\n        print(\"parsed\")\n        return n\n    finally:\n        print(\"done\")\n\nparse(\"12\")\nparse(\"x\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What order of messages does `parse(\"12\")` print?",
+     "options": [
+      "parsed, done",
+      "done, parsed",
+      "parsed",
+      "bad number, done"
+     ],
+     "answer": 0,
+     "explanation": "`else` runs after the try block succeeds, and `finally` runs last, even though `else` contains a `return`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "def f():\n    try:\n        return 1\n    finally:\n        return 2\nprint(f())\n",
+     "options": [
+      "1",
+      "2",
+      "1 then 2",
+      "2 then 1"
+     ],
+     "answer": 1,
+     "explanation": "`finally` runs before the function actually returns, and its own `return` overrides the earlier one. Never `return` from `finally`: it also silently swallows exceptions."
+    },
+    {
+     "type": "concept",
+     "title": "Exception hierarchy and raising",
+     "body": "All exceptions derive from `BaseException`; normal ones derive from `Exception`. Hierarchy examples: `KeyError` and `IndexError` derive from `LookupError`; `ZeroDivisionError` from `ArithmeticError`. Order `except` clauses from specific to general because the first match wins. Use `raise` alone inside `except` to re-raise preserving the traceback, and `raise New(...) from err` to chain causes.",
+     "code": "try:\n    {}[\"k\"]\nexcept LookupError as e:\n    print(type(e).__name__, e)\n\ntry:\n    try:\n        1 / 0\n    except ZeroDivisionError as err:\n        raise ValueError(\"calc failed\") from err\nexcept ValueError as e:\n    print(e, \"<-\", repr(e.__cause__))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which except clause catches `{}['k']` (a KeyError)?",
+     "options": [
+      "`except IndexError`",
+      "`except LookupError`",
+      "`except ValueError`",
+      "`except TypeError`"
+     ],
+     "answer": 1,
+     "explanation": "`KeyError` subclasses `LookupError`, so catching the parent works. `IndexError` is a sibling, not a parent."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the clause that runs only when no exception was raised.",
+     "code": "try:\n    x = 1\nexcept Exception:\n    pass\n____:\n    print(\"ok\")",
+     "answer": [
+      "else"
+     ],
+     "explanation": "`else` after `except` blocks runs only if the try body completed without error."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write `safe_div(a, b)` that returns `a / b`, or the string `\"inf\"` when dividing by zero. Print `safe_div(10, 4)` and `safe_div(1, 0)` on separate lines.",
+     "starter": "def safe_div(a, b):\n    pass\n\nprint(safe_div(10, 4))\nprint(safe_div(1, 0))\n",
+     "solution": "def safe_div(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        return \"inf\"\n\nprint(safe_div(10, 4))\nprint(safe_div(1, 0))\n",
+     "expected_output": "2.5\ninf"
+    }
+   ]
+  },
+  {
+   "id": "py-u6-custom-exceptions",
+   "track_id": "python",
+   "unit_id": "py-u6",
+   "title": "Custom Exceptions & EAFP",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Defining your own exceptions",
+     "body": "Subclass `Exception` (not `BaseException`) to create domain-specific errors. A small hierarchy lets callers catch broadly (`AppError`) or precisely (`NotFoundError`). Give errors useful data as attributes and a clear message. Raising a class instance with `raise MyError(\"msg\")` is standard; `raise MyError` also works and instantiates it for you.",
+     "code": "class AppError(Exception):\n    pass\n\nclass NotFoundError(AppError):\n    def __init__(self, key):\n        super().__init__(f\"{key!r} not found\")\n        self.key = key\n\ntry:\n    raise NotFoundError(\"user42\")\nexcept AppError as e:\n    print(e, e.key)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Why subclass `Exception` rather than `BaseException`?",
+     "options": [
+      "BaseException cannot be subclassed",
+      "`except Exception` and normal handlers would not catch your error, and it could mask exit signals",
+      "It's faster",
+      "There's no difference"
+     ],
+     "answer": 1,
+     "explanation": "`BaseException` includes `KeyboardInterrupt` and `SystemExit`. Application errors belong under `Exception` so ordinary handlers work."
+    },
+    {
+     "type": "concept",
+     "title": "EAFP vs LBYL",
+     "body": "Python favours **EAFP** (\"easier to ask forgiveness than permission\"): try the operation and handle the failure. The opposite, **LBYL** (\"look before you leap\"), checks conditions first. EAFP avoids race conditions (a file can vanish between `exists()` and `open()`) and is often faster when failures are rare, but don't use exceptions for ordinary control flow in hot loops.",
+     "code": "data = {\"a\": 1}\n\n# LBYL\nif \"b\" in data:\n    v = data[\"b\"]\nelse:\n    v = 0\n\n# EAFP\ntry:\n    v2 = data[\"b\"]\nexcept KeyError:\n    v2 = 0\nprint(v, v2)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which is a classic reason EAFP is safer than LBYL for file access?",
+     "options": [
+      "It uses less memory",
+      "The state can change between the check and the use (race condition)",
+      "exists() raises errors",
+      "LBYL is deprecated"
+     ],
+     "answer": 1,
+     "explanation": "Between `os.path.exists(p)` and `open(p)` another process may delete the file. A try/except around `open` is atomic from your code's view."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the base class for a custom error.",
+     "code": "class ValidationError(____):\n    pass",
+     "answer": [
+      "Exception"
+     ],
+     "explanation": "Application-level errors subclass `Exception`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Define `InsufficientFunds(Exception)`. Write `withdraw(balance, amount)` that raises it when amount > balance, else returns the new balance. Catch it for a call `withdraw(50, 80)` and print `blocked`, then print `withdraw(50, 20)`.",
+     "starter": "class InsufficientFunds(Exception):\n    pass\n\ndef withdraw(balance, amount):\n    pass\n\n# call both and print\n",
+     "solution": "class InsufficientFunds(Exception):\n    pass\n\ndef withdraw(balance, amount):\n    if amount > balance:\n        raise InsufficientFunds(\"not enough\")\n    return balance - amount\n\ntry:\n    withdraw(50, 80)\nexcept InsufficientFunds:\n    print(\"blocked\")\nprint(withdraw(50, 20))\n",
+     "expected_output": "blocked\n30"
+    }
+   ]
+  },
+  {
+   "id": "py-u6-context-managers",
+   "track_id": "python",
+   "unit_id": "py-u6",
+   "title": "Context Managers & the with Statement",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Why `with`",
+     "body": "A context manager guarantees setup and **cleanup** around a block, even if an exception occurs. `with open(path) as f:` closes the file automatically, replacing manual `try/finally`. It works on any object implementing `__enter__` and `__exit__`. Use it for files, locks, database transactions, temporary state changes.",
+     "code": "with open(__file__ if False else \"/dev/null\") as f:\n    pass\nprint(f.closed)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `f.closed` report after the with block exits?",
+     "options": [
+      "True",
+      "False",
+      "None",
+      "It raises an error"
+     ],
+     "answer": 0,
+     "explanation": "`__exit__` closes the file when the block ends, normally or via exception."
+    },
+    {
+     "type": "concept",
+     "title": "Writing your own",
+     "body": "Implement `__enter__` (returns the value bound by `as`) and `__exit__(exc_type, exc, tb)`. If `__exit__` returns a truthy value the exception is **suppressed**; otherwise it propagates. The easier way is `contextlib.contextmanager`: write a generator that `yield`s once; code before the yield is setup, after it is cleanup (wrap the yield in `try/finally`).",
+     "code": "from contextlib import contextmanager\n\n@contextmanager\ndef tag(name):\n    print(f\"<{name}>\")\n    try:\n        yield\n    finally:\n        print(f\"</{name}>\")\n\nwith tag(\"p\"):\n    print(\"hello\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `__exit__` returning `True` do?",
+     "options": [
+      "Re-raises the exception",
+      "Suppresses the exception raised in the block",
+      "Closes the file twice",
+      "Nothing"
+     ],
+     "answer": 1,
+     "explanation": "A truthy return from `__exit__` tells Python the exception was handled."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "class CM:\n    def __enter__(self):\n        print(\"enter\")\n        return self\n    def __exit__(self, *exc):\n        print(\"exit\")\nwith CM():\n    print(\"body\")\n",
+     "options": [
+      "enter body exit",
+      "enter exit body",
+      "body enter exit",
+      "enter body"
+     ],
+     "answer": 0,
+     "explanation": "`__enter__` runs first, then the body, then `__exit__` (printed 'exit')."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the method called when leaving the with block.",
+     "code": "class CM:\n    def __enter__(self):\n        return self\n    def ____(self, exc_type, exc, tb):\n        pass",
+     "answer": [
+      "__exit__"
+     ],
+     "explanation": "`__exit__` runs on block exit and receives exception info (or Nones)."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write a context manager class `Timer`-like `Section(name)` that prints `start <name>` on enter and `end <name>` on exit. Use it around a print of `working`. Expected three lines.",
+     "starter": "class Section:\n    pass\n\nwith Section(\"load\"):\n    print(\"working\")\n",
+     "solution": "class Section:\n    def __init__(self, name):\n        self.name = name\n    def __enter__(self):\n        print(f\"start {self.name}\")\n        return self\n    def __exit__(self, exc_type, exc, tb):\n        print(f\"end {self.name}\")\n        return False\n\nwith Section(\"load\"):\n    print(\"working\")\n",
+     "expected_output": "start load\nworking\nend load"
+    }
+   ]
+  },
+  {
+   "id": "py-u6-modules",
+   "track_id": "python",
+   "unit_id": "py-u6",
+   "title": "Modules, Packages & __name__",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Modules and imports",
+     "body": "Any `.py` file is a **module**; a folder with `__init__.py` (or a namespace folder) is a **package**. `import m` runs the module once and caches it in `sys.modules`, so later imports reuse the same object. Forms: `import os`, `from os import path`, `import numpy as np`. Avoid `from m import *` (pollutes the namespace and hides where names come from). Search order for modules is `sys.path`; naming your file `random.py` or `json.py` can shadow the standard library.",
+     "code": "import math\nfrom collections import Counter\nprint(math.sqrt(16))\nprint(Counter(\"aab\").most_common(1))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "When is the body of an imported module executed?",
+     "options": [
+      "Every time `import` appears",
+      "Only the first time (then it is cached in sys.modules)",
+      "Only when you call a function",
+      "Never"
+     ],
+     "answer": 1,
+     "explanation": "Python caches modules in `sys.modules`; repeated imports return the cached module without re-running it."
+    },
+    {
+     "type": "concept",
+     "title": "if __name__ == \"__main__\"",
+     "body": "When a file is executed directly, Python sets its `__name__` to `\"__main__\"`. When it is imported, `__name__` is the module's name. The guard `if __name__ == \"__main__\":` lets a file serve both as an importable library and a runnable script, without running the script code on import. Put the entry point in a `main()` function.",
+     "code": "def main():\n    print(\"running as script\")\n\nif __name__ == \"__main__\":\n    main()\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the value of `__name__` inside `utils.py` when another file does `import utils`?",
+     "options": [
+      "\"__main__\"",
+      "\"utils\"",
+      "\"__init__\"",
+      "None"
+     ],
+     "answer": 1,
+     "explanation": "Imported modules get their own name; only the entry-point file is `\"__main__\"`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the guard.",
+     "code": "if __name__ == ____:\n    main()",
+     "answer": [
+      "\"__main__\"",
+      "'__main__'"
+     ],
+     "explanation": "Compare against the string `\"__main__\"`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Use the standard library: import `math`, print `math.floor(7.8)`, `math.ceil(7.2)` and `math.gcd(12, 18)` on separate lines.",
+     "starter": "import math\n# print the three values\n",
+     "solution": "import math\nprint(math.floor(7.8))\nprint(math.ceil(7.2))\nprint(math.gcd(12, 18))\n",
+     "expected_output": "7\n8\n6"
+    }
+   ]
+  },
+  {
+   "id": "py-u6-file-io",
+   "track_id": "python",
+   "unit_id": "py-u6",
+   "title": "File I/O, pathlib & JSON",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Reading and writing files",
+     "body": "Always use `with open(path, mode, encoding=\"utf-8\") as f`. Modes: `r` read (default), `w` write (**truncates**), `a` append, `x` create-new, plus `b` for binary. Iterate a text file line by line (`for line in f`) to stream large files without loading them whole; `f.read()` loads everything and `f.readlines()` builds a list. Always pass `encoding` explicitly, because the default depends on the platform.",
+     "code": "import tempfile, os\npath = os.path.join(tempfile.gettempdir(), \"ph_demo.txt\")\nwith open(path, \"w\", encoding=\"utf-8\") as f:\n    f.write(\"one\\ntwo\\n\")\nwith open(path, encoding=\"utf-8\") as f:\n    for line in f:\n        print(line.rstrip())\nos.remove(path)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does opening an existing file with mode `\"w\"` do?",
+     "options": [
+      "Appends to it",
+      "Raises FileExistsError",
+      "Truncates it to empty immediately",
+      "Opens read-only"
+     ],
+     "answer": 2,
+     "explanation": "`w` truncates on open, so you lose the old contents even if you never write. Use `a` to append or `x` to refuse overwriting."
+    },
+    {
+     "type": "concept",
+     "title": "pathlib and json",
+     "body": "`pathlib.Path` replaces string path juggling: `Path('a') / 'b.txt'`, `.exists()`, `.read_text()`, `.write_text()`, `.suffix`, `.parent`. For structured data use `json`: `json.dumps(obj)` -> string, `json.loads(s)` -> object, and `json.dump`/`json.load` for file objects. JSON keys become strings, tuples become lists, and `None` becomes `null`.",
+     "code": "import json\nfrom pathlib import Path\n\np = Path(\"data.json\")\nprint(p.suffix, p.stem)\ns = json.dumps({\"a\": [1, 2], \"b\": None})\nprint(s)\nprint(json.loads(s)[\"a\"])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `json.loads(json.dumps({1: 'x'}))` return?",
+     "options": [
+      "{1: 'x'}",
+      "{'1': 'x'}",
+      "Error",
+      "[1, 'x']"
+     ],
+     "answer": 1,
+     "explanation": "JSON object keys are always strings, so the integer key comes back as `'1'`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "import io\nwith io.StringIO(\"a\\nb\\n\") as f:\n    lines = f.read().splitlines()\nprint(lines == [\"a\", \"b\"])\n",
+     "options": [
+      "True",
+      "False",
+      "None",
+      "Error"
+     ],
+     "answer": 0,
+     "explanation": "`StringIO` behaves like a file; `read().splitlines()` yields the lines without newline characters."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the mode that appends to a file.",
+     "code": "with open(\"log.txt\", \"____\") as f:\n    f.write(\"entry\\n\")",
+     "answer": [
+      "a"
+     ],
+     "explanation": "Mode `a` appends and creates the file if missing."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write the lines `alpha`, `beta`, `gamma` to a temporary file, read them back, and print how many lines there are followed by the longest line, on two lines.",
+     "starter": "import tempfile, os\npath = os.path.join(tempfile.gettempdir(), \"ph_lines.txt\")\n# write, read, print, then remove\n",
+     "solution": "import tempfile, os\npath = os.path.join(tempfile.gettempdir(), \"ph_lines.txt\")\nwith open(path, \"w\", encoding=\"utf-8\") as f:\n    f.write(\"alpha\\nbeta\\ngamma\\n\")\nwith open(path, encoding=\"utf-8\") as f:\n    lines = [ln.rstrip() for ln in f]\nos.remove(path)\nprint(len(lines))\nprint(max(lines, key=len))\n",
+     "expected_output": "3\nalpha"
+    }
+   ]
+  }
+ ]
+}

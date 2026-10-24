@@ -1,0 +1,1481 @@
+{
+ "tracks": [
+  {
+   "id": "typescript",
+   "title": "TypeScript",
+   "icon": "🔷",
+   "color": "#2563eb",
+   "available": true,
+   "order": 200,
+   "description": "Master the type system: from inference and narrowing to conditional types, variance and senior-level type puzzles.",
+   "units": [
+    {
+     "id": "ts-u1",
+     "title": "Type Basics",
+     "description": "Primitives, inference, unions, narrowing",
+     "level": "Basic"
+    },
+    {
+     "id": "ts-u2",
+     "title": "Shaping Types",
+     "description": "Interfaces, generics, keyof and indexed access",
+     "level": "Intermediate"
+    },
+    {
+     "id": "ts-u3",
+     "title": "Type-Level Programming",
+     "description": "Mapped, conditional and utility types",
+     "level": "Advanced"
+    },
+    {
+     "id": "ts-u4",
+     "title": "Patterns & Ecosystem",
+     "description": "Template literals, unions, strictness, React and Node",
+     "level": "Advanced"
+    },
+    {
+     "id": "ts-u5",
+     "title": "Expert Type Systems",
+     "description": "Variance, brands, recursion and hard puzzles",
+     "level": "Expert"
+    }
+   ]
+  }
+ ],
+ "lessons": [
+  {
+   "id": "ts-basic-types",
+   "track_id": "typescript",
+   "unit_id": "ts-u1",
+   "title": "Basic Types & Inference",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Annotations vs inference",
+     "body": "TypeScript infers types from initialisers, so you rarely annotate local variables. `const` infers the *literal* type (`\"hi\"`), while `let` widens to the base type (`string`). Annotate function parameters and public API return types; let inference handle the rest.",
+     "code": "const a = \"hi\";      // type \"hi\"\nlet b = \"hi\";        // type string\nconst arr = [1, 2];  // number[]\nconst t = [1, \"a\"] as const; // readonly [1, \"a\"]"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the inferred type of `x`?",
+     "options": [
+      "`string`",
+      "`\"on\"`",
+      "`\"on\" | \"off\"`",
+      "`any`"
+     ],
+     "answer": 1,
+     "explanation": "A `const` declaration of a string literal gets the literal type `\"on\"`. With `let` it would widen to `string`.",
+     "code": "const x = \"on\";"
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement about `unknown` and `any` is correct?",
+     "options": [
+      "Both let you call any method on the value without checks",
+      "`unknown` must be narrowed before use; `any` disables checking",
+      "`any` is safer than `unknown`",
+      "`unknown` is only allowed in strict mode"
+     ],
+     "answer": 1,
+     "explanation": "`any` opts out of type checking entirely. `unknown` is the type-safe top type: you must narrow it (typeof, instanceof, guards) before using it."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the return type that means 'never returns normally' (always throws).",
+     "code": "function fail(msg: string): ____ {\n  throw new Error(msg);\n}",
+     "answer": [
+      "never"
+     ],
+     "explanation": "`never` is the bottom type: no value can be produced, so a function that always throws (or loops forever) returns `never`."
+    },
+    {
+     "type": "mcq",
+     "question": "Does this compile under `strict`?",
+     "options": [
+      "Yes",
+      "No: `string` is not assignable to `number`",
+      "No: `age` is implicitly any",
+      "No: tuple length mismatch"
+     ],
+     "answer": 1,
+     "explanation": "`age` is inferred as `number` from the initialiser, so assigning a string is an error (TS2322).",
+     "code": "let age = 30;\nage = \"thirty\";"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the type of `pair`?",
+     "options": [
+      "`(string | number)[]`",
+      "`[string, number]`",
+      "`readonly [string, number]`",
+      "`any[]`"
+     ],
+     "answer": 0,
+     "explanation": "Without an annotation or `as const`, an array literal infers an array of the union of element types, not a tuple.",
+     "code": "const pair = [\"a\", 1];"
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Arrays and tuples are both plain arrays at runtime. Print `Array.isArray(t)` and then `t.length` on separate lines (types are erased).",
+     "starter": "const t = [\"a\", 1];\n// print Array.isArray(t) then t.length\n",
+     "solution": "const t = [\"a\", 1];\nconsole.log(Array.isArray(t));\nconsole.log(t.length);\n",
+     "expected_output": "true\n2",
+     "hint": "Types vanish at runtime."
+    }
+   ]
+  },
+  {
+   "id": "ts-unions-intersections",
+   "track_id": "typescript",
+   "unit_id": "ts-u1",
+   "title": "Unions & Intersections",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Unions and intersections",
+     "body": "`A | B` means a value is *either* A or B, so you may only use members common to both until you narrow. `A & B` means the value is *both*, so it has all members of each. Intersections of object types merge their properties; intersecting disjoint literal types yields `never`.",
+     "code": "type ID = string | number;\ntype Named = { name: string };\ntype Aged = { age: number };\ntype Person = Named & Aged; // {name; age}\ntype Bad = \"a\" & \"b\";       // never"
+    },
+    {
+     "type": "mcq",
+     "question": "Which operation is allowed on `v` without narrowing?",
+     "options": [
+      "`v.toFixed(2)`",
+      "`v.toUpperCase()`",
+      "`v.toString()`",
+      "`v.length`"
+     ],
+     "answer": 2,
+     "explanation": "Only members present on every constituent are accessible. `toString` exists on both `string` and `number`; the others exist on only one.",
+     "code": "declare const v: string | number;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `(\"a\" | \"b\") & (\"b\" | \"c\")`?",
+     "options": [
+      "`\"a\" | \"b\" | \"c\"`",
+      "`\"b\"`",
+      "`never`",
+      "`string`"
+     ],
+     "answer": 1,
+     "explanation": "Intersection distributes over unions: only `\"b\"` is in both sets."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the type of `x.name`?",
+     "options": [
+      "`string`",
+      "`number`",
+      "`string | number`",
+      "`{ first: string } | number`"
+     ],
+     "answer": 0,
+     "explanation": "Intersecting object types combines their members: `x` has both `name` and `age`.",
+     "code": "type A = { name: string };\ntype B = { age: number };\ndeclare const x: A & B;\nx.name;"
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the type so `Result` is either of two literal types.",
+     "code": "type Result = \"ok\" ____ \"error\";",
+     "answer": [
+      "|"
+     ],
+     "explanation": "`|` builds a union of the two literal types."
+    },
+    {
+     "type": "mcq",
+     "question": "Why does this fail to compile under `strictNullChecks`?",
+     "options": [
+      "Union members must be objects",
+      "`p` could be `null`, which has no `name`",
+      "`name` is read-only",
+      "Unions can't hold null"
+     ],
+     "answer": 1,
+     "explanation": "`null` is a distinct type; check before dereferencing (`p?.name` or an `if`).",
+     "code": "function f(p: { name: string } | null) {\n  return p.name;\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Given `type U = string | number | boolean`, what is `Exclude<U, string>`?",
+     "options": [
+      "`number`",
+      "`boolean`",
+      "`number | boolean`",
+      "`string`"
+     ],
+     "answer": 2,
+     "explanation": "`Exclude<T, U>` removes members of T assignable to U, leaving `number | boolean`."
+    }
+   ]
+  },
+  {
+   "id": "ts-narrowing",
+   "track_id": "typescript",
+   "unit_id": "ts-u1",
+   "title": "Narrowing & Type Guards",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "How narrowing works",
+     "body": "Control-flow analysis narrows a union inside branches. Built-in narrowing constructs: `typeof x === \"string\"`, `instanceof`, `in`, truthiness, equality (`===`), and discriminant checks. You can add your own with user-defined guards (`x is T`) and assertion functions (`asserts x is T`).",
+     "code": "function f(x: string | string[]) {\n  if (typeof x === \"string\") return x.toUpperCase();\n  return x.join(\",\");\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Inside the `if`, what is the type of `x`?",
+     "options": [
+      "`string | number | null`",
+      "`string | number`",
+      "`number`",
+      "`string`"
+     ],
+     "answer": 1,
+     "explanation": "Truthiness excludes `null`. The remaining members are `string | number`.",
+     "code": "function f(x: string | number | null) {\n  if (x) {\n    x;\n  }\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does the `in` check narrow `a` to?",
+     "options": [
+      "`Cat`",
+      "`Dog`",
+      "nothing",
+      "`never`"
+     ],
+     "answer": 0,
+     "explanation": "`\"meow\" in a` narrows to the union members that have that property: `Cat`.",
+     "code": "type Cat = { meow(): void };\ntype Dog = { bark(): void };\nfunction f(a: Cat | Dog) {\n  if (\"meow\" in a) a;\n}"
+    },
+    {
+     "type": "concept",
+     "title": "User-defined type guards",
+     "body": "A function returning `x is T` tells the compiler that a `true` result narrows the argument. The compiler trusts you: a wrong guard is silent unsoundness. Assertion functions (`asserts x is T`) narrow after the call returns instead of in a branch.",
+     "code": "function isString(x: unknown): x is string {\n  return typeof x === \"string\";\n}\nfunction assertDefined<T>(x: T | undefined): asserts x is T {\n  if (x === undefined) throw new Error(\"undef\");\n}"
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the type predicate.",
+     "code": "function isNum(x: unknown): ____ {\n  return typeof x === \"number\";\n}",
+     "answer": [
+      "x is number"
+     ],
+     "explanation": "A type predicate has the form `param is Type`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the type of `r`?",
+     "options": [
+      "`(string | null)[]`",
+      "`string[]`",
+      "`(string | undefined)[]`",
+      "`any[]`"
+     ],
+     "answer": 1,
+     "explanation": "A type-guard callback selects the overload `filter<S extends T>(pred: (v: T) => v is S): S[]`, so the result is `string[]`.",
+     "code": "const xs: (string | null)[] = [\"a\", null];\nconst r = xs.filter((x): x is string => x !== null);"
+    },
+    {
+     "type": "mcq",
+     "question": "Which input makes this guard lie about its claim?",
+     "options": [
+      "`{}`",
+      "`[1, 2]`, since arrays satisfy `typeof === \"object\"` but are rarely meant as records",
+      "`null`",
+      "`\"hi\"`"
+     ],
+     "answer": 1,
+     "explanation": "The guard excludes `null` and primitives, but arrays pass. Type predicates are unchecked assertions, so the body must really verify what the signature promises.",
+     "code": "function isRecord(x: unknown): x is Record<string, unknown> {\n  return typeof x === \"object\" && x !== null;\n}"
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Runtime gotcha: print `typeof` of each value in `[\"a\", 1, null, [1]]` joined with commas.",
+     "starter": "const vals = [\"a\", 1, null, [1]];\n// print typeof of each, joined by ','\n",
+     "solution": "const vals = [\"a\", 1, null, [1]];\nconsole.log(vals.map(v => typeof v).join(','));\n",
+     "expected_output": "string,number,object,object"
+    }
+   ]
+  },
+  {
+   "id": "ts-interfaces-aliases",
+   "track_id": "typescript",
+   "unit_id": "ts-u2",
+   "title": "Interfaces vs Type Aliases",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Two ways to name an object type",
+     "body": "`interface` and `type` overlap heavily for object shapes. Differences: interfaces support declaration merging and `extends` (with good error messages); type aliases can also name unions, tuples, primitives, mapped and conditional types. Classes can `implements` either when the type is an object type with statically known members.",
+     "code": "interface A { x: number }\ninterface A { y: number }   // merges: {x; y}\ntype B = { x: number };\n// type B = { y: number }; // error: duplicate identifier"
+    },
+    {
+     "type": "mcq",
+     "question": "Which can NOT be expressed directly with `interface`?",
+     "options": [
+      "An object type with methods",
+      "A union type `string | number`",
+      "An extendable shape",
+      "A callable type"
+     ],
+     "answer": 1,
+     "explanation": "Interfaces describe object-like shapes (including callable and constructable ones). Unions need `type`."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens with two `interface Config` declarations in the same scope?",
+     "options": [
+      "Compile error",
+      "They merge into one interface",
+      "The second shadows the first",
+      "Only the first is used"
+     ],
+     "answer": 1,
+     "explanation": "Declaration merging combines members. This is how libraries are augmented (e.g. adding fields to Express's `Request`)."
+    },
+    {
+     "type": "mcq",
+     "question": "Does this compile?",
+     "options": [
+      "Yes",
+      "No: excess property `z`",
+      "No: missing property `y`",
+      "No: wrong type of `x`"
+     ],
+     "answer": 1,
+     "explanation": "Fresh object literals undergo excess property checks. Assigning via an intermediate variable would pass, since structural typing allows extra props.",
+     "code": "interface P { x: number; y: number }\nconst p: P = { x: 1, y: 2, z: 3 };"
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the keyword so `Admin` inherits from `User`.",
+     "code": "interface User { id: number }\ninterface Admin ____ User { role: string }",
+     "answer": [
+      "extends"
+     ],
+     "explanation": "`interface Admin extends User` copies members; the equivalent with aliases uses `&`."
+    },
+    {
+     "type": "mcq",
+     "question": "Which best summarises structural typing?",
+     "options": [
+      "Types are compatible only if declared with the same name",
+      "Types are compatible when their shapes are compatible",
+      "Classes are always nominal",
+      "Interfaces are nominal, aliases structural"
+     ],
+     "answer": 1,
+     "explanation": "TS is structural: a value with the required members is assignable regardless of the declared name. (Private/protected members make classes effectively nominal.)"
+    },
+    {
+     "type": "mcq",
+     "question": "How do you create a union of two interfaces?",
+     "options": [
+      "Impossible",
+      "`type Shape = Circle | Square`",
+      "`interface Shape = Circle | Square`",
+      "`interface Shape extends Circle | Square`"
+     ],
+     "answer": 1,
+     "explanation": "Use a type alias; an interface can only extend object types with statically known members, not a union."
+    }
+   ]
+  },
+  {
+   "id": "ts-generics",
+   "track_id": "typescript",
+   "unit_id": "ts-u2",
+   "title": "Generics & Constraints",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Generics",
+     "body": "Generics parameterise a type over other types. A constraint (`T extends U`) restricts what can be passed, and lets you use U's members inside. Type arguments are normally inferred from call arguments. Defaults (`<T = string>`) fill missing arguments.",
+     "code": "function first<T>(xs: T[]): T | undefined { return xs[0]; }\nfunction len<T extends { length: number }>(x: T) { return x.length; }\nlen(\"abc\"); len([1,2]); // ok\n// len(5);  // error"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the inferred type of `r`?",
+     "options": [
+      "`string`",
+      "`T`",
+      "`\"a\"`",
+      "`string | undefined`"
+     ],
+     "answer": 3,
+     "explanation": "`T` is inferred as `string` from `string[]`; the function returns `T | undefined`.",
+     "code": "function first<T>(xs: T[]): T | undefined { return xs[0]; }\nconst r = first([\"a\", \"b\"]);"
+    },
+    {
+     "type": "mcq",
+     "question": "Why is this an error?",
+     "options": [
+      "`T` has no members known inside the body",
+      "Generic functions can't return T",
+      "`key` must be a string",
+      "`obj` must be an array"
+     ],
+     "answer": 0,
+     "explanation": "An unconstrained `T` could be anything, so `.id` isn't allowed. Add `T extends { id: unknown }`.",
+     "code": "function getId<T>(obj: T) {\n  return obj.id;\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What type is inferred for `K` in the call?",
+     "options": [
+      "`string`",
+      "`\"name\"`",
+      "`keyof User`",
+      "`\"name\" | \"age\"`"
+     ],
+     "answer": 1,
+     "explanation": "A `K extends keyof T` parameter keeps the literal type of the argument, so `K` is `\"name\"` and the result is `string`.",
+     "code": "function pick<T, K extends keyof T>(o: T, k: K): T[K] { return o[k]; }\nconst user = { name: \"a\", age: 3 };\npick(user, \"name\");"
+    },
+    {
+     "type": "fill",
+     "prompt": "Add the constraint so `T` must have a string `id`.",
+     "code": "function byId<T ____ { id: string }>(xs: T[], id: string) {\n  return xs.find(x => x.id === id);\n}",
+     "answer": [
+      "extends"
+     ],
+     "explanation": "Constraints use `extends` in type parameter lists."
+    },
+    {
+     "type": "mcq",
+     "question": "With `function identity<T>(x: T): T`, what is the result type of `identity([1, 2] as const)`?",
+     "options": [
+      "`number[]`",
+      "`readonly [1, 2]`",
+      "`[number, number]`",
+      "`(1 | 2)[]`"
+     ],
+     "answer": 1,
+     "explanation": "`as const` makes the argument `readonly [1, 2]`, and `T` is inferred as exactly that."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the code smell here?",
+     "options": [
+      "Nothing",
+      "`T` appears only once in the signature, so it relates nothing; use `(xs: string[])`",
+      "Generics can't take arrays",
+      "It returns `any`"
+     ],
+     "answer": 1,
+     "explanation": "A type parameter used only once adds no relationship between inputs and outputs. Prefer the concrete type.",
+     "code": "function logAll<T extends string[]>(xs: T): void {}"
+    }
+   ]
+  },
+  {
+   "id": "ts-keyof-typeof",
+   "track_id": "typescript",
+   "unit_id": "ts-u2",
+   "title": "keyof, typeof & Indexed Access",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Type-level operators",
+     "body": "`keyof T` is the union of T's property names. `typeof x` in a *type position* gives the type of a value. `T[K]` is an indexed access type. Combine them: `keyof typeof obj`, `(typeof arr)[number]`.",
+     "code": "const cfg = { host: \"a\", port: 1 } as const;\ntype Cfg = typeof cfg;\ntype Key = keyof Cfg;          // \"host\" | \"port\"\ntype Val = Cfg[Key];           // \"a\" | 1\nconst roles = [\"admin\", \"user\"] as const;\ntype Role = (typeof roles)[number]; // \"admin\" | \"user\""
+    },
+    {
+     "type": "mcq",
+     "question": "What is `keyof { a: 1; b: 2 }`?",
+     "options": [
+      "`string`",
+      "`\"a\" | \"b\"`",
+      "`1 | 2`",
+      "`[\"a\", \"b\"]`"
+     ],
+     "answer": 1,
+     "explanation": "`keyof` yields the union of property-name literals."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Role`?",
+     "options": [
+      "`string[]`",
+      "`readonly string[]`",
+      "`\"admin\" | \"user\"`",
+      "`number`"
+     ],
+     "answer": 2,
+     "explanation": "`as const` makes a readonly tuple of literals; indexing with `number` gives the union of element types.",
+     "code": "const roles = [\"admin\", \"user\"] as const;\ntype Role = (typeof roles)[number];"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `keyof { [k: string]: boolean }`?",
+     "options": [
+      "`string`",
+      "`string | number`",
+      "`never`",
+      "`symbol`"
+     ],
+     "answer": 1,
+     "explanation": "A string index signature also accepts numeric keys (`obj[1]` is `obj[\"1\"]`), so `keyof` gives `string | number`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the indexed access type for the type of `name`.",
+     "code": "type User = { id: number; name: string };\ntype N = User____;",
+     "answer": [
+      "[\"name\"]"
+     ],
+     "explanation": "`User[\"name\"]` is `string`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `typeof` do in `type T = typeof x`?",
+     "options": [
+      "Returns the runtime string",
+      "Gets the static type of the value `x`",
+      "Is the same as `keyof`",
+      "Only works with classes"
+     ],
+     "answer": 1,
+     "explanation": "In type positions `typeof` is a type query, distinct from the runtime `typeof` operator."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `ReturnType<typeof f>`?",
+     "options": [
+      "`() => number`",
+      "`number`",
+      "`typeof f`",
+      "`Function`"
+     ],
+     "answer": 1,
+     "explanation": "`typeof f` is the function type; `ReturnType` extracts its return type `number`.",
+     "code": "function f() { return 1; }"
+    }
+   ]
+  },
+  {
+   "id": "ts-mapped-types",
+   "track_id": "typescript",
+   "unit_id": "ts-u3",
+   "title": "Mapped Types",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Mapped types",
+     "body": "A mapped type iterates over a union of keys and builds a new object type: `{ [K in Keys]: ValueType }`. Modifiers `readonly` and `?` can be added or removed with `+`/`-`. Key remapping with `as` lets you rename or filter keys. Homomorphic mapped types (`[K in keyof T]`) preserve modifiers of T.",
+     "code": "type Partial2<T> = { [K in keyof T]?: T[K] };\ntype Mutable<T> = { -readonly [K in keyof T]: T[K] };\ntype Required2<T> = { [K in keyof T]-?: T[K] };\ntype Getters<T> = { [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K] };"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Flags` ?",
+     "options": [
+      "`{ a: boolean; b: boolean }`",
+      "`{ a: true; b: true }`",
+      "`{ a?: boolean; b?: boolean }`",
+      "`boolean`"
+     ],
+     "answer": 0,
+     "explanation": "The mapped type iterates over `\"a\" | \"b\"` and gives every property type `boolean`.",
+     "code": "type Flags = { [K in \"a\" | \"b\"]: boolean };"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `-?` do?",
+     "options": [
+      "Makes properties optional",
+      "Removes optionality (like `Required`)",
+      "Removes readonly",
+      "Removes `undefined` from every value"
+     ],
+     "answer": 1,
+     "explanation": "`-?` strips the optional modifier. In a homomorphic mapped type it also removes the implicit `undefined` that optionality added to the value type."
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the mapped type that makes every property of `T` readonly.",
+     "code": "type Frozen<T> = { ____ [K in keyof T]: T[K] };",
+     "answer": [
+      "readonly"
+     ],
+     "explanation": "`readonly` before the key makes the property readonly."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Keys`?",
+     "options": [
+      "`\"a\" | \"b\"`",
+      "`\"b\"`",
+      "`\"a\"`",
+      "`never`"
+     ],
+     "answer": 2,
+     "explanation": "The `as` clause filters keys: for `b` the condition `number extends string` is false, so the key maps to `never` and is dropped. Only `\"a\"` remains.",
+     "code": "type OnlyStr<T> = { [K in keyof T as T[K] extends string ? K : never]: T[K] };\ntype Keys = keyof OnlyStr<{ a: string; b: number }>;"
+    },
+    {
+     "type": "mcq",
+     "question": "Which is true of homomorphic mapped types over arrays/tuples?",
+     "options": [
+      "They always yield objects",
+      "`{ [K in keyof T]: X<T[K]> }` with T an array/tuple type produces an array/tuple type",
+      "They can't be used with generics",
+      "They drop readonly"
+     ],
+     "answer": 1,
+     "explanation": "When T is a generic array or tuple type, a homomorphic mapped type maps the elements and keeps the array/tuple shape."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Result`?",
+     "options": [
+      "`{ id: number; name: string }`",
+      "`{ readonly id: number; readonly name: string }`",
+      "`{ id?: number; name?: string }`",
+      "`Readonly<string>`"
+     ],
+     "answer": 1,
+     "explanation": "The built-in `Readonly<T>` is `{ readonly [K in keyof T]: T[K] }`.",
+     "code": "type Result = Readonly<{ id: number; name: string }>;"
+    }
+   ]
+  },
+  {
+   "id": "ts-conditional-infer",
+   "track_id": "typescript",
+   "unit_id": "ts-u3",
+   "title": "Conditional Types & infer",
+   "minutes": 10,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Conditional types",
+     "body": "`T extends U ? X : Y` picks a branch based on assignability. When `T` is a *naked* type parameter and instantiated with a union, the conditional **distributes** over the members. `infer` declares a type variable inside the `extends` clause that the compiler solves for.",
+     "code": "type IsString<T> = T extends string ? true : false;\ntype A = IsString<\"x\" | 1>;  // boolean (distributes: true | false)\ntype ElementOf<T> = T extends (infer E)[] ? E : never;\ntype R<T> = T extends (...a: any[]) => infer R ? R : never;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `IsString<string | number>`?",
+     "options": [
+      "`true`",
+      "`false`",
+      "`boolean`",
+      "`never`"
+     ],
+     "answer": 2,
+     "explanation": "Distribution: `IsString<string> | IsString<number>` = `true | false` = `boolean`.",
+     "code": "type IsString<T> = T extends string ? true : false;"
+    },
+    {
+     "type": "mcq",
+     "question": "How do you stop distribution?",
+     "options": [
+      "Use `T | never`",
+      "Wrap both sides in tuples: `[T] extends [U] ? ...`",
+      "Use `keyof T`",
+      "Add `readonly`"
+     ],
+     "answer": 1,
+     "explanation": "Distribution only happens for naked type parameters. Wrapping in a tuple makes it non-distributive."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `ElementOf<string[] | number[]>`?",
+     "options": [
+      "`string | number`",
+      "`string`",
+      "`never`",
+      "`(string | number)[]`"
+     ],
+     "answer": 0,
+     "explanation": "`ElementOf` distributes: `string[]` yields `string`, `number[]` yields `number`; the union is `string | number`.",
+     "code": "type ElementOf<T> = T extends (infer E)[] ? E : never;"
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the type that extracts the resolved value of a Promise.",
+     "code": "type Awaited2<T> = T extends Promise<____ U> ? U : T;",
+     "answer": [
+      "infer"
+     ],
+     "explanation": "`infer U` declares U inside the conditional's extends clause."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `P`?",
+     "options": [
+      "`[number, string]`",
+      "`(a: number, b: string) => void`",
+      "`void`",
+      "`never`"
+     ],
+     "answer": 0,
+     "explanation": "`Parameters<T>` is defined as `T extends (...args: infer P) => any ? P : never`, giving the parameter tuple.",
+     "code": "type P = Parameters<(a: number, b: string) => void>;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `X`?",
+     "options": [
+      "`never`",
+      "`string`",
+      "`unknown`",
+      "`any`"
+     ],
+     "answer": 0,
+     "explanation": "Distribution over the empty union (`never`) yields `never`: a distributive conditional applied to `never` produces `never` without evaluating a branch.",
+     "code": "type ToStr<T> = T extends unknown ? string : number;\ntype X = ToStr<never>;"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this evaluate to?",
+     "options": [
+      "`\"yes\"`",
+      "`\"no\"`",
+      "`boolean`",
+      "`never`"
+     ],
+     "answer": 1,
+     "explanation": "Optional property `a?: 1` allows `undefined`, so `{a?: 1}` is not assignable to `{a: 1}`; `{a:1}` is assignable to `{a?:1}` but not vice versa.",
+     "code": "type R = { a?: 1 } extends { a: 1 } ? \"yes\" : \"no\";"
+    }
+   ]
+  },
+  {
+   "id": "ts-utility-types",
+   "track_id": "typescript",
+   "unit_id": "ts-u3",
+   "title": "Built-in Utility Types",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The utility toolbox",
+     "body": "`Partial<T>` makes props optional; `Required<T>` the opposite; `Readonly<T>` freezes them. `Pick<T,K>` / `Omit<T,K>` select or drop keys. `Record<K,V>` builds a map type. `Exclude`/`Extract`/`NonNullable` operate on unions. `ReturnType`, `Parameters`, `ConstructorParameters`, `InstanceType`, and `Awaited` extract function/class/promise types.",
+     "code": "type User = { id: number; name: string; email?: string };\ntype Draft = Partial<User>;\ntype Pub = Pick<User, \"id\" | \"name\">;\ntype NoId = Omit<User, \"id\">;\ntype Roles = Record<\"admin\" | \"user\", boolean>;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Omit<{a:1;b:2;c:3}, \"a\" | \"b\">`?",
+     "options": [
+      "`{ c: 3 }`",
+      "`{ a: 1; b: 2 }`",
+      "`{}`",
+      "`never`"
+     ],
+     "answer": 0,
+     "explanation": "`Omit` removes the listed keys, leaving `{ c: 3 }`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Extract<\"a\" | \"b\" | 1, string>`?",
+     "options": [
+      "`1`",
+      "`\"a\" | \"b\"`",
+      "`string`",
+      "`never`"
+     ],
+     "answer": 1,
+     "explanation": "`Extract<T, U>` keeps members of T assignable to U."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Awaited<Promise<Promise<number>>>`?",
+     "options": [
+      "`Promise<number>`",
+      "`number`",
+      "`Promise<Promise<number>>`",
+      "`unknown`"
+     ],
+     "answer": 1,
+     "explanation": "`Awaited` recursively unwraps thenables, giving `number`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Use a utility type so `patch` accepts any subset of `User`'s fields.",
+     "code": "interface User { id: number; name: string }\nfunction update(id: number, patch: ____<User>) {}",
+     "answer": [
+      "Partial"
+     ],
+     "explanation": "`Partial<User>` makes every property optional."
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement about `Omit` is true?",
+     "options": [
+      "`Omit<T, K>` requires K to be a key of T",
+      "`Omit<T, K>` accepts any string key, including ones not in T",
+      "`Omit` is distributive over unions",
+      "`Omit` preserves index signatures"
+     ],
+     "answer": 1,
+     "explanation": "`Omit<T, K extends keyof any>` does not check K against `keyof T`, so typos are silently accepted. `Pick` does check. Also `Omit` is not distributive and collapses unions of object types."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `NonNullable<string | null | undefined>`?",
+     "options": [
+      "`string`",
+      "`string | null`",
+      "`string | undefined`",
+      "`never`"
+     ],
+     "answer": 0,
+     "explanation": "`NonNullable` removes `null` and `undefined`."
+    },
+    {
+     "type": "mcq",
+     "question": "Which builds `{ [k in 'a'|'b']: number }`?",
+     "options": [
+      "`Pick<number,'a'|'b'>`",
+      "`Record<'a'|'b', number>`",
+      "`Partial<'a'|'b'>`",
+      "`Exclude<'a'|'b', number>`"
+     ],
+     "answer": 1,
+     "explanation": "`Record<K, V>` maps each key in K to V."
+    }
+   ]
+  },
+  {
+   "id": "ts-template-literal",
+   "track_id": "typescript",
+   "unit_id": "ts-u4",
+   "title": "Template Literal & String Types",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Template literal types",
+     "body": "Template literal types build string types from other types: `` `${A}-${B}` ``. They distribute over unions (cartesian product). Intrinsic helpers `Uppercase`, `Lowercase`, `Capitalize`, `Uncapitalize` transform casing. In conditional types you can `infer` pieces of a string pattern to parse it at the type level.",
+     "code": "type Dir = \"top\" | \"bottom\";\ntype Pad = `padding-${Dir}`;  // \"padding-top\" | \"padding-bottom\"\ntype Split<S> = S extends `${infer H},${infer T}` ? [H, ...Split<T>] : [S];\ntype X = Split<\"a,b,c\">;     // [\"a\", \"b\", \"c\"]"
+    },
+    {
+     "type": "mcq",
+     "question": "How many members does `` `${\"a\"|\"b\"}${1|2|3}` `` have?",
+     "options": [
+      "2",
+      "3",
+      "5",
+      "6"
+     ],
+     "answer": 3,
+     "explanation": "The cartesian product has 2 x 3 = 6 members."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Capitalize<\"hello\">`?",
+     "options": [
+      "`\"HELLO\"`",
+      "`\"Hello\"`",
+      "`\"hello\"`",
+      "`string`"
+     ],
+     "answer": 1,
+     "explanation": "`Capitalize` upper-cases the first character."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `T`?",
+     "options": [
+      "`\"world\"`",
+      "`\"hello\"`",
+      "`string`",
+      "`\"hello world\"`"
+     ],
+     "answer": 0,
+     "explanation": "The pattern `hello ${infer R}` matches and R captures the remainder.",
+     "code": "type After<S> = S extends `hello ${infer R}` ? R : never;\ntype T = After<\"hello world\">;"
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the key-remapping so `Events<{click: 1}>` yields `{ onClick: 1 }`.",
+     "code": "type Events<T> = { [K in keyof T as `on${____<string & K>}`]: T[K] };",
+     "answer": [
+      "Capitalize"
+     ],
+     "explanation": "`Capitalize` upper-cases the first letter, giving `onClick`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `infer H` capture in `S extends `${infer H}${infer R}``?",
+     "options": [
+      "The whole string",
+      "The first character, with R being the rest",
+      "The last character",
+      "Nothing; this is an error"
+     ],
+     "answer": 1,
+     "explanation": "When two adjacent inferences sit in a template, the first infers a single character and the last takes the rest."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the downside of heavy template-literal parsing types?",
+     "options": [
+      "They change runtime output",
+      "Deep recursion can hit the compiler's instantiation depth and slow editors",
+      "They only work with numbers",
+      "They require a plugin"
+     ],
+     "answer": 1,
+     "explanation": "Recursive type-level parsing is limited (depth ~50 non-tail, ~1000 for tail-recursive conditionals) and can slow type checking."
+    }
+   ]
+  },
+  {
+   "id": "ts-discriminated-unions",
+   "track_id": "typescript",
+   "unit_id": "ts-u4",
+   "title": "Discriminated Unions & Exhaustiveness",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Discriminated unions",
+     "body": "Give every variant a literal-typed tag (the discriminant) and the compiler narrows on it. Add an exhaustiveness check by assigning the leftover value to `never`: when you add a variant and forget a case, the assignment fails at compile time.",
+     "code": "type Shape =\n  | { kind: \"circle\"; r: number }\n  | { kind: \"rect\"; w: number; h: number };\nfunction area(s: Shape): number {\n  switch (s.kind) {\n    case \"circle\": return Math.PI * s.r ** 2;\n    case \"rect\": return s.w * s.h;\n    default: {\n      const _x: never = s;\n      return _x;\n    }\n  }\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "In the `default` branch, what is the type of `s` after handling both cases?",
+     "options": [
+      "`Shape`",
+      "`never`",
+      "`unknown`",
+      "`undefined`"
+     ],
+     "answer": 1,
+     "explanation": "All members are eliminated, leaving the empty union `never`. That's why `const _x: never = s` works as a check."
+    },
+    {
+     "type": "mcq",
+     "question": "You add `{ kind: \"tri\"; ... }` to `Shape` without updating `area`. What happens?",
+     "options": [
+      "Nothing",
+      "A runtime error only",
+      "A compile error at `const _x: never = s`",
+      "A lint warning"
+     ],
+     "answer": 2,
+     "explanation": "`s` would be the `tri` variant in `default`, not assignable to `never`, so the compiler flags the missing case."
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the helper used for exhaustiveness.",
+     "code": "function assertNever(x: ____): never {\n  throw new Error(\"unexpected: \" + JSON.stringify(x));\n}",
+     "answer": [
+      "never"
+     ],
+     "explanation": "Typing the parameter as `never` means callers can only pass it when all cases are handled."
+    },
+    {
+     "type": "mcq",
+     "question": "Which property can serve as a discriminant?",
+     "options": [
+      "A `string` typed property",
+      "A property with a literal type (or `undefined`/`null`) that differs between members",
+      "Any optional property",
+      "A method"
+     ],
+     "answer": 1,
+     "explanation": "Discriminants need unit/literal types that are unique per variant so equality checks narrow the union."
+    },
+    {
+     "type": "mcq",
+     "question": "Does `noImplicitReturns` plus a `switch` over a discriminated union without default still require exhaustiveness?",
+     "options": [
+      "No, the compiler never checks",
+      "Yes: if the switch is exhaustive, TS knows the end is unreachable and does not complain",
+      "It always errors",
+      "Only for enums"
+     ],
+     "answer": 1,
+     "explanation": "If every case returns, control flow analysis sees the fall-off as unreachable (the switch condition narrows to `never`)."
+    },
+    {
+     "type": "mcq",
+     "question": "What type does `s.r` give outside of narrowing?",
+     "options": [
+      "`number`",
+      "`number | undefined`",
+      "Compile error: `r` doesn't exist on all members",
+      "`any`"
+     ],
+     "answer": 2,
+     "explanation": "Property access on a union requires the property to exist on every member.",
+     "code": "declare const s: Shape;\ns.r;"
+    }
+   ]
+  },
+  {
+   "id": "ts-strict-dts",
+   "track_id": "typescript",
+   "unit_id": "ts-u4",
+   "title": "Strict Mode & Declaration Files",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "What `strict` turns on",
+     "body": "`\"strict\": true` enables a family of flags: `noImplicitAny`, `strictNullChecks`, `strictFunctionTypes`, `strictBindCallApply`, `strictPropertyInitialization`, `noImplicitThis`, `alwaysStrict`, `useUnknownInCatchVariables`. Common extras that are *not* in strict: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`.",
+     "code": "{ \"compilerOptions\": { \"strict\": true,\n  \"noUncheckedIndexedAccess\": true } }"
+    },
+    {
+     "type": "mcq",
+     "question": "With `noUncheckedIndexedAccess`, what is the type of `xs[0]` for `xs: string[]`?",
+     "options": [
+      "`string`",
+      "`string | undefined`",
+      "`string | null`",
+      "`never`"
+     ],
+     "answer": 1,
+     "explanation": "Indexing may be out of bounds, so the flag adds `undefined` to index results."
+    },
+    {
+     "type": "mcq",
+     "question": "Under `useUnknownInCatchVariables`, what is `e` in `catch (e)`?",
+     "options": [
+      "`any`",
+      "`Error`",
+      "`unknown`",
+      "`never`"
+     ],
+     "answer": 2,
+     "explanation": "Catch variables are `unknown`; narrow with `instanceof Error` before using `.message`."
+    },
+    {
+     "type": "concept",
+     "title": ".d.ts files",
+     "body": "Declaration files describe the types of JavaScript code without implementation. `declare` introduces ambient declarations. Libraries ship `.d.ts` via the `types` field, or you install `@types/*` packages from DefinitelyTyped. Module augmentation uses `declare module \"x\" { ... }` to extend existing typings.",
+     "code": "// globals.d.ts\ndeclare const __VERSION__: string;\ndeclare module \"*.svg\" {\n  const url: string;\n  export default url;\n}"
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the ambient declaration for a global variable.",
+     "code": "____ const API_URL: string;",
+     "answer": [
+      "declare"
+     ],
+     "explanation": "`declare` tells the compiler a value exists at runtime without emitting code."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `skipLibCheck: true` do?",
+     "options": [
+      "Skips checking your own source",
+      "Skips type-checking of all `.d.ts` files, speeding up builds and hiding errors inside library typings",
+      "Disables `@types`",
+      "Skips emitting JS"
+     ],
+     "answer": 1,
+     "explanation": "It skips checking declaration files. It trades safety within library typings for speed and avoids conflicts between library versions."
+    },
+    {
+     "type": "mcq",
+     "question": "Why might `import x from \"./data.json\"` fail?",
+     "options": [
+      "JSON can't be imported",
+      "`resolveJsonModule` is not enabled",
+      "`strict` is off",
+      "JSON needs a `.d.ts`"
+     ],
+     "answer": 1,
+     "explanation": "Importing JSON needs `resolveJsonModule` (and often `esModuleInterop` for default imports)."
+    },
+    {
+     "type": "mcq",
+     "question": "What's the safest way to type an untyped third-party module quickly?",
+     "options": [
+      "`// @ts-ignore` at each import",
+      "`declare module \"lib\";` (everything becomes `any`) as a stopgap, then add real types",
+      "Disable strict",
+      "Delete the import"
+     ],
+     "answer": 1,
+     "explanation": "A shorthand ambient module gives `any`-typed exports with minimal noise; replace it with real declarations or `@types` when possible."
+    }
+   ]
+  },
+  {
+   "id": "ts-react-node-patterns",
+   "track_id": "typescript",
+   "unit_id": "ts-u4",
+   "title": "TypeScript with React & Node",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Typing React props and hooks",
+     "body": "Type props with an interface or alias and annotate the function parameter directly. `useState<T>()` infers from the initial value; give an explicit generic when the initial value is `null`. Events are typed by `React.ChangeEvent<HTMLInputElement>` etc. Prefer discriminated union props over many optional booleans.",
+     "code": "type ButtonProps = { label: string; onClick: () => void };\nfunction Button({ label, onClick }: ButtonProps) { /* ... */ }\nconst [user, setUser] = useState<User | null>(null);\nconst onChange = (e: React.ChangeEvent<HTMLInputElement>) => e.target.value;"
+    },
+    {
+     "type": "mcq",
+     "question": "Why is `useState<User | null>(null)` needed?",
+     "options": [
+      "Because hooks require generics",
+      "Without it the state would be inferred as `null` only",
+      "To make it readonly",
+      "It isn't; `useState(null)` infers `User | null`"
+     ],
+     "answer": 1,
+     "explanation": "`useState(null)` infers `null`, so `setUser(user)` would fail. Provide the union explicitly."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the best typing for a component with mutually exclusive props (`href` XOR `onClick`)?",
+     "options": [
+      "Both optional",
+      "A discriminated or union props type, e.g. `{ href: string; onClick?: never } | { onClick: () => void; href?: never }`",
+      "`any`",
+      "Overloading the component"
+     ],
+     "answer": 1,
+     "explanation": "Unions with `never` on the excluded fields make the invalid combination unrepresentable."
+    },
+    {
+     "type": "concept",
+     "title": "Typing Node code",
+     "body": "Use `@types/node` for core modules. Validate external input (env vars, JSON, request bodies) as `unknown`, then parse into a trusted type; `process.env.X` is `string | undefined`. Express handlers get types via generics: `Request<Params, ResBody, ReqBody, Query>`. Type assertions (`as`) do not validate anything at runtime; use schema validators for boundaries."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the type of `process.env.PORT`?",
+     "options": [
+      "`string`",
+      "`number`",
+      "`string | undefined`",
+      "`unknown`"
+     ],
+     "answer": 2,
+     "explanation": "Env variables may be missing, so the type is `string | undefined`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Narrow the unknown JSON before use. Fill the operator that checks for an object.",
+     "code": "function parse(raw: string) {\n  const data: unknown = JSON.parse(raw);\n  if (typeof data === \"____\" && data !== null) { /* ok */ }\n}",
+     "answer": [
+      "object"
+     ],
+     "explanation": "`typeof` returns `\"object\"` for objects and `null`, hence the extra null check."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is true about `const user = JSON.parse(text) as User`?",
+     "options": [
+      "It validates the shape at runtime",
+      "It only tells the compiler to trust you; wrong data still flows through",
+      "It throws if shape mismatches",
+      "It converts to a class instance"
+     ],
+     "answer": 1,
+     "explanation": "`as` is a compile-time assertion; runtime validation needs explicit checks or a schema library."
+    }
+   ]
+  },
+  {
+   "id": "ts-variance",
+   "track_id": "typescript",
+   "unit_id": "ts-u5",
+   "title": "Variance & Assignability",
+   "minutes": 11,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Covariance, contravariance, invariance",
+     "body": "If `Dog extends Animal`: a producer (`() => Dog`) is assignable to `() => Animal` (covariant in the return type). A consumer `(a: Animal) => void` is assignable to `(d: Dog) => void` (contravariant in the parameter) under `strictFunctionTypes`. A type that both reads and writes is invariant in theory, but TS treats arrays and *method-syntax* members bivariantly for pragmatism. Explicit annotations `in`/`out` (TS 4.7) document and verify variance for type parameters.",
+     "code": "interface Animal { name: string }\ninterface Dog extends Animal { bark(): void }\nlet f: (a: Animal) => void = (a) => {};\nlet g: (d: Dog) => void = f;   // ok: contravariant\n// f = g;                        // error under strictFunctionTypes"
+    },
+    {
+     "type": "mcq",
+     "question": "Under `strictFunctionTypes`, is this assignment allowed?",
+     "options": [
+      "Yes",
+      "No: parameters are checked contravariantly",
+      "No: return types differ",
+      "Yes, only with `as`"
+     ],
+     "answer": 1,
+     "explanation": "`(d: Dog) => void` requires a function that accepts Dogs only; assigning it to `(a: Animal) => void` would let callers pass any Animal. Parameters are contravariant, so it's an error.",
+     "code": "declare let animalFn: (a: Animal) => void;\ndeclare let dogFn: (d: Dog) => void;\nanimalFn = dogFn;"
+    },
+    {
+     "type": "mcq",
+     "question": "Why does this compile (unsound!) even in strict mode?",
+     "options": [
+      "Arrays are covariant in TS",
+      "The cast is hidden",
+      "Dog extends Cat",
+      "It does not compile"
+     ],
+     "answer": 0,
+     "explanation": "TS treats `Dog[]` as assignable to `Animal[]` even though writes through the alias can break the original array. It's a deliberate unsoundness for usability.",
+     "code": "declare const dogs: Dog[];\nconst animals: Animal[] = dogs;\nanimals.push({ name: \"cat\" }); // pushes a non-Dog into dogs"
+    },
+    {
+     "type": "mcq",
+     "question": "Why is `Handler` bivariant in its parameter despite `strictFunctionTypes`?",
+     "options": [
+      "Interfaces are always bivariant",
+      "Method shorthand declarations are exempt from strictFunctionTypes",
+      "Because of `readonly`",
+      "Because the return type is void"
+     ],
+     "answer": 1,
+     "explanation": "Methods declared with method syntax (`handle(e: X): void`) are compared bivariantly. Property syntax (`handle: (e: X) => void`) is checked contravariantly.",
+     "code": "interface Handler { handle(e: Dog): void }"
+    },
+    {
+     "type": "fill",
+     "prompt": "Annotate `T` as covariant (output-only) using the variance modifier.",
+     "code": "interface Producer<____ T> { get(): T }",
+     "answer": [
+      "out"
+     ],
+     "explanation": "`out T` declares T used only in output positions; TS verifies it."
+    },
+    {
+     "type": "mcq",
+     "question": "Which interface is invariant in `T`?",
+     "options": [
+      "`interface A<T> { get(): T }`",
+      "`interface B<T> { set: (v: T) => void }`",
+      "`interface C<T> { get: () => T; set: (v: T) => void }`",
+      "`interface D<T> { }`"
+     ],
+     "answer": 2,
+     "explanation": "C both produces and consumes T (with property syntax), so neither direction is safe: invariant. A is covariant, B contravariant, D bivariant/unused."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the result?",
+     "options": [
+      "`string`",
+      "`number`",
+      "`string | number`",
+      "error"
+     ],
+     "answer": 1,
+     "explanation": "The conditional `T extends (arg: infer A) => void ? A : never` infers `A` in a contravariant position; with a single candidate the result is `number`. With multiple candidates in that position, inference produces an intersection instead of a union.",
+     "code": "type Arg<T> = T extends (a: infer A) => void ? A : never;\ntype R = Arg<(a: number) => void>;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `U`?",
+     "options": [
+      "`{a: 1} | {b: 2}`",
+      "`never`",
+      "`{a: 1} & {b: 2}`",
+      "`unknown`"
+     ],
+     "answer": 2,
+     "explanation": "Multiple candidates for `infer` in a *contravariant* position are intersected; in covariant positions they are unioned. This is the classic union-to-intersection trick.",
+     "code": "type UnionToIntersection<U> =\n  (U extends unknown ? (x: U) => void : never) extends (x: infer I) => void ? I : never;\ntype U = UnionToIntersection<{ a: 1 } | { b: 2 }>;"
+    }
+   ]
+  },
+  {
+   "id": "ts-type-puzzles",
+   "track_id": "typescript",
+   "unit_id": "ts-u5",
+   "title": "Senior-level Type Puzzles",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Reading hard types",
+     "body": "Work systematically: (1) identify distribution points (naked type params in conditionals), (2) evaluate for each union member, (3) note where `never` collapses, (4) remember that mapped types over `keyof T` are homomorphic. Recursion is allowed in conditional types; tail-recursive forms are optimised.",
+     "code": "type Reverse<T extends unknown[]> =\n  T extends [infer H, ...infer R] ? [...Reverse<R>, H] : [];\ntype X = Reverse<[1, 2, 3]>; // [3, 2, 1]"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Q`?",
+     "options": [
+      "`[1, 2, 3]`",
+      "`[3, 2, 1]`",
+      "`[3, 2]`",
+      "`never`"
+     ],
+     "answer": 1,
+     "explanation": "Peel the head, reverse the rest, append head: [3,2] then 1 gives `[3, 2, 1]`.",
+     "code": "type Reverse<T extends unknown[]> = T extends [infer H, ...infer R] ? [...Reverse<R>, H] : [];\ntype Q = Reverse<[1, 2, 3]>;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Keys`?",
+     "options": [
+      "`\"a\" | \"b\"`",
+      "`\"a\"`",
+      "`never`",
+      "`string`"
+     ],
+     "answer": 1,
+     "explanation": "`RequiredKeys` keeps keys where `{} extends Pick<T,K>` is false, i.e. required ones. `a` is required, `b` is optional.",
+     "code": "type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];\ntype Keys = RequiredKeys<{ a: string; b?: number }>;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `IsNever<never>` with the naive definition?",
+     "options": [
+      "`true`",
+      "`false`",
+      "`never`",
+      "`boolean`"
+     ],
+     "answer": 2,
+     "explanation": "A naked `T` in a conditional distributes; over `never` it produces `never`, not `true`. Use `[T] extends [never] ? true : false` to detect never.",
+     "code": "type IsNever<T> = T extends never ? true : false;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `Last`?",
+     "options": [
+      "`3`",
+      "`1 | 3`",
+      "`never`",
+      "`number`"
+     ],
+     "answer": 0,
+     "explanation": "The pattern `[...infer _, infer L]` matches a tuple's final element.",
+     "code": "type Last<T extends unknown[]> = T extends [...unknown[], infer L] ? L : never;\ntype R = Last<[1, 2, 3]>;"
+    },
+    {
+     "type": "fill",
+     "prompt": "Fix the type so that `Len<[1,2,3]>` is `3`. Fill the property.",
+     "code": "type Len<T extends readonly unknown[]> = T[\"____\"];",
+     "answer": [
+      "length"
+     ],
+     "explanation": "The `length` of a tuple type is a numeric literal type."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this type compute?",
+     "options": [
+      "Keys of T that are functions",
+      "Keys of T that are not functions",
+      "All values of T",
+      "Methods of T as a union of their return types"
+     ],
+     "answer": 0,
+     "explanation": "For each key, map to the key if its value extends a function, otherwise `never`; indexing with `keyof T` gathers the union of surviving keys.",
+     "code": "type FnKeys<T> = { [K in keyof T]: T[K] extends (...a: any[]) => any ? K : never }[keyof T];"
+    },
+    {
+     "type": "mcq",
+     "question": "Why does the following call error?",
+     "options": [
+      "`T` is inferred as `string` but the second arg is a number",
+      "`K` isn't a key",
+      "Missing return",
+      "Generic can't have two params"
+     ],
+     "answer": 0,
+     "explanation": "Both arguments produce candidates for `T` (`string` and `number`). TypeScript does not widen to a union by itself here: it picks `string` from the first argument, then reports that `number` isn't assignable to it. Use two type parameters or `<T extends unknown>` patterns to allow different types.",
+     "code": "declare function same<T>(a: T, b: T): T;\nsame(\"a\", 1);"
+    }
+   ]
+  },
+  {
+   "id": "ts-branded-recursive",
+   "track_id": "typescript",
+   "unit_id": "ts-u5",
+   "title": "Branded Types, Recursion & Soundness Holes",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Nominal-ish typing with brands",
+     "body": "Because TS is structural, `UserId` and `OrderId` (both `string`) are interchangeable. A *brand* adds a phantom property to make them incompatible. The brand exists only in the type system; construct values through a smart constructor.",
+     "code": "type Brand<T, B extends string> = T & { readonly __brand: B };\ntype UserId = Brand<string, \"UserId\">;\ntype OrderId = Brand<string, \"OrderId\">;\nconst uid = (s: string) => s as UserId;\ndeclare function getUser(id: UserId): void;\n// getUser(\"x\" as OrderId) // error"
+    },
+    {
+     "type": "mcq",
+     "question": "Does `getUser(\"abc\")` compile when the parameter is `UserId`?",
+     "options": [
+      "Yes",
+      "No: `string` lacks the brand",
+      "Only in non-strict mode",
+      "Yes, strings are assignable to intersections"
+     ],
+     "answer": 1,
+     "explanation": "A plain `string` lacks the `__brand` property, so it isn't assignable to `string & { __brand: \"UserId\" }`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the runtime cost of a brand?",
+     "options": [
+      "A property is added to each string",
+      "None: it's erased and only affects type-checking",
+      "A wrapper object",
+      "A Symbol"
+     ],
+     "answer": 1,
+     "explanation": "Brands are phantom types: no runtime representation."
+    },
+    {
+     "type": "concept",
+     "title": "Recursive types",
+     "body": "Types can refer to themselves, enabling JSON types, deep readonly, and path types. Deep mapped types should guard against functions and primitives. Beware very deep recursion: the compiler enforces limits (error TS2589 'excessively deep').",
+     "code": "type JSON = string | number | boolean | null | JSON[] | { [k: string]: JSON };\ntype DeepReadonly<T> = T extends (...a: any[]) => any ? T\n  : T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `DeepReadonly<{a: {b: number}}>`?",
+     "options": [
+      "`{ readonly a: { b: number } }`",
+      "`{ readonly a: { readonly b: number } }`",
+      "`Readonly<{ a: {b: number} }>`",
+      "`never`"
+     ],
+     "answer": 1,
+     "explanation": "The recursion applies `readonly` at every object level."
+    },
+    {
+     "type": "fill",
+     "prompt": "Name the escape hatch: write the TS error-suppression comment that fails if there is NO error on the next line (prefer it to `@ts-ignore`).",
+     "code": "// @ts-____\nconst n: number = \"x\";",
+     "answer": [
+      "expect-error"
+     ],
+     "explanation": "`@ts-expect-error` errors when the next line has no error, so stale suppressions get flagged."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is a known soundness hole in TS?",
+     "options": [
+      "Calling a function with wrong argument count",
+      "Assigning through a covariant array alias, or trusting `as` assertions and non-null `!`",
+      "Using `never`",
+      "Narrowing with `typeof`"
+     ],
+     "answer": 1,
+     "explanation": "Array covariance, method bivariance, user type predicates, `as`/`!` and index signatures without `noUncheckedIndexedAccess` all let unsound code compile."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `satisfies` do in `const c = { a: 1 } satisfies Record<string, number>`?",
+     "options": [
+      "Casts `c` to `Record<string, number>`",
+      "Checks the value against the type while preserving the narrower inferred type `{ a: number }`",
+      "Makes `c` readonly",
+      "Is identical to a type annotation"
+     ],
+     "answer": 1,
+     "explanation": "`satisfies` (TS 4.9) validates without widening, so `c.a` is known to exist, unlike with a `Record` annotation."
+    }
+   ]
+  }
+ ]
+}

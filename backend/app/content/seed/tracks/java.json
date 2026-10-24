@@ -1,0 +1,1427 @@
+{
+ "tracks": [
+  {
+   "id": "java",
+   "title": "Java",
+   "icon": "☕",
+   "color": "#f97316",
+   "available": true,
+   "order": 300,
+   "description": "From language gotchas to JVM internals and concurrency: interview-grade Java.",
+   "units": [
+    {
+     "id": "java-u1",
+     "title": "Language Fundamentals",
+     "description": "Types, strings and arrays: the traps that start most interviews.",
+     "level": "Basic"
+    },
+    {
+     "id": "java-u2",
+     "title": "Object-Oriented Java",
+     "description": "Inheritance, polymorphism, interfaces and binding rules.",
+     "level": "Intermediate"
+    },
+    {
+     "id": "java-u3",
+     "title": "Collections & Contracts",
+     "description": "equals/hashCode, collection internals and iteration pitfalls.",
+     "level": "Intermediate"
+    },
+    {
+     "id": "java-u4",
+     "title": "Generics, Exceptions & Functional Java",
+     "description": "Wildcards, erasure, exception semantics, streams, Optional and records.",
+     "level": "Advanced"
+    },
+    {
+     "id": "java-u5",
+     "title": "Concurrency",
+     "description": "Threads, memory visibility, executors, futures and concurrent collections.",
+     "level": "Advanced"
+    },
+    {
+     "id": "java-u6",
+     "title": "JVM Internals & Design",
+     "description": "Memory, GC, class loading, immutability, patterns and Spring concepts.",
+     "level": "Expert"
+    }
+   ]
+  }
+ ],
+ "lessons": [
+  {
+   "id": "java-types",
+   "track_id": "java",
+   "unit_id": "java-u1",
+   "title": "Primitives, Wrappers & Numeric Gotchas",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Primitives vs wrappers",
+     "body": "Java has 8 primitives (`byte short int long float double char boolean`) stored by value, and wrapper classes (`Integer`, `Long`, ...) that are real objects. Arithmetic on `int` silently overflows (wraps around) and integer division truncates toward zero. `Integer.valueOf` caches values from -128 to 127, so `==` on boxed values is only reliable inside that range."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "2147483648",
+      "-2147483648",
+      "An ArithmeticException",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "int arithmetic wraps around silently in Java. MAX_VALUE + 1 becomes MIN_VALUE. Only Math.addExact and friends throw ArithmeticException.",
+     "code": "int x = Integer.MAX_VALUE;\nx++;\nSystem.out.println(x);"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "true true",
+      "true false",
+      "false false",
+      "false true"
+     ],
+     "answer": 1,
+     "explanation": "Autoboxing uses Integer.valueOf, which caches -128..127. 127 gives the same cached object so == is true; 128 creates two distinct objects so == is false. Always compare wrappers with equals.",
+     "code": "Integer a = 127, b = 127, c = 128, d = 128;\nSystem.out.println((a == b) + \" \" + (c == d));"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "98bc",
+      "abc",
+      "a1bc",
+      "Compile error"
+     ],
+     "answer": 0,
+     "explanation": "Evaluation is left to right. 'a' + 1 is int addition (97 + 1 = 98); then 98 + \"b\" becomes the string \"98b\", and 'c' is appended as a char.",
+     "code": "System.out.println('a' + 1 + \"b\" + 'c');"
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the operator that gives the remainder.",
+     "code": "System.out.println(7 ____ 3);   // prints 1",
+     "answer": [
+      "%"
+     ],
+     "explanation": "The `%` operator is the remainder; its sign follows the dividend, so -7 % 3 is -1."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `System.out.println(1 / 2 + 1 / 2.0);` print?",
+     "options": [
+      "1.0",
+      "0.5",
+      "1",
+      "0.0"
+     ],
+     "answer": 1,
+     "explanation": "1/2 is integer division = 0. 1/2.0 is double division = 0.5. The sum is 0.5."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Print the results of these five expressions, one per line, in this order: `Integer.MAX_VALUE + 1` (int), the same value computed as a long (`(long) Integer.MAX_VALUE + 1`), `7 / 2`, `7 % -3`, and `-7 / 2`.",
+     "starter": "public class Main {\n    public static void main(String[] args) {\n        // print the five values, one per line\n    }\n}\n",
+     "solution": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(Integer.MAX_VALUE + 1);\n        System.out.println((long) Integer.MAX_VALUE + 1);\n        System.out.println(7 / 2);\n        System.out.println(7 % -3);\n        System.out.println(-7 / 2);\n    }\n}\n",
+     "expected_output": "-2147483648\n2147483648\n3\n1\n-3",
+     "hint": "The cast has to happen before the addition."
+    }
+   ]
+  },
+  {
+   "id": "java-strings",
+   "track_id": "java",
+   "unit_id": "java-u1",
+   "title": "Strings: Immutability, the Pool & equals vs ==",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Immutable strings and the string pool",
+     "body": "A `String` never changes after creation; methods like `toUpperCase()` return a new string. String literals live in the **string pool**, so identical literals share one object. `new String(\"x\")` always allocates a distinct heap object; `intern()` returns the pooled one. Compile-time constant expressions (`\"ja\" + \"va\"`) are folded and pooled, but concatenation involving a non-final variable happens at runtime and creates a new object."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "true,false,true,true",
+      "true,true,true,true",
+      "false,false,true,true",
+      "true,false,false,true"
+     ],
+     "answer": 0,
+     "explanation": "a and b are the same pooled literal. c is a new heap object, so a == c is false, but equals is true. c.intern() returns the pooled instance, so a == c.intern() is true.",
+     "code": "String a = \"hi\", b = \"hi\", c = new String(\"hi\");\nSystem.out.println((a == b) + \",\" + (a == c) + \",\" + a.equals(c) + \",\" + (a == c.intern()));"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "abc",
+      "ABC",
+      "abcd",
+      "ABCd"
+     ],
+     "answer": 0,
+     "explanation": "Strings are immutable: both calls return new strings that are discarded. s still refers to \"abc\".",
+     "code": "String s = \"abc\";\ns.toUpperCase();\ns.concat(\"d\");\nSystem.out.println(s);"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "true true",
+      "true false",
+      "false true",
+      "false false"
+     ],
+     "answer": 1,
+     "explanation": "\"ja\" + \"va\" is a constant expression folded at compile time and pooled, so s1 == \"java\". p is not final, so p + \"va\" is computed at runtime into a new object. If p were declared `final`, it would be a constant and both would be true.",
+     "code": "String s1 = \"ja\" + \"va\";\nString p = \"ja\";\nString s2 = p + \"va\";\nSystem.out.println((s1 == \"java\") + \" \" + (s2 == \"java\"));"
+    },
+    {
+     "type": "fill",
+     "prompt": "Compare string contents.",
+     "code": "String x = \"a\", y = new String(\"a\");\nboolean same = x.____(y);",
+     "answer": [
+      "equals"
+     ],
+     "explanation": "`equals` compares characters; `==` compares references."
+    },
+    {
+     "type": "mcq",
+     "question": "Why prefer `StringBuilder` over `+=` inside a loop of n iterations?",
+     "options": [
+      "+= is not allowed in loops",
+      "Each += copies the whole string, giving O(n^2) total work",
+      "StringBuilder is always thread-safe",
+      "+= bypasses the string pool"
+     ],
+     "answer": 1,
+     "explanation": "Every += allocates a new String and copies all previous characters. StringBuilder appends into a growing buffer, amortized O(1) per append. (StringBuffer is the synchronized variant.)"
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Print four lines: `a == b` (where `a = \"hi\"` and `b = new String(\"hi\")`), `a.equals(b)`, `a == b.intern()`, and finally the result of reversing `new StringBuilder(\"stack\")` and appending `!`.",
+     "starter": "public class Main {\n    public static void main(String[] args) {\n        String a = \"hi\";\n        String b = new String(\"hi\");\n        // print the four lines\n    }\n}\n",
+     "solution": "public class Main {\n    public static void main(String[] args) {\n        String a = \"hi\";\n        String b = new String(\"hi\");\n        System.out.println(a == b);\n        System.out.println(a.equals(b));\n        System.out.println(a == b.intern());\n        StringBuilder sb = new StringBuilder(\"stack\");\n        System.out.println(sb.reverse().append(\"!\"));\n    }\n}\n",
+     "expected_output": "false\ntrue\ntrue\nkcats!"
+    }
+   ]
+  },
+  {
+   "id": "java-arrays",
+   "track_id": "java",
+   "unit_id": "java-u1",
+   "title": "Arrays: Defaults, Covariance & Pass-by-Value",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Arrays are objects",
+     "body": "Arrays are heap objects with a fixed length and default-initialized elements (`0`, `false`, `null`). Printing an array directly shows a type/hash string, so use `Arrays.toString` or `Arrays.deepToString`. `==` and `.equals` on arrays compare references; use `Arrays.equals` / `Arrays.deepEquals`. Arrays are **covariant** (`String[]` is an `Object[]`), which is checked at runtime and can throw `ArrayStoreException`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "0 null",
+      "0 0",
+      "null null",
+      "Compile error: uninitialized"
+     ],
+     "answer": 0,
+     "explanation": "Elements get default values: 0 for int, null for references.",
+     "code": "int[] a = new int[3];\nString[] s = new String[2];\nSystem.out.println(a[0] + \" \" + s[0]);"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens when this runs?",
+     "options": [
+      "Compiles and runs silently",
+      "Compile error",
+      "ArrayStoreException at runtime",
+      "ClassCastException at runtime"
+     ],
+     "answer": 2,
+     "explanation": "The static type Object[] allows storing an Integer, but the actual array object is a String[], so the JVM rejects the store at runtime.",
+     "code": "Object[] o = new String[1];\no[0] = 1;"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1",
+      "9",
+      "7",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "Java passes the reference by value. x[0] = 9 mutates the shared array; reassigning x only changes the local copy of the reference.",
+     "code": "static void f(int[] x) { x[0] = 9; x = new int[]{7}; }\npublic static void main(String[] a) {\n    int[] arr = {1};\n    f(arr);\n    System.out.println(arr[0]);\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What are the three results?",
+     "options": [
+      "false false true",
+      "true true true",
+      "false true true",
+      "true false true"
+     ],
+     "answer": 0,
+     "explanation": "Different array objects: == is false, inherited Object.equals is identity so also false, and Arrays.equals compares elements.",
+     "code": "int[] a = {1, 2}, b = {1, 2};\nSystem.out.println((a == b) + \" \" + a.equals(b) + \" \" + java.util.Arrays.equals(a, b));"
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Sort `{5,3,9,1}`, print it with `Arrays.toString`, print the index of 5 using `Arrays.binarySearch`, print a copy extended to length 6 with `Arrays.copyOf`, then create `new int[2][3]`, set `g[1][2] = 7` and print it with `Arrays.deepToString`.",
+     "starter": "import java.util.Arrays;\n\npublic class Main {\n    public static void main(String[] args) {\n        int[] a = {5, 3, 9, 1};\n        // your code\n    }\n}\n",
+     "solution": "import java.util.Arrays;\n\npublic class Main {\n    public static void main(String[] args) {\n        int[] a = {5, 3, 9, 1};\n        Arrays.sort(a);\n        System.out.println(Arrays.toString(a));\n        System.out.println(Arrays.binarySearch(a, 5));\n        System.out.println(Arrays.toString(Arrays.copyOf(a, 6)));\n        int[][] g = new int[2][3];\n        g[1][2] = 7;\n        System.out.println(Arrays.deepToString(g));\n    }\n}\n",
+     "expected_output": "[1, 3, 5, 9]\n2\n[1, 3, 5, 9, 0, 0]\n[[0, 0, 0], [0, 0, 7]]"
+    }
+   ]
+  },
+  {
+   "id": "java-inheritance",
+   "track_id": "java",
+   "unit_id": "java-u2",
+   "title": "Inheritance & Polymorphism",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Dynamic dispatch and its limits",
+     "body": "Instance method calls are dispatched on the **runtime** type (overriding). But **fields** and **static methods** are resolved on the **compile-time** type, so they are hidden, not overridden. Constructors run parent-first, and a parent constructor calling an overridable method can run the child's override before the child's fields are initialized (they still hold defaults)."
+    },
+    {
+     "type": "mcq",
+     "question": "What do the three calls print?",
+     "options": [
+      "A B sA",
+      "B B sB",
+      "A A sA",
+      "A B sB"
+     ],
+     "answer": 0,
+     "explanation": "Field access and static calls use the declared type A. The instance method who() is overridden, so the runtime type B wins.",
+     "code": "class A { String name = \"A\"; String who() { return \"A\"; } static String s() { return \"sA\"; } }\nclass B extends A { String name = \"B\"; String who() { return \"B\"; } static String s() { return \"sB\"; } }\n// A obj = new B();\nSystem.out.println(obj.name + \" \" + obj.who() + \" \" + obj.s());"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `new B()` print?",
+     "options": [
+      "A ctor / B ctor",
+      "A ctor / B.init v=5 / B ctor",
+      "A ctor / B.init v=0 / B ctor",
+      "B.init v=0 / A ctor / B ctor"
+     ],
+     "answer": 2,
+     "explanation": "The A constructor runs first and calls the overridden init(). B's field v has not been initialized yet, so it is 0. Only afterwards does v = 5 run.",
+     "code": "class A { A() { System.out.println(\"A ctor\"); init(); } void init() {} }\nclass B extends A {\n    int v = 5;\n    B() { System.out.println(\"B ctor\"); }\n    void init() { System.out.println(\"B.init v=\" + v); }\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Which methods can NOT be overridden?",
+     "options": [
+      "public and protected ones",
+      "private, static and final methods",
+      "abstract methods",
+      "Methods with generics"
+     ],
+     "answer": 1,
+     "explanation": "Private methods are not inherited, static methods are hidden, and final methods are explicitly locked."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `super.toString()` inside a class that does not extend anything explicitly call?",
+     "options": [
+      "Nothing, compile error",
+      "Object.toString()",
+      "String.valueOf(this)",
+      "The interface default"
+     ],
+     "answer": 1,
+     "explanation": "Every class implicitly extends Object, so super refers to Object, whose toString is ClassName@hexHash."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "`Animal` has `speak()` returning \"...\". `Dog` already overrides it with \"Woof\". Write `Cat` (override with \"Meow\") and loop over an `Animal[]` of Dog, Cat, and a plain Animal, printing each `speak()` on its own line.",
+     "starter": "class Animal { String speak() { return \"...\"; } }\nclass Dog extends Animal { @Override String speak() { return \"Woof\"; } }\n// TODO: class Cat\n\npublic class Main {\n    public static void main(String[] args) {\n        // build the array and print\n    }\n}\n",
+     "solution": "class Animal { String speak() { return \"...\"; } }\nclass Dog extends Animal { @Override String speak() { return \"Woof\"; } }\nclass Cat extends Animal { @Override String speak() { return \"Meow\"; } }\n\npublic class Main {\n    public static void main(String[] args) {\n        Animal[] zoo = { new Dog(), new Cat(), new Animal() };\n        for (Animal a : zoo) System.out.println(a.speak());\n    }\n}\n",
+     "expected_output": "Woof\nMeow\n..."
+    }
+   ]
+  },
+  {
+   "id": "java-abstract-interface",
+   "track_id": "java",
+   "unit_id": "java-u2",
+   "title": "Abstract Classes vs Interfaces",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Choosing between them",
+     "body": "An **abstract class** can hold state, constructors and any access level, but a class extends only one. An **interface** declares a capability; since Java 8 it may have `default` and `static` methods (and private helpers since 9), but only `public static final` constants, never instance state. A class can implement many interfaces. If two interfaces supply the same default method, the class must override and may pick one with `Iface.super.method()`. \"Class wins\": an inherited concrete class method beats an interface default."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "I",
+      "P",
+      "Compile error: ambiguous",
+      "Q"
+     ],
+     "answer": 1,
+     "explanation": "The superclass method P.m() wins over the interface default (class wins rule).",
+     "code": "interface I { default String m() { return \"I\"; } }\nclass P { public String m() { return \"P\"; } }\nclass Q extends P implements I {}\nSystem.out.println(new Q().m());"
+    },
+    {
+     "type": "mcq",
+     "question": "A class implements two interfaces that both define `default void hi()`. What must it do?",
+     "options": [
+      "Nothing, the first one listed wins",
+      "Override hi() itself",
+      "Mark the class abstract only",
+      "Use reflection"
+     ],
+     "answer": 1,
+     "explanation": "The compiler reports a conflict unless the class overrides the method (optionally delegating with A.super.hi())."
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement is TRUE?",
+     "options": [
+      "An interface can declare instance fields",
+      "An abstract class can have a constructor",
+      "A class can extend two abstract classes",
+      "Interfaces cannot have static methods"
+     ],
+     "answer": 1,
+     "explanation": "Abstract classes have constructors (called via super). Interface fields are implicitly public static final constants."
+    },
+    {
+     "type": "mcq",
+     "question": "Which design is the best fit: several unrelated classes (File, Socket, Timer) all need `close()` semantics?",
+     "options": [
+      "A shared abstract base class",
+      "An interface like AutoCloseable",
+      "A static utility class",
+      "Copy the method into each class"
+     ],
+     "answer": 1,
+     "explanation": "Unrelated types share a capability, not an is-a hierarchy and not state, so an interface fits; it also lets them keep their own superclass."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "`Duck` implements both `Walker` and `Swimmer`, which each have a default `move()`. Override `move()` in `Duck` so it returns the walker's text, a plus sign and then the swimmer's text, and print it.",
+     "starter": "interface Walker { default String move() { return \"walk\"; } }\ninterface Swimmer { default String move() { return \"swim\"; } }\nclass Duck implements Walker, Swimmer {\n    // TODO\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new Duck().move());\n    }\n}\n",
+     "solution": "interface Walker { default String move() { return \"walk\"; } }\ninterface Swimmer { default String move() { return \"swim\"; } }\nclass Duck implements Walker, Swimmer {\n    @Override public String move() { return Walker.super.move() + \"+\" + Swimmer.super.move(); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new Duck().move());\n    }\n}\n",
+     "expected_output": "walk+swim"
+    }
+   ]
+  },
+  {
+   "id": "java-overloading",
+   "track_id": "java",
+   "unit_id": "java-u2",
+   "title": "Overloading vs Overriding",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Two different binding times",
+     "body": "**Overriding** is resolved at runtime on the object's actual class and needs the same signature. **Overloading** is resolved at **compile time** using the static argument types. The overload phases are: exact/widening primitive, then boxing, then varargs; within a phase the most specific method wins. Overriding allows covariant return types, cannot reduce visibility and cannot throw broader checked exceptions."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "obj",
+      "str",
+      "Compile error: ambiguous",
+      "NullPointerException"
+     ],
+     "answer": 1,
+     "explanation": "Both overloads apply to null, and String is more specific than Object, so f(String) is chosen.",
+     "code": "static void f(Object o) { System.out.println(\"obj\"); }\nstatic void f(String s) { System.out.println(\"str\"); }\n// call:\nf(null);"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `f(5)` print?",
+     "options": [
+      "long",
+      "Integer",
+      "varargs",
+      "Compile error"
+     ],
+     "answer": 0,
+     "explanation": "Phase 1 (no boxing) allows widening int to long, so f(long) matches before boxing to Integer is considered.",
+     "code": "static void f(long x) { System.out.println(\"long\"); }\nstatic void f(Integer x) { System.out.println(\"Integer\"); }\nstatic void f(int... x) { System.out.println(\"varargs\"); }"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "PP",
+      "QQ",
+      "Compile error",
+      "PQ"
+     ],
+     "answer": 0,
+     "explanation": "Q.g(Q) has a different parameter type, so it overloads rather than overrides. The compile-time type of x is P, so only g(P) is visible; Q does not override it, so P.g runs.",
+     "code": "class P { void g(P p) { System.out.println(\"PP\"); } }\nclass Q extends P { void g(Q q) { System.out.println(\"QQ\"); } }\n// P x = new Q();\nx.g(new Q());"
+    },
+    {
+     "type": "mcq",
+     "question": "Why should you always add `@Override`?",
+     "options": [
+      "It makes the method faster",
+      "The compiler errors if you did not truly override (typo or overload by mistake)",
+      "It is required by the JVM",
+      "It lets you reduce visibility"
+     ],
+     "answer": 1,
+     "explanation": "@Override is a compile-time safety net that catches mistakes like the g(Q) example above."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "`Dog` overrides `create()` with a covariant return type `Dog` and `name()` returning \"dog\". Print `a.create().name()` for `Animal a = new Dog()`. Then call the overloaded `show(Object)`/`show(String)` with a variable declared as `Object o = \"x\"` and print which one runs.",
+     "starter": "class Animal {\n    Animal create() { return new Animal(); }\n    String name() { return \"animal\"; }\n}\nclass Dog extends Animal {\n    // TODO: covariant override of create(), override of name()\n}\npublic class Main {\n    static String show(Object o) { return \"object\"; }\n    static String show(String s) { return \"string\"; }\n    public static void main(String[] args) {\n        Animal a = new Dog();\n        System.out.println(a.create().name());\n        Object o = \"x\";\n        // print show(o)\n    }\n}\n",
+     "solution": "class Animal {\n    Animal create() { return new Animal(); }\n    String name() { return \"animal\"; }\n}\nclass Dog extends Animal {\n    @Override Dog create() { return new Dog(); }\n    @Override String name() { return \"dog\"; }\n}\npublic class Main {\n    static String show(Object o) { return \"object\"; }\n    static String show(String s) { return \"string\"; }\n    public static void main(String[] args) {\n        Animal a = new Dog();\n        System.out.println(a.create().name());\n        Object o = \"x\";\n        System.out.println(show(o));\n    }\n}\n",
+     "expected_output": "dog\nobject"
+    }
+   ]
+  },
+  {
+   "id": "java-equals-hashcode",
+   "track_id": "java",
+   "unit_id": "java-u3",
+   "title": "The equals / hashCode Contract",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The contract",
+     "body": "`equals` must be reflexive, symmetric, transitive, consistent and false for `null`. Equal objects **must** have equal hash codes (the reverse is not required). Hash collections compute `hashCode` first to pick a bucket and only then call `equals`. Overriding `equals` without `hashCode` breaks `HashMap`/`HashSet`. Never put mutable fields that participate in `hashCode` into a key and then mutate the key."
+    },
+    {
+     "type": "mcq",
+     "question": "`Point` overrides `equals` (by x,y) but not `hashCode`. What is the likely result?",
+     "options": [
+      "set.contains(new Point(1,2)) is true after adding an equal Point",
+      "set.contains(...) is usually false because the two objects hash to different buckets",
+      "A compile error",
+      "An infinite loop"
+     ],
+     "answer": 1,
+     "explanation": "Default hashCode is identity based, so equal points normally land in different buckets and equals is never even consulted."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1",
+      "null",
+      "2",
+      "A ConcurrentModificationException"
+     ],
+     "answer": 1,
+     "explanation": "The key's hashCode changed after insertion, so lookup goes to a different bucket. The entry is effectively lost.",
+     "code": "Map<List<Integer>, Integer> m = new HashMap<>();\nList<Integer> key = new ArrayList<>(List.of(1));\nm.put(key, 1);\nkey.add(2);\nSystem.out.println(m.get(key));"
+    },
+    {
+     "type": "mcq",
+     "question": "Is `public int hashCode() { return 42; }` a legal implementation?",
+     "options": [
+      "No, it violates the contract",
+      "Yes, but every key collides so lookups degrade (to O(log n) with treeified bins, O(n) otherwise)",
+      "Only for final classes",
+      "Only if equals is not overridden"
+     ],
+     "answer": 1,
+     "explanation": "The contract only demands equal objects give equal hashes. A constant satisfies it but destroys HashMap performance."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "true",
+      "false"
+     ],
+     "answer": 1,
+     "explanation": "Integer.equals requires the argument to be an Integer. 1L boxes to a Long, so the result is false. Mixed wrapper types are never equal.",
+     "code": "System.out.println(Integer.valueOf(1).equals(1L));"
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Implement `equals` and `hashCode` for `Pt` (fields x, y) using `Objects`. The main method prints `a.equals(b)`, the size of a `HashSet` after adding both, and whether the set contains a fresh `new Pt(1, 2)`.",
+     "starter": "import java.util.*;\n\nclass Pt {\n    final int x, y;\n    Pt(int x, int y) { this.x = x; this.y = y; }\n    // TODO equals and hashCode\n}\npublic class Main {\n    public static void main(String[] args) {\n        Pt a = new Pt(1, 2), b = new Pt(1, 2);\n        Set<Pt> set = new HashSet<>();\n        set.add(a); set.add(b);\n        System.out.println(a.equals(b));\n        System.out.println(set.size());\n        System.out.println(set.contains(new Pt(1, 2)));\n    }\n}\n",
+     "solution": "import java.util.*;\n\nclass Pt {\n    final int x, y;\n    Pt(int x, int y) { this.x = x; this.y = y; }\n    @Override public boolean equals(Object o) {\n        if (this == o) return true;\n        if (!(o instanceof Pt)) return false;\n        Pt p = (Pt) o;\n        return x == p.x && y == p.y;\n    }\n    @Override public int hashCode() { return Objects.hash(x, y); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Pt a = new Pt(1, 2), b = new Pt(1, 2);\n        Set<Pt> set = new HashSet<>();\n        set.add(a); set.add(b);\n        System.out.println(a.equals(b));\n        System.out.println(set.size());\n        System.out.println(set.contains(new Pt(1, 2)));\n    }\n}\n",
+     "expected_output": "true\n1\ntrue"
+    }
+   ]
+  },
+  {
+   "id": "java-collections-internals",
+   "track_id": "java",
+   "unit_id": "java-u3",
+   "title": "ArrayList, LinkedList & HashMap Internals",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "What is inside",
+     "body": "`ArrayList` is a resizable array: `get` O(1), append amortized O(1) (capacity grows about 1.5x), insert/remove in the middle O(n). `LinkedList` is a doubly linked list: O(1) at the ends but O(n) `get(i)` and poor cache locality, so it rarely beats `ArrayList`. `HashMap` is an array of buckets (default capacity 16, load factor 0.75). The index is `(n-1) & spread(hash)`; collisions chain in a linked list that is converted to a red-black tree when a bin reaches 8 entries (and the table has at least 64 slots). The table doubles when size exceeds capacity x load factor."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[2, 3]",
+      "[3]",
+      "[1, 3]",
+      "IndexOutOfBoundsException"
+     ],
+     "answer": 1,
+     "explanation": "remove(1) with an int removes the element at index 1 (the 2), leaving [1, 3]. remove(Integer.valueOf(1)) removes the value 1, leaving [3].",
+     "code": "List<Integer> l = new ArrayList<>(List.of(1, 2, 3));\nl.remove(1);\nl.remove(Integer.valueOf(1));\nSystem.out.println(l);"
+    },
+    {
+     "type": "mcq",
+     "question": "With default settings, a HashMap resizes when you insert which entry?",
+     "options": [
+      "The 12th",
+      "The 13th",
+      "The 16th",
+      "The 17th"
+     ],
+     "answer": 1,
+     "explanation": "Threshold = 16 * 0.75 = 12. The resize happens once the size exceeds it, i.e. on inserting the 13th entry."
+    },
+    {
+     "type": "mcq",
+     "question": "Which of these allows a null key?",
+     "options": [
+      "Hashtable",
+      "ConcurrentHashMap",
+      "HashMap",
+      "Map.of(...)"
+     ],
+     "answer": 2,
+     "explanation": "HashMap permits one null key and null values. Hashtable, ConcurrentHashMap and immutable Map.of reject nulls with NullPointerException."
+    },
+    {
+     "type": "mcq",
+     "question": "Which ordering guarantee does `HashMap` give when iterating?",
+     "options": [
+      "Insertion order",
+      "Sorted by key",
+      "None; it can change after a resize",
+      "Reverse insertion order"
+     ],
+     "answer": 2,
+     "explanation": "Use LinkedHashMap for insertion order or TreeMap for sorted order."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Count the words in `b a b c a b` using a `LinkedHashMap<String,Integer>` and `merge`, then print the map. Insertion order must be preserved.",
+     "starter": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        String[] words = \"b a b c a b\".split(\" \");\n        Map<String, Integer> counts = new LinkedHashMap<>();\n        // count them\n        System.out.println(counts);\n    }\n}\n",
+     "solution": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        String[] words = \"b a b c a b\".split(\" \");\n        Map<String, Integer> counts = new LinkedHashMap<>();\n        for (String w : words) counts.merge(w, 1, Integer::sum);\n        System.out.println(counts);\n    }\n}\n",
+     "expected_output": "{b=3, a=2, c=1}"
+    }
+   ]
+  },
+  {
+   "id": "java-treemap-cme",
+   "track_id": "java",
+   "unit_id": "java-u3",
+   "title": "TreeMap, Iteration & ConcurrentModificationException",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Sorted maps and fail-fast iterators",
+     "body": "`TreeMap` is a red-black tree: `get/put/remove` are O(log n), keys are sorted, and it offers navigation such as `floorKey`, `ceilingKey` and `headMap`. It decides equality with `compareTo`/the comparator, **not** `equals`. Most collections have **fail-fast** iterators: structurally modifying the collection during a for-each throws `ConcurrentModificationException` on the next `next()` call. Safe ways to remove: `Iterator.remove()` or `removeIf`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[1, 3]",
+      "ConcurrentModificationException",
+      "[1, 2, 3]",
+      "[1, 2]"
+     ],
+     "answer": 0,
+     "explanation": "After removing 2 (the second to last element), the iterator's cursor equals the new size, so hasNext() returns false and no exception is thrown. Remove from [1,2,3,4] instead and it would throw.",
+     "code": "List<Integer> list = new ArrayList<>(List.of(1, 2, 3));\nfor (Integer x : list) {\n    if (x == 2) list.remove(x);\n}\nSystem.out.println(list);"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "2",
+      "1",
+      "0",
+      "TreeSet rejects the second add"
+     ],
+     "answer": 1,
+     "explanation": "The comparator treats \"a\" and \"A\" as equal, and TreeSet uses the comparator for equality, so the second add is ignored.",
+     "code": "Set<String> s = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);\ns.add(\"a\"); s.add(\"A\");\nSystem.out.println(s.size());"
+    },
+    {
+     "type": "mcq",
+     "question": "For a TreeMap with keys 10, 20, 30, what do `floorKey(25)` and `ceilingKey(25)` return?",
+     "options": [
+      "20 and 30",
+      "10 and 30",
+      "20 and 20",
+      "30 and 20"
+     ],
+     "answer": 0,
+     "explanation": "floorKey is the greatest key <= 25, ceilingKey is the smallest key >= 25."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is the idiomatic, safe way to delete all even numbers from a list?",
+     "options": [
+      "for-each with list.remove",
+      "list.removeIf(x -> x % 2 == 0)",
+      "A for loop that never adjusts the index",
+      "list.stream().remove(...)"
+     ],
+     "answer": 1,
+     "explanation": "removeIf (or Iterator.remove) is safe. Index loops that remove need to adjust the index or iterate backwards."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Build a `TreeMap` with 30->c, 10->a, 20->b, 40->d. Print `floorKey(25)`, `ceilingKey(25)`, `headMap(30)`. Then remove all even numbers from the list 1..6 with `removeIf` and print it.",
+     "starter": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        TreeMap<Integer, String> m = new TreeMap<>();\n        m.put(30, \"c\"); m.put(10, \"a\"); m.put(20, \"b\"); m.put(40, \"d\");\n        // prints\n        List<Integer> l = new ArrayList<>(List.of(1, 2, 3, 4, 5, 6));\n        // remove evens and print\n    }\n}\n",
+     "solution": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        TreeMap<Integer, String> m = new TreeMap<>();\n        m.put(30, \"c\"); m.put(10, \"a\"); m.put(20, \"b\"); m.put(40, \"d\");\n        System.out.println(m.floorKey(25));\n        System.out.println(m.ceilingKey(25));\n        System.out.println(m.headMap(30));\n        List<Integer> l = new ArrayList<>(List.of(1, 2, 3, 4, 5, 6));\n        l.removeIf(x -> x % 2 == 0);\n        System.out.println(l);\n    }\n}\n",
+     "expected_output": "20\n30\n{10=a, 20=b}\n[1, 3, 5]"
+    }
+   ]
+  },
+  {
+   "id": "java-generics",
+   "track_id": "java",
+   "unit_id": "java-u4",
+   "title": "Generics, Erasure & Wildcards",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Invariance, erasure and PECS",
+     "body": "Generics are **invariant**: `List<String>` is not a `List<Object>`. Type arguments are erased at runtime, so `List<String>` and `List<Integer>` share one class, you cannot do `new T()` or `instanceof List<String>`, and two overloads differing only in type arguments clash. Wildcards restore flexibility: `? extends T` is a **producer** (you can read T, cannot add except null); `? super T` is a **consumer** (you can add T, reads give Object). Remember **PECS**: Producer Extends, Consumer Super."
+    },
+    {
+     "type": "mcq",
+     "question": "Which line fails to compile?",
+     "options": [
+      "List<? extends Number> a = new ArrayList<Integer>();",
+      "List<Object> b = new ArrayList<String>();",
+      "List<? super Integer> c = new ArrayList<Number>();",
+      "List<?> d = new ArrayList<String>();"
+     ],
+     "answer": 1,
+     "explanation": "Generics are invariant; only wildcards allow the relationship."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "true",
+      "false"
+     ],
+     "answer": 0,
+     "explanation": "After type erasure both are just ArrayList.class.",
+     "code": "System.out.println(new ArrayList<String>().getClass() == new ArrayList<Integer>().getClass());"
+    },
+    {
+     "type": "mcq",
+     "question": "Given `List<? extends Number> nums`, which is allowed?",
+     "options": [
+      "nums.add(1)",
+      "nums.add(1.5)",
+      "Number n = nums.get(0)",
+      "nums.add(new Object())"
+     ],
+     "answer": 2,
+     "explanation": "With an extends wildcard you can read items as Number but cannot safely add anything (other than null)."
+    },
+    {
+     "type": "mcq",
+     "question": "Why do these two declarations not compile together?",
+     "options": [
+      "Different return types",
+      "void f(List<String> a) and void f(List<Integer> a) have the same erasure",
+      "Generics cannot be overloaded at all",
+      "Missing static"
+     ],
+     "answer": 1,
+     "explanation": "Both erase to f(List), a name clash."
+    },
+    {
+     "type": "fill",
+     "prompt": "Bound T so it can be compared.",
+     "code": "static <T ____ Comparable<T>> T max(T a, T b) { return a.compareTo(b) >= 0 ? a : b; }",
+     "answer": [
+      "extends"
+     ],
+     "explanation": "Bounded type parameters always use the keyword `extends`, even for interfaces."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Write `max` (bounded generic), `sum(List<? extends Number>)` returning a double, and `fill(List<? super Integer>, int n)` adding 0..n-1. Print `max(\"pear\",\"apple\")`, `max(3, 9)`, `sum(List.of(1, 2.5, 3))`, and a `List<Object>` filled with 3 ints.",
+     "starter": "import java.util.*;\n\npublic class Main {\n    // TODO: max, sum, fill\n\n    public static void main(String[] args) {\n        System.out.println(max(\"pear\", \"apple\"));\n        System.out.println(max(3, 9));\n        System.out.println(sum(List.of(1, 2.5, 3)));\n        List<Object> sink = new ArrayList<>();\n        fill(sink, 3);\n        System.out.println(sink);\n    }\n}\n",
+     "solution": "import java.util.*;\n\npublic class Main {\n    static <T extends Comparable<T>> T max(T a, T b) { return a.compareTo(b) >= 0 ? a : b; }\n    static double sum(List<? extends Number> xs) {\n        double t = 0;\n        for (Number n : xs) t += n.doubleValue();\n        return t;\n    }\n    static void fill(List<? super Integer> out, int n) {\n        for (int i = 0; i < n; i++) out.add(i);\n    }\n\n    public static void main(String[] args) {\n        System.out.println(max(\"pear\", \"apple\"));\n        System.out.println(max(3, 9));\n        System.out.println(sum(List.of(1, 2.5, 3)));\n        List<Object> sink = new ArrayList<>();\n        fill(sink, 3);\n        System.out.println(sink);\n    }\n}\n",
+     "expected_output": "pear\n9\n6.5\n[0, 1, 2]"
+    }
+   ]
+  },
+  {
+   "id": "java-exceptions",
+   "track_id": "java",
+   "unit_id": "java-u4",
+   "title": "Exceptions: Checked, Unchecked & finally",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The hierarchy and the rules",
+     "body": "`Throwable` splits into `Error` (JVM problems, do not catch) and `Exception`. **Checked** exceptions (`IOException`, any `Exception` not under `RuntimeException`) must be caught or declared. **Unchecked** ones (`RuntimeException` and `Error`) need not be. `finally` always runs (except on `System.exit` or a JVM crash) and a `return` or `throw` inside it overrides the earlier result. `try-with-resources` closes resources in reverse order and attaches close failures as **suppressed** exceptions."
+    },
+    {
+     "type": "mcq",
+     "question": "Which must be declared or caught?",
+     "options": [
+      "NullPointerException",
+      "IllegalArgumentException",
+      "IOException",
+      "StackOverflowError"
+     ],
+     "answer": 2,
+     "explanation": "Only IOException is checked. The others are RuntimeException or Error subclasses."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `f()` return?",
+     "options": [
+      "1",
+      "2",
+      "It does not compile",
+      "It throws"
+     ],
+     "answer": 1,
+     "explanation": "A return in finally replaces the value from the try block (and swallows exceptions); it is considered bad practice.",
+     "code": "static int f() {\n    try { return 1; } finally { return 2; }\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `g()` return?",
+     "options": [
+      "1",
+      "2"
+     ],
+     "answer": 0,
+     "explanation": "The return value is evaluated and saved before finally runs. Modifying the local x afterwards does not change it.",
+     "code": "static int g() {\n    int x = 1;\n    try { return x; } finally { x = 2; }\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Why does this fail to compile?",
+     "options": [
+      "catch needs a finally",
+      "The IOException handler is unreachable because Exception was caught first",
+      "IOException is unchecked",
+      "Missing throws"
+     ],
+     "answer": 1,
+     "explanation": "Handlers must go from most specific to most general.",
+     "code": "try { read(); }\ncatch (Exception e) { }\ncatch (java.io.IOException e) { }"
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Make `f()` return 1 and print `finally` from a finally block (so main prints `finally` then `1`). Then use try-with-resources with resources `a` and `b` whose `close()` prints `close <name>` and throws `IllegalStateException`; the body throws `RuntimeException(\"body\")`. In the catch print the message and the number of suppressed exceptions as `body suppressed=N`.",
+     "starter": "public class Main {\n    static int f() {\n        // try returning 1, print \"finally\" in a finally block\n        return 0;\n    }\n    static class Res implements AutoCloseable {\n        final String n;\n        Res(String n) { this.n = n; }\n        public void close() {\n            System.out.println(\"close \" + n);\n            throw new IllegalStateException(\"close-\" + n);\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(f());\n        // try-with-resources here\n    }\n}\n",
+     "solution": "public class Main {\n    static int f() {\n        try { return 1; } finally { System.out.println(\"finally\"); }\n    }\n    static class Res implements AutoCloseable {\n        final String n;\n        Res(String n) { this.n = n; }\n        public void close() {\n            System.out.println(\"close \" + n);\n            throw new IllegalStateException(\"close-\" + n);\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(f());\n        try (Res a = new Res(\"a\"); Res b = new Res(\"b\")) {\n            throw new RuntimeException(\"body\");\n        } catch (Exception e) {\n            System.out.println(e.getMessage() + \" suppressed=\" + e.getSuppressed().length);\n        }\n    }\n}\n",
+     "expected_output": "finally\n1\nclose b\nclose a\nbody suppressed=2"
+    }
+   ]
+  },
+  {
+   "id": "java-streams-optional-records",
+   "track_id": "java",
+   "unit_id": "java-u4",
+   "title": "Streams, Optional & Records",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Functional Java in practice",
+     "body": "Streams are **lazy**: intermediate operations (`filter`, `map`) do nothing until a terminal operation (`collect`, `findFirst`, `forEach`) runs, and short-circuiting terminals stop early. A stream can be consumed only once. `Optional` models a maybe-value: `Optional.of(null)` throws, `ofNullable` does not; `orElse(x)` evaluates `x` eagerly while `orElseGet(supplier)` is lazy. A `record` is a transparent immutable data carrier with generated constructor, accessors, `equals`, `hashCode` and `toString`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "options": [
+      "1 2 3",
+      "Nothing",
+      "2 4 6",
+      "1"
+     ],
+     "answer": 1,
+     "explanation": "There is no terminal operation, so the pipeline never runs and peek is never invoked.",
+     "code": "Stream.of(1, 2, 3).peek(System.out::println).map(x -> x * 2);"
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "options": [
+      "f1 f2 f3 f4",
+      "f1 f2",
+      "f2",
+      "f1 f2 f3"
+     ],
+     "answer": 1,
+     "explanation": "Elements flow one at a time through the pipeline. findFirst short-circuits as soon as 2 passes the filter.",
+     "code": "Stream.of(1, 2, 3, 4)\n    .filter(x -> { System.out.print(\"f\" + x + \" \"); return x % 2 == 0; })\n    .findFirst();"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens when a stream is traversed twice?",
+     "options": [
+      "Works fine",
+      "IllegalStateException: stream has already been operated upon or closed",
+      "Returns empty",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "Streams are single-use."
+    },
+    {
+     "type": "mcq",
+     "question": "`opt` holds a value. What does `opt.orElse(compute())` do?",
+     "options": [
+      "Never calls compute()",
+      "Always calls compute() first",
+      "Calls compute() only if empty",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "The argument is evaluated eagerly before orElse runs. Use orElseGet(this::compute) for laziness."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `System.out.println(new Point(1, 2));` print for `record Point(int x, int y) {}`?",
+     "options": [
+      "Point@1b6d3586",
+      "Point[x=1, y=2]",
+      "(1, 2)",
+      "Point{x=1, y=2}"
+     ],
+     "answer": 1,
+     "explanation": "The generated toString shows the record name and components like Point[x=1, y=2]."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "From `[apple, bob, cat, avocado, banana]`: print the words longer than 3 chars, uppercased and joined with commas; print a `TreeMap` grouping by first letter with counts; print `new Pt(1, 2)` for the record `Pt`; and print the first word starting with `z`, or `none`.",
+     "starter": "import java.util.*;\nimport java.util.stream.*;\n\npublic class Main {\n    record Pt(int x, int y) {}\n\n    public static void main(String[] args) {\n        List<String> w = List.of(\"apple\", \"bob\", \"cat\", \"avocado\", \"banana\");\n        // 1. joined uppercase long words\n        // 2. grouping count\n        // 3. record\n        // 4. optional\n    }\n}\n",
+     "solution": "import java.util.*;\nimport java.util.stream.*;\n\npublic class Main {\n    record Pt(int x, int y) {}\n\n    public static void main(String[] args) {\n        List<String> w = List.of(\"apple\", \"bob\", \"cat\", \"avocado\", \"banana\");\n        System.out.println(w.stream().filter(s -> s.length() > 3).map(String::toUpperCase).collect(Collectors.joining(\",\")));\n        Map<Character, Long> m = w.stream().collect(Collectors.groupingBy(s -> s.charAt(0), TreeMap::new, Collectors.counting()));\n        System.out.println(m);\n        System.out.println(new Pt(1, 2));\n        Optional<String> o = w.stream().filter(s -> s.startsWith(\"z\")).findFirst();\n        System.out.println(o.orElse(\"none\"));\n    }\n}\n",
+     "expected_output": "APPLE,AVOCADO,BANANA\n{a=2, b=2, c=1}\nPt[x=1, y=2]\nnone"
+    }
+   ]
+  },
+  {
+   "id": "java-threads",
+   "track_id": "java",
+   "unit_id": "java-u5",
+   "title": "Threads, synchronized & volatile",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Visibility, atomicity, ordering",
+     "body": "Concurrency bugs come from three things: **atomicity** (`count++` is read-modify-write, not one step), **visibility** (one thread may not see another's write without a happens-before edge) and **ordering** (the compiler/CPU may reorder). `synchronized` gives mutual exclusion **and** visibility (unlock happens-before the next lock of the same monitor). `volatile` gives visibility and ordering for a single variable but **not** atomicity of compound actions. `t.start()` creates a new thread; `t.run()` just calls the method on the current thread."
+    },
+    {
+     "type": "mcq",
+     "question": "`t.run()` is called from `main`. What does `Thread.currentThread().getName()` print inside run?",
+     "options": [
+      "Thread-0",
+      "main",
+      "pool-1-thread-1",
+      "It throws"
+     ],
+     "answer": 1,
+     "explanation": "run() is an ordinary method call. Only start() spawns a new thread of execution."
+    },
+    {
+     "type": "mcq",
+     "question": "Two threads each execute `count++` 1000 times on a plain `int count` (initially 0). The final value is:",
+     "options": [
+      "Always 2000",
+      "Always 1000",
+      "Anywhere up to 2000; lost updates are possible",
+      "Always at least 1500"
+     ],
+     "answer": 2,
+     "explanation": "count++ is not atomic, so interleaved read-modify-write cycles lose updates. The result is unpredictable."
+    },
+    {
+     "type": "mcq",
+     "question": "`volatile int count; count++;` executed by many threads. Is it thread-safe?",
+     "options": [
+      "Yes, volatile makes it atomic",
+      "No, volatile gives visibility but count++ is still three steps",
+      "Yes, but only on 64-bit JVMs",
+      "Only if count is static"
+     ],
+     "answer": 1,
+     "explanation": "Use AtomicInteger, LongAdder or synchronization for compound actions."
+    },
+    {
+     "type": "mcq",
+     "question": "Two threads call a `synchronized` instance method, but on two DIFFERENT objects of the class. Do they block each other?",
+     "options": [
+      "Yes, always",
+      "No, each object has its own monitor",
+      "Only for static fields",
+      "Only on single-core CPUs"
+     ],
+     "answer": 1,
+     "explanation": "Instance synchronized locks `this`. A static synchronized method locks the Class object instead."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens if `wait()` is called without holding the object's monitor?",
+     "options": [
+      "It blocks forever",
+      "IllegalMonitorStateException",
+      "It is ignored",
+      "Deadlock"
+     ],
+     "answer": 1,
+     "explanation": "wait, notify and notifyAll must be called inside synchronized on that same object, and wait must be in a loop that re-checks the condition (spurious wakeups)."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "The counter below is racy. Make `safe` correct with a `synchronized` block on `LOCK` and make `atomic` an `AtomicInteger` updated with `incrementAndGet()`. Two threads each loop 1000 times; print `safe` then `atomic.get()`.",
+     "starter": "import java.util.concurrent.atomic.AtomicInteger;\n\npublic class Main {\n    static int safe = 0;\n    static final Object LOCK = new Object();\n\n    public static void main(String[] args) throws Exception {\n        AtomicInteger atomic = new AtomicInteger();\n        Runnable r = () -> {\n            for (int i = 0; i < 1000; i++) {\n                safe++;          // fix me\n                // also bump atomic\n            }\n        };\n        Thread t1 = new Thread(r), t2 = new Thread(r);\n        t1.start(); t2.start();\n        t1.join(); t2.join();\n        System.out.println(safe);\n        System.out.println(atomic.get());\n    }\n}\n",
+     "solution": "import java.util.concurrent.atomic.AtomicInteger;\n\npublic class Main {\n    static int safe = 0;\n    static final Object LOCK = new Object();\n\n    public static void main(String[] args) throws Exception {\n        AtomicInteger atomic = new AtomicInteger();\n        Runnable r = () -> {\n            for (int i = 0; i < 1000; i++) {\n                synchronized (LOCK) { safe++; }\n                atomic.incrementAndGet();\n            }\n        };\n        Thread t1 = new Thread(r), t2 = new Thread(r);\n        t1.start(); t2.start();\n        t1.join(); t2.join();\n        System.out.println(safe);\n        System.out.println(atomic.get());\n    }\n}\n",
+     "expected_output": "2000\n2000"
+    }
+   ]
+  },
+  {
+   "id": "java-executors",
+   "track_id": "java",
+   "unit_id": "java-u5",
+   "title": "ExecutorService & CompletableFuture",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Pools and futures",
+     "body": "Create threads through an `ExecutorService` (`Executors.newFixedThreadPool(n)`) instead of by hand: `submit` returns a `Future` whose `get()` blocks and wraps task failures in `ExecutionException`. Pool threads are non-daemon, so forgetting `shutdown()` keeps the JVM alive. `CompletableFuture` composes async steps: `thenApply` is like `map`, `thenCompose` like `flatMap`, `thenCombine` joins two futures, `exceptionally`/`handle` recover. Async stages default to `ForkJoinPool.commonPool()`; pass your own executor for blocking IO."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens if you create a fixed thread pool, submit tasks, and never call shutdown()?",
+     "options": [
+      "Nothing, the JVM exits when main ends",
+      "The JVM does not exit because pool threads are non-daemon",
+      "The tasks never run",
+      "A compile warning only"
+     ],
+     "answer": 1,
+     "explanation": "Idle core threads of a fixed pool stay alive and keep the JVM running."
+    },
+    {
+     "type": "mcq",
+     "question": "`future.get()` for a task that threw `IllegalStateException`. What is thrown?",
+     "options": [
+      "IllegalStateException directly",
+      "ExecutionException with the original as its cause",
+      "CancellationException",
+      "Nothing, get returns null"
+     ],
+     "answer": 1,
+     "explanation": "get wraps the task's exception in ExecutionException; unwrap with getCause()."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is the correct analogy?",
+     "options": [
+      "thenApply = flatMap, thenCompose = map",
+      "thenApply = map, thenCompose = flatMap",
+      "Both are identical",
+      "thenCompose runs synchronously, thenApply asynchronously"
+     ],
+     "answer": 1,
+     "explanation": "Use thenCompose when your function itself returns a CompletableFuture, otherwise you get a nested CompletableFuture<CompletableFuture<T>>."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "boom",
+      "java.lang.IllegalStateException: boom",
+      "null",
+      "-1"
+     ],
+     "answer": 1,
+     "explanation": "Exceptions in an async stage are delivered wrapped in a CompletionException, so getMessage() is the cause's toString.",
+     "code": "String s = CompletableFuture\n    .supplyAsync(() -> { throw new IllegalStateException(\"boom\"); })\n    .handle((v, e) -> e.getMessage())\n    .thenApply(Object::toString)\n    .join();\nSystem.out.println(s);"
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Submit three tasks computing the squares of 1, 2 and 3 to a fixed pool of 3 threads, collect the results in submission order into a list, shut the pool down and print the list. Then use `thenCombine` to multiply the results of two `supplyAsync` futures (6 and 7), and finally show `exceptionally` mapping a failed future to -1.",
+     "starter": "import java.util.*;\nimport java.util.concurrent.*;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        ExecutorService ex = Executors.newFixedThreadPool(3);\n        // squares via submit, print list\n        // thenCombine -> 42\n        // exceptionally -> -1\n    }\n}\n",
+     "solution": "import java.util.*;\nimport java.util.concurrent.*;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        ExecutorService ex = Executors.newFixedThreadPool(3);\n        List<Future<Integer>> fs = new ArrayList<>();\n        for (int i = 1; i <= 3; i++) {\n            final int n = i;\n            fs.add(ex.submit(() -> n * n));\n        }\n        List<Integer> out = new ArrayList<>();\n        for (Future<Integer> f : fs) out.add(f.get());\n        ex.shutdown();\n        System.out.println(out);\n\n        CompletableFuture<Integer> a = CompletableFuture.supplyAsync(() -> 6);\n        CompletableFuture<Integer> b = CompletableFuture.supplyAsync(() -> 7);\n        System.out.println(a.thenCombine(b, (x, y) -> x * y).join());\n\n        int r = CompletableFuture.<Integer>supplyAsync(() -> { throw new IllegalStateException(\"boom\"); })\n                .exceptionally(e -> -1).join();\n        System.out.println(r);\n    }\n}\n",
+     "expected_output": "[1, 4, 9]\n42\n-1"
+    }
+   ]
+  },
+  {
+   "id": "java-concurrent-collections",
+   "track_id": "java",
+   "unit_id": "java-u5",
+   "title": "ConcurrentHashMap, Atomics & Deadlock",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Thread-safe building blocks",
+     "body": "`ConcurrentHashMap` offers atomic per-key operations (`merge`, `compute`, `putIfAbsent`); a check-then-act like `if (!m.containsKey(k)) m.put(k, v)` is still a race. It does not allow null keys or values. `CopyOnWriteArrayList` iterates over a snapshot (never throws CME) but is expensive for writes. Atomic classes use lock-free **CAS** (compare-and-swap); beware the ABA problem. **Deadlock** needs mutual exclusion, hold-and-wait, no preemption and circular wait; the standard cure is a global lock ordering (or `tryLock` with timeouts)."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is atomic for a ConcurrentHashMap<String,Integer> `m`?",
+     "options": [
+      "if (!m.containsKey(k)) m.put(k, 1);",
+      "m.putIfAbsent(k, 1);",
+      "int v = m.get(k); m.put(k, v + 1);",
+      "if (m.get(k) == null) m.put(k, 1);"
+     ],
+     "answer": 1,
+     "explanation": "The others are check-then-act or read-modify-write sequences; two threads can interleave between the steps. Use merge(k, 1, Integer::sum) for counters."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "4 [1, 2, 3, 4]",
+      "3 [1, 2, 3, 4]",
+      "3 [1, 2, 3]",
+      "ConcurrentModificationException"
+     ],
+     "answer": 1,
+     "explanation": "The iterator works over the snapshot taken at loop start, so it visits 3 elements, yet the list itself ends up with 4.",
+     "code": "List<Integer> cow = new CopyOnWriteArrayList<>(List.of(1, 2, 3));\nint visited = 0;\nfor (int x : cow) { visited++; if (x == 1) cow.add(4); }\nSystem.out.println(visited + \" \" + cow);"
+    },
+    {
+     "type": "mcq",
+     "question": "Thread 1 locks A then B; thread 2 locks B then A. The simplest robust fix is:",
+     "options": [
+      "Make both use volatile",
+      "Acquire locks in one global order (always A then B)",
+      "Increase thread priority",
+      "Use Thread.sleep between locks"
+     ],
+     "answer": 1,
+     "explanation": "Breaking the circular-wait condition by ordering locks removes the deadlock."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the ABA problem?",
+     "options": [
+      "A CAS succeeds because the value changed A->B->A, hiding intermediate changes",
+      "Two threads allocate the same address",
+      "A lock is acquired twice",
+      "A volatile read returning stale data"
+     ],
+     "answer": 0,
+     "explanation": "The value looks unchanged, but state built around it may have changed. AtomicStampedReference adds a version stamp to detect this."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Start 4 threads that each call `m.merge(\"a\", 1, Integer::sum)` 500 times and also increment a `LongAdder`. After joining, print the map value for `a` and the adder sum. Then print the results of `putIfAbsent(\"b\", 1)` followed by `putIfAbsent(\"b\", 2)`.",
+     "starter": "import java.util.concurrent.*;\nimport java.util.concurrent.atomic.LongAdder;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        ConcurrentHashMap<String, Integer> m = new ConcurrentHashMap<>();\n        LongAdder adder = new LongAdder();\n        Thread[] ts = new Thread[4];\n        // create, start, join\n        System.out.println(m.get(\"a\"));\n        System.out.println(adder.sum());\n        System.out.println(m.putIfAbsent(\"b\", 1));\n        System.out.println(m.putIfAbsent(\"b\", 2));\n    }\n}\n",
+     "solution": "import java.util.concurrent.*;\nimport java.util.concurrent.atomic.LongAdder;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        ConcurrentHashMap<String, Integer> m = new ConcurrentHashMap<>();\n        LongAdder adder = new LongAdder();\n        Thread[] ts = new Thread[4];\n        for (int i = 0; i < ts.length; i++) {\n            ts[i] = new Thread(() -> {\n                for (int j = 0; j < 500; j++) {\n                    m.merge(\"a\", 1, Integer::sum);\n                    adder.increment();\n                }\n            });\n            ts[i].start();\n        }\n        for (Thread t : ts) t.join();\n        System.out.println(m.get(\"a\"));\n        System.out.println(adder.sum());\n        System.out.println(m.putIfAbsent(\"b\", 1));\n        System.out.println(m.putIfAbsent(\"b\", 2));\n    }\n}\n",
+     "expected_output": "2000\n2000\nnull\n1"
+    }
+   ]
+  },
+  {
+   "id": "java-jvm-memory-gc",
+   "track_id": "java",
+   "unit_id": "java-u6",
+   "title": "JVM Memory & Garbage Collection",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Runtime areas",
+     "body": "The **heap** holds objects and is split (in generational collectors) into the **young generation** (Eden plus two survivor spaces) and the **old generation**. Each thread has its own **stack** of frames (locals, operand stack). **Metaspace** (native memory, replaced PermGen in Java 8) holds class metadata. A GC finds live objects by tracing from **GC roots** (stack locals, static fields, JNI refs). Minor GCs collect the young gen (most objects die young); objects that survive enough cycles are promoted. G1 splits the heap into regions with pause-time goals; ZGC and Shenandoah do most work concurrently for very low pauses."
+    },
+    {
+     "type": "mcq",
+     "question": "A Java 'memory leak' most commonly means:",
+     "options": [
+      "The GC forgot to free memory",
+      "Objects that are no longer needed are still reachable (e.g. in a static map or unremoved listener)",
+      "Native heap corruption",
+      "Too many local variables"
+     ],
+     "answer": 1,
+     "explanation": "The GC only frees unreachable objects. Forgotten references in static collections, caches, listeners or ThreadLocals in pooled threads keep garbage alive."
+    },
+    {
+     "type": "mcq",
+     "question": "Where do these live: `int n = 5;` (local) and `new int[10]` (referenced by local `arr`)?",
+     "options": [
+      "n and the array on the stack",
+      "n and arr's reference on the stack, array object on the heap",
+      "Everything on the heap",
+      "Everything in Metaspace"
+     ],
+     "answer": 1,
+     "explanation": "Locals and references live in the stack frame; every object, arrays included, lives on the heap."
+    },
+    {
+     "type": "mcq",
+     "question": "`System.gc()` does what?",
+     "options": [
+      "Forces an immediate full collection",
+      "Is only a hint the JVM may ignore",
+      "Clears the string pool",
+      "Compacts Metaspace"
+     ],
+     "answer": 1,
+     "explanation": "It is a request; never rely on it for correctness, and avoid it in production code."
+    },
+    {
+     "type": "mcq",
+     "question": "Which reference type is cleared as soon as the object is only weakly reachable (used by WeakHashMap keys)?",
+     "options": [
+      "Strong",
+      "Soft",
+      "Weak",
+      "None; all are kept until OutOfMemoryError"
+     ],
+     "answer": 2,
+     "explanation": "Weak references do not prevent collection. Soft references are cleared under memory pressure; phantom references are for post-mortem cleanup."
+    },
+    {
+     "type": "mcq",
+     "question": "`StackOverflowError` vs `OutOfMemoryError`: which pairing is right?",
+     "options": [
+      "Deep/infinite recursion vs. heap exhausted",
+      "Heap exhausted vs. deep recursion",
+      "Both mean heap exhaustion",
+      "Both mean too many threads"
+     ],
+     "answer": 0,
+     "explanation": "Frames pile up on the thread stack until it overflows; OOM signals heap (or Metaspace/native) exhaustion."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Show the two error types: recurse without a base case, catch the `StackOverflowError` and print `SOE caught` plus whether the depth exceeded 1000 (`true`). Then try to allocate `new long[Integer.MAX_VALUE]`, catch `OutOfMemoryError` and print `OOM caught`. Finally, print whether a `WeakReference` to an object you still hold a strong reference to still returns that object.",
+     "starter": "import java.lang.ref.WeakReference;\n\npublic class Main {\n    static int depth = 0;\n    static void recurse() { depth++; recurse(); }\n\n    public static void main(String[] args) {\n        // 1. StackOverflowError\n        // 2. OutOfMemoryError\n        // 3. WeakReference\n    }\n}\n",
+     "solution": "import java.lang.ref.WeakReference;\n\npublic class Main {\n    static int depth = 0;\n    static void recurse() { depth++; recurse(); }\n\n    public static void main(String[] args) {\n        try {\n            recurse();\n        } catch (StackOverflowError e) {\n            System.out.println(\"SOE caught \" + (depth > 1000));\n        }\n        try {\n            long[] big = new long[Integer.MAX_VALUE];\n            System.out.println(big.length);\n        } catch (OutOfMemoryError e) {\n            System.out.println(\"OOM caught\");\n        }\n        Object strong = new Object();\n        WeakReference<Object> w = new WeakReference<>(strong);\n        System.out.println(w.get() == strong);\n    }\n}\n",
+     "expected_output": "SOE caught true\nOOM caught\ntrue"
+    }
+   ]
+  },
+  {
+   "id": "java-classloading-immutability",
+   "track_id": "java",
+   "unit_id": "java-u6",
+   "title": "Class Loading, Init Order & Immutability",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "From bytes to objects",
+     "body": "Class loading has three phases: **loading** (find bytes), **linking** (verify, prepare, resolve) and **initialization** (run static initializers). Loaders delegate to their parent first: Bootstrap, then Platform, then Application, so core classes like `java.lang.String` cannot be replaced. Initialization is lazy: it happens on first `new`, static method call, or non-constant static field access. Reading a compile-time constant (`static final int X = 5`) does **not** trigger it because the value is inlined. Object construction order: parent static, child static, parent instance init + constructor, child instance init + constructor.\n\nAn **immutable** class is `final`, has `private final` fields, no setters, and makes defensive copies of mutable inputs/outputs."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "init then 5",
+      "5",
+      "init",
+      "Nothing"
+     ],
+     "answer": 1,
+     "explanation": "X is a compile-time constant, so reading it is inlined into the caller and K is never initialized; the static block does not run.",
+     "code": "class K { static final int X = 5; static { System.out.println(\"init\"); } }\n// in main:\nSystem.out.println(K.X);"
+    },
+    {
+     "type": "mcq",
+     "question": "Which loader loads `java.lang.String`?",
+     "options": [
+      "Application class loader",
+      "Platform class loader",
+      "Bootstrap class loader",
+      "A custom loader per application"
+     ],
+     "answer": 2,
+     "explanation": "Delegation sends core classes to the bootstrap loader (it appears as null in getClassLoader())."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this code print?",
+     "options": [
+      "A static, A instance, A ctor, A instance, A ctor",
+      "A static, A instance, A ctor, A ctor",
+      "A instance, A ctor, A instance, A ctor",
+      "A static, A static, A ctor, A ctor"
+     ],
+     "answer": 0,
+     "explanation": "Static init happens once per class. Instance initializers and the constructor run for every new object, instance initializers first.",
+     "code": "class A {\n    static { System.out.println(\"A static\"); }\n    { System.out.println(\"A instance\"); }\n    A() { System.out.println(\"A ctor\"); }\n}\n// new A(); new A();"
+    },
+    {
+     "type": "mcq",
+     "question": "Why is this class NOT immutable?",
+     "options": [
+      "Fields are final",
+      "The getter returns the internal List directly, so callers can mutate it",
+      "The class is final",
+      "It has a constructor"
+     ],
+     "answer": 1,
+     "explanation": "The reference is final but the list object is mutable and leaks out. Return List.copyOf(items) or an unmodifiable view, and copy on the way in too.",
+     "code": "final class Box {\n    private final List<String> items;\n    Box(List<String> items) { this.items = items; }\n    List<String> items() { return items; }\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the difference between `Class.forName(\"X\")` and `ClassLoader.loadClass(\"X\")`?",
+     "options": [
+      "None",
+      "forName initializes the class by default; loadClass only loads it",
+      "loadClass initializes, forName doesn't",
+      "forName is only for arrays"
+     ],
+     "answer": 1,
+     "explanation": "forName(String) runs static initializers; loadClass leaves the class uninitialized until first active use."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Print the construction order of `new C()` where `P` and `C` each have a static block, an instance block and a constructor that log via `Main.p`. Then build an immutable `Box` that copies its input with `List.copyOf`; mutate the original list after construction, print `box.items()`, and print `immutable` when adding to the exposed list throws `UnsupportedOperationException`.",
+     "starter": "import java.util.*;\n\nclass P {\n    static { Main.p(\"P static\"); }\n    { Main.p(\"P inst\"); }\n    P() { Main.p(\"P ctor\"); }\n}\nclass C extends P {\n    // TODO: static block, instance block, constructor logging \"C static\", \"C inst\", \"C ctor\"\n}\nfinal class Box {\n    private final List<Integer> items;\n    Box(List<Integer> src) { this.items = src; } // fix: defensive copy\n    List<Integer> items() { return items; }\n}\npublic class Main {\n    static void p(String s) { System.out.println(s); }\n    public static void main(String[] args) {\n        new C();\n        List<Integer> src = new ArrayList<>(List.of(1, 2));\n        Box b = new Box(src);\n        src.add(3);\n        System.out.println(b.items());\n        try { b.items().add(9); } catch (UnsupportedOperationException e) { p(\"immutable\"); }\n    }\n}\n",
+     "solution": "import java.util.*;\n\nclass P {\n    static { Main.p(\"P static\"); }\n    { Main.p(\"P inst\"); }\n    P() { Main.p(\"P ctor\"); }\n}\nclass C extends P {\n    static { Main.p(\"C static\"); }\n    { Main.p(\"C inst\"); }\n    C() { Main.p(\"C ctor\"); }\n}\nfinal class Box {\n    private final List<Integer> items;\n    Box(List<Integer> src) { this.items = List.copyOf(src); }\n    List<Integer> items() { return items; }\n}\npublic class Main {\n    static void p(String s) { System.out.println(s); }\n    public static void main(String[] args) {\n        new C();\n        List<Integer> src = new ArrayList<>(List.of(1, 2));\n        Box b = new Box(src);\n        src.add(3);\n        System.out.println(b.items());\n        try { b.items().add(9); } catch (UnsupportedOperationException e) { p(\"immutable\"); }\n    }\n}\n",
+     "expected_output": "P static\nC static\nP inst\nP ctor\nC inst\nC ctor\n[1, 2]\nimmutable"
+    }
+   ]
+  },
+  {
+   "id": "java-patterns-spring",
+   "track_id": "java",
+   "unit_id": "java-u6",
+   "title": "Design Patterns & Spring-Style Concepts",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Patterns you must be able to sketch",
+     "body": "**Singleton**: the safest forms are a single-element `enum` or the holder idiom; double-checked locking needs a `volatile` field. **Builder** tames many optional parameters. **Strategy** swaps behaviour behind an interface (lambdas make this cheap). **Decorator** wraps an object to add behaviour; **Proxy** controls access; **Observer** broadcasts events; **Factory** hides construction.\n\nSpring at concept level: the container does **inversion of control** and **dependency injection** (prefer constructor injection: immutable and testable). Beans are singletons by default. AOP features like `@Transactional` work through **proxies** (JDK dynamic proxies for interfaces, CGLIB subclasses otherwise), so a call from one method to another **inside the same class** bypasses the proxy and the advice does not apply. By default a transaction rolls back on unchecked exceptions and errors, not on checked ones."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the default scope of a Spring bean?",
+     "options": [
+      "prototype",
+      "singleton (one per container)",
+      "request",
+      "session"
+     ],
+     "answer": 1,
+     "explanation": "Singleton scope means one shared instance per ApplicationContext, so beans must be stateless or thread-safe."
+    },
+    {
+     "type": "mcq",
+     "question": "`save()` is called from another method in the same bean, and `save()` is annotated `@Transactional`. What happens?",
+     "options": [
+      "A new transaction always starts",
+      "The annotation is ignored for the internal call because the proxy is bypassed",
+      "An exception is thrown at startup",
+      "Spring rewrites the bytecode of the caller"
+     ],
+     "answer": 1,
+     "explanation": "Only calls that cross the proxy (from another bean) are intercepted. Fix by moving the method to another bean or injecting the proxy."
+    },
+    {
+     "type": "mcq",
+     "question": "A `@Transactional` method throws a checked `IOException`. With defaults, the transaction:",
+     "options": [
+      "Rolls back",
+      "Commits",
+      "Hangs",
+      "Is suspended"
+     ],
+     "answer": 1,
+     "explanation": "Default rollback rules cover RuntimeException and Error only. Use rollbackFor = Exception.class to include checked exceptions."
+    },
+    {
+     "type": "mcq",
+     "question": "Which singleton implementation is thread-safe without explicit locking and serialization-safe?",
+     "options": [
+      "A public static field initialised lazily",
+      "A single-element enum",
+      "A non-volatile double-checked locking",
+      "A synchronized getter on a Map"
+     ],
+     "answer": 1,
+     "explanation": "The JVM guarantees enum constants are created once, even against reflection and serialization attacks."
+    },
+    {
+     "type": "mcq",
+     "question": "Why is constructor injection preferred over field injection?",
+     "options": [
+      "It is faster at runtime",
+      "Dependencies can be final, are explicit, and the class is usable in a plain unit test",
+      "Field injection is removed in Spring 6",
+      "It avoids needing beans"
+     ],
+     "answer": 1,
+     "explanation": "Constructor injection enforces required collaborators and makes the object valid at construction."
+    },
+    {
+     "type": "code",
+     "language": "java",
+     "prompt": "Implement `percent(pct)` (subtract that integer percent), `flat(amount)` and the default method `then` (apply this discount, then the next) of the `Discount` strategy interface. Print `percent(10)` on 100, `flat(5)` on 100, and the chain `percent(10).then(flat(5))` on 100. Then print whether `Registry.INSTANCE == Registry.valueOf(\"INSTANCE\")`, and the builder's result.",
+     "starter": "interface Discount {\n    int apply(int price);\n    default Discount then(Discount next) {\n        return null; // TODO\n    }\n}\nenum Registry { INSTANCE }\n\nfinal class Req {\n    final String url; final int retries;\n    private Req(Builder b) { url = b.url; retries = b.retries; }\n    static class Builder {\n        String url = \"/\"; int retries = 1;\n        Builder url(String u) { url = u; return this; }\n        Builder retries(int r) { retries = r; return this; }\n        Req build() { return new Req(this); }\n    }\n    @Override public String toString() { return url + \" retries=\" + retries; }\n}\n\npublic class Main {\n    static Discount percent(int pct) { return null; } // TODO\n    static Discount flat(int amount) { return null; } // TODO\n\n    public static void main(String[] args) {\n        System.out.println(percent(10).apply(100));\n        System.out.println(flat(5).apply(100));\n        System.out.println(percent(10).then(flat(5)).apply(100));\n        System.out.println(Registry.INSTANCE == Registry.valueOf(\"INSTANCE\"));\n        System.out.println(new Req.Builder().url(\"/x\").retries(3).build());\n    }\n}\n",
+     "solution": "interface Discount {\n    int apply(int price);\n    default Discount then(Discount next) {\n        return p -> next.apply(apply(p));\n    }\n}\nenum Registry { INSTANCE }\n\nfinal class Req {\n    final String url; final int retries;\n    private Req(Builder b) { url = b.url; retries = b.retries; }\n    static class Builder {\n        String url = \"/\"; int retries = 1;\n        Builder url(String u) { url = u; return this; }\n        Builder retries(int r) { retries = r; return this; }\n        Req build() { return new Req(this); }\n    }\n    @Override public String toString() { return url + \" retries=\" + retries; }\n}\n\npublic class Main {\n    static Discount percent(int pct) { return p -> p - p * pct / 100; }\n    static Discount flat(int amount) { return p -> p - amount; }\n\n    public static void main(String[] args) {\n        System.out.println(percent(10).apply(100));\n        System.out.println(flat(5).apply(100));\n        System.out.println(percent(10).then(flat(5)).apply(100));\n        System.out.println(Registry.INSTANCE == Registry.valueOf(\"INSTANCE\"));\n        System.out.println(new Req.Builder().url(\"/x\").retries(3).build());\n    }\n}\n",
+     "expected_output": "90\n95\n85\ntrue\n/x retries=3"
+    }
+   ]
+  }
+ ]
+}

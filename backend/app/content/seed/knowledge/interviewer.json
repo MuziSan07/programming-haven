@@ -1,0 +1,235 @@
+{
+ "knowledge": [
+  {
+   "id": "kb-coding-interview-flow",
+   "title": "How to run a coding interview",
+   "tags": [
+    "coding",
+    "process",
+    "interviewer"
+   ],
+   "content": "A good coding interview follows five stages: clarify, approach, code, test, complexity. Guide the candidate through them gently and note how well they drive the process themselves.\n\n1. Clarify. Present the problem in one or two sentences and then stay quiet. Strong candidates ask about input size, duplicates, negative numbers, empty input, sorted or unsorted data, and what to return when no answer exists. If they start coding immediately, ask: \"What assumptions are you making about the input?\" Do not penalise heavily on the first nudge, but record it.\n\n2. Approach. Before any code, the candidate should state a brute-force solution, name its cost, then improve it. Ask \"Can we do better?\" only after they have said something. Listen for pattern recognition: hash map, two pointers, sliding window, binary search, BFS or DFS, dynamic programming, heap. Accept any correct approach, not only your favourite.\n\n3. Code. Let them type without interruption for a few minutes. Expect meaningful names, small helper functions when useful, and narration of what they are doing. If they go silent for more than a minute, ask what they are thinking. Silence is fine; being stuck without communicating is the signal.\n\n4. Test. Ask them to walk through an example by hand, then edge cases: empty input, a single element, duplicates, very large values. Strong candidates find their own bugs. Count a self-found bug as a positive, not a negative.\n\n5. Complexity. Ask for time and space complexity of the final solution and what they would change with more time or memory. Check they count recursion stack space and hidden costs such as string concatenation.\n\nKeep roughly 5 minutes for clarify and approach, 20 to 25 for code, 10 for testing and discussion. End by asking \"What would you do differently in production?\" which reveals engineering maturity beyond puzzle skills. Always give the candidate time to ask you questions at the end."
+  },
+  {
+   "id": "kb-socratic-hinting",
+   "title": "Socratic hinting style",
+   "tags": [
+    "coaching",
+    "hints",
+    "interviewer"
+   ],
+   "content": "When a candidate is stuck, do not hand over the answer. Use graduated hints that preserve their dignity and their learning. The goal is to find the smallest nudge that unlocks progress, and to note how many nudges were needed.\n\nHint ladder:\nLevel 0, a question about their own work: \"What does your code do for the input [1]?\" or \"Which line do you think is the slowest?\"\nLevel 1, a direction: \"Is there information you computed once and then recomputed later?\"\nLevel 2, a concept hint with an analogy: \"Think about how a librarian finds a book without reading every shelf.\" Analogies make the idea stick and reduce anxiety. Keep them playful and short.\nLevel 3, a named technique: \"A hash map could help here. What would the keys and values be?\"\nLevel 4, a structural outline: describe the algorithm in plain steps but let the candidate write the code.\n\nRules of thumb:\n- Ask before telling. A good first reaction to a wrong idea is \"Let's test that on an example\", not \"That is wrong\". Let the example expose the flaw.\n- Praise specific things: \"Good catch on the empty list\" is better than \"Nice\".\n- Never give two hints at once. Wait for the response.\n- Match the candidate's level. A junior gets a lower ladder step sooner; a senior gets a question only.\n- Record the ladder level reached. A candidate who solves at level 1 and one who needs level 3 should score differently, but both can pass for junior roles.\n- If the candidate is clearly spiralling, say \"Let us step back\" and restate what has been established so far. This lowers pressure and often gets them unstuck.\n\nTone: warm, curious and slightly playful. You are a teammate thinking aloud, not an examiner holding the answer sheet. The next three documents contain a library of real-life analogies you can use at hint levels 2 and 3."
+  },
+  {
+   "id": "kb-analogies-data-structures",
+   "title": "Analogy library: data structures",
+   "tags": [
+    "analogy",
+    "data-structures",
+    "hints"
+   ],
+   "content": "Use these playful real-life pictures at hint level 2 to reconnect a candidate with a data structure. Always follow with a question that makes them map the picture to code.\n\nHash map: a librarian's index. She does not walk every shelf; the card catalogue tells her the exact shelf in one step. \"What is your catalogue key?\"\nStack: a stack of plates. You add and remove only from the top, so the last plate in is the first out. Good for undo, matching brackets and DFS.\nQueue: the line at a bank. The first person in line is served first. Good for BFS, task scheduling and buffering.\nHeap or priority queue: an emergency room. Patients are not seen in arrival order but by urgency, and the most urgent is always at the front.\nLinked list: a treasure hunt. Each clue only tells you where the next clue is, so you cannot jump to clue number seven without following the chain.\nArray: a row of numbered lockers. If you know the number you go straight there, but inserting a new locker in the middle means shifting everything.\nBinary search tree: a guessing game of \"higher or lower\". Each answer halves the remaining possibilities.\nTrie: a phone's autocomplete. Letters branch like a road map and every shared prefix shares the same road.\nSet: a guest list at the door. You only need to know if a name is on it, never how many times.\nGraph: a social network or subway map. People or stations are nodes, friendships or tracks are edges.\nUnion-find: friend groups at a party merging. When two people from different groups shake hands, the two groups become one.\nDeque: a train you can board or leave from either end.\nAsk afterwards: \"Which operations does your solution need to be fast, and which structure gives you that?\""
+  },
+  {
+   "id": "kb-analogies-oop-language",
+   "title": "Analogy library: OOP and language concepts",
+   "tags": [
+    "analogy",
+    "oop",
+    "hints"
+   ],
+   "content": "Use these analogies when a candidate struggles with object-oriented or language-level ideas. Keep them to a sentence or two, then hand the thinking back.\n\nInheritance and super(): a kid asks its parent. If the child does not know how to do something, it calls the parent class, which is what super() does. Prompt: \"Who should handle the setup that every child shares?\"\nEncapsulation: a car dashboard. You use the pedal and wheel without touching the engine, because the engine details are private.\nPolymorphism: a universal remote or a power socket. The same button or plug works for many devices, and each device responds in its own way.\nAbstraction and interface: a restaurant menu. You know what you can order, not how the kitchen cooks it.\nClass versus object: a cookie cutter versus cookies. The class is the shape; each object is a separate cookie.\nComposition over inheritance: building with LEGO bricks instead of being born into a family. Snap parts together instead of inheriting a whole body.\nClosure: a backpack. A function carries the variables it needs from the place it was created, even after leaving home.\nPointer or reference: a house address on a card. Copying the card does not copy the house; both cards lead to the same door.\nImmutability: a printed book versus a whiteboard. Print can be reprinted but not erased, so everyone holding it sees the same thing.\nRecursion: Russian nesting dolls. Open one to find a smaller version of the same problem until the tiny solid doll, which is the base case.\nGarbage collection: a cleaner who removes cups nobody is holding anymore.\nDependency injection: a chef who is handed ingredients instead of shopping each time, making testing with fake ingredients easy.\nEvent loop: a single waiter taking orders and never standing at one table waiting for the kitchen.\nFollow every analogy with \"So how does that look in your code?\" so the picture turns into understanding."
+  },
+  {
+   "id": "kb-analogies-algorithms-systems",
+   "title": "Analogy library: algorithms and systems",
+   "tags": [
+    "analogy",
+    "algorithms",
+    "systems",
+    "hints"
+   ],
+   "content": "These analogies cover algorithm patterns and system concepts. Use one per hint and ask the candidate to translate it.\n\nBFS: a queue at a bank, or ripples in a pond. Everyone one step away is served before anyone two steps away, which finds shortest paths in unweighted graphs.\nDFS: exploring a maze with a ball of string. Go as deep as possible, and when stuck, backtrack.\nTwo pointers: two people walking toward each other along a hallway, adjusting positions until they meet.\nSliding window: a train window moving along the scenery. Add the new view on the right, drop the old on the left, never re-look at the middle.\nBinary search: finding a name in a phone book by opening the middle each time.\nDynamic programming: writing intermediate results on a notepad so you never recompute them. Memoization is the notepad.\nGreedy: always taking the biggest coin first. It works only when the problem allows it, so prove it.\nDivide and conquer: sorting a pile of exams by splitting among helpers and merging the sorted piles.\nBacktracking: trying outfits and putting one back when it clashes.\nCaching: keeping your most-used tools on the desk and the rest in the garage.\nLoad balancer: a restaurant host who seats guests at the table with the shortest wait.\nDatabase index: the index at the back of a textbook.\nMessage queue: a post office sorting room; senders drop letters and carry on, receivers collect at their own pace.\nRate limiting: a nightclub bouncer who admits a fixed number per minute.\nDeadlock: two cars at a narrow bridge each waiting for the other to reverse.\nRace condition: two people editing the same shared document line without seeing each other.\nIdempotency: pressing a lift button several times; the result is the same as pressing once.\nSharding: splitting a huge filing cabinet into alphabetical drawers in different rooms.\nAlways end with: \"What is the equivalent in your design?\""
+  },
+  {
+   "id": "kb-system-design-framework",
+   "title": "System design interview framework",
+   "tags": [
+    "system-design",
+    "process",
+    "senior"
+   ],
+   "content": "A system design interview is a structured conversation, not a quiz. Use this framework to guide the candidate and to judge whether they drive it.\n\n1. Requirements (5 minutes). Functional: what must the system do? Non-functional: scale, latency, availability, consistency, durability, cost. Strong candidates ask for numbers: daily active users, read to write ratio, data size, peak traffic.\n2. Estimation (3 minutes). Back-of-envelope: requests per second, storage per year, bandwidth. Accuracy matters less than showing the method and noticing what dominates.\n3. API and data model (5 minutes). Core endpoints, main entities, and the access patterns that decide the database choice.\n4. High-level design (10 minutes). Clients, load balancer, stateless services, database, cache, queue, object storage, CDN. Draw the main read path and write path.\n5. Deep dive (15 minutes). The interviewer picks, or the candidate chooses, one or two components: data partitioning, replication, caching policy, consistency model, fan-out strategy, idempotency, rate limiting.\n6. Bottlenecks and failure (5 minutes). Single points of failure, hot keys, retries and thundering herds, regional outages, observability.\n7. Trade-offs. Every decision should be stated with an alternative: \"SQL here because we need transactions, though we could shard later.\"\n\nSignals of seniority: they ask clarifying questions first, quantify, justify choices, discuss failure modes, and keep the design as simple as the requirements allow. Red flags: jumping to microservices and Kafka for a small problem, buzzword lists, no data model, ignoring consistency.\n\nHinting: ask \"What happens when this component fails?\" or \"How does this behave at ten times the traffic?\" instead of giving solutions. Classic prompts: URL shortener, chat, news feed, rate limiter, notification service, file storage."
+  },
+  {
+   "id": "kb-star-method",
+   "title": "STAR method for behavioural questions",
+   "tags": [
+    "behavioral",
+    "star",
+    "soft-skills"
+   ],
+   "content": "Behavioural questions begin with \"Tell me about a time when...\". The STAR method gives answers a clear shape: Situation, Task, Action, Result. Teach it to candidates and use it to evaluate them.\n\nSituation: one or two sentences of context. Where, when, what team, what was at stake? Good: \"Our checkout service started timing out two days before a big sale.\" Weak: a long history of the company.\nTask: your specific responsibility. \"I was the on-call engineer and had to restore service.\" Interviewers want to know your part, not the team's.\nAction: the heart of the answer, about 60 percent of the time. Use \"I\", not \"we\". Describe decisions, reasoning and trade-offs: how you investigated, who you talked to, what you rejected and why.\nResult: measurable outcome and learning. \"Latency dropped from 4 s to 300 ms, and we added an alert so it cannot go unnoticed again.\" Include what you would do differently.\n\nTypical questions: conflict with a teammate, a mistake you made, working with unclear requirements, handling tight deadlines, disagreeing with a manager, leading without authority, learning something quickly, giving or receiving hard feedback, a project you are proud of.\n\nHow to evaluate: look for ownership, honesty about failure, specifics, reflection and collaboration. Red flags: blaming others, no concrete example, claiming perfect outcomes, always \"we\", or a story with no result.\n\nFollow-up probes: \"What was your role specifically?\", \"What did you consider and reject?\", \"What would you change?\", \"How did the other person feel about it?\" Remote clients especially value communication, reliability and proactive updates, so listen for those behaviours.\n\nCoaching tip: advise candidates to prepare five stories that can be adapted to many questions."
+  },
+  {
+   "id": "kb-scoring-rubric",
+   "title": "How to score answers: rubric levels",
+   "tags": [
+    "scoring",
+    "evaluation",
+    "interviewer"
+   ],
+   "content": "Use a consistent 1 to 5 scale per dimension and write a one-line justification for every score. Evidence beats impressions.\n\nDimensions for coding: problem solving, code quality, testing and debugging, communication, complexity analysis. For system design: requirements, architecture, depth, trade-offs, communication. For behavioural: ownership, collaboration, self-awareness.\n\nLevels:\n1 No signal. Cannot start, major misconceptions, needs the solution given.\n2 Weak. Partial progress only after heavy hints (ladder level 3 or 4), with significant bugs, or poor explanation.\n3 Meets the bar for a junior or mid-level role. Correct solution, perhaps with one or two nudges, reasonable complexity discussion, minor bugs found when testing.\n4 Strong. Independent, clean solution, finds and fixes own bugs, discusses trade-offs, communicates clearly. Hire for mid and senior roles.\n5 Exceptional. Optimal approach, anticipates edge cases, discusses production concerns, teaches you something.\n\nAdjust for level. A senior who needs hints on fundamentals scores lower than a junior who needs the same hints.\n\nOverall recommendation: Strong no, No, Lean yes, Yes, Strong yes. A single 1 in a critical dimension, such as being unable to code, usually decides the outcome regardless of other scores. Do not average away red flags.\n\nAvoid bias: do not reward accent, school, speed of typing or personality similarity. Do not penalise nervousness. Do not compare to your own style. Score what was demonstrated, not what you would have written.\n\nIn feedback to the candidate, give two strengths, two improvement areas and a concrete next-step resource."
+  },
+  {
+   "id": "kb-english-proficiency",
+   "title": "English proficiency evaluation (CEFR-style)",
+   "tags": [
+    "english",
+    "communication",
+    "evaluation"
+   ],
+   "content": "Remote clients need developers who can communicate clearly in writing and speech. Evaluate English as a working skill, not as accent or perfection. These levels follow the CEFR scale loosely.\n\nB1 (intermediate): Can explain simple ideas and describe past work, but needs many pauses, has frequent grammar errors and struggles with technical nuance. Usually not enough for client-facing remote roles.\nB2 (upper intermediate): Can discuss technical topics fluently, explain design decisions, ask clarification questions and understand a native speaker at normal speed. Some errors that do not impede meaning. This is the typical minimum for most talent networks.\nC1 (advanced): Expresses ideas fluently and precisely, handles disagreement diplomatically, writes clear documentation and manages ambiguous conversation. Preferred for lead roles and direct client contact.\nC2 (proficient): Near-native nuance and idiom. Not required.\n\nWhat to assess:\nClarity: do they explain their approach so a teammate could follow?\nComprehension: do they understand questions without repeated rephrasing? Do they ask when they do not?\nVocabulary: technical terms used correctly, plus everyday collaboration language.\nFluency: steady pace with natural recovery; fillers are normal.\nAccuracy: errors matter only when they cause misunderstanding.\nWritten English: clear messages, polite requests, concise status updates.\nProfessional tone: confident, courteous, concise.\n\nTips to give candidates: speak slightly slower than you think, summarise before answering (\"So you are asking...\"), use simple sentences, say \"Let me think for a moment\" instead of going silent, and rehearse explaining your projects aloud.\n\nNever penalise accent. Penalise only unclear communication."
+  },
+  {
+   "id": "kb-red-flags",
+   "title": "Red flags interviewers notice",
+   "tags": [
+    "red-flags",
+    "evaluation",
+    "interviewer"
+   ],
+   "content": "Interviewers form impressions quickly. These behaviours repeatedly reduce a candidate's score, and most are easy to avoid.\n\nCommunication red flags: coding in silence, not asking any clarifying question, talking continuously without listening, defensiveness when corrected, and vague answers such as \"I just used a library\" with no understanding. Over-claiming also hurts: listing technologies on a CV that they cannot discuss at depth.\n\nTechnical red flags: jumping to code with no plan, refusing to test, ignoring edge cases, being unable to explain their own code, copying a memorised solution without adapting it, not knowing the time complexity of their solution, and writing the solution only once with no review.\n\nBehavioural red flags: blaming previous teammates or employers, not owning mistakes, claiming perfection (\"I have no weaknesses\"), inconsistency between CV and conversation, poor reliability signals such as being late to the call, and arguing with the interviewer.\n\nRemote-specific red flags: unstable audio with no backup plan, camera off without explanation, visible reading from another screen or an off-camera helper, noisy background, and no questions about the team or process.\n\nIntegrity red flags: using hidden AI assistance or a second person during live questions, which interviewers often detect through delays, unnatural phrasing and inability to answer follow-ups. Be honest: if you are allowed to use tools, say so. Clients value candour about gaps far more than a bluff that collapses on the first follow-up question.\n\nPositive counterparts: ask questions, think aloud, own mistakes, test your code, admit uncertainty and then reason it through (\"I am not certain, but I would test it by...\").\n\nInterviewer note: a single red flag is not decisive. Look for patterns."
+  },
+  {
+   "id": "kb-toptal-process",
+   "title": "Toptal screening process (typically described)",
+   "tags": [
+    "toptal",
+    "networks",
+    "process"
+   ],
+   "content": "The following reflects publicly described information and candidate reports; steps and names change, so always check the official site.\n\nToptal markets itself as accepting a small percentage of applicants. The process is typically described in several stages:\n\n1. Application and language/personality screen. A recruiter checks English communication, professionalism and background. Be concise and structured, as this stage also tests how you present yourself to clients.\n2. Timed algorithm and problem-solving test. Often described as a live or timed session with a screener covering data structures, algorithms and practical coding. Expect to talk through your approach while coding, and to respond to hints. Preparation: arrays, strings, hash maps, recursion, complexity.\n3. Live technical interview. A senior engineer in your stack asks about architecture, language depth and real-world experience. Expect deeper questions rather than puzzles.\n4. Test project. A take-home style project, usually with a deadline of several days, reviewed for code quality, architecture, testing and documentation. Treat it like production work. Commit regularly, add tests and write a README.\n5. Continuous review. After joining, ongoing performance and client feedback matter.\n\nTips: prepare to explain trade-offs, practise speaking English under time pressure, keep your examples senior-sounding (ownership, mentoring, technical decisions), and be responsive and punctual. Toptal clients are often start-ups and enterprises needing independent freelancers, so show you can work without hand-holding.\n\nInterviewer behaviour: when simulating this process, keep the tone professional, probe for production experience, and score communication as heavily as code.\n\nDisclaimer: do not claim any question is an actual Toptal question. Say \"typical of what candidates describe\"."
+  },
+  {
+   "id": "kb-turing-process",
+   "title": "Turing vetting process (typically described)",
+   "tags": [
+    "turing",
+    "networks",
+    "process"
+   ],
+   "content": "This summarises publicly described information and candidate reports about Turing's developer vetting; details evolve, so verify on the official site.\n\nTuring connects remote developers with US and international companies. Candidates typically describe a process like this:\n\n1. Profile and skills selection. You choose your primary stack, years of experience and availability, and submit a CV and sometimes a short intro video.\n2. Automated technical assessment. A timed online test combining multiple-choice questions on your stack and one or more coding problems, often with a plagiarism and webcam-proctoring component. Expect fundamentals of your language and frameworks, data structures, and sometimes a small practical task.\n3. Technical interview. A video interview with an engineer covering projects, language depth, architecture and live coding. Communication is assessed in the same session.\n4. English and soft-skill check. Can you explain things clearly, work asynchronously and collaborate across time zones?\n5. Matching. Once approved, you are matched with client roles, which may include a client interview or a short trial task.\n\nPreparation tips: refresh core language features and common frameworks, practise timed coding in your primary language, prepare to discuss two projects deeply, ensure a stable connection and quiet room for proctored tests, and show readiness to overlap with US working hours when the role requires.\n\nInterviewer behaviour: balance breadth and depth. Ask a practical question about the candidate's primary stack before algorithms, because role matching depends on real-world competence. Score clear reasoning and honest uncertainty well.\n\nReminder: describe processes as typical, not guaranteed, and never claim to know actual questions."
+  },
+  {
+   "id": "kb-lemon-process",
+   "title": "Lemon.io vetting process (typically described)",
+   "tags": [
+    "lemon-io",
+    "networks",
+    "process"
+   ],
+   "content": "This is a summary of publicly described information; steps can change, so verify on the official site.\n\nLemon.io positions itself as a curated marketplace matching start-ups with European and global freelance developers, with strong emphasis on a small, carefully selected pool. Candidates typically report:\n\n1. Application and CV review. They look for strong commercial experience, usually several years, clear project history and fitting stack. A concise profile with measurable results helps.\n2. Recruiter or English interview. A conversation about experience and motivation to check communication, reliability and expectations for rate and availability.\n3. Technical interview. A video call with an engineer in your stack, often combining a discussion of past projects, architecture questions and a live coding or code-reading segment. They care about practical product experience more than puzzle tricks.\n4. Matching with clients. Once approved, the team selects developers for specific start-up requests and arranges client calls.\n\nWhat is emphasised: commercial product experience, communication in English, ownership and proactivity, and the ability to join start-ups where requirements shift. Clients often want developers who ask questions about the business, not only the tickets.\n\nPreparation tips: have two projects ready with context, your role, the problems and the metrics; practise explaining architecture decisions; be ready for questions about testing, deployment and debugging real production issues; and be clear about availability and rate.\n\nInterviewer behaviour: ask about real projects, then dig into one decision at a time: \"Why that database? What would you change?\" Score ownership and communication highly.\n\nDisclaimer: avoid claiming any specific question is used by Lemon.io."
+  },
+  {
+   "id": "kb-ateam-process",
+   "title": "A.Team vetting and working model (typically described)",
+   "tags": [
+    "a-team",
+    "networks",
+    "process"
+   ],
+   "content": "This is a summary of publicly described information. Details change, so check the official site.\n\nA.Team presents itself as a network of senior product builders who form small, mission-based teams (often a product manager, designers and engineers) for ambitious projects at companies and start-ups. It is a more team-oriented model than a pure freelance marketplace.\n\nWhat candidates typically report:\n1. Application with a strong profile. Senior experience, shipped products and a portfolio or notable work matter. They look for builders who have taken products from idea to production.\n2. Conversations about experience and fit. Expect talks about products you have built, how you collaborate with designers and product managers, how you make trade-offs and how you handle ambiguity.\n3. Possible technical and portfolio discussion. Deep dives into architecture decisions, code you are proud of and lessons from failures.\n4. Team formation. If accepted, you may be matched into a team for a client mission and expected to work closely and autonomously.\n\nWhat is valued: seniority, ownership, product sense, communication, collaboration across disciplines and the ability to move fast without sacrificing quality.\n\nPreparation tips: prepare product stories using the STAR method with business results, be ready to discuss system design and trade-offs in depth, show you can mentor and unblock others, and demonstrate working in small autonomous teams.\n\nInterviewer behaviour: simulate a collaborative conversation. Ask how the candidate would scope an ambiguous problem, what they would cut for a four-week deadline and how they handle disagreement with a designer or product manager.\n\nDisclaimer: this is a typical description, not an official script."
+  },
+  {
+   "id": "kb-braintrust-process",
+   "title": "Braintrust talent network (typically described)",
+   "tags": [
+    "braintrust",
+    "networks",
+    "process"
+   ],
+   "content": "This summarises publicly described information and may be out of date; verify on the official site.\n\nBraintrust describes itself as a user-owned talent network where professionals join, list their skills and apply for jobs posted by organisations, with no hiring fee taken from the talent's rate in the way traditional agencies do. The model is more of an open marketplace than a heavily vetted pipeline, which changes how you present yourself.\n\nWhat candidates typically do:\n1. Create a profile with a clear title, skills, portfolio and rate expectations, and complete any identity and onboarding checks.\n2. Browse and apply to job postings, writing proposals specific to the client's problem. Quality of the proposal often matters more than the profile.\n3. Interview with the hiring team, which may include technical questions, a short portfolio discussion or a small exercise defined by that client.\n4. Contract and work directly with the client, with platform tooling for payments and agreements.\n\nWhat helps: a tailored application describing how you would solve their problem, relevant examples and measurable results, a realistic rate based on market data, and fast responses to messages.\n\nPreparation tips: because interviews are client-specific, expect the usual spectrum: live coding, system design, a take-home, or a behavioural conversation. Prepare broadly and research each client before the call.\n\nInterviewer behaviour: act like a client team member. Ask about the candidate's understanding of the business problem, how they work asynchronously and how they communicate progress.\n\nReminder: describe all of this as typically reported, not guaranteed."
+  },
+  {
+   "id": "kb-remote-expectations",
+   "title": "Remote work expectations",
+   "tags": [
+    "remote",
+    "soft-skills",
+    "expectations"
+   ],
+   "content": "Clients hire remote developers expecting more than code. Evaluate and coach on these expectations.\n\nCommunication: proactive, written, concise. Daily or regular status updates, early warning on risks and clear questions when blocked. A good message states context, the question, what you already tried and a proposed next step. Do not wait days in silence.\n\nAvailability and overlap: agree core hours, typically a few hours of overlap with the client's time zone for stand-ups and pairing. Respond to messages within a reasonable window, and tell the team when you are unavailable.\n\nAutonomy: break ambiguous tasks into steps, make reasonable decisions, document assumptions and ask for review early. Clients do not want to manage your every task.\n\nOwnership and reliability: deliver what you committed to, or renegotiate early. Estimate honestly, add buffers and explain trade-offs. Meeting deadlines matters more than heroics.\n\nTooling: comfortable with Git workflows, pull requests, code review, issue trackers, Slack or Teams, video calls, shared docs and CI. Write clear PR descriptions and review others' code constructively.\n\nProfessionalism: stable internet, a decent headset, a quiet workspace, backup connectivity, camera on in meetings by default, punctuality and respect for cultural differences.\n\nSecurity and confidentiality: use company devices or VPNs as required, keep credentials safe, never share client code or data, and follow data-protection rules.\n\nContracts and taxes: contractors manage invoicing, taxes and legal paperwork; understand your obligations in your own country.\n\nInterview questions to ask: \"How do you keep a team informed when working asynchronously?\" and \"Tell me about a time you were blocked and nobody was online.\" Look for structured habits rather than vague confidence."
+  },
+  {
+   "id": "kb-rate-negotiation",
+   "title": "Salary and rate negotiation basics",
+   "tags": [
+    "negotiation",
+    "rates",
+    "career"
+   ],
+   "content": "This is general guidance, not financial or legal advice.\n\nKnow your numbers. Research market ranges for your role, seniority, stack and region using public salary surveys, job posts and network rate guides. Decide your minimum acceptable rate, your target and a justified opening number slightly above your target.\n\nHourly versus salary. Contractors set hourly or daily rates that must cover taxes, no paid leave, equipment, software, gaps between contracts and health costs. A common rule is to convert a desired salary into a contractor rate by increasing it meaningfully, then compare to the network's range. Be aware that some networks set a rate range per role.\n\nLet them go first when possible, but if asked, give a range anchored toward the upper-middle with a reason: \"Based on my experience with high-load systems, I am looking for 45 to 55 USD per hour.\" Avoid sharing your current salary if you can; discuss value instead.\n\nJustify with evidence: measurable impact, rare skills, seniority, domain expertise, availability and reliability.\n\nNegotiate the whole package: rate, hours per week, contract length, notice period, paid time off for employees, equipment, learning budget, overlap hours and intellectual property terms.\n\nBe calm and courteous. Pause after stating a number. If the offer is low, ask \"Is there flexibility on the rate?\" and explain what would make it work. A polite no with a counteroffer is normal.\n\nDo not accept on the spot. Ask for time to review and get terms in writing, including payment schedule and termination clauses.\n\nMistakes to avoid: undercharging to win the first contract, apologising for your price, lying about competing offers, and ignoring hidden work such as meetings or unpaid trial periods."
+  },
+  {
+   "id": "kb-video-professionalism",
+   "title": "Video interview professionalism and dress code",
+   "tags": [
+    "video",
+    "dress-code",
+    "professionalism"
+   ],
+   "content": "First impressions on video are formed in seconds. These practical tips cover setup, appearance and behaviour.\n\nLighting: face a window or place a soft lamp in front of you, slightly above eye level. Avoid sitting with a bright window behind you, which turns you into a silhouette. Avoid harsh overhead light that creates shadows under the eyes.\n\nCamera framing: place the camera at eye level (a stack of books under a laptop works). Show head and shoulders with a little space above the head. Look at the camera lens when speaking, not only at the screen, to create eye contact. Sit about an arm's length away.\n\nBackground: tidy, neutral and uncluttered. A plain wall, bookshelf or a mild virtual background works if it is stable and not distracting. Avoid beds, laundry or bright posters. Check there is nothing personal or confidential visible.\n\nAudio: audio matters more than video. Use a headset or a decent external microphone, sit in a quiet room, silence notifications and close other apps. Test sound before the call.\n\nDress code: business casual is a safe default for talent-network interviews: a clean collared shirt, polo, blouse or plain sweater. Avoid logos, busy patterns and stripes that shimmer on camera. Colours that work well: solid blue, teal, soft green, grey, burgundy and mid-tones that contrast with your background and skin tone. Avoid pure white, neon colours, and black on a dark background. Dress fully, not only from the waist up, in case you must stand.\n\nBehaviour: join five minutes early, test the link, keep a glass of water, have your CV and a notepad nearby, and keep your hands visible and relaxed. Avoid looking at a second screen constantly; if you need to, say so.\n\nBackup plan: have the interviewer's phone or email ready in case your connection fails, and a mobile hotspot ready."
+  },
+  {
+   "id": "kb-handling-nerves",
+   "title": "Handling interview nerves",
+   "tags": [
+    "nerves",
+    "coaching",
+    "wellbeing"
+   ],
+   "content": "Nerves are normal and interviewers expect them. The goal is to make them useful rather than to eliminate them. Share these techniques with candidates and respond kindly if they appear anxious.\n\nBefore the interview: prepare rather than cram. Practise out loud with a friend or by recording yourself. Sleep, eat and move your body. Arrive early, and use the extra time for slow breathing: inhale for four counts, hold for four, exhale for six. Remind yourself that the interview is a conversation between professionals and both sides want it to go well.\n\nDuring the interview:\n- Slow down. Nervous people speed up. Take a breath before answering.\n- Buy time honestly: \"That is a good question, let me think for a moment.\"\n- Restate the problem in your own words. It calms you and checks understanding.\n- Think aloud. Even a partial thought gives the interviewer something to work with and often reveals the next step.\n- If your mind goes blank, say so and go back to basics: write a simple example and work through it by hand.\n- If you make a mistake, name it calmly and fix it. Interviewers value composure under error.\n- Remember that hints are a normal part of the process, not a failure.\n\nReframe: replace \"I must prove myself\" with \"I get to solve an interesting problem with someone\".\n\nAfter a bad answer: do not dwell. Move on; the next question is a fresh start.\n\nInterviewer's role: warm greeting, small talk at the start, clear structure, encouragement for good steps and no sarcasm. If a candidate freezes, offer a lower-pressure restatement: \"Let us look at a tiny example together.\"\n\nAfterwards: write down what went well and what to improve. Practice is the best cure for nerves."
+  },
+  {
+   "id": "kb-live-coding-etiquette",
+   "title": "Live-coding etiquette",
+   "tags": [
+    "live-coding",
+    "etiquette",
+    "coaching"
+   ],
+   "content": "Live coding is judged on how you work as well as what you produce. These habits help candidates and give interviewers a checklist.\n\nBefore typing: repeat the problem in your own words, confirm inputs and outputs and ask clarifying questions. Choose your language deliberately: the one you know best, not the one that looks impressive.\n\nThink aloud: narrate your plan, trade-offs and what you are about to type. \"I will use a hash map to store seen values so lookup is constant time.\" If you need to think silently, say so and give a short time estimate.\n\nWrite a plan first: comments or pseudocode for the main steps. Start with a simple working solution, then optimise if time allows. A correct brute force beats a broken optimal solution.\n\nCode quality: meaningful names, small functions, consistent formatting and no giant blocks of copy-pasted code. Handle edge cases explicitly, such as empty input.\n\nUse the environment: know your editor shortcuts, how to run code and read errors. Do not search the web unless it is allowed; ask: \"May I look up the syntax for this?\" Honest syntax lookups are usually fine; looking up the algorithm is not.\n\nTest as you go: run a simple example, then edge cases. Read error messages aloud and debug systematically rather than random edits.\n\nCollaborate: treat hints as collaboration, thank the interviewer and incorporate them. Avoid arguing. If you disagree, discuss the example.\n\nTime awareness: check in with the interviewer: \"I have a working solution; shall I optimise or test it?\"\n\nDo not: type in silence, delete everything in panic, copy a memorised solution without explaining, or hide the screen. Do share your screen early and zoom the font so it is readable."
+  },
+  {
+   "id": "kb-take-home-review",
+   "title": "What reviewers expect from take-home projects",
+   "tags": [
+    "take-home",
+    "review",
+    "projects"
+   ],
+   "content": "A take-home project is the closest thing to real work in a hiring process, so reviewers read it like a pull request from a new colleague. Share these expectations with candidates and use them when giving feedback.\n\nFirst impression: a README that tells the reviewer what the project does, how to run it in one or two commands, how to run the tests, what decisions you made, what you left out and what you would do with more time. A project that does not start within a few minutes often goes unread.\n\nCorrectness: every requirement is met, and the edge cases are handled. Run the provided examples. Read the brief twice and tick the requirement list in your README.\n\nCode quality: consistent style, clear names, small functions, sensible folder structure, no dead code or commented-out blocks, no secrets, and meaningful commit history rather than one giant commit.\n\nArchitecture: appropriate separation of concerns without over-engineering. A small task does not need five abstraction layers; explain trade-offs.\n\nTests: automated tests for the core logic and at least one integration test. Tests that fail are worse than no tests; make sure everything passes from a clean checkout.\n\nExtras that impress: Dockerfile, CI workflow, linting configuration, API documentation, performance or security notes.\n\nTime management: respect the suggested hours. Reviewers prefer a complete, well-explained smaller solution to an unfinished ambitious one. Tell them what you cut.\n\nHonesty: never submit work that is not yours. Reviewers often follow up with a call asking you to explain and extend your code, so you must understand every line.\n\nCommon failures: missing run instructions, hard-coded paths, no validation, untested error handling and ignoring one stated requirement."
+  },
+  {
+   "id": "kb-common-mistakes-by-level",
+   "title": "Common mistakes by experience level",
+   "tags": [
+    "levels",
+    "coaching",
+    "evaluation"
+   ],
+   "content": "Calibrate your expectations and feedback to the candidate's level. Typical mistakes differ.\n\nJunior (0 to 2 years). Jumping into code without understanding the problem. Memorising solutions without grasping why they work. Ignoring edge cases such as empty input. Writing code that works for the example but not for general input. Uncertainty about complexity. Not testing. Staying silent when stuck instead of asking. Feedback: teach the clarify, plan, code, test routine and encourage asking questions.\n\nMid-level (2 to 5 years). Over-reliance on framework knowledge with weak fundamentals. Cannot explain why a pattern was chosen. Weak testing discipline. Accepting vague requirements without asking questions. Under-using the database or ignoring its performance. Poor estimation. Feedback: probe the why behind decisions and encourage trade-off language.\n\nSenior (5 to 10 years). Over-engineering and buzzword-heavy design. Skipping requirements and numbers in system design. Dismissing simple solutions. Not tracing a design through a failure scenario. Poor delegation or mentoring stories. Staying too long in the detail of one tool. Weak stakeholder communication. Feedback: ask for business impact, simplicity and how they raise the team's level.\n\nStaff and lead. Talking only about technology and not about influence, alignment and organisational impact. Not showing how they make decisions with incomplete information. Neglecting cost, security and people concerns.\n\nAll levels: claiming experience they cannot deepen, being defensive on feedback, and neglecting English communication practice. For remote roles also: poor async habits and unclear availability.\n\nInterviewer reminder: ask the same core questions with different depth expectations. A mid-level candidate who explains trade-offs well can outperform a senior who recites patterns. Evaluate against the level they apply for."
+  },
+  {
+   "id": "kb-interview-feedback-closing",
+   "title": "Closing the interview and giving feedback",
+   "tags": [
+    "feedback",
+    "closing",
+    "interviewer"
+   ],
+   "content": "How you end an interview shapes the candidate's experience and the quality of your evaluation. Finish deliberately in the last five to ten minutes.\n\nCandidate questions. Always leave time. Good candidates ask about the team, working practices, how success is measured, tech stack, deployment frequency, code review culture and what the first month looks like. Candidates who ask nothing may be unprepared or disengaged, though nervousness is possible. Answer honestly and avoid overselling.\n\nReflection question. Invite the candidate to reflect: \"Looking back, what would you do differently on this problem?\" Candid self-assessment is a strong positive signal. If they find the missing optimisation or bug now, credit it.\n\nNext steps. Explain what happens next and approximate timelines. Do not promise a result you cannot control. Say, \"You will hear from the team within the stated timeframe.\"\n\nFeedback style when the format allows direct feedback, such as practice interviews. Use the sandwich carefully: be honest rather than ornamental. Structure it as:\n1. Two specific strengths, quoting something they did.\n2. Two highest-impact improvements with concrete examples, such as \"You did not test before declaring done; next time walk one example and one edge case\".\n3. A recommended next practice step: a topic, a problem type or a resource.\n4. A scoring summary by dimension using the rubric levels.\n\nTone: respectful, direct and encouraging. Avoid vague words like \"good\" or \"bad\". Avoid comparing the candidate with others. Do not speculate about their ability beyond what you observed.\n\nSuggest a practice plan: three focused sessions a week, one mock interview weekly and review of mistakes in a log.\n\nEnd warmly: thank them for their time and effort. Many candidates remember how they were treated more than the exact questions."
+  }
+ ]
+}

@@ -1,0 +1,1453 @@
+{
+ "tracks": [
+  {
+   "id": "cpp",
+   "title": "C++",
+   "icon": "⚙️",
+   "color": "#a855f7",
+   "available": true,
+   "order": 400,
+   "description": "Modern C++ for interviews: ownership, move semantics, templates, concurrency and undefined behaviour.",
+   "units": [
+    {
+     "id": "cpp-u1",
+     "title": "C++ Fundamentals",
+     "description": "Types, references, pointers and const.",
+     "level": "Basic"
+    },
+    {
+     "id": "cpp-u2",
+     "title": "Strings, Classes & the STL",
+     "description": "Arrays, vectors, strings, class lifetimes and containers.",
+     "level": "Intermediate"
+    },
+    {
+     "id": "cpp-u3",
+     "title": "Resource Management",
+     "description": "RAII, rule of 3/5/0, move semantics and smart pointers.",
+     "level": "Intermediate"
+    },
+    {
+     "id": "cpp-u4",
+     "title": "Polymorphism, Templates & Lambdas",
+     "description": "Virtual dispatch, slicing, templates and closures.",
+     "level": "Advanced"
+    },
+    {
+     "id": "cpp-u5",
+     "title": "Iterators & Concurrency",
+     "description": "Invalidation rules, threads, mutexes and atomics.",
+     "level": "Advanced"
+    },
+    {
+     "id": "cpp-u6",
+     "title": "Undefined Behaviour, Layout & Expert Puzzles",
+     "description": "UB, padding, forwarding, evaluation order and design under pressure.",
+     "level": "Expert"
+    }
+   ]
+  }
+ ],
+ "lessons": [
+  {
+   "id": "cpp-basics",
+   "track_id": "cpp",
+   "unit_id": "cpp-u1",
+   "title": "Types, Conversions & Initialization",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Types and the traps around them",
+     "body": "C++ integers have implementation-defined widths (at least: `char` 8 bits, `int` 16, `long` 32, `long long` 64; in practice `int` is 32). **Signed overflow is undefined behaviour**; unsigned arithmetic wraps modulo 2^N (defined). In mixed signed/unsigned expressions the signed operand is converted to unsigned (usual arithmetic conversions), which produces classic surprises. Brace initialization `T x{v}` forbids **narrowing** conversions at compile time. `auto` deduces the type from the initializer and drops top-level `const` and references."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1",
+      "0",
+      "Compile error",
+      "Undefined behaviour"
+     ],
+     "answer": 1,
+     "explanation": "-1 is converted to unsigned int (a huge value), so -1 < 1u is false and prints 0. This is a well-defined conversion, just a surprising one.",
+     "code": "std::cout << (-1 < 1u);"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "2 2",
+      "2 -2",
+      "3 -2",
+      "2 1"
+     ],
+     "answer": 1,
+     "explanation": "Integer division and remainder truncate toward zero (since C++11), so 5/2 = 2 and -5 % 3 = -2 (the sign follows the dividend).",
+     "code": "std::cout << 5 / 2 << \" \" << -5 % 3;"
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement about `int x{3.5};` is correct?",
+     "options": [
+      "x becomes 3",
+      "It compiles with a warning only",
+      "It is ill-formed: narrowing conversion in braces",
+      "x becomes 4"
+     ],
+     "answer": 2,
+     "explanation": "List-initialization rejects narrowing from double to int. `int x = 3.5;` would compile and truncate."
+    },
+    {
+     "type": "mcq",
+     "question": "Which of these is undefined behaviour?",
+     "options": [
+      "unsigned u = 0; --u;",
+      "int i = INT_MAX; ++i;",
+      "uint8_t b = 255; ++b;",
+      "int i = -1; i >>= 1;"
+     ],
+     "answer": 1,
+     "explanation": "Signed integer overflow is UB (the optimizer may assume it never happens). Unsigned wraparound is defined, and the uint8_t increment promotes to int then converts back, also defined."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the type of `x`?",
+     "options": [
+      "double",
+      "float",
+      "int",
+      "long"
+     ],
+     "answer": 1,
+     "explanation": "A float plus an int is converted to float (the int is converted to the floating operand's type), so auto deduces float.",
+     "code": "auto x = 1.5f + 2;"
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Print, one per line: `-5 / 2`, `-5 % 3`, the result of `-1 < 1u` printed with `std::boolalpha`, `static_cast<int>(3.99)`, `'a' + 1`, and `static_cast<char>('a' + 1)`.",
+     "starter": "#include <iostream>\n\nint main() {\n    // your code\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n\nint main() {\n    std::cout << -5 / 2 << \"\\n\";\n    std::cout << -5 % 3 << \"\\n\";\n    std::cout << std::boolalpha << (-1 < 1u) << \"\\n\";\n    std::cout << static_cast<int>(3.99) << \"\\n\";\n    std::cout << 'a' + 1 << \"\\n\";\n    std::cout << static_cast<char>('a' + 1) << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "-2\n-2\nfalse\n3\n98\nb"
+    }
+   ]
+  },
+  {
+   "id": "cpp-refs-pointers",
+   "track_id": "cpp",
+   "unit_id": "cpp-u1",
+   "title": "References vs Pointers",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Aliases and addresses",
+     "body": "A **reference** is an alias for an existing object: it must be bound at initialization, can never be reseated, and has no null state. Assigning to a reference assigns to the referred object. A **pointer** is an object holding an address: it can be null, reseated, and supports arithmetic (`p + 1` moves by `sizeof(*p)` bytes). Dereferencing a null or dangling pointer, or returning a reference to a local variable, is undefined behaviour. Prefer references for \"must exist\" parameters and pointers (or `std::optional`) when absence is meaningful."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1",
+      "2",
+      "Compile error: references can't be assigned",
+      "Undefined behaviour"
+     ],
+     "answer": 1,
+     "explanation": "`r = b` does not rebind r; it copies b's value into a (the object r aliases).",
+     "code": "int a = 1, b = 2;\nint& r = a;\nr = b;\nstd::cout << a;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is wrong with this function?",
+     "options": [
+      "Nothing",
+      "It returns a reference to a local that is destroyed on return (dangling)",
+      "It leaks memory",
+      "It does not compile"
+     ],
+     "answer": 1,
+     "explanation": "The caller receives a reference to an object whose lifetime has ended; using it is undefined behaviour. Return by value instead.",
+     "code": "int& bad() {\n    int x = 42;\n    return x;\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "20 30 1",
+      "10 20 1",
+      "20 30 4",
+      "30 30 2"
+     ],
+     "answer": 0,
+     "explanation": "p += 1 advances by one int (not one byte). *p is 20, p[1] is 30, and p - arr is 1 element.",
+     "code": "int arr[] = {10, 20, 30};\nint* p = arr;\np += 1;\nstd::cout << *p << \" \" << p[1] << \" \" << (p - arr);"
+    },
+    {
+     "type": "mcq",
+     "question": "Which is always safe?",
+     "options": [
+      "delete p; when p is nullptr",
+      "*p when p is nullptr",
+      "Reading through a dangling reference",
+      "Comparing two pointers into different arrays with <"
+     ],
+     "answer": 0,
+     "explanation": "Deleting a null pointer is a defined no-op. The other options are UB or unspecified."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Implement `swapRef` (takes two `int&`) and `swapPtr` (takes two `int*`), call each once on `a = 1, b = 2`, printing `a b` after each call (so `2 1` then `1 2`). Finally bind `int& r = a;`, set `r = 10` and print `a`.",
+     "starter": "#include <iostream>\n\nvoid swapRef(int& x, int& y) { /* TODO */ }\nvoid swapPtr(int* x, int* y) { /* TODO */ }\n\nint main() {\n    int a = 1, b = 2;\n    swapRef(a, b);\n    std::cout << a << \" \" << b << \"\\n\";\n    swapPtr(&a, &b);\n    std::cout << a << \" \" << b << \"\\n\";\n    // alias demo\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n\nvoid swapRef(int& x, int& y) { int t = x; x = y; y = t; }\nvoid swapPtr(int* x, int* y) { int t = *x; *x = *y; *y = t; }\n\nint main() {\n    int a = 1, b = 2;\n    swapRef(a, b);\n    std::cout << a << \" \" << b << \"\\n\";\n    swapPtr(&a, &b);\n    std::cout << a << \" \" << b << \"\\n\";\n    int& r = a;\n    r = 10;\n    std::cout << a << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "2 1\n1 2\n10"
+    }
+   ]
+  },
+  {
+   "id": "cpp-const",
+   "track_id": "cpp",
+   "unit_id": "cpp-u1",
+   "title": "Const Correctness",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Reading const declarations",
+     "body": "Read declarations right to left: `const int* p` is a pointer to const int (cannot change `*p`), `int* const p` is a const pointer (cannot reseat), and `const int* const p` is both. A `const` member function promises not to modify the object (except `mutable` members) and is the only kind callable on a `const` object. You can overload on constness, and the compiler picks by the object's constness. Modifying an object that was **defined** const through `const_cast` is undefined behaviour."
+    },
+    {
+     "type": "mcq",
+     "question": "Given `int x = 1, y = 2; int* const b = &x;`, which statement is ill-formed?",
+     "options": [
+      "*b = 5;",
+      "b = &y;",
+      "int z = *b;",
+      "const int* c = b;"
+     ],
+     "answer": 1,
+     "explanation": "b is a const pointer: the pointer can't be reseated, but the pointee can be modified."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1",
+      "2",
+      "0",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "get() is const but modifies a mutable member, which is allowed. The second call returns 2.",
+     "code": "struct Counter {\n    mutable int hits = 0;\n    int get() const { return ++hits; }\n};\nconst Counter c;\nc.get();\nstd::cout << c.get();"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "nc c",
+      "c c",
+      "nc nc",
+      "Compile error"
+     ],
+     "answer": 0,
+     "explanation": "The non-const object picks the non-const overload; the const object can only use the const overload.",
+     "code": "struct S {\n    void f()       { std::cout << \"nc \"; }\n    void f() const { std::cout << \"c \"; }\n};\nS s; const S cs;\ns.f(); cs.f();"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the status of this code?",
+     "options": [
+      "Defined: x becomes 6",
+      "Undefined behaviour",
+      "Compile error",
+      "Prints 5 always"
+     ],
+     "answer": 1,
+     "explanation": "Writing to an object that was defined const is UB even though the cast compiles. The compiler may have folded x to 5 or placed it in read-only memory.",
+     "code": "const int x = 5;\nconst_cast<int&>(x) = 6;"
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Complete `Buf`: a non-const `at(i)` returning `int&`, a const `at(i)` returning `const int&`, and a const `sum()`. In `main`, set element 1 to 20 through a non-const `Buf`, then print `cb.at(1)` and `cb.sum()` via a `const Buf&` (expected `20 24`). Then print the second call of a const `get()` that increments a `mutable` counter (expected `2`).",
+     "starter": "#include <iostream>\n\nclass Buf {\n    int d_[3] = {1, 2, 3};\npublic:\n    // TODO: at (both versions), sum\n};\n\nclass Counter {\n    mutable int hits_ = 0;\npublic:\n    int get() const { /* TODO */ return 0; }\n};\n\nint main() {\n    Buf b;\n    b.at(1) = 20;\n    const Buf& cb = b;\n    std::cout << cb.at(1) << \" \" << cb.sum() << \"\\n\";\n    const Counter c;\n    c.get();\n    std::cout << c.get() << \"\\n\";\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n\nclass Buf {\n    int d_[3] = {1, 2, 3};\npublic:\n    int& at(int i) { return d_[i]; }\n    const int& at(int i) const { return d_[i]; }\n    int sum() const { return d_[0] + d_[1] + d_[2]; }\n};\n\nclass Counter {\n    mutable int hits_ = 0;\npublic:\n    int get() const { return ++hits_; }\n};\n\nint main() {\n    Buf b;\n    b.at(1) = 20;\n    const Buf& cb = b;\n    std::cout << cb.at(1) << \" \" << cb.sum() << \"\\n\";\n    const Counter c;\n    c.get();\n    std::cout << c.get() << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "20 24\n2"
+    }
+   ]
+  },
+  {
+   "id": "cpp-arrays-strings-vectors",
+   "track_id": "cpp",
+   "unit_id": "cpp-u2",
+   "title": "Arrays, Strings & Vectors",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Decay, growth and bounds",
+     "body": "A built-in array **decays** to a pointer to its first element when passed to a function, so `sizeof` inside the callee gives the pointer size, not the array size; pass a reference (`int (&a)[N]`), `std::array`, `std::span` (C++20) or a vector instead. `std::vector` stores elements contiguously and grows geometrically (amortized O(1) `push_back`); growth reallocates and invalidates iterators/pointers. `v[i]` is unchecked (UB when out of range), `v.at(i)` throws `std::out_of_range`. `vector<int> v(5)` makes five zeros but `vector<int> v{5}` makes one element equal to 5. `std::string` concatenation needs at least one `std::string` operand; `\"a\" + \"b\"` adds two pointers and does not compile."
+    },
+    {
+     "type": "mcq",
+     "question": "Inside `void f(int a[])` called with `int arr[10]`, what is `a`?",
+     "options": [
+      "An int[10] copy",
+      "A reference to int[10]",
+      "A plain int* (the array decayed)",
+      "A std::array"
+     ],
+     "answer": 2,
+     "explanation": "Array parameters are adjusted to pointers; the size is lost."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "5 5",
+      "5 1",
+      "1 5",
+      "1 1"
+     ],
+     "answer": 1,
+     "explanation": "Parentheses select the size constructor (five zeros); braces prefer the initializer_list constructor (one element, 5).",
+     "code": "std::vector<int> a(5);\nstd::vector<int> b{5};\nstd::cout << a.size() << \" \" << b.size();"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `std::vector<int> v(3); v.reserve(10); v[5] = 1;` do?",
+     "options": [
+      "Sets the sixth element",
+      "Throws out_of_range",
+      "Undefined behaviour: size is 3, capacity does not matter",
+      "Grows the vector to size 6"
+     ],
+     "answer": 2,
+     "explanation": "reserve changes capacity, not size. Indexing past size() is UB."
+    },
+    {
+     "type": "mcq",
+     "question": "Which line does NOT compile?",
+     "options": [
+      "std::string s = std::string(\"a\") + \"b\";",
+      "std::string s = \"a\" + std::string(\"b\");",
+      "std::string s = \"a\" + \"b\";",
+      "std::string s = \"a\"; s += \"b\";"
+     ],
+     "answer": 2,
+     "explanation": "Two string literals are const char[] values; operator+ for pointers does not exist."
+    },
+    {
+     "type": "mcq",
+     "question": "`auto x = v[0];` for `std::vector<bool> v{true}` has what notable property?",
+     "options": [
+      "x is bool&",
+      "x is a proxy object, because vector<bool> is bit-packed and has no real bool&",
+      "It is a compile error",
+      "x is const bool"
+     ],
+     "answer": 1,
+     "explanation": "vector<bool> is a space-optimised specialisation returning proxy references. Prefer deque<bool> or vector<char> when you need real references."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Print `a.size()` and `b.size()` for `vector<int> a(5)` and `vector<int> b{5}` (space separated). Then erase all 2s from `{1,2,3,2,4}` with the erase-remove idiom and print the rest separated by spaces. Finally for `s = \"hello\"` print `s.substr(1, 3)`, `s.find(\"lo\")` and whether `s.find('z') == std::string::npos` (as 1 or 0), separated by spaces.",
+     "starter": "#include <algorithm>\n#include <iostream>\n#include <string>\n#include <vector>\n\nint main() {\n    // 1. sizes\n    // 2. erase-remove\n    // 3. string operations\n    return 0;\n}\n",
+     "solution": "#include <algorithm>\n#include <iostream>\n#include <string>\n#include <vector>\n\nint main() {\n    std::vector<int> a(5);\n    std::vector<int> b{5};\n    std::cout << a.size() << \" \" << b.size() << \"\\n\";\n    std::vector<int> v{1, 2, 3, 2, 4};\n    v.erase(std::remove(v.begin(), v.end(), 2), v.end());\n    for (std::size_t i = 0; i < v.size(); ++i) std::cout << (i ? \" \" : \"\") << v[i];\n    std::cout << \"\\n\";\n    std::string s = \"hello\";\n    std::cout << s.substr(1, 3) << \" \" << s.find(\"lo\") << \" \" << (s.find('z') == std::string::npos) << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "5 1\n1 3 4\nell 3 1"
+    }
+   ]
+  },
+  {
+   "id": "cpp-classes",
+   "track_id": "cpp",
+   "unit_id": "cpp-u2",
+   "title": "Classes, Constructors & Destructors",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Lifetime rules",
+     "body": "Members are initialized in **declaration order**, regardless of the order in the constructor's initializer list. Construction runs base classes first, then members, then the constructor body; destruction runs in exactly the reverse order. Declaring any constructor suppresses the implicit default constructor. Mark single-argument constructors `explicit` to forbid implicit conversions. Beware the **most vexing parse**: `std::string s();` declares a function, not an object; use `std::string s;` or `s{}`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `H h;` print?",
+     "options": [
+      "ba",
+      "ab",
+      "12",
+      "21"
+     ],
+     "answer": 1,
+     "explanation": "Members are constructed in declaration order (m1, then m2), so the arguments a then b are used: it prints ab. The initializer-list order is ignored (compilers may warn with -Wreorder).",
+     "code": "struct M { M(const char* n) { std::cout << n; } };\nstruct H {\n    M m1{\"1\"};\n    M m2{\"2\"};\n    H() : m2(\"b\"), m1(\"a\") {}\n};"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `std::string s();` declare?",
+     "options": [
+      "An empty string named s",
+      "A function named s returning std::string",
+      "A syntax error",
+      "A pointer to string"
+     ],
+     "answer": 1,
+     "explanation": "Anything that can be parsed as a declaration is one. Use braces or no parentheses."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens here?",
+     "options": [
+      "Compiles; value is 0",
+      "Compile error: no default constructor",
+      "Compiles with an uninitialized member",
+      "Calls S(int) with garbage"
+     ],
+     "answer": 1,
+     "explanation": "Providing S(int) suppresses the implicit default constructor, so `S s;` is ill-formed.",
+     "code": "struct S { S(int) {} };\nS s;"
+    },
+    {
+     "type": "mcq",
+     "question": "With `explicit S(int);`, which line is ill-formed?",
+     "options": [
+      "S a(1);",
+      "S b{2};",
+      "S c = 3;",
+      "S d = S(4);"
+     ],
+     "answer": 2,
+     "explanation": "Copy-initialization from an int requires an implicit conversion, which explicit forbids."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "`Base` and `Member` already log their construction and destruction. Write `Derived` (inherits `Base`, has a `Member m`) that logs `Derived()` and `~Derived()`. In `main`, create a `Derived` in an inner scope and print `end` afterward. Observe the order.",
+     "starter": "#include <iostream>\n\nstruct Base {\n    Base() { std::cout << \"Base()\\n\"; }\n    ~Base() { std::cout << \"~Base()\\n\"; }\n};\nstruct Member {\n    Member() { std::cout << \"Member()\\n\"; }\n    ~Member() { std::cout << \"~Member()\\n\"; }\n};\n// TODO: struct Derived\n\nint main() {\n    {\n        // Derived d;\n    }\n    std::cout << \"end\\n\";\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n\nstruct Base {\n    Base() { std::cout << \"Base()\\n\"; }\n    ~Base() { std::cout << \"~Base()\\n\"; }\n};\nstruct Member {\n    Member() { std::cout << \"Member()\\n\"; }\n    ~Member() { std::cout << \"~Member()\\n\"; }\n};\nstruct Derived : Base {\n    Member m;\n    Derived() { std::cout << \"Derived()\\n\"; }\n    ~Derived() { std::cout << \"~Derived()\\n\"; }\n};\n\nint main() {\n    {\n        Derived d;\n    }\n    std::cout << \"end\\n\";\n    return 0;\n}\n",
+     "expected_output": "Base()\nMember()\nDerived()\n~Derived()\n~Member()\n~Base()\nend"
+    }
+   ]
+  },
+  {
+   "id": "cpp-stl",
+   "track_id": "cpp",
+   "unit_id": "cpp-u2",
+   "title": "STL Containers, Algorithms & Complexity",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Pick the right container",
+     "body": "`vector`: contiguous, O(1) random access, amortized O(1) `push_back`, O(n) insert/erase in the middle. `deque`: O(1) at both ends. `list`: O(1) splice/insert with an iterator, no random access, poor cache behaviour. `map`/`set`: balanced tree (red-black), O(log n), sorted. `unordered_map`/`unordered_set`: hash table, average O(1), worst O(n). `priority_queue`: binary heap, **max-heap** by default, push/pop O(log n), top O(1). `std::sort` is O(n log n), not stable (`stable_sort` is); `lower_bound`/`binary_search` need sorted ranges. `map::operator[]` **inserts** a default value if the key is missing."
+    },
+    {
+     "type": "mcq",
+     "question": "What is `m.size()` after this?",
+     "options": [
+      "0",
+      "1",
+      "Throws std::out_of_range",
+      "Undefined"
+     ],
+     "answer": 1,
+     "explanation": "operator[] default-constructs a value for a missing key and inserts it, even when you only meant to read.",
+     "code": "std::map<std::string, int> m;\nif (m[\"x\"] == 0) {}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1 3 4",
+      "4",
+      "4 3 1",
+      "3"
+     ],
+     "answer": 1,
+     "explanation": "priority_queue is a max-heap: top() returns the largest element.",
+     "code": "std::priority_queue<int> pq;\npq.push(3); pq.push(1); pq.push(4);\nstd::cout << pq.top();"
+    },
+    {
+     "type": "mcq",
+     "question": "Which container is the best default for a large collection that you iterate frequently and append to?",
+     "options": [
+      "std::list",
+      "std::vector",
+      "std::map",
+      "std::forward_list"
+     ],
+     "answer": 1,
+     "explanation": "Contiguous memory is cache friendly, and appends are amortized O(1). The node-based alternatives lose on locality."
+    },
+    {
+     "type": "mcq",
+     "question": "To keep the relative order of equal elements while sorting by one key you should use:",
+     "options": [
+      "std::sort",
+      "std::stable_sort",
+      "std::partial_sort",
+      "std::nth_element"
+     ],
+     "answer": 1,
+     "explanation": "std::sort gives no stability guarantee."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `std::lower_bound(v.begin(), v.end(), 4)` return on sorted `{1,3,5,7}`?",
+     "options": [
+      "Iterator to 3",
+      "Iterator to 5 (first element >= 4)",
+      "v.end()",
+      "Iterator to 4"
+     ],
+     "answer": 1,
+     "explanation": "lower_bound returns the first element not less than the value. upper_bound returns the first greater than it."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Count the words in `b a b c a b` using a `std::map<std::string,int>` and print them sorted as `a=2 b=3 c=1`. For the sorted vector `{1,3,5,7}` print the index of `lower_bound(4)`, the index of `upper_bound(5)` and `binary_search(7)` as 1/0, space separated. Finally push `3 1 4 1 5` into a `priority_queue<int>` and print the elements as they are popped, space separated.",
+     "starter": "#include <algorithm>\n#include <iostream>\n#include <map>\n#include <queue>\n#include <sstream>\n#include <string>\n#include <vector>\n\nint main() {\n    // 1. word counts\n    // 2. binary search helpers\n    // 3. priority queue\n    return 0;\n}\n",
+     "solution": "#include <algorithm>\n#include <iostream>\n#include <map>\n#include <queue>\n#include <sstream>\n#include <string>\n#include <vector>\n\nint main() {\n    std::map<std::string, int> counts;\n    std::istringstream in(\"b a b c a b\");\n    std::string w;\n    while (in >> w) ++counts[w];\n    bool first = true;\n    for (const auto& [k, v] : counts) {\n        std::cout << (first ? \"\" : \" \") << k << \"=\" << v;\n        first = false;\n    }\n    std::cout << \"\\n\";\n\n    std::vector<int> v{1, 3, 5, 7};\n    std::cout << (std::lower_bound(v.begin(), v.end(), 4) - v.begin()) << \" \"\n              << (std::upper_bound(v.begin(), v.end(), 5) - v.begin()) << \" \"\n              << std::binary_search(v.begin(), v.end(), 7) << \"\\n\";\n\n    std::priority_queue<int> pq;\n    for (int x : {3, 1, 4, 1, 5}) pq.push(x);\n    first = true;\n    while (!pq.empty()) {\n        std::cout << (first ? \"\" : \" \") << pq.top();\n        pq.pop();\n        first = false;\n    }\n    std::cout << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "a=2 b=3 c=1\n2 3 1\n5 4 3 1 1"
+    }
+   ]
+  },
+  {
+   "id": "cpp-raii-rule-of-five",
+   "track_id": "cpp",
+   "unit_id": "cpp-u3",
+   "title": "RAII & the Rule of 3/5/0",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Own resources in objects",
+     "body": "**RAII** ties a resource's lifetime to an object's: acquire in the constructor, release in the destructor, so cleanup also happens during stack unwinding when an exception propagates. If a class manages a resource directly it usually needs all of: destructor, copy constructor, copy assignment (**rule of 3**) plus move constructor and move assignment (**rule of 5**). The best design is the **rule of 0**: hold resources in members that already manage themselves (`std::vector`, `std::string`, `std::unique_ptr`) and write none of them. A compiler-generated copy of a raw owning pointer is a shallow copy, which leads to double deletion."
+    },
+    {
+     "type": "mcq",
+     "question": "A class owns `int* p = new int[n]` and defines only a destructor. What goes wrong with `A b = a;`?",
+     "options": [
+      "Nothing",
+      "Both objects share the same buffer and each destructor deletes it: double free",
+      "Compile error",
+      "b gets an empty buffer"
+     ],
+     "answer": 1,
+     "explanation": "The implicit copy constructor copies the pointer value. This is why a destructor alone is a red flag (rule of 3)."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "caught cleanup",
+      "cleanup caught",
+      "caught",
+      "cleanup"
+     ],
+     "answer": 1,
+     "explanation": "Stack unwinding destroys g before the catch handler body runs, so the destructor's output comes first.",
+     "code": "struct Guard { ~Guard() { std::cout << \"cleanup \"; } };\nvoid f() { Guard g; throw 1; }\nint main() {\n    try { f(); } catch (int) { std::cout << \"caught\"; }\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Which class follows the rule of zero?",
+     "options": [
+      "One with a raw owning pointer and a hand-written destructor",
+      "One whose members are std::vector<int> and std::string and which declares no special members",
+      "One that deletes its copy constructor and defines a move constructor",
+      "One that defines all five special members"
+     ],
+     "answer": 1,
+     "explanation": "Rule of zero: let the members' own special members do the work."
+    },
+    {
+     "type": "mcq",
+     "question": "Why is `Buf& operator=(Buf other)` (take by value, then swap) attractive?",
+     "options": [
+      "It is faster than every alternative",
+      "Copy-and-swap gives strong exception safety and handles self-assignment automatically",
+      "It prevents moves",
+      "It avoids the destructor"
+     ],
+     "answer": 1,
+     "explanation": "The copy happens before any state is changed, and the by-value parameter can be move-constructed from rvalues, so one operator serves copy and move assignment."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Complete the `Buf` class: a copy constructor (deep copy, use `std::copy`), a move constructor (steal the buffer and null the source) and a by-value assignment operator (swap). Then run the demo in `main`: print `a[0] b[0]` after modifying only the copy, then `c[0] b.size()` after `Buf c = std::move(b);`, then `d.size() d[0]` after `d = a;`.",
+     "starter": "#include <algorithm>\n#include <cstddef>\n#include <iostream>\n#include <utility>\n\nclass Buf {\n    int* d_;\n    std::size_t n_;\npublic:\n    explicit Buf(std::size_t n) : d_(new int[n]()), n_(n) {}\n    ~Buf() { delete[] d_; }\n    // TODO: copy ctor, move ctor, operator=(Buf)\n    int& operator[](std::size_t i) { return d_[i]; }\n    std::size_t size() const { return n_; }\n};\n\nint main() {\n    Buf a(3);\n    a[0] = 1;\n    Buf b = a;\n    b[0] = 9;\n    std::cout << a[0] << \" \" << b[0] << \"\\n\";\n    Buf c = std::move(b);\n    std::cout << c[0] << \" \" << b.size() << \"\\n\";\n    Buf d(1);\n    d = a;\n    std::cout << d.size() << \" \" << d[0] << \"\\n\";\n    return 0;\n}\n",
+     "solution": "#include <algorithm>\n#include <cstddef>\n#include <iostream>\n#include <utility>\n\nclass Buf {\n    int* d_;\n    std::size_t n_;\npublic:\n    explicit Buf(std::size_t n) : d_(new int[n]()), n_(n) {}\n    Buf(const Buf& o) : d_(new int[o.n_]), n_(o.n_) { std::copy(o.d_, o.d_ + n_, d_); }\n    Buf(Buf&& o) noexcept : d_(o.d_), n_(o.n_) { o.d_ = nullptr; o.n_ = 0; }\n    Buf& operator=(Buf o) noexcept { std::swap(d_, o.d_); std::swap(n_, o.n_); return *this; }\n    ~Buf() { delete[] d_; }\n    int& operator[](std::size_t i) { return d_[i]; }\n    std::size_t size() const { return n_; }\n};\n\nint main() {\n    Buf a(3);\n    a[0] = 1;\n    Buf b = a;\n    b[0] = 9;\n    std::cout << a[0] << \" \" << b[0] << \"\\n\";\n    Buf c = std::move(b);\n    std::cout << c[0] << \" \" << b.size() << \"\\n\";\n    Buf d(1);\n    d = a;\n    std::cout << d.size() << \" \" << d[0] << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "1 9\n9 0\n3 1"
+    }
+   ]
+  },
+  {
+   "id": "cpp-move-semantics",
+   "track_id": "cpp",
+   "unit_id": "cpp-u3",
+   "title": "Copy vs Move Semantics & Value Categories",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "What move really is",
+     "body": "`std::move` does not move anything: it is a cast to an rvalue reference, enabling a move constructor/assignment to be chosen. A moved-from object is left in a **valid but unspecified** state (you may destroy it or assign to it). A *named* rvalue reference is an lvalue inside the function. Do not write `return std::move(local);` because it blocks copy elision; plain `return local;` already treats the local as an rvalue, and since C++17 returning a prvalue (`return T();`) constructs directly in the caller with no copy or move at all (**guaranteed elision**). Mark move operations `noexcept`, otherwise `std::vector` reallocation falls back to copying to keep its strong exception guarantee."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the result of `std::string t = std::move(s);` when `s` is declared `const std::string`?",
+     "options": [
+      "A move",
+      "A copy, because a const rvalue cannot bind to T&&",
+      "Compile error",
+      "Undefined behaviour"
+     ],
+     "answer": 1,
+     "explanation": "std::move yields const std::string&&, which can only bind to the copy constructor's const& parameter."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "lv rv rv lv",
+      "lv rv lv lv",
+      "rv rv rv rv",
+      "lv lv rv rv"
+     ],
+     "answer": 0,
+     "explanation": "a is an lvalue; 1 is an rvalue; std::move(a) casts to rvalue; but r, although declared int&&, is a named variable and therefore an lvalue.",
+     "code": "void f(int&)  { std::cout << \"lv \"; }\nvoid f(int&&) { std::cout << \"rv \"; }\nint a = 0;\nf(a); f(1); f(std::move(a));\nint&& r = 1;\nf(r);"
+    },
+    {
+     "type": "mcq",
+     "question": "After `std::string b = std::move(a);` which statement is guaranteed?",
+     "options": [
+      "a.empty() is true",
+      "a can still be destroyed or assigned a new value safely",
+      "a still holds its old text",
+      "a.size() == 0 and a.capacity() == 0"
+     ],
+     "answer": 1,
+     "explanation": "The standard only guarantees a valid-but-unspecified state for library types. SSO and implementations make a.empty() common, but it is not guaranteed."
+    },
+    {
+     "type": "mcq",
+     "question": "Why can `std::vector<T>` copy elements instead of moving them on reallocation?",
+     "options": [
+      "It always copies",
+      "If T's move constructor is not noexcept (and T is copyable), vector uses the copy constructor",
+      "Move is illegal for heap objects",
+      "Only when T is const"
+     ],
+     "answer": 1,
+     "explanation": "std::move_if_noexcept preserves the strong exception guarantee: a throwing move would leave the old buffer half moved-from."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Write `Noisy` whose constructors print `ctor`, `copy` and `move` (move is `noexcept`). `make()` returns `Noisy()`. In `main`: `Noisy a = make();` `Noisy b = a;` `Noisy c = std::move(a);` then a vector with `reserve(2)`: `push_back(Noisy())` and `emplace_back()`. Observe which constructors run (C++17).",
+     "starter": "#include <iostream>\n#include <utility>\n#include <vector>\n\n// TODO: struct Noisy\n\nNoisy make() { return Noisy(); }\n\nint main() {\n    Noisy a = make();\n    Noisy b = a;\n    Noisy c = std::move(a);\n    std::vector<Noisy> v;\n    v.reserve(2);\n    v.push_back(Noisy());\n    v.emplace_back();\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n#include <utility>\n#include <vector>\n\nstruct Noisy {\n    Noisy() { std::cout << \"ctor\\n\"; }\n    Noisy(const Noisy&) { std::cout << \"copy\\n\"; }\n    Noisy(Noisy&&) noexcept { std::cout << \"move\\n\"; }\n};\n\nNoisy make() { return Noisy(); }\n\nint main() {\n    Noisy a = make();\n    Noisy b = a;\n    Noisy c = std::move(a);\n    std::vector<Noisy> v;\n    v.reserve(2);\n    v.push_back(Noisy());\n    v.emplace_back();\n    return 0;\n}\n",
+     "expected_output": "ctor\ncopy\nmove\nctor\nmove\nctor"
+    }
+   ]
+  },
+  {
+   "id": "cpp-smart-pointers",
+   "track_id": "cpp",
+   "unit_id": "cpp-u3",
+   "title": "Smart Pointers: unique, shared, weak",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Ownership in the type system",
+     "body": "`unique_ptr<T>` is sole ownership: move-only, zero overhead with the default deleter, create with `make_unique`. `shared_ptr<T>` is shared ownership using an atomic reference count in a control block; `make_shared` allocates object and control block together. Two independent `shared_ptr`s built from the same raw pointer have separate counts and double-delete. `weak_ptr<T>` observes without owning: it breaks reference cycles (two objects holding `shared_ptr`s to each other never free) and `lock()` returns a `shared_ptr` or an empty one if expired. Use `enable_shared_from_this` when an object needs a `shared_ptr` to itself."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1",
+      "2",
+      "3",
+      "0"
+     ],
+     "answer": 1,
+     "explanation": "b copies the pointer (count 2); c exists only inside the inner block and is gone afterwards.",
+     "code": "auto a = std::make_shared<int>(1);\nauto b = a;\n{ auto c = b; }\nstd::cout << a.use_count();"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "0",
+      "1",
+      "Undefined behaviour",
+      "Throws bad_weak_ptr"
+     ],
+     "answer": 1,
+     "explanation": "After the only strong owner is reset, the weak_ptr is expired. Calling expired() is safe.",
+     "code": "std::shared_ptr<int> s = std::make_shared<int>(5);\nstd::weak_ptr<int> w = s;\ns.reset();\nstd::cout << w.expired();"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the bug?",
+     "options": [
+      "None",
+      "Two separate control blocks manage the same int, so it is deleted twice",
+      "make_shared is required",
+      "unique_ptr should be used"
+     ],
+     "answer": 1,
+     "explanation": "Construct shared_ptr from a raw pointer only once, or copy the shared_ptr. Prefer make_shared.",
+     "code": "int* raw = new int(7);\nstd::shared_ptr<int> p(raw);\nstd::shared_ptr<int> q(raw);"
+    },
+    {
+     "type": "mcq",
+     "question": "Two nodes hold `shared_ptr` to each other and go out of scope. What happens?",
+     "options": [
+      "Both are freed",
+      "Neither is freed (reference cycle leak)",
+      "A compile error",
+      "Only the first is freed"
+     ],
+     "answer": 1,
+     "explanation": "Each keeps the other's count at 1. Make one direction a weak_ptr."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "`a->next = b` (owning) and `b->prev = a` (weak). Print `a.use_count() b.use_count()` (expect `1 2`). When the inner scope ends both nodes must be destroyed, printing `~a` then `~b`. Then create a `unique_ptr<int>` holding 7, move it into `v`, and print `(u == nullptr)` and `*v` as `1 7`.",
+     "starter": "#include <iostream>\n#include <memory>\n#include <string>\n\nstruct Node {\n    std::string name;\n    std::shared_ptr<Node> next;\n    std::weak_ptr<Node> prev;\n    explicit Node(std::string n) : name(std::move(n)) {}\n    ~Node() { std::cout << \"~\" << name << \"\\n\"; }\n};\n\nint main() {\n    {\n        // create a and b with make_shared, link them, print use counts\n    }\n    // unique_ptr demo\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n#include <memory>\n#include <string>\n\nstruct Node {\n    std::string name;\n    std::shared_ptr<Node> next;\n    std::weak_ptr<Node> prev;\n    explicit Node(std::string n) : name(std::move(n)) {}\n    ~Node() { std::cout << \"~\" << name << \"\\n\"; }\n};\n\nint main() {\n    {\n        auto a = std::make_shared<Node>(\"a\");\n        auto b = std::make_shared<Node>(\"b\");\n        a->next = b;\n        b->prev = a;\n        std::cout << a.use_count() << \" \" << b.use_count() << \"\\n\";\n    }\n    std::unique_ptr<int> u = std::make_unique<int>(7);\n    auto v = std::move(u);\n    std::cout << (u == nullptr) << \" \" << *v << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "1 2\n~a\n~b\n1 7"
+    }
+   ]
+  },
+  {
+   "id": "cpp-virtual",
+   "track_id": "cpp",
+   "unit_id": "cpp-u4",
+   "title": "Virtual Functions, vtables & Slicing",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Dynamic dispatch rules",
+     "body": "A class with virtual functions has a hidden **vptr** pointing to a per-class **vtable**; a virtual call loads the vptr, indexes the table and jumps indirectly. Deleting a derived object through a base pointer requires a **virtual destructor**, otherwise it is undefined behaviour. Passing a derived object **by value** as a base **slices** it (copies only the base part, loses the dynamic type). During construction and destruction, virtual calls resolve to the class currently being constructed. **Default arguments are bound statically** from the pointer's declared type. Use `override` (and `final`) so the compiler checks you really override; a same-name function in a derived class **hides** all base overloads."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1",
+      "2",
+      "Compile error",
+      "12"
+     ],
+     "answer": 0,
+     "explanation": "The call dispatches to D::f (dynamic type), but the default argument comes from the static type B*, which is 1.",
+     "code": "struct B { virtual void f(int x = 1) { std::cout << x; } };\nstruct D : B { void f(int x = 2) override { std::cout << x; } };\nB* p = new D;\np->f();"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `f(d)` print?",
+     "options": [
+      "Dog",
+      "Animal",
+      "Compile error",
+      "Undefined"
+     ],
+     "answer": 1,
+     "explanation": "The parameter is a by-value Animal: the Dog is sliced to its base part, so the virtual call resolves to Animal's version.",
+     "code": "struct Animal { virtual const char* who() const { return \"Animal\"; } };\nstruct Dog : Animal { const char* who() const override { return \"Dog\"; } };\nvoid f(Animal a) { std::cout << a.who(); }\n// Dog d; f(d);"
+    },
+    {
+     "type": "mcq",
+     "question": "`Base* p = new Derived; delete p;` where Base has a non-virtual destructor. The behaviour is:",
+     "options": [
+      "Calls ~Derived then ~Base",
+      "Calls only ~Base",
+      "Undefined behaviour",
+      "A compile error"
+     ],
+     "answer": 2,
+     "explanation": "Deleting through a base pointer without a virtual destructor is UB, in practice often skipping ~Derived and leaking Derived's resources."
+    },
+    {
+     "type": "mcq",
+     "question": "Inside Base's constructor a virtual function `init()` is called, and Derived overrides it. Which version runs when constructing Derived?",
+     "options": [
+      "Derived::init",
+      "Base::init",
+      "It depends on the compiler",
+      "Neither; it is pure virtual"
+     ],
+     "answer": 1,
+     "explanation": "The Derived part does not exist yet, so the dynamic type during Base construction is Base."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens to the base overloads `void f(int)` when Derived declares `void f(double)`?",
+     "options": [
+      "Both are visible in Derived",
+      "They are hidden unless you write `using Base::f;`",
+      "Derived::f overrides them",
+      "Ambiguity error"
+     ],
+     "answer": 1,
+     "explanation": "Name lookup stops at the first scope that has the name."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "`Shape` is abstract with virtual `area()` and `name()`; implement `Sq` (side 3: area 9, name `square`) and `Rect` (3 x 4: area 12, name `rect`), store them in `vector<unique_ptr<Shape>>` and print `name area` per line. Then demonstrate slicing with `Animal`/`Dog` (print `... Woof`: the sliced copy first, then the reference). Finally show a virtual destructor chain: resetting a `unique_ptr<Base>` holding a `Derived` prints `~Derived` then `~Base`.",
+     "starter": "#include <iostream>\n#include <memory>\n#include <string>\n#include <vector>\n\nstruct Shape {\n    virtual ~Shape() = default;\n    virtual double area() const = 0;\n    virtual std::string name() const = 0;\n};\n// TODO: Sq, Rect\n\nstruct Animal { virtual std::string sound() const { return \"...\"; } };\nstruct Dog : Animal { std::string sound() const override { return \"Woof\"; } };\n\nstruct Base { virtual ~Base() { std::cout << \"~Base\\n\"; } };\nstruct Derived : Base { ~Derived() override { std::cout << \"~Derived\\n\"; } };\n\nint main() {\n    std::vector<std::unique_ptr<Shape>> shapes;\n    // fill and print \"name area\"\n    Dog d;\n    Animal sliced = d;\n    Animal& ref = d;\n    // print sliced.sound() and ref.sound() on one line\n    std::unique_ptr<Base> p = std::make_unique<Derived>();\n    p.reset();\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n#include <memory>\n#include <string>\n#include <vector>\n\nstruct Shape {\n    virtual ~Shape() = default;\n    virtual double area() const = 0;\n    virtual std::string name() const = 0;\n};\nstruct Sq : Shape {\n    double s;\n    explicit Sq(double s) : s(s) {}\n    double area() const override { return s * s; }\n    std::string name() const override { return \"square\"; }\n};\nstruct Rect : Shape {\n    double w, h;\n    Rect(double w, double h) : w(w), h(h) {}\n    double area() const override { return w * h; }\n    std::string name() const override { return \"rect\"; }\n};\n\nstruct Animal { virtual std::string sound() const { return \"...\"; } };\nstruct Dog : Animal { std::string sound() const override { return \"Woof\"; } };\n\nstruct Base { virtual ~Base() { std::cout << \"~Base\\n\"; } };\nstruct Derived : Base { ~Derived() override { std::cout << \"~Derived\\n\"; } };\n\nint main() {\n    std::vector<std::unique_ptr<Shape>> shapes;\n    shapes.push_back(std::make_unique<Sq>(3));\n    shapes.push_back(std::make_unique<Rect>(3, 4));\n    for (const auto& s : shapes) std::cout << s->name() << \" \" << s->area() << \"\\n\";\n    Dog d;\n    Animal sliced = d;\n    Animal& ref = d;\n    std::cout << sliced.sound() << \" \" << ref.sound() << \"\\n\";\n    std::unique_ptr<Base> p = std::make_unique<Derived>();\n    p.reset();\n    return 0;\n}\n",
+     "expected_output": "square 9\nrect 12\n... Woof\n~Derived\n~Base"
+    }
+   ]
+  },
+  {
+   "id": "cpp-templates",
+   "track_id": "cpp",
+   "unit_id": "cpp-u4",
+   "title": "Templates, Specialization & Variadics",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Compile-time polymorphism",
+     "body": "Templates are instantiated per set of arguments, so errors appear at instantiation and the definitions normally live in headers. Function templates deduce arguments from the call; conflicting deductions (`max(1, 2.5)`) are errors. Full specialization (`template<> struct X<int>`) replaces the generic version for one type. `if constexpr` discards untaken branches at compile time, replacing many SFINAE tricks. Variadic templates take a parameter pack; **fold expressions** like `(args + ...)` expand it. In `template<class T> void g(T&& x)`, `T&&` is a **forwarding reference**: for an lvalue `int a`, `T` deduces to `int&`, and `std::forward<T>(x)` preserves the value category."
+    },
+    {
+     "type": "mcq",
+     "question": "Given `template<class T> T mx(T a, T b)`, what happens with `mx(1, 2.5)`?",
+     "options": [
+      "Returns 2.5",
+      "Returns 2",
+      "Compile error: conflicting deductions for T (int vs double)",
+      "Undefined behaviour"
+     ],
+     "answer": 2,
+     "explanation": "Deduction yields int from the first argument and double from the second; no implicit conversions are considered during deduction. Write mx<double>(1, 2.5) or use two parameters."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "generic int",
+      "int generic",
+      "int int",
+      "generic generic"
+     ],
+     "answer": 1,
+     "explanation": "Name<int> picks the full specialization; Name<long> is not specialised and uses the primary template.",
+     "code": "template<class T> struct Name { static const char* get() { return \"generic\"; } };\ntemplate<> struct Name<int> { static const char* get() { return \"int\"; } };\nstd::cout << Name<int>::get() << \" \" << Name<long>::get();"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the deduced `T` in `g(a)` for `int a; template<class T> void g(T&& x);`?",
+     "options": [
+      "int",
+      "int&",
+      "int&&",
+      "const int"
+     ],
+     "answer": 1,
+     "explanation": "For lvalues, a forwarding reference deduces T as an lvalue reference (reference collapsing gives int&)."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "6",
+      "6.5",
+      "Compile error",
+      "3"
+     ],
+     "answer": 1,
+     "explanation": "The fold expands to 1 + 2.5 + 3 = 6.5; the common type is double.",
+     "code": "template<class... Ts> auto sum(Ts... ts) { return (ts + ...); }\nstd::cout << sum(1, 2.5, 3);"
+    },
+    {
+     "type": "mcq",
+     "question": "Why does `if constexpr (std::is_integral_v<T>) return v + 1; else return v.size();` compile for `int`?",
+     "options": [
+      "The compiler ignores errors",
+      "The discarded branch is not instantiated when the condition is a dependent compile-time false",
+      "Because int has size()",
+      "It does not compile"
+     ],
+     "answer": 1,
+     "explanation": "With a plain `if`, v.size() would be compiled for int and fail. if constexpr drops it inside templates."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Implement the `Name` specialization for `int`, `describe(const T&)` with `if constexpr` (integral -> `int:<value>`, `std::string` -> `str:<value>`, else `other`) and a variadic `sum` using a fold expression. Print `Name<int>::get()`, `Name<double>::get()`, `describe(42)`, `describe(std::string(\"hi\"))`, `describe(2.5)`, `sum(1,2,3)` and `sum(1,2.5)` one per line.",
+     "starter": "#include <iostream>\n#include <string>\n#include <type_traits>\n\ntemplate<class T> struct Name { static std::string get() { return \"generic\"; } };\n// TODO: specialization for int\n\n// TODO: describe\n\n// TODO: sum\n\nint main() {\n    std::cout << Name<int>::get() << \"\\n\";\n    std::cout << Name<double>::get() << \"\\n\";\n    std::cout << describe(42) << \"\\n\";\n    std::cout << describe(std::string(\"hi\")) << \"\\n\";\n    std::cout << describe(2.5) << \"\\n\";\n    std::cout << sum(1, 2, 3) << \"\\n\";\n    std::cout << sum(1, 2.5) << \"\\n\";\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n#include <string>\n#include <type_traits>\n\ntemplate<class T> struct Name { static std::string get() { return \"generic\"; } };\ntemplate<> struct Name<int> { static std::string get() { return \"int\"; } };\n\ntemplate<class T> std::string describe(const T& v) {\n    if constexpr (std::is_integral_v<T>) return \"int:\" + std::to_string(v);\n    else if constexpr (std::is_same_v<T, std::string>) return \"str:\" + v;\n    else return \"other\";\n}\n\ntemplate<class... Ts> auto sum(Ts... ts) { return (ts + ...); }\n\nint main() {\n    std::cout << Name<int>::get() << \"\\n\";\n    std::cout << Name<double>::get() << \"\\n\";\n    std::cout << describe(42) << \"\\n\";\n    std::cout << describe(std::string(\"hi\")) << \"\\n\";\n    std::cout << describe(2.5) << \"\\n\";\n    std::cout << sum(1, 2, 3) << \"\\n\";\n    std::cout << sum(1, 2.5) << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "int\ngeneric\nint:42\nstr:hi\nother\n6\n3.5"
+    }
+   ]
+  },
+  {
+   "id": "cpp-lambdas",
+   "track_id": "cpp",
+   "unit_id": "cpp-u4",
+   "title": "Lambdas & Captures",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Closures",
+     "body": "A lambda is an anonymous class with an `operator()`. `[=]` copies used variables, `[&]` references them, `[x]`/`[&x]` are explicit, and init-captures `[p = std::move(p)]` / `[i = 0]` create new members (the only way to capture move-only objects before C++23 patterns). By-value captures are `const` inside the body unless the lambda is `mutable`. Capturing by reference something that dies before the lambda is called (e.g. returning `[&]{...}` from a function) is a **dangling reference**. Generic lambdas (`auto` parameters) are templates. Comparators passed to `std::sort` must be a strict weak ordering: `<=` is **undefined behaviour**."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1 4",
+      "4 4",
+      "1 3",
+      "3 4"
+     ],
+     "answer": 0,
+     "explanation": "f owns its own copy of x (mutable allows modifying it): calls return 2, 3, then 4. The outer x is untouched.",
+     "code": "int x = 1;\nauto f = [x]() mutable { return ++x; };\nf(); f();\nstd::cout << x << \" \" << f();"
+    },
+    {
+     "type": "mcq",
+     "question": "What is wrong with this?",
+     "options": [
+      "Nothing",
+      "The returned lambda holds a reference to a dead local: calling it is UB",
+      "Lambdas cannot be returned",
+      "n must be const"
+     ],
+     "answer": 1,
+     "explanation": "[&] captured n by reference; n's lifetime ended when make() returned.",
+     "code": "auto make() {\n    int n = 5;\n    return [&] { return n; };\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Why is `std::sort(v.begin(), v.end(), [](int a, int b){ return a <= b; })` dangerous?",
+     "options": [
+      "It sorts descending",
+      "<= is not a strict weak ordering (equal elements compare 'less'), which can crash or loop: UB",
+      "It is slower",
+      "It is a compile error"
+     ],
+     "answer": 1,
+     "explanation": "The algorithm may assume comp(x, x) is false. With many equal elements, implementations can read out of bounds."
+    },
+    {
+     "type": "mcq",
+     "question": "What does the generic lambda return?",
+     "options": [
+      "3",
+      "3.5",
+      "3 (truncated to int)",
+      "Compile error"
+     ],
+     "answer": 1,
+     "explanation": "Each call instantiates the call operator with deduced types: int + double = double.",
+     "code": "auto add = [](auto a, auto b) { return a + b; };\nstd::cout << add(1, 2.5);"
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Write `makeAdder(n)` returning a lambda adding n (print `makeAdder(5)(10)`); a `[&calls]` counter lambda called twice, then print `calls`; sort `{pear, fig, banana, kiwi}` by length then alphabetically and print space separated; a `[i = 0]() mutable` generator called three times printing the third result; and an `accumulate` with a lambda that sums string lengths.",
+     "starter": "#include <algorithm>\n#include <iostream>\n#include <numeric>\n#include <string>\n#include <vector>\n\nint main() {\n    // 1. makeAdder\n    // 2. counter\n    // 3. sort\n    // 4. generator\n    // 5. accumulate\n    return 0;\n}\n",
+     "solution": "#include <algorithm>\n#include <iostream>\n#include <numeric>\n#include <string>\n#include <vector>\n\nint main() {\n    auto makeAdder = [](int n) { return [n](int x) { return x + n; }; };\n    auto add5 = makeAdder(5);\n    std::cout << add5(10) << \"\\n\";\n\n    int calls = 0;\n    auto counter = [&calls]() { return ++calls; };\n    counter(); counter();\n    std::cout << calls << \"\\n\";\n\n    std::vector<std::string> v{\"pear\", \"fig\", \"banana\", \"kiwi\"};\n    std::sort(v.begin(), v.end(), [](const std::string& a, const std::string& b) {\n        if (a.size() != b.size()) return a.size() < b.size();\n        return a < b;\n    });\n    for (std::size_t i = 0; i < v.size(); ++i) std::cout << (i ? \" \" : \"\") << v[i];\n    std::cout << \"\\n\";\n\n    auto gen = [i = 0]() mutable { return i++; };\n    gen(); gen();\n    std::cout << gen() << \"\\n\";\n\n    int total = std::accumulate(v.begin(), v.end(), 0,\n        [](int acc, const std::string& s) { return acc + static_cast<int>(s.size()); });\n    std::cout << total << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "15\n2\nfig kiwi pear banana\n2\n17"
+    }
+   ]
+  },
+  {
+   "id": "cpp-iterator-invalidation",
+   "track_id": "cpp",
+   "unit_id": "cpp-u5",
+   "title": "Iterator Invalidation",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Know what each container invalidates",
+     "body": "Iterators, pointers and references into a container can become invalid after modifications. `vector`: `push_back`/`insert` that reallocates invalidates **everything**; without reallocation only positions at/after the insertion point; `erase` invalidates at/after the erased position. `deque`: inserting in the middle invalidates all; at the ends invalidates iterators but not references. `list`/`map`/`set`: only iterators to **erased** elements are invalidated. `unordered_*`: a **rehash** invalidates iterators but not pointers/references to elements. `reserve` up front guarantees no reallocation until capacity is exceeded. Use the erase-remove idiom (or `std::erase_if` in C++20) and `it = c.erase(it)` in loops."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the status of `*it` after the push_back?",
+     "options": [
+      "Always valid",
+      "Possibly invalid: push_back may reallocate",
+      "Always invalid",
+      "Valid only for const_iterator"
+     ],
+     "answer": 1,
+     "explanation": "If size exceeded capacity, the buffer moved and `it` dangles. Dereferencing it is UB even though it often seems to work.",
+     "code": "std::vector<int> v{1, 2, 3};\nauto it = v.begin();\nv.push_back(4);\nstd::cout << *it;"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `v.size()` after this?",
+     "options": [
+      "4",
+      "5",
+      "1",
+      "Undefined"
+     ],
+     "answer": 1,
+     "explanation": "std::remove only shifts the kept elements forward and returns the new logical end; it does not shrink the container. You must call erase afterwards.",
+     "code": "std::vector<int> v{1, 2, 3, 4, 5};\nauto it = std::remove(v.begin(), v.end(), 3);\nstd::cout << v.size();"
+    },
+    {
+     "type": "mcq",
+     "question": "Which is the correct way to erase matching entries from a `std::map` while iterating?",
+     "options": [
+      "for (auto it = m.begin(); it != m.end(); ++it) if (pred(it)) m.erase(it);",
+      "for (auto it = m.begin(); it != m.end();) { if (pred(it)) it = m.erase(it); else ++it; }",
+      "Use a range-for and call erase on the loop variable",
+      "It is impossible; copy the map first"
+     ],
+     "answer": 1,
+     "explanation": "erase(it) invalidates it. Assign the iterator returned by erase (C++11), or use m.erase(it++) in older code."
+    },
+    {
+     "type": "mcq",
+     "question": "After an `unordered_map` insert triggers a rehash, which of these remains valid?",
+     "options": [
+      "All iterators",
+      "Pointers and references to existing elements",
+      "Nothing",
+      "Only begin()"
+     ],
+     "answer": 1,
+     "explanation": "Nodes are not moved by a rehash (only the bucket array changes), so references remain valid while iterators are invalidated."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Erase the even numbers from `{1..8}` with the erase-remove idiom and print the rest. Erase entries with even keys from a `std::map<int,std::string>` (keys 1-4) using `it = m.erase(it)` and print the remaining keys. Finally `reserve(10)` on a vector, push one element, remember `&w[0]`, push five more and print whether the address is unchanged (`1`).",
+     "starter": "#include <algorithm>\n#include <iostream>\n#include <map>\n#include <string>\n#include <vector>\n\nint main() {\n    // 1. erase-remove\n    // 2. safe map erase\n    // 3. reserve keeps addresses stable\n    return 0;\n}\n",
+     "solution": "#include <algorithm>\n#include <iostream>\n#include <map>\n#include <string>\n#include <vector>\n\nint main() {\n    std::vector<int> v{1, 2, 3, 4, 5, 6, 7, 8};\n    v.erase(std::remove_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; }), v.end());\n    for (std::size_t i = 0; i < v.size(); ++i) std::cout << (i ? \" \" : \"\") << v[i];\n    std::cout << \"\\n\";\n\n    std::map<int, std::string> m{{1, \"a\"}, {2, \"b\"}, {3, \"c\"}, {4, \"d\"}};\n    for (auto it = m.begin(); it != m.end();) {\n        if (it->first % 2 == 0) it = m.erase(it);\n        else ++it;\n    }\n    bool first = true;\n    for (const auto& kv : m) { std::cout << (first ? \"\" : \" \") << kv.first; first = false; }\n    std::cout << \"\\n\";\n\n    std::vector<int> w;\n    w.reserve(10);\n    w.push_back(1);\n    int* p = &w[0];\n    for (int i = 0; i < 5; ++i) w.push_back(i);\n    std::cout << (p == &w[0]) << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "1 3 5 7\n1 3\n1"
+    }
+   ]
+  },
+  {
+   "id": "cpp-threads-mutex",
+   "track_id": "cpp",
+   "unit_id": "cpp-u5",
+   "title": "std::thread, Mutexes & Condition Variables",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Threads in standard C++",
+     "body": "A `std::thread` must be **joined or detached** before its destructor runs, otherwise `std::terminate` is called. Arguments are copied into the thread; pass references with `std::ref`. A data race (two threads access the same non-atomic object, at least one writing) is **undefined behaviour**. Protect shared data with `std::mutex` via RAII: `lock_guard` for simple scopes, `unique_lock` when you need to unlock or use a condition variable, `scoped_lock` to lock several mutexes deadlock-free. `condition_variable::wait` must be given a predicate (or a loop) because of **spurious wakeups** and lost notifications. `std::async` returns a `future` for a task's result and rethrows its exceptions in `get()`."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens if a joinable `std::thread` object is destroyed?",
+     "options": [
+      "It is joined automatically",
+      "It is detached automatically",
+      "std::terminate is called",
+      "Nothing, the thread keeps running"
+     ],
+     "answer": 2,
+     "explanation": "This is a deliberate design choice; C++20's std::jthread joins in its destructor."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is required for `void f(int& x)` to modify `a` via `std::thread t(f, ...)`?",
+     "options": [
+      "t(f, a)",
+      "t(f, &a)",
+      "t(f, std::ref(a))",
+      "t(f, std::move(a))"
+     ],
+     "answer": 2,
+     "explanation": "Thread arguments are decayed copies. Without std::ref the code does not compile (an lvalue reference cannot bind to the internal copy)."
+    },
+    {
+     "type": "mcq",
+     "question": "Why is `cv.wait(lk)` without a predicate considered a bug?",
+     "options": [
+      "It is slower",
+      "The thread can wake spuriously or miss a notification that happened earlier, so the condition must be re-checked",
+      "wait requires a timeout",
+      "It deadlocks always"
+     ],
+     "answer": 1,
+     "explanation": "Always wait on a condition: cv.wait(lk, [&]{ return ready; })."
+    },
+    {
+     "type": "mcq",
+     "question": "Thread 1 locks m1 then m2; thread 2 locks m2 then m1 with two separate lock_guards. The fix is:",
+     "options": [
+      "Use shorter critical sections",
+      "std::scoped_lock lk(m1, m2); (deadlock-avoidance algorithm)",
+      "Mark the mutexes volatile",
+      "Use detach"
+     ],
+     "answer": 1,
+     "explanation": "scoped_lock (or std::lock) acquires multiple mutexes without deadlocking. A fixed global ordering also works."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Start four threads that each increment a shared `counter` 1000 times under a `lock_guard`, join them and print the counter. Then run two transfer threads on accounts `a` and `b` (both start at 100): thread 1 moves 10 from a to b, 100 times, locking with `std::scoped_lock lk(ma, mb)`; thread 2 moves 5 from b to a, 100 times, locking in the opposite argument order `std::scoped_lock lk(mb, ma)`; print `a b` (expect `-400 600`, and no deadlock). Finally split the sum of 1..100 across four threads that write into disjoint slots of a results vector and print the total.",
+     "starter": "#include <iostream>\n#include <mutex>\n#include <thread>\n#include <vector>\n\nint counter = 0;\nstd::mutex mtx;\n\nint main() {\n    // 1. four threads with lock_guard\n    // 2. deadlock-free transfers with scoped_lock\n    // 3. disjoint-slot partial sums\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n#include <mutex>\n#include <thread>\n#include <vector>\n\nint counter = 0;\nstd::mutex mtx;\n\nvoid work() {\n    for (int i = 0; i < 1000; ++i) {\n        std::lock_guard<std::mutex> lk(mtx);\n        ++counter;\n    }\n}\n\nint main() {\n    std::vector<std::thread> ts;\n    for (int i = 0; i < 4; ++i) ts.emplace_back(work);\n    for (auto& t : ts) t.join();\n    std::cout << counter << \"\\n\";\n\n    int a = 100, b = 100;\n    std::mutex ma, mb;\n    std::thread t1([&] {\n        for (int i = 0; i < 100; ++i) {\n            std::scoped_lock lk(ma, mb);\n            a -= 10; b += 10;\n        }\n    });\n    std::thread t2([&] {\n        for (int i = 0; i < 100; ++i) {\n            std::scoped_lock lk(mb, ma);\n            b -= 5; a += 5;\n        }\n    });\n    t1.join(); t2.join();\n    std::cout << a << \" \" << b << \"\\n\";\n\n    std::vector<long> part(4, 0);\n    std::vector<std::thread> ws;\n    for (int k = 0; k < 4; ++k)\n        ws.emplace_back([&part, k] {\n            for (int x = k * 25 + 1; x <= (k + 1) * 25; ++x) part[k] += x;\n        });\n    for (auto& t : ws) t.join();\n    long total = 0;\n    for (long p : part) total += p;\n    std::cout << total << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "4000\n-400 600\n5050"
+    }
+   ]
+  },
+  {
+   "id": "cpp-atomics",
+   "track_id": "cpp",
+   "unit_id": "cpp-u5",
+   "title": "Atomics & the Memory Model",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Lock-free building blocks",
+     "body": "`std::atomic<T>` makes individual operations indivisible and data-race free; `a = a + 1` is **not** atomic as a whole (a load followed by a store), while `a++`, `a += 1` and `fetch_add` are. The default order is `memory_order_seq_cst`. A release store paired with an acquire load that reads its value creates a happens-before edge: everything written before the release is visible after the acquire. `relaxed` gives atomicity only and is fine for counters but not for publishing data. `compare_exchange_weak` may fail spuriously, so use it in a loop; on failure it reloads the current value into `expected`. `volatile` is not a synchronization tool. `std::atomic<T>` requires `T` to be trivially copyable. Adjacent hot atomics written by different threads suffer **false sharing**; align them to separate cache lines."
+    },
+    {
+     "type": "mcq",
+     "question": "Is `std::atomic<int> a; a = a + 1;` atomic as a whole?",
+     "options": [
+      "Yes",
+      "No, it is an atomic load, then an add, then an atomic store; other threads can interleave",
+      "Only with memory_order_seq_cst",
+      "Only on x86"
+     ],
+     "answer": 1,
+     "explanation": "Use a.fetch_add(1) or ++a for a single indivisible read-modify-write."
+    },
+    {
+     "type": "mcq",
+     "question": "The writer does `data = 42; ready.store(true, std::memory_order_release);`. The reader spins `while(!ready.load(std::memory_order_acquire));` then reads `data`. What is guaranteed?",
+     "options": [
+      "data might still be 0",
+      "data is 42",
+      "The program has a data race on data",
+      "Nothing, relaxed is required"
+     ],
+     "answer": 1,
+     "explanation": "The release/acquire pair orders the plain write before the plain read, so there is no race and the value is visible."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is a good use of memory_order_relaxed?",
+     "options": [
+      "Publishing a pointer to a freshly built object",
+      "An approximate statistics counter incremented by many threads",
+      "Implementing a spinlock release",
+      "Signalling that a buffer is filled"
+     ],
+     "answer": 1,
+     "explanation": "Relaxed does not order surrounding memory operations, so it is only for independent counters."
+    },
+    {
+     "type": "mcq",
+     "question": "Why must compare_exchange_weak normally sit in a loop?",
+     "options": [
+      "It always blocks",
+      "It may fail spuriously even when the values match",
+      "It throws on contention",
+      "It needs a mutex"
+     ],
+     "answer": 1,
+     "explanation": "The weak form can be cheaper on LL/SC architectures; the strong form hides spurious failure at some cost."
+    },
+    {
+     "type": "mcq",
+     "question": "`struct S { std::atomic<int> a; std::atomic<int> b; };` with one thread hammering a and another b is slow. Why?",
+     "options": [
+      "Atomics are slow",
+      "a and b share a cache line, so the cores keep invalidating each other's copy (false sharing)",
+      "The compiler serialises threads",
+      "Atomic needs a mutex"
+     ],
+     "answer": 1,
+     "explanation": "Fix with alignas(64) (or std::hardware_destructive_interference_size where available) on each member."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Four threads each `fetch_add(1)` an atomic counter 1000 times: print the total. Print the old value returned by `fetch_add(3)` on an atomic initialised to 5, then the new value (`5 8`). Implement `updateMax` with a CAS loop and run it with values 5, 9, 3, 7 on separate threads, printing the maximum. Finally publish `data = 42` with a release store and read it after an acquire loop in `main`.",
+     "starter": "#include <atomic>\n#include <iostream>\n#include <thread>\n#include <vector>\n\nvoid updateMax(std::atomic<int>& m, int v) {\n    // TODO: CAS loop\n}\n\nint main() {\n    // 1. atomic counter\n    // 2. fetch_add result\n    // 3. updateMax\n    // 4. release/acquire\n    return 0;\n}\n",
+     "solution": "#include <atomic>\n#include <iostream>\n#include <thread>\n#include <vector>\n\nvoid updateMax(std::atomic<int>& m, int v) {\n    int cur = m.load();\n    while (cur < v && !m.compare_exchange_weak(cur, v)) {}\n}\n\nint main() {\n    std::atomic<int> counter{0};\n    std::vector<std::thread> ts;\n    for (int i = 0; i < 4; ++i)\n        ts.emplace_back([&] { for (int j = 0; j < 1000; ++j) counter.fetch_add(1); });\n    for (auto& t : ts) t.join();\n    std::cout << counter.load() << \"\\n\";\n\n    std::atomic<int> x{5};\n    int old = x.fetch_add(3);\n    std::cout << old << \" \" << x.load() << \"\\n\";\n\n    std::atomic<int> mx{0};\n    std::vector<std::thread> us;\n    for (int v : {5, 9, 3, 7}) us.emplace_back(updateMax, std::ref(mx), v);\n    for (auto& t : us) t.join();\n    std::cout << mx.load() << \"\\n\";\n\n    int data = 0;\n    std::atomic<bool> ready{false};\n    std::thread producer([&] {\n        data = 42;\n        ready.store(true, std::memory_order_release);\n    });\n    while (!ready.load(std::memory_order_acquire)) std::this_thread::yield();\n    std::cout << data << \"\\n\";\n    producer.join();\n    return 0;\n}\n",
+     "expected_output": "4000\n5 8\n9\n42"
+    }
+   ]
+  },
+  {
+   "id": "cpp-undefined-behaviour",
+   "track_id": "cpp",
+   "unit_id": "cpp-u6",
+   "title": "Undefined Behaviour & How to Avoid It",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Three kinds of 'unspecified'",
+     "body": "**Undefined behaviour** (UB): the standard places no requirements at all; the optimizer may assume it never occurs, so code can \"work\" in debug and break in release. Examples: out-of-bounds access, null/dangling dereference, signed overflow, data races, reading uninitialized scalars, violating strict aliasing, shifting by >= the bit width, modifying a const object, using an invalidated iterator. **Unspecified** behaviour: a choice from valid options, not documented (the order of evaluating function arguments). **Implementation-defined**: documented per compiler (`sizeof(int)`, signedness of `char`). Tools: `-fsanitize=address,undefined`, `-Wall -Wextra`, `std::vector::at`, `std::memcpy` or `std::bit_cast` for type punning."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is UB?",
+     "options": [
+      "int a[3]; a[3] = 1;",
+      "unsigned u = 0; u--;",
+      "char c = 200; (implementation-defined conversion)",
+      "int x = 5 / 2;"
+     ],
+     "answer": 0,
+     "explanation": "Writing one past the end of an array object is UB. Unsigned wrap and the conversion are defined (or implementation-defined)."
+    },
+    {
+     "type": "mcq",
+     "question": "Is the result of `f(g(), h())` call order deterministic?",
+     "options": [
+      "Yes, left to right",
+      "No: the order of evaluating arguments is unspecified (each is sequenced, but not relative to each other)",
+      "No: it is UB",
+      "Right to left"
+     ],
+     "answer": 1,
+     "explanation": "Different compilers choose differently. Unspecified is not UB, but you must not depend on it."
+    },
+    {
+     "type": "mcq",
+     "question": "An optimizer may turn `bool f(int x) { return x + 1 > x; }` into `return true;`. Why is that legal?",
+     "options": [
+      "It is a bug",
+      "Signed overflow is UB, so the compiler may assume x + 1 never wraps",
+      "Because int is 64-bit",
+      "Because comparisons are constexpr"
+     ],
+     "answer": 1,
+     "explanation": "UB lets compilers assume the impossible. Use unsigned arithmetic or explicit range checks when wrapping is possible."
+    },
+    {
+     "type": "mcq",
+     "question": "Which way of reading the bit pattern of a float is well defined in C++17?",
+     "options": [
+      "*reinterpret_cast<uint32_t*>(&f)",
+      "std::memcpy(&u, &f, sizeof u)",
+      "A union and reading the inactive member",
+      "(uint32_t)f"
+     ],
+     "answer": 1,
+     "explanation": "The first and third violate aliasing/active-member rules in C++. (uint32_t)f converts the value rather than reading its bits. memcpy (or std::bit_cast in C++20) is the portable way."
+    },
+    {
+     "type": "mcq",
+     "question": "`int i = 0; i = i++ + ++i;` in C++17 is:",
+     "options": [
+      "Always 2",
+      "Always 1",
+      "Undefined behaviour (unsequenced modifications)",
+      "Implementation-defined"
+     ],
+     "answer": 2,
+     "explanation": "C++17 sequences some operators (like <<, &&, ||, comma) but not the operands of +; two unsequenced modifications of i remain UB."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Without triggering UB: print the bit pattern of `1.0f` in hex using `std::memcpy` into a `uint32_t`; write `addOverflows(a, b)` that checks int overflow *before* adding and print `addOverflows(INT_MAX, 1)` and `addOverflows(1, 2)` using `boolalpha`; print `static_cast<int>(static_cast<unsigned char>(255) + 1)` after `unsigned char x = 255; ++x;` (i.e. print x as int, expecting 0); and show that `v.at(10)` throws `std::out_of_range` on a three element vector by printing `out_of_range caught`.",
+     "starter": "#include <climits>\n#include <cstdint>\n#include <cstring>\n#include <iostream>\n#include <stdexcept>\n#include <vector>\n\nbool addOverflows(int a, int b) {\n    // TODO: no overflow while checking\n    return false;\n}\n\nint main() {\n    // 1. memcpy bit pattern in hex\n    // 2. overflow checks\n    // 3. unsigned char wrap\n    // 4. at()\n    return 0;\n}\n",
+     "solution": "#include <climits>\n#include <cstdint>\n#include <cstring>\n#include <iostream>\n#include <stdexcept>\n#include <vector>\n\nbool addOverflows(int a, int b) {\n    return b > 0 ? a > INT_MAX - b : a < INT_MIN - b;\n}\n\nint main() {\n    float f = 1.0f;\n    std::uint32_t u;\n    std::memcpy(&u, &f, sizeof u);\n    std::cout << std::hex << u << std::dec << \"\\n\";\n\n    std::cout << std::boolalpha << addOverflows(INT_MAX, 1) << \"\\n\";\n    std::cout << addOverflows(1, 2) << \"\\n\";\n\n    unsigned char x = 255;\n    ++x;\n    std::cout << static_cast<int>(x) << \"\\n\";\n\n    std::vector<int> v{1, 2, 3};\n    try {\n        v.at(10);\n    } catch (const std::out_of_range&) {\n        std::cout << \"out_of_range caught\\n\";\n    }\n    return 0;\n}\n",
+     "expected_output": "3f800000\ntrue\nfalse\n0\nout_of_range caught"
+    }
+   ]
+  },
+  {
+   "id": "cpp-memory-layout",
+   "track_id": "cpp",
+   "unit_id": "cpp-u6",
+   "title": "Memory Layout, Padding & Alignment",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Bytes matter",
+     "body": "Each type has an **alignment**; the compiler inserts **padding** so every member sits at an address that is a multiple of its alignment, and pads the struct's total size to a multiple of its largest alignment. Declaring members largest-first usually shrinks a struct. An empty class has size 1 (distinct addresses), but an **empty base** can occupy zero bytes (EBO). A class with virtual functions typically has a hidden **vptr** (one pointer per object, vtable per class). Programs have distinct regions: code, static/global data (`.data`/`.bss`), the stack (automatic locals, grows per call), and the heap. Returning the address of a local gives a dangling pointer. Sizes are implementation-defined; numbers below assume a typical platform (4-byte `int` aligned to 4)."
+    },
+    {
+     "type": "mcq",
+     "question": "`struct A { char a; int b; char c; };` has `sizeof(A)` of (typical):",
+     "options": [
+      "6",
+      "8",
+      "12",
+      "9"
+     ],
+     "answer": 2,
+     "explanation": "a at 0, 3 bytes padding, b at 4, c at 8, then 3 bytes of tail padding so the size is a multiple of 4: 12."
+    },
+    {
+     "type": "mcq",
+     "question": "Reordering to `struct B { int b; char a; char c; };` gives (typical):",
+     "options": [
+      "6",
+      "8",
+      "12",
+      "4"
+     ],
+     "answer": 1,
+     "explanation": "b (4) + a (1) + c (1) = 6, padded to a multiple of 4: 8."
+    },
+    {
+     "type": "mcq",
+     "question": "`struct E {}; struct D : E { int x; };` What is `sizeof(D)` with empty base optimisation?",
+     "options": [
+      "1",
+      "4",
+      "5",
+      "8"
+     ],
+     "answer": 1,
+     "explanation": "The empty base subobject is allowed to share the address of the first member, so D is just an int. A member of type E would not get this treatment."
+    },
+    {
+     "type": "mcq",
+     "question": "Where does a function-local `static int n = 0;` live?",
+     "options": [
+      "On the stack",
+      "In static storage (data/bss), not on the stack",
+      "On the heap",
+      "In registers only"
+     ],
+     "answer": 1,
+     "explanation": "Its lifetime is the whole program, so it is not tied to the stack frame (initialisation happens on first call and is thread-safe since C++11)."
+    },
+    {
+     "type": "mcq",
+     "question": "What is true about `struct V { virtual void f() {} };` compared with an identical struct with a non-virtual f?",
+     "options": [
+      "Same size",
+      "V objects carry an extra vptr, so sizeof(V) is typically the pointer size",
+      "V cannot be copied",
+      "V is allocated on the heap"
+     ],
+     "answer": 1,
+     "explanation": "Typical implementations store one pointer to the vtable inside each object."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Print (using `sizeof`/`offsetof`): `sizeof(A) sizeof(B)` for the two structs described in this lesson on one line; `sizeof(E)` for an empty struct; `sizeof(D)` for the derived-from-empty struct with an int; whether `sizeof(V) == sizeof(void*)` for a struct with one virtual function (print 1 or 0); and `offsetof(A, b) offsetof(A, c)` on one line.",
+     "starter": "#include <cstddef>\n#include <iostream>\n\nstruct A { char a; int b; char c; };\nstruct B { int b; char a; char c; };\nstruct E {};\nstruct D : E { int x; };\nstruct V { virtual void f() {} };\n\nint main() {\n    // print the five lines\n    return 0;\n}\n",
+     "solution": "#include <cstddef>\n#include <iostream>\n\nstruct A { char a; int b; char c; };\nstruct B { int b; char a; char c; };\nstruct E {};\nstruct D : E { int x; };\nstruct V { virtual void f() {} };\n\nint main() {\n    std::cout << sizeof(A) << \" \" << sizeof(B) << \"\\n\";\n    std::cout << sizeof(E) << \"\\n\";\n    std::cout << sizeof(D) << \"\\n\";\n    std::cout << (sizeof(V) == sizeof(void*)) << \"\\n\";\n    std::cout << offsetof(A, b) << \" \" << offsetof(A, c) << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "12 8\n1\n4\n1\n4 8"
+    }
+   ]
+  },
+  {
+   "id": "cpp-interview-puzzles",
+   "track_id": "cpp",
+   "unit_id": "cpp-u6",
+   "title": "Expert Puzzles: Forwarding, Evaluation Order & LRU",
+   "minutes": 10,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "What top-tier interviewers probe",
+     "body": "Expect questions that combine several rules at once: value categories and `std::forward`, evaluation order guarantees (C++17 sequences `<<`, `>>`, `&&`, `||`, `,` and assignment right-to-left), integer promotion (small integers become `int` in arithmetic), short-circuiting, the static-initialization-order fiasco (fix with a function-local static, initialized thread-safely on first use since C++11), and performance topics such as cache lines, false sharing, branch prediction and why `std::vector` beats `std::list` almost always. Finally, a data-structure design under pressure: an LRU cache with O(1) get/put using a `std::list` (recency order) plus an `unordered_map` from key to list iterator, relying on `splice` to move nodes without invalidating iterators."
+    },
+    {
+     "type": "mcq",
+     "question": "In C++17, what does this print?",
+     "options": [
+      "00",
+      "01",
+      "10",
+      "Undefined behaviour"
+     ],
+     "answer": 1,
+     "explanation": "Since C++17 the operands of << are evaluated left to right, so the first i++ yields 0 and the second yields 1. In C++14 the order was unspecified.",
+     "code": "int i = 0;\nstd::cout << i++ << i++;"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "300 44",
+      "44 44",
+      "300 300",
+      "Compile error"
+     ],
+     "answer": 0,
+     "explanation": "uint8_t operands are promoted to int, so a + b is 300. Casting back to uint8_t wraps modulo 256: 44.",
+     "code": "uint8_t a = 200, b = 100;\nstd::cout << (a + b) << \" \" << (int)(uint8_t)(a + b);"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "L L L R",
+      "L R L R",
+      "L L R R",
+      "R R R R"
+     ],
+     "answer": 0,
+     "explanation": "Inside bad, t is a named variable, hence an lvalue, so f(t) always picks the int& overload. Only good, which uses std::forward<T>, preserves the original category (L for a, R for 1); bad(a) and bad(1) both print L.",
+     "code": "void f(int&)  { std::cout << \"L \"; }\nvoid f(int&&) { std::cout << \"R \"; }\ntemplate<class T> void bad(T&& t)  { f(t); }\ntemplate<class T> void good(T&& t) { f(std::forward<T>(t)); }\nint a = 0;\nbad(a); bad(1); good(a); good(1);"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "ffg",
+      "fg",
+      "fgg",
+      "fgf"
+     ],
+     "answer": 0,
+     "explanation": "The first condition prints f and short-circuits (false && ...). The second prints f (false), then evaluates g because of ||.",
+     "code": "bool f() { std::cout << \"f\"; return false; }\nbool g() { std::cout << \"g\"; return true; }\nif (f() && g()) {}\nif (f() || g()) {}"
+    },
+    {
+     "type": "mcq",
+     "question": "Two global objects in different translation units, one's constructor uses the other. The robust fix is:",
+     "options": [
+      "Link order tricks",
+      "Replace the global with a function returning a function-local static (Meyers singleton), initialised on first use",
+      "Declare both volatile",
+      "Use goto"
+     ],
+     "answer": 1,
+     "explanation": "The order of dynamic initialization across translation units is unspecified (the static initialization order fiasco). First-use initialization removes the dependency."
+    },
+    {
+     "type": "code",
+     "language": "cpp",
+     "prompt": "Implement an LRU cache of capacity 2 with O(1) `get` and `put` using a `std::list<std::pair<int,int>>` and an `unordered_map<int, list::iterator>`. Sequence: put(1,10), put(2,20), print get(1), put(3,30) (evicts key 2), print get(2), print get(3). Expected prints: `10`, `-1`, `30` (one per line).",
+     "starter": "#include <iostream>\n#include <list>\n#include <unordered_map>\n#include <utility>\n\nclass LRU {\n    std::size_t cap_;\n    std::list<std::pair<int, int>> items_;  // front = most recent\n    std::unordered_map<int, std::list<std::pair<int, int>>::iterator> idx_;\npublic:\n    explicit LRU(std::size_t cap) : cap_(cap) {}\n    int get(int key) {\n        // TODO\n        return -1;\n    }\n    void put(int key, int value) {\n        // TODO\n    }\n};\n\nint main() {\n    LRU c(2);\n    c.put(1, 10);\n    c.put(2, 20);\n    std::cout << c.get(1) << \"\\n\";\n    c.put(3, 30);\n    std::cout << c.get(2) << \"\\n\";\n    std::cout << c.get(3) << \"\\n\";\n    return 0;\n}\n",
+     "solution": "#include <iostream>\n#include <list>\n#include <unordered_map>\n#include <utility>\n\nclass LRU {\n    std::size_t cap_;\n    std::list<std::pair<int, int>> items_;  // front = most recent\n    std::unordered_map<int, std::list<std::pair<int, int>>::iterator> idx_;\npublic:\n    explicit LRU(std::size_t cap) : cap_(cap) {}\n    int get(int key) {\n        auto it = idx_.find(key);\n        if (it == idx_.end()) return -1;\n        items_.splice(items_.begin(), items_, it->second);\n        return it->second->second;\n    }\n    void put(int key, int value) {\n        auto it = idx_.find(key);\n        if (it != idx_.end()) {\n            it->second->second = value;\n            items_.splice(items_.begin(), items_, it->second);\n            return;\n        }\n        if (items_.size() == cap_) {\n            idx_.erase(items_.back().first);\n            items_.pop_back();\n        }\n        items_.emplace_front(key, value);\n        idx_[key] = items_.begin();\n    }\n};\n\nint main() {\n    LRU c(2);\n    c.put(1, 10);\n    c.put(2, 20);\n    std::cout << c.get(1) << \"\\n\";\n    c.put(3, 30);\n    std::cout << c.get(2) << \"\\n\";\n    std::cout << c.get(3) << \"\\n\";\n    return 0;\n}\n",
+     "expected_output": "10\n-1\n30"
+    }
+   ]
+  }
+ ]
+}

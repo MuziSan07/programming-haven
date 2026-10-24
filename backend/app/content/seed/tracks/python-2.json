@@ -1,0 +1,1987 @@
+{
+ "lessons": [
+  {
+   "id": "py-u7-comprehensions-deep",
+   "track_id": "python",
+   "unit_id": "py-u7",
+   "title": "Comprehensions & Generator Expressions, Deeply",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Reading nested comprehensions",
+     "body": "A comprehension's `for` clauses read **left to right in the same order as the equivalent nested loops**. `[x for row in m for x in row]` is `for row in m: for x in row: out.append(x)`. A *nested* comprehension (`[[...] for ...]`) builds a list of lists instead.\n\nA trailing `if` filters; a `x if cond else y` expression goes at the **front** and transforms. Mixing them up is a classic syntax-error interview question.\n\nSince Python 3 every comprehension has its **own scope**: the loop variable does not leak. The one expression evaluated in the *enclosing* scope is the **leftmost iterable** (the first `in ...`), and it is evaluated immediately.",
+     "code": "m = [[1, 2, 3], [4, 5, 6]]\nflat = [x for row in m for x in row]          # [1, 2, 3, 4, 5, 6]\nnested = [[x * 2 for x in row] for row in m]  # [[2, 4, 6], [8, 10, 12]]\nsigned = [x if x % 2 else -x for x in flat]   # conditional expression: front\nevens = [x for x in flat if x % 2 == 0]       # filter: back\n"
+    },
+    {
+     "type": "concept",
+     "title": "Generator expressions and the walrus",
+     "body": "`(expr for x in it)` is a generator expression: **lazy**, O(1) memory, single-use. When it is the only argument to a call you may drop the extra parentheses: `sum(x * x for x in data)`.\n\nTwo consequences interviewers love: (1) the leftmost iterable is captured *when the generator is created*, but everything else is evaluated lazily at consumption time; (2) a generator is exhausted after one pass.\n\nThe walrus operator (`:=`) lets you compute something once and reuse it in both the filter and the output: `[y for x in data if (y := f(x)) > 0]`. Its binding goes to the *enclosing* function scope, which is the one deliberate exception to comprehension scoping.",
+     "code": "data = [1, 2, 3]\ng = (x * 10 for x in data)\ndata.append(4)        # the iterator over `data` was already obtained, and it sees the append\nprint(list(g))        # [10, 20, 30, 40]\nprint(list(g))        # []  exhausted\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[[1, 4], [2, 5], [3, 6]]",
+      "[[1, 2, 3], [4, 5, 6]]",
+      "[1, 4, 2, 5, 3, 6]",
+      "[[1, 2], [3, 4], [5, 6]]"
+     ],
+     "answer": 0,
+     "explanation": "The outer comprehension iterates `i` over column indexes; for each `i` the inner comprehension collects `r[i]` from every row `r`. That is a transpose: columns become rows. `zip(*m)` does the same thing.",
+     "code": "m = [[1, 2, 3], [4, 5, 6]]\nprint([[r[i] for r in m] for i in range(3)])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[2, 4, 6]",
+      "[2, 4, 6, 8]",
+      "[]",
+      "RuntimeError"
+     ],
+     "answer": 1,
+     "explanation": "The generator expression grabs `iter(xs)` immediately (the leftmost iterable is evaluated eagerly), but that list iterator only reads elements as it advances. The append happens before consumption, so the iterator sees 4 as well. Had we *rebound* `xs = [9]`, the generator would not notice.",
+     "code": "xs = [1, 2, 3]\ng = (x * 2 for x in xs)\nxs.append(4)\nprint(list(g))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[0, 1, 2] [0, 1, 2]",
+      "[0, 1, 2] []",
+      "[] []",
+      "[0, 1, 2] [0, 1, 2, 0, 1, 2]"
+     ],
+     "answer": 1,
+     "explanation": "A generator is its own iterator and can be consumed once. The first `list(g)` drains it; the second call gets an already-exhausted generator and returns `[]`. No error is raised. This silently-empty result is a very common production bug when a generator is reused.",
+     "code": "g = (i for i in range(3))\nprint(list(g), list(g))\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the keyword so odd numbers keep their sign and even numbers are negated.",
+     "code": "signed = [x if x % 2 else -x ____ x in range(5)]",
+     "answer": [
+      "for"
+     ],
+     "explanation": "The conditional expression `x if cond else -x` is the *output expression* and comes first; the `for` clause follows it. A filter-style `if` would go after the `for` clause instead."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Using only comprehensions, build a dict mapping each word length to the list of words of that length (keys in ascending order, words in original order) and print it.",
+     "starter": "words = [\"pear\", \"fig\", \"apple\", \"kiwi\", \"plum\", \"date\"]\n# build and print the dict\n",
+     "solution": "words = [\"pear\", \"fig\", \"apple\", \"kiwi\", \"plum\", \"date\"]\nprint({n: [w for w in words if len(w) == n] for n in sorted({len(w) for w in words})})\n",
+     "expected_output": "{3: ['fig'], 4: ['pear', 'kiwi', 'plum', 'date'], 5: ['apple']}",
+     "hint": "A set comprehension gives the distinct lengths; sort them; then a dict comprehension with a list comprehension as value."
+    }
+   ]
+  },
+  {
+   "id": "py-u7-iterator-protocol",
+   "track_id": "python",
+   "unit_id": "py-u7",
+   "title": "The Iterator Protocol",
+   "minutes": 11,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Iterable vs iterator",
+     "body": "An **iterable** has `__iter__()` returning an iterator. An **iterator** has `__next__()` (raises `StopIteration` when done) *and* `__iter__()` returning itself. A `for` loop is `it = iter(obj)` followed by repeated `next(it)` until `StopIteration`.\n\nWhy must an iterator's `__iter__` return `self`? So iterators can be used anywhere an iterable is accepted (e.g. `for x in it`).\n\nThe difference matters: a **list** is a reusable iterable (every `iter(lst)` gives a fresh iterator), while a **file object or generator** is its own iterator and is one-shot. If a class's `__iter__` returns `self`, it is single-pass.\n\nOld-style fallback: if there is no `__iter__` but there *is* `__getitem__`, `iter()` builds an iterator that calls `obj[0], obj[1], ...` until `IndexError`.",
+     "code": "class Countdown:                     # reusable iterable\n    def __init__(self, n): self.n = n\n    def __iter__(self):              # generator => fresh iterator each time\n        i = self.n\n        while i > 0:\n            yield i\n            i -= 1\n"
+    },
+    {
+     "type": "concept",
+     "title": "Two-argument iter and consuming iterators",
+     "body": "`iter(callable, sentinel)` calls `callable()` repeatedly and stops when the result equals the sentinel (the sentinel itself is not yielded). It is the idiomatic way to read chunks: `iter(lambda: f.read(4096), b\"\")`.\n\nIterators are consumed *by whoever pulls from them*. Functions like `zip`, `enumerate`, `map` pull one item at a time from each argument in order, so **argument order decides which iterator loses an item** when lengths differ.",
+     "code": "it = iter([1, 2, 3])\nnext(it, \"default\")   # next() with a default avoids StopIteration\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[1, 2, 3] [1, 2, 3]",
+      "[1, 2, 3] []",
+      "[1, 2, 3] [3]",
+      "TypeError"
+     ],
+     "answer": 1,
+     "explanation": "`Count.__iter__` returns `self`, so `list(c)` drains the single shared state (`self.i`). The second `list(c)` calls `__next__` with `i` already at `n` and immediately gets `StopIteration`. Making it reusable requires `__iter__` to return a *new* iterator each time.",
+     "code": "class Count:\n    def __init__(self, n):\n        self.n = n\n        self.i = 0\n    def __iter__(self):\n        return self\n    def __next__(self):\n        if self.i >= self.n:\n            raise StopIteration\n        self.i += 1\n        return self.i\n\nc = Count(3)\nprint(list(c), list(c))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1 [(2, 'a'), (3, 'b')] 4",
+      "1 [(2, 'a'), (3, 'b')] gone",
+      "1 [(2, 'a'), (3, 'b'), (4, None)] gone",
+      "StopIteration"
+     ],
+     "answer": 1,
+     "explanation": "`zip(it, 'ab')` asks `it` for an item *first*, then asks the string. After `(3, 'b')` the string is exhausted, but zip already pulled `4` from `it` for that round and discards it. So `next(it, 'gone')` finds nothing left. Writing `zip('ab', it)` would have preserved the 4. This is a real data-loss bug source.",
+     "code": "it = iter([1, 2, 3, 4])\nfirst = next(it)\npairs = list(zip(it, \"ab\"))\nprint(first, pairs, next(it, \"gone\"))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[1, 2, 3, 4]",
+      "[1, 2, 3]",
+      "[2, 3]",
+      "It never terminates"
+     ],
+     "answer": 1,
+     "explanation": "`iter(f, sentinel)` calls `f()` until it returns a value equal to the sentinel and stops *without* yielding it. The counter yields 1, 2, 3 and then 4 equals the sentinel, so the sequence ends.",
+     "code": "import itertools\nc = itertools.count(1)\nprint(list(iter(lambda: next(c), 4)))\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "An iterator's `__iter__` method must return which object?",
+     "code": "def __iter__(self):\n    return ____",
+     "answer": [
+      "self"
+     ],
+     "explanation": "Returning `self` makes the iterator itself iterable, which is what the protocol requires so `for x in iterator` works."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Implement `Countdown` as a *reusable* iterable (its `__iter__` is a generator). It should yield n, n-1, ..., 1. The script iterates it twice and prints both lists.",
+     "starter": "class Countdown:\n    def __init__(self, n):\n        self.n = n\n    # add __iter__\n\nc = Countdown(3)\nprint(list(c), list(c))\n",
+     "solution": "class Countdown:\n    def __init__(self, n):\n        self.n = n\n    def __iter__(self):\n        i = self.n\n        while i > 0:\n            yield i\n            i -= 1\n\nc = Countdown(3)\nprint(list(c), list(c))\n",
+     "expected_output": "[3, 2, 1] [3, 2, 1]",
+     "hint": "Each call to a generator function returns a brand new generator, so a generator-based __iter__ is reusable."
+    }
+   ]
+  },
+  {
+   "id": "py-u7-generators-send-yield-from",
+   "track_id": "python",
+   "unit_id": "py-u7",
+   "title": "Generators: send, yield from, close",
+   "minutes": 14,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Generators are suspended frames",
+     "body": "Calling a function containing `yield` runs **nothing**; it returns a generator object that holds a suspended frame. `next(g)` resumes until the next `yield`.\n\n`yield` is also an *expression*: `x = yield value` hands `value` out and, on resume, `x` becomes whatever was passed to `g.send(x)` (plain `next` sends `None`). You must start a generator with `next(g)` or `g.send(None)` before sending a real value, because there is no `yield` waiting yet to receive it.\n\nA `return v` inside a generator ends iteration and stores `v` on the `StopIteration.value` attribute. `yield from sub()` delegates to a sub-generator, forwards `send`/`throw`/`close`, and **evaluates to the sub-generator's return value**.",
+     "code": "def averager():\n    total = n = 0\n    avg = None\n    while True:\n        x = yield avg\n        total += x; n += 1\n        avg = total / n\n\na = averager(); next(a)      # prime it\na.send(10)   # 10.0\na.send(20)   # 15.0\n"
+    },
+    {
+     "type": "concept",
+     "title": "Shutdown and the PEP 479 rule",
+     "body": "`g.close()` raises `GeneratorExit` at the paused `yield`; `finally` blocks and context managers run, which is how generators release resources. A generator must not yield again after `GeneratorExit`. `g.throw(exc)` raises `exc` at the paused `yield`.\n\nSince Python 3.7 (PEP 479), a `StopIteration` that escapes *inside* a generator body is converted to `RuntimeError`. Reason: otherwise a stray `next()` on an empty iterator inside the generator would silently truncate the output. To stop early, just `return`.\n\nGenerators are garbage-collected with `close()` implicitly, but do not rely on timing for cleanup; use `with contextlib.closing(gen)` when a `finally` matters.",
+     "code": "def reader():\n    try:\n        while True:\n            yield \"line\"\n    finally:\n        print(\"closed file\")   # runs on close() or garbage collection\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "5 10",
+      "5 15",
+      "0 5",
+      "TypeError"
+     ],
+     "answer": 1,
+     "explanation": "`next(g)` runs to the first `yield total` (yields 0). `send(5)` makes the yield expression evaluate to 5, so total becomes 5, which is yielded and printed. `send(10)` makes total 15. Each `send` returns the *next* yielded value.",
+     "code": "def acc():\n    total = 0\n    while True:\n        x = yield total\n        total += x\n\ng = acc()\nnext(g)\nprint(g.send(5), g.send(10))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[1]",
+      "[1, 'done']",
+      "[1, None]",
+      "['done']"
+     ],
+     "answer": 1,
+     "explanation": "`yield from sub()` yields `1` through, then evaluates to sub's return value `'done'`, which is bound to `r`. The outer generator then yields `r`. The `return` value is not part of normal iteration; only `yield from` (or catching `StopIteration`) sees it.",
+     "code": "def sub():\n    yield 1\n    return \"done\"\n\ndef outer():\n    r = yield from sub()\n    yield r\n\nprint(list(outer()))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1 end",
+      "1 cleanup end",
+      "1 2 cleanup end",
+      "1 end cleanup"
+     ],
+     "answer": 1,
+     "explanation": "`close()` throws `GeneratorExit` at the paused `yield 1`; the `finally` block runs and prints 'cleanup' before `close()` returns, so 'cleanup' appears before 'end'. 2 is never produced.",
+     "code": "def g():\n    try:\n        yield 1\n        yield 2\n    finally:\n        print(\"cleanup\")\n\nit = g()\nprint(next(it))\nit.close()\nprint(\"end\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What happens here?",
+     "options": [
+      "Prints [1]",
+      "Prints [1, 2]",
+      "RuntimeError: generator raised StopIteration",
+      "StopIteration propagates out of list()"
+     ],
+     "answer": 2,
+     "explanation": "PEP 479: a `StopIteration` raised inside a generator body is converted into `RuntimeError`, so bugs cannot masquerade as normal termination. Use `return` to end a generator.",
+     "code": "def g():\n    yield 1\n    raise StopIteration\n    yield 2\n\ntry:\n    print(list(g()))\nexcept RuntimeError:\n    print(\"RuntimeError\")\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Delegate to a sub-generator and capture its return value:",
+     "code": "result = yield ____ sub()",
+     "answer": [
+      "from"
+     ],
+     "explanation": "`yield from` forwards values (and send/throw/close) to the sub-generator and evaluates to its `return` value."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write a recursive generator `flatten(x)` using `yield from` that flattens arbitrarily nested lists of ints. Print `list(flatten([1, [2, [3, [4]], 5], [], 6]))`.",
+     "starter": "def flatten(items):\n    # your code\n    pass\n\nprint(list(flatten([1, [2, [3, [4]], 5], [], 6])))\n",
+     "solution": "def flatten(items):\n    for it in items:\n        if isinstance(it, list):\n            yield from flatten(it)\n        else:\n            yield it\n\nprint(list(flatten([1, [2, [3, [4]], 5], [], 6])))\n",
+     "expected_output": "[1, 2, 3, 4, 5, 6]",
+     "hint": "Recurse with yield from when the element is a list; otherwise yield it."
+    }
+   ]
+  },
+  {
+   "id": "py-u7-decorators-advanced",
+   "track_id": "python",
+   "unit_id": "py-u7",
+   "title": "Decorators with Arguments, wraps & lru_cache",
+   "minutes": 14,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "What a decorator really is",
+     "body": "`@deco` above `def f` is exactly `f = deco(f)`, executed at definition time. A decorator is any callable that takes a callable and returns a callable (often a closure).\n\n**Stacking order**: decorators apply bottom-up (closest to the function first), so the top one is outermost at call time.\n\n**Decorators with arguments** need a third level: `@retry(3)` first calls `retry(3)`, which must *return* the real decorator. So there are three nested functions: factory, decorator, wrapper.\n\n**Always use `functools.wraps(f)` on the wrapper.** Without it the wrapper replaces `__name__`, `__doc__`, `__module__` and the `__wrapped__` link, breaking introspection, help(), pytest, Flask routing (endpoint name collisions!) and stacking with other decorators.",
+     "code": "import functools\n\ndef log_calls(prefix):\n    def deco(f):\n        @functools.wraps(f)\n        def wrapper(*args, **kwargs):\n            print(prefix, f.__name__, args)\n            return f(*args, **kwargs)\n        return wrapper\n    return deco\n"
+    },
+    {
+     "type": "concept",
+     "title": "functools.lru_cache",
+     "body": "`lru_cache(maxsize=128)` memoizes by the call's **arguments as a dict key**, so all arguments must be hashable. Keys use equality, so `f(1)`, `f(1.0)` and `f(True)` share one entry unless `typed=True`. `maxsize=None` (alias `functools.cache`) is unbounded.\n\n`f.cache_info()` returns hits/misses/maxsize/currsize; `f.cache_clear()` empties it. Gotchas: it caches *exceptions never*, only returns; it keeps references to arguments alive (memory leak risk); on **methods** it keys on `self`, keeping every instance alive. Prefer `cached_property` for per-instance values.",
+     "code": "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef fib(n):\n    return n if n < 2 else fib(n - 1) + fib(n - 2)\n\nfib(80)\nprint(fib.cache_info())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "<b><i>hi</i></b>",
+      "<i><b>hi</b></i>",
+      "<b>hi</b><i>",
+      "hi"
+     ],
+     "answer": 0,
+     "explanation": "Decorators apply bottom-up: `tag('i')` wraps `hi` first, then `tag('b')` wraps that result. At call time the outermost wrapper (b) runs first and encloses the inner output.",
+     "code": "def tag(t):\n    def deco(f):\n        def w(*a):\n            return f\"<{t}>{f(*a)}</{t}>\"\n        return w\n    return deco\n\n@tag(\"b\")\n@tag(\"i\")\ndef hi():\n    return \"hi\"\n\nprint(hi())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "foo doc",
+      "w None",
+      "w doc",
+      "foo None"
+     ],
+     "answer": 1,
+     "explanation": "The decorator returns the inner `w` and never copied metadata, so `foo` is now `w`, and `w` has no docstring. `functools.wraps` copies `__name__`, `__doc__`, `__dict__`, `__module__`, `__qualname__` and sets `__wrapped__`.",
+     "code": "def d(f):\n    def w(*a, **k):\n        return f(*a, **k)\n    return w\n\n@d\ndef foo():\n    \"doc\"\n\nprint(foo.__name__, foo.__doc__)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "calc 1.0 1",
+      "calc 1.0 calc True 0",
+      "calc 1.0 2",
+      "TypeError"
+     ],
+     "answer": 0,
+     "explanation": "`1.0 == True` and they hash equal, so the argument tuples `(1.0,)` and `(True,)` are the same dict key: the second call is a hit and 'calc' prints once. Use `typed=True` to keep argument types apart. (Quirk: a lone `int`/`str` argument is used as the key directly, an optimisation that is not part of the contract, so never rely on exactly which equal-but-different-typed calls collide.)",
+     "code": "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef sq(x):\n    print(\"calc\", x)\n    return x * x\n\nsq(1.0); sq(True)\nprint(sq.cache_info().hits)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "TypeError 2 1",
+      "TypeError 2 2",
+      "3 2 1",
+      "TypeError 2 0"
+     ],
+     "answer": 0,
+     "explanation": "A list is unhashable, so building the cache key fails with `TypeError` before any lookup (not counted as a miss). The tuple call is the first real miss, giving `misses == 1`. Caching functions that receive lists is a classic mistake; convert to tuples.",
+     "code": "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef f(x):\n    return len(x)\n\ntry:\n    f([1, 2])\nexcept TypeError:\n    print(\"TypeError\", end=\" \")\nprint(f((1, 2)), f.cache_info().misses)\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Preserve the wrapped function's metadata:",
+     "code": "@functools.____(f)\ndef wrapper(*a, **k):\n    return f(*a, **k)",
+     "answer": [
+      "wraps"
+     ],
+     "explanation": "`functools.wraps(f)` is itself a decorator factory that copies metadata from `f` onto the wrapper."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write a decorator factory `retry(times)` that calls the function up to `times` times, catching `ValueError`, printing `attempt N failed` for each failure, and re-raising the last error if all fail. Use functools.wraps. Print the result and the function's `__name__`.",
+     "starter": "import functools\n\ndef retry(times):\n    pass  # your code\n\ncalls = {\"n\": 0}\n\n@retry(3)\ndef flaky():\n    calls[\"n\"] += 1\n    if calls[\"n\"] < 3:\n        raise ValueError(\"boom\")\n    return \"ok\"\n\nprint(flaky(), flaky.__name__)\n",
+     "solution": "import functools\n\ndef retry(times):\n    def deco(f):\n        @functools.wraps(f)\n        def wrapper(*a, **k):\n            last = None\n            for attempt in range(1, times + 1):\n                try:\n                    return f(*a, **k)\n                except ValueError as e:\n                    last = e\n                    print(f\"attempt {attempt} failed\")\n            raise last\n        return wrapper\n    return deco\n\ncalls = {\"n\": 0}\n\n@retry(3)\ndef flaky():\n    calls[\"n\"] += 1\n    if calls[\"n\"] < 3:\n        raise ValueError(\"boom\")\n    return \"ok\"\n\nprint(flaky(), flaky.__name__)\n",
+     "expected_output": "attempt 1 failed\nattempt 2 failed\nok flaky",
+     "hint": "Three nested functions: retry -> deco -> wrapper. Assign the exception to another name inside except; the `as e` name is deleted at block end."
+    }
+   ]
+  },
+  {
+   "id": "py-u7-contextlib",
+   "track_id": "python",
+   "unit_id": "py-u7",
+   "title": "Context Managers & contextlib",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The with-statement contract",
+     "body": "`with cm as x:` calls `cm.__enter__()` (its return value is bound to `x`), runs the body, and always calls `cm.__exit__(exc_type, exc, tb)`. If the body raised, those three describe the exception; otherwise they are `None`. **If `__exit__` returns a truthy value the exception is suppressed**; returning `None`/`False` lets it propagate.\n\n`__exit__` should not swallow exceptions by accident: a stray `return True` hides real bugs.\n\n`@contextlib.contextmanager` turns a generator into a context manager: code before the single `yield` is `__enter__`, the yielded value is the `as` target, and code after is `__exit__`. **An exception in the with-body is re-raised at the `yield`**, so cleanup that must always run needs `try/finally`.",
+     "code": "from contextlib import contextmanager\n\n@contextmanager\ndef opened(path):\n    f = open(path)\n    try:\n        yield f\n    finally:\n        f.close()    # runs even if the body raises\n"
+    },
+    {
+     "type": "concept",
+     "title": "ExitStack, suppress, closing",
+     "body": "`ExitStack` manages a dynamic number of context managers (and `callback()`s); everything is unwound in **LIFO** order, and it keeps unwinding even if one exit raises. It is the answer to \"open N files whose count is only known at runtime\".\n\n`contextlib.suppress(KeyError)` replaces a try/except/pass. `closing(obj)` calls `obj.close()` for things that have `close` but no `__exit__`. `redirect_stdout` temporarily swaps `sys.stdout`. In 3.10+, parenthesized multi-item `with (A() as a, B() as b):` is allowed.",
+     "code": "from contextlib import suppress\nwith suppress(FileNotFoundError):\n    open(\"nope.txt\")\nprint(\"still running\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "in exit ValueError",
+      "in exit ValueError after",
+      "in after",
+      "in exit None after"
+     ],
+     "answer": 1,
+     "explanation": "The body raises `ValueError`, `__exit__` receives its type (printed as the name) and returns `True`, which suppresses it, so execution continues after the `with` block and 'after' prints. Without `return True` the exception would propagate and 'after' would never print.",
+     "code": "class CM:\n    def __enter__(self):\n        print(\"in\")\n        return self\n    def __exit__(self, t, v, tb):\n        print(\"exit\", t.__name__ if t else None)\n        return True\n\nwith CM():\n    raise ValueError(\"x\")\nprint(\"after\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "open close caught",
+      "open caught",
+      "open",
+      "close caught"
+     ],
+     "answer": 1,
+     "explanation": "The exception is thrown *into the generator at the yield*. Since the generator has no `try/finally`, the line after `yield` never runs, so 'close' is not printed and the exception propagates to the outer except. This is why every `@contextmanager` that owns a resource needs `try/finally`.",
+     "code": "from contextlib import contextmanager\n\n@contextmanager\ndef res():\n    print(\"open\")\n    yield\n    print(\"close\")\n\ntry:\n    with res():\n        raise RuntimeError\nexcept RuntimeError:\n    print(\"caught\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What order does ExitStack unwind callbacks?",
+     "options": [
+      "c b a",
+      "a b c",
+      "a c b",
+      "Unspecified"
+     ],
+     "answer": 0,
+     "explanation": "ExitStack is a stack: last registered, first unwound (LIFO), exactly like nested `with` blocks exit inner-first. That mirrors resource dependency order (open A, then B that depends on A; close B before A).",
+     "code": "from contextlib import ExitStack\nwith ExitStack() as st:\n    for n in \"abc\":\n        st.callback(print, n)\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Turn a generator function into a context manager:",
+     "code": "@contextlib.____\ndef managed():\n    yield",
+     "answer": [
+      "contextmanager"
+     ],
+     "explanation": "`contextlib.contextmanager` wraps the generator in an object implementing `__enter__`/`__exit__`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write a `@contextmanager` called `block(name)` that prints `enter name` and `exit name`, indenting two spaces per nesting level, and guarantees the exit line prints even when the body raises. Run the nested example given.",
+     "starter": "from contextlib import contextmanager\n\nlevel = 0\n\n# define block(name)\n\nwith block(\"a\"):\n    try:\n        with block(\"b\"):\n            raise KeyError(\"x\")\n    except KeyError:\n        print(\"caught\")\n",
+     "solution": "from contextlib import contextmanager\n\nlevel = 0\n\n@contextmanager\ndef block(name):\n    global level\n    print(\"  \" * level + f\"enter {name}\")\n    level += 1\n    try:\n        yield\n    finally:\n        level -= 1\n        print(\"  \" * level + f\"exit {name}\")\n\nwith block(\"a\"):\n    try:\n        with block(\"b\"):\n            raise KeyError(\"x\")\n    except KeyError:\n        print(\"caught\")\n",
+     "expected_output": "enter a\n  enter b\n  exit b\ncaught\nexit a",
+     "hint": "Increment the level after printing enter, and decrement in a finally before printing exit."
+    }
+   ]
+  },
+  {
+   "id": "py-u8-type-hints-generics",
+   "track_id": "python",
+   "unit_id": "py-u8",
+   "title": "Type Hints & Generics",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Hints are metadata, not enforcement",
+     "body": "Annotations are stored in `__annotations__` and **ignored by the interpreter**. Tools like mypy/pyright (and libraries like pydantic or FastAPI that *read* annotations) give them meaning. Calling `f(\"a\")` on `def f(x: int)` runs fine.\n\nModern syntax: `list[int]`, `dict[str, int]`, `X | None` (3.10+) instead of `typing.List`, `Optional[X]`. Note `Optional[int]` means \"int or None\", **not** \"argument may be omitted\": omission requires a default value.\n\n`from __future__ import annotations` (or the lazy annotations of 3.14) stops annotations being evaluated at definition time, which allows forward references to classes not yet defined; `typing.get_type_hints(f)` resolves them back to objects.",
+     "code": "def area(w: float, h: float = 1.0) -> float:\n    return w * h\n\nprint(area.__annotations__)   # {'w': float, 'h': float, 'return': float}\n"
+    },
+    {
+     "type": "concept",
+     "title": "TypeVar, Generic and variance",
+     "body": "A `TypeVar` links types across a signature: `def first(xs: Sequence[T]) -> T` says \"the return type is whatever the element type is\". `class Stack(Generic[T])` makes a generic class; `Stack[int]()` at runtime is just a `Stack` (the subscript creates an alias; there is **no runtime type erasure check**).\n\n**Variance** is the senior-level question: `list` is *invariant* because it is mutable. A `list[Dog]` is not a `list[Animal]`, otherwise you could `append(Cat())` through the Animal view. Read-only `Sequence[Dog]` *is* a `Sequence[Animal]` (covariant). Callable parameters are contravariant. Use `bound=` to constrain a TypeVar (`T = TypeVar(\"T\", bound=Comparable)`).",
+     "code": "from typing import TypeVar, Sequence\nT = TypeVar(\"T\")\n\ndef first(xs: Sequence[T]) -> T:\n    return xs[0]\n\nreveal = first([1, 2])    # checker infers int\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "a {'x': <class 'int'>, 'return': <class 'str'>}",
+      "TypeError",
+      "a {}",
+      "a {'x': int, 'return': str}"
+     ],
+     "answer": 0,
+     "explanation": "No runtime enforcement: `f('a')` returns 'a' even though it breaks both hints. `__annotations__` holds the actual class objects, which print as `<class 'int'>`.",
+     "code": "def f(x: int) -> str:\n    return x\n\nprint(f(\"a\"), f.__annotations__)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "s Box",
+      "TypeError",
+      "s Box[int]",
+      "AttributeError"
+     ],
+     "answer": 0,
+     "explanation": "`Box[int]` is only a parameterised alias; calling it constructs a plain `Box`. Generic parameters are erased, and nothing validates that 's' is an int. Only a static checker would reject this line.",
+     "code": "from typing import Generic, TypeVar\nT = TypeVar(\"T\")\n\nclass Box(Generic[T]):\n    def __init__(self, v: T):\n        self.v = v\n\nb = Box[int](\"s\")\nprint(b.v, type(b).__name__)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "A function takes `animals: list[Animal]` and you pass a `list[Dog]` where Dog subclasses Animal. What does a type checker say, and why?",
+     "options": [
+      "Fine: Dog is an Animal, so lists of Dog are lists of Animal",
+      "Error: list is invariant, since the function could append a Cat to your list[Dog]",
+      "Error: list needs to be declared Covariant at runtime",
+      "Fine, but only when Dog defines __eq__"
+     ],
+     "answer": 1,
+     "explanation": "Mutable containers must be invariant for soundness. Fix by accepting a read-only supertype: `Sequence[Animal]` (covariant) or `Iterable[Animal]`."
+    },
+    {
+     "type": "mcq",
+     "question": "`def f(x: Optional[int]): ...` is called as `f()`. What happens?",
+     "options": [
+      "x defaults to None",
+      "TypeError: missing required argument; Optional only widens the type, it does not add a default",
+      "A static check passes but runtime TypeError is impossible",
+      "x defaults to 0"
+     ],
+     "answer": 1,
+     "explanation": "`Optional[int]` is shorthand for `int | None`; it says nothing about defaults. You must write `x: int | None = None` to make the argument optional."
+    },
+    {
+     "type": "fill",
+     "prompt": "Accept any read-only indexable collection while preserving the element type:",
+     "code": "def first(xs: ____[T]) -> T:\n    return xs[0]",
+     "answer": [
+      "Sequence"
+     ],
+     "explanation": "`collections.abc.Sequence` (or typing.Sequence) is covariant and read-only, a better parameter type than `list`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write a generic `Stack` class (Generic[T]) with `push`, `pop`, `peek` and `__len__`. Push 1, 2, 3, then print `pop()`, `peek()` and `len(stack)` on one line separated by spaces.",
+     "starter": "from typing import Generic, TypeVar\n\nT = TypeVar(\"T\")\n\n# write class Stack(Generic[T])\n\ns = Stack()\nfor i in (1, 2, 3):\n    s.push(i)\nprint(s.pop(), s.peek(), len(s))\n",
+     "solution": "from typing import Generic, TypeVar\n\nT = TypeVar(\"T\")\n\nclass Stack(Generic[T]):\n    def __init__(self) -> None:\n        self._items: list[T] = []\n    def push(self, item: T) -> None:\n        self._items.append(item)\n    def pop(self) -> T:\n        return self._items.pop()\n    def peek(self) -> T:\n        return self._items[-1]\n    def __len__(self) -> int:\n        return len(self._items)\n\ns = Stack()\nfor i in (1, 2, 3):\n    s.push(i)\nprint(s.pop(), s.peek(), len(s))\n",
+     "expected_output": "3 2 2",
+     "hint": "Back the stack with a list; pop removes the last element and peek reads index -1."
+    }
+   ]
+  },
+  {
+   "id": "py-u8-protocol-typeddict",
+   "track_id": "python",
+   "unit_id": "py-u8",
+   "title": "Protocol, TypedDict & Structural Typing",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Nominal vs structural typing",
+     "body": "With an ABC, a class must *declare* inheritance (**nominal** typing). A `typing.Protocol` describes the *shape*: any class with the right methods satisfies it, no inheritance needed (**structural** typing, \"static duck typing\"). That keeps libraries decoupled: you can define the interface at the consumer side.\n\n`@runtime_checkable` lets `isinstance(obj, MyProto)` work, but it only checks that the **attributes/methods exist**, not their signatures or types. Subtle: protocols with data members cannot be used with `issubclass`.\n\nRelated tools: `Literal[\"r\", \"w\"]` restricts to exact values, `Final` forbids rebinding, `@overload` declares multiple call signatures for the checker (only the final implementation exists at runtime).",
+     "code": "from typing import Protocol\n\nclass SupportsClose(Protocol):\n    def close(self) -> None: ...\n\ndef shutdown(r: SupportsClose) -> None:   # files, sockets, your own classes all work\n    r.close()\n"
+    },
+    {
+     "type": "concept",
+     "title": "TypedDict is a dict at runtime",
+     "body": "`TypedDict` gives a dict a per-key schema for static checking: `class User(TypedDict): name: str; age: int`. At runtime `User(name=\"a\", age=1)` just returns a plain `dict`: **no validation, and you cannot `isinstance` against it** (TypeError). Keys can be optional with `total=False` or `NotRequired[...]`.\n\nWhen you need runtime validation or methods, reach for `dataclass` or pydantic; use TypedDict when the data is genuinely a dict (JSON payloads, kwargs via `Unpack`).",
+     "code": "from typing import TypedDict, NotRequired\n\nclass User(TypedDict):\n    name: str\n    nickname: NotRequired[str]\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "True",
+      "False",
+      "TypeError",
+      "AttributeError"
+     ],
+     "answer": 0,
+     "explanation": "A runtime_checkable Protocol `isinstance` check only looks for the *presence* of a `close` attribute. `A.close(self, force)` has a different signature than the protocol, but that is a static-checker concern. The runtime says True. Never treat it as a full conformance test.",
+     "code": "from typing import Protocol, runtime_checkable\n\n@runtime_checkable\nclass Closer(Protocol):\n    def close(self) -> None: ...\n\nclass A:\n    def close(self, force):\n        pass\n\nprint(isinstance(A(), Closer))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "P {'name': 'a', 'age': 'x'}",
+      "dict {'name': 'a', 'age': 'x'}",
+      "TypeError: age must be int",
+      "dict {'name': 'a'}"
+     ],
+     "answer": 1,
+     "explanation": "TypedDict is erased to `dict`. The wrong-typed value passes without complaint because only static analysis enforces the schema.",
+     "code": "from typing import TypedDict\n\nclass P(TypedDict):\n    name: str\n    age: int\n\np = P(name=\"a\", age=\"x\")\nprint(type(p).__name__, p)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "True",
+      "False",
+      "TypeError",
+      "KeyError"
+     ],
+     "answer": 2,
+     "explanation": "TypedDict classes do not support `isinstance`/`issubclass`; the interpreter raises `TypeError`. If you need runtime narrowing you must check keys yourself or use a validation library.",
+     "code": "from typing import TypedDict\n\nclass P(TypedDict):\n    name: str\n\ntry:\n    print(isinstance({}, P))\nexcept TypeError:\n    print(\"TypeError\")\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Declare a structural interface by inheriting from:",
+     "code": "class Drawable(____):\n    def draw(self) -> None: ...",
+     "answer": [
+      "Protocol"
+     ],
+     "explanation": "Inheriting from `typing.Protocol` marks the class as a structural interface; implementers do not inherit from it."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Define a runtime_checkable Protocol `Speaker` with a `speak()` method. Classes `Dog` (has speak returning 'woof') and `Rock` (has none) should be tested with isinstance; print `Dog True` and `Rock False` lines.",
+     "starter": "from typing import Protocol, runtime_checkable\n\n# define Speaker\n\nclass Dog:\n    def speak(self):\n        return \"woof\"\n\nclass Rock:\n    pass\n\nfor o in (Dog(), Rock()):\n    print(type(o).__name__, isinstance(o, Speaker))\n",
+     "solution": "from typing import Protocol, runtime_checkable\n\n@runtime_checkable\nclass Speaker(Protocol):\n    def speak(self) -> str: ...\n\nclass Dog:\n    def speak(self):\n        return \"woof\"\n\nclass Rock:\n    pass\n\nfor o in (Dog(), Rock()):\n    print(type(o).__name__, isinstance(o, Speaker))\n",
+     "expected_output": "Dog True\nRock False",
+     "hint": "Decorate a Protocol subclass with @runtime_checkable."
+    }
+   ]
+  },
+  {
+   "id": "py-u8-dataclasses",
+   "track_id": "python",
+   "unit_id": "py-u8",
+   "title": "Dataclasses in Depth",
+   "minutes": 13,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "What @dataclass generates",
+     "body": "`@dataclass` inspects annotated class attributes and generates `__init__`, `__repr__` and `__eq__` (eq compares fields as a tuple, and only for the *same class*).\n\nKey rules interviewers probe:\n- `eq=True` (default) **sets `__hash__` to `None`** so instances are unhashable, because mutable objects with value-equality must not hash. `frozen=True` (with eq) generates `__hash__`.\n- **Mutable defaults** (`list`, `dict`, `set`) raise `ValueError`; use `field(default_factory=list)`.\n- Fields with defaults cannot precede fields without (unless `kw_only=True`, 3.10+).\n- `__post_init__` runs after `__init__`; `InitVar` passes values only to it; `field(init=False)` excludes a field from `__init__`.\n- `order=True` adds `<, <=, >, >=` comparing field tuples; `slots=True` (3.10+) generates `__slots__` for memory savings and no per-instance dict.",
+     "code": "from dataclasses import dataclass, field\n\n@dataclass(order=True, frozen=True)\nclass Version:\n    major: int\n    minor: int = 0\n    tags: tuple = ()\n\nsorted([Version(1, 2), Version(1, 0), Version(0, 9)])\n"
+    },
+    {
+     "type": "concept",
+     "title": "frozen, replace, and copying",
+     "body": "`frozen=True` blocks assignment by making `__setattr__` raise `FrozenInstanceError`. (Internally `__init__` uses `object.__setattr__`.) A frozen dataclass is only *shallowly* immutable: a list field can still be mutated. To \"modify\" use `dataclasses.replace(obj, field=new)`, which builds a new instance.\n\n`dataclasses.asdict` recurses and deep-copies; `astuple` likewise. `fields(cls)` lists `Field` objects. Inheritance: fields from bases come first, in MRO order, and a redefined field keeps its original position.",
+     "code": "from dataclasses import replace\nv2 = replace(Version(1, 0), minor=5)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "{P(x=1)}",
+      "unhashable",
+      "1",
+      "P(x=1)"
+     ],
+     "answer": 1,
+     "explanation": "With the default `eq=True` and not frozen, dataclass sets `__hash__ = None`, so putting an instance into a set raises `TypeError`. That deliberately prevents mutable keys that would break lookups.",
+     "code": "from dataclasses import dataclass\n\n@dataclass\nclass P:\n    x: int\n\ntry:\n    {P(1)}\nexcept TypeError:\n    print(\"unhashable\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "ValueError",
+      "TypeError",
+      "[]",
+      "Nothing, class defined"
+     ],
+     "answer": 0,
+     "explanation": "A list default would be shared across all instances, so dataclasses refuse it at class-creation time with `ValueError: mutable default <class 'list'> ... use default_factory`. (This check is for unhashable defaults, so `list`, `dict` and `set` all fail.) Plain classes silently share it, which is the classic bug.",
+     "code": "from dataclasses import dataclass\n\ntry:\n    @dataclass\n    class A:\n        items: list = []\nexcept ValueError:\n    print(\"ValueError\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "frozen Pt(x=1, y=9) True",
+      "Pt(x=5, y=0) False",
+      "frozen Pt(x=1, y=0) True",
+      "TypeError"
+     ],
+     "answer": 0,
+     "explanation": "Assignment on a frozen instance raises FrozenInstanceError. `replace` constructs a new instance with `y=9`. Frozen + eq generates `__hash__` from the fields, so equal instances hash equal.",
+     "code": "from dataclasses import dataclass, replace, FrozenInstanceError\n\n@dataclass(frozen=True)\nclass Pt:\n    x: int\n    y: int = 0\n\np = Pt(1)\ntry:\n    p.x = 5\nexcept FrozenInstanceError:\n    print(\"frozen\", end=\" \")\nprint(replace(p, y=9), hash(p) == hash(Pt(1)))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[] and shared list",
+      "[]",
+      "[1]",
+      "TypeError"
+     ],
+     "answer": 1,
+     "explanation": "`default_factory` runs per instance, so each gets its own list. `b.xs` stays empty. With a plain shared default, mutating through `a` would be visible via `b`.",
+     "code": "from dataclasses import dataclass, field\n\n@dataclass\nclass B:\n    xs: list = field(default_factory=list)\n\na, b = B(), B()\na.xs.append(1)\nprint(b.xs)\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Give each instance its own list:",
+     "code": "tags: list = field(____=list)",
+     "answer": [
+      "default_factory"
+     ],
+     "explanation": "`default_factory` takes a zero-argument callable that is called for every new instance."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Define a frozen, ordered dataclass `Task` with fields `priority: int` and `name: str`. Sort the three tasks below and print their names in order, then print the result of `replace`-ing the first task's priority to 0 as a repr.",
+     "starter": "from dataclasses import dataclass, replace\n\n# define Task\n\ntasks = [Task(3, \"c\"), Task(1, \"a\"), Task(2, \"b\")]\ntasks.sort()\nprint([t.name for t in tasks])\nprint(replace(tasks[0], priority=0))\n",
+     "solution": "from dataclasses import dataclass, replace\n\n@dataclass(frozen=True, order=True)\nclass Task:\n    priority: int\n    name: str\n\ntasks = [Task(3, \"c\"), Task(1, \"a\"), Task(2, \"b\")]\ntasks.sort()\nprint([t.name for t in tasks])\nprint(replace(tasks[0], priority=0))\n",
+     "expected_output": "['a', 'b', 'c']\nTask(priority=0, name='a')",
+     "hint": "@dataclass(frozen=True, order=True); order=True compares (priority, name) tuples."
+    }
+   ]
+  },
+  {
+   "id": "py-u8-enums",
+   "track_id": "python",
+   "unit_id": "py-u8",
+   "title": "Enums: Aliases, IntEnum, Flag",
+   "minutes": 11,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Enum semantics",
+     "body": "Enum members are **singletons**: compare with `is` (or `==`, which for plain `Enum` is identity). Access by name `Color[\"RED\"]` or by value `Color(1)`; a bad value raises `ValueError`, a bad name `KeyError`.\n\n**Aliases**: two names with the same value make the second an alias of the first (`CRIMSON = 1` after `RED = 1`). Iterating the class skips aliases, but `Color.__members__` includes them. `@enum.unique` forbids aliases.\n\nA plain `Enum` member is *not* equal to its raw value (`Color.RED == 1` is `False`). `IntEnum` members **are** ints, so they compare equal to ints (convenient and a common source of type confusion). Use `auto()` to pick values, and `Flag`/`IntFlag` for bit-sets combined with `|`, `&`.",
+     "code": "from enum import Enum, auto\n\nclass State(Enum):\n    IDLE = auto()\n    RUNNING = auto()\n\n    def next(self):\n        return State.RUNNING if self is State.IDLE else State.IDLE\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[<C.RED: 1>, <C.GREEN: 2>, <C.CRIMSON: 1>] False RED",
+      "[<C.RED: 1>, <C.GREEN: 2>] True RED",
+      "[<C.RED: 1>, <C.GREEN: 2>] False CRIMSON",
+      "ValueError"
+     ],
+     "answer": 1,
+     "explanation": "CRIMSON has the same value as RED, so it is an alias: `C.CRIMSON is C.RED`, its `.name` is the canonical 'RED', and list iteration omits aliases.",
+     "code": "from enum import Enum\n\nclass C(Enum):\n    RED = 1\n    GREEN = 2\n    CRIMSON = 1\n\nprint(list(C), C.CRIMSON is C.RED, C.CRIMSON.name)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "True True True",
+      "False True True",
+      "False False True",
+      "False True False"
+     ],
+     "answer": 1,
+     "explanation": "Plain `Enum` members are not their values (`A.X == 1` is False). `IntEnum` subclasses `int`, so `B.X == 1` is True. And `A(1)` looks the member up by value, returning the singleton, so `is` is True.",
+     "code": "from enum import Enum, IntEnum\n\nclass A(Enum):\n    X = 1\n\nclass B(IntEnum):\n    X = 1\n\nprint(A.X == 1, B.X == 1, A(1) is A.X)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "True False 3",
+      "True False 2",
+      "False False 3",
+      "True True 3"
+     ],
+     "answer": 0,
+     "explanation": "`auto()` in a Flag assigns powers of two: R=1, W=2, X=4. `R|W` has value 3 and contains W but not X. Membership with `in` tests whether all bits of the left operand are set.",
+     "code": "from enum import Flag, auto\n\nclass Perm(Flag):\n    R = auto()\n    W = auto()\n    X = auto()\n\np = Perm.R | Perm.W\nprint(Perm.W in p, Perm.X in p, p.value)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "Color.RED Color.RED ValueError",
+      "Color.RED Color.RED KeyError",
+      "'r' 'r' ValueError",
+      "KeyError"
+     ],
+     "answer": 0,
+     "explanation": "`Color['RED']` looks up by **name**; `Color('r')` looks up by **value**; `Color('RED')` is a value lookup with a name, which fails with `ValueError`. (Name lookup failures give `KeyError`.)",
+     "code": "from enum import Enum\n\nclass Color(Enum):\n    RED = \"r\"\n\nprint(Color[\"RED\"], Color(\"r\"), end=\" \")\ntry:\n    Color(\"RED\")\nexcept ValueError:\n    print(\"ValueError\")\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Let Python choose values for members:",
+     "code": "class Status(Enum):\n    A = ____()\n    B = ____()",
+     "answer": [
+      "auto"
+     ],
+     "explanation": "`enum.auto()` assigns incrementing integers (or powers of two in Flag). Both blanks take the same answer."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Create a `Light` Enum (RED, GREEN, YELLOW) with a method `next()` implementing RED -> GREEN -> YELLOW -> RED using a dict. Starting from RED, print the names of the next 4 lights separated by spaces.",
+     "starter": "from enum import Enum\n\n# define Light\n\nl = Light.RED\nout = []\nfor _ in range(4):\n    l = l.next()\n    out.append(l.name)\nprint(\" \".join(out))\n",
+     "solution": "from enum import Enum\n\nclass Light(Enum):\n    RED = 1\n    GREEN = 2\n    YELLOW = 3\n\n    def next(self):\n        order = {Light.RED: Light.GREEN, Light.GREEN: Light.YELLOW, Light.YELLOW: Light.RED}\n        return order[self]\n\nl = Light.RED\nout = []\nfor _ in range(4):\n    l = l.next()\n    out.append(l.name)\nprint(\" \".join(out))\n",
+     "expected_output": "GREEN YELLOW RED GREEN",
+     "hint": "Enum members are hashable, so they work as dict keys."
+    }
+   ]
+  },
+  {
+   "id": "py-u8-testing-mocking",
+   "track_id": "python",
+   "unit_id": "py-u8",
+   "title": "pytest Patterns & unittest.mock",
+   "minutes": 13,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "pytest essentials",
+     "body": "pytest discovers `test_*` functions and uses plain `assert` (introspected for rich failure output). Core features:\n\n- **Fixtures** (`@pytest.fixture`): dependency injection by argument name. `scope` = function (default), class, module, session. Code after a `yield` is teardown, run after the last test using it in that scope. Shared fixtures live in `conftest.py`.\n- **`@pytest.mark.parametrize(\"a,b\", [...])`**: one test function, many cases, each reported separately. Stacking two parametrize decorators produces the **cross product**.\n- `pytest.raises(ValueError, match=\"...\")`, `pytest.approx(0.3)` for floats, `monkeypatch` (undone automatically), `tmp_path`, `capsys`.",
+     "code": "import pytest\n\n@pytest.fixture\ndef db():\n    conn = connect()\n    yield conn          # test runs here\n    conn.close()        # teardown\n\n@pytest.mark.parametrize(\"a, b, total\", [(1, 2, 3), (0, 0, 0), (-1, 1, 0)])\ndef test_add(a, b, total):\n    assert a + b == total\n"
+    },
+    {
+     "type": "concept",
+     "title": "Mocking rules that bite",
+     "body": "`unittest.mock.patch(\"pkg.mod.name\")` replaces the name **in the namespace where it is looked up**, not where it is defined. If `app.py` does `from time import sleep`, you patch `app.sleep`, not `time.sleep`.\n\n`Mock` auto-creates any attribute, so typos pass silently; pass `spec=Class` or use `create_autospec` to restrict to the real API (and check signatures). `side_effect` may be an exception, a function, or an **iterable** (successive return values / raises). `return_value` is for fixed results. Assertions: `assert_called_once_with(...)`, `call_args`, `call_count`. `MagicMock` also supports dunder methods like `__len__`.",
+     "code": "from unittest.mock import patch\n\nwith patch(\"app.sleep\") as fake:    # patch where it is USED\n    run_job()\nfake.assert_called_once_with(2)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "`app.py` has `from time import sleep` and a function that calls `sleep(2)`. Which patch makes the test skip the wait?",
+     "options": [
+      "patch(\"time.sleep\")",
+      "patch(\"app.sleep\")",
+      "patch(\"builtins.sleep\")",
+      "patch(\"app.time.sleep\")"
+     ],
+     "answer": 1,
+     "explanation": "`from time import sleep` copies a reference into `app`'s namespace at import. Patching `time.sleep` later changes the original attribute, but `app.sleep` still points at the real function. Patch the name where it is used."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1 VE 3 3",
+      "1 VE 1 3",
+      "1 VE 3 2",
+      "VE"
+     ],
+     "answer": 0,
+     "explanation": "A `side_effect` iterable is consumed one item per call; items that are exception instances are raised instead of returned. The 4th printed value counts all three calls.",
+     "code": "from unittest.mock import Mock\n\nm = Mock(side_effect=[1, ValueError(\"x\"), 3])\nprint(m(), end=\" \")\ntry:\n    m()\nexcept ValueError:\n    print(\"VE\", end=\" \")\nprint(m(), m.call_count)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "no b call(1)",
+      "call(1) no b",
+      "no b None",
+      "AttributeError"
+     ],
+     "answer": 0,
+     "explanation": "With `spec=[...]` accessing an attribute outside the list raises AttributeError, which is how you catch test typos. `call_args` records the last call's arguments, printed as `call(1)`.",
+     "code": "from unittest.mock import Mock\n\nm = Mock(spec=[\"a\"])\nm.a(1)\ntry:\n    m.b\nexcept AttributeError:\n    print(\"no b\", end=\" \")\nprint(m.a.call_args)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Two stacked decorators: `@parametrize('x',[1,2])` and `@parametrize('y',[10,20])` on one test. How many test cases run?",
+     "options": [
+      "2",
+      "4",
+      "3",
+      "Error: duplicate parametrize"
+     ],
+     "answer": 1,
+     "explanation": "Stacked parametrize decorators multiply: (x, y) = (1,10),(2,10),(1,20),(2,20). Use a single decorator with tuples when you want pairs instead."
+    },
+    {
+     "type": "fill",
+     "prompt": "Mark a test to run once per input row:",
+     "code": "@pytest.mark.____(\"x,y\", [(1, 2), (3, 4)])",
+     "answer": [
+      "parametrize"
+     ],
+     "explanation": "`parametrize` takes the argument names and a list of value tuples."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Using `unittest.mock.patch.object`, replace `Api.fetch` so that `report()` receives `{'name': 'Ann'}` without touching the network. Print the report line and then print whether `fetch` was called exactly once (True/False).",
+     "starter": "from unittest.mock import patch\n\nclass Api:\n    def fetch(self):\n        raise RuntimeError(\"network down\")\n\ndef report(api):\n    return \"user: \" + api.fetch()[\"name\"]\n\n# patch Api.fetch and call report(Api())\n",
+     "solution": "from unittest.mock import patch\n\nclass Api:\n    def fetch(self):\n        raise RuntimeError(\"network down\")\n\ndef report(api):\n    return \"user: \" + api.fetch()[\"name\"]\n\nwith patch.object(Api, \"fetch\", return_value={\"name\": \"Ann\"}) as m:\n    print(report(Api()))\n    print(m.call_count == 1)\n",
+     "expected_output": "user: Ann\nTrue",
+     "hint": "patch.object(Api, 'fetch', return_value=...) works as a context manager and yields the mock."
+    }
+   ]
+  },
+  {
+   "id": "py-u9-gil-threads-processes",
+   "track_id": "python",
+   "unit_id": "py-u9",
+   "title": "The GIL: Threads vs Processes vs asyncio",
+   "minutes": 13,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "What the GIL does (and does not)",
+     "body": "CPython's **Global Interpreter Lock** lets only one thread execute Python bytecode at a time per interpreter. It exists because reference counting is not thread-safe; one lock is simpler and faster for single-threaded code than locking every object.\n\nConsequences:\n- **CPU-bound pure-Python code gets no speedup from threads** (often slightly slower from lock contention).\n- The GIL is **released during blocking I/O** (sockets, files, `time.sleep`) and inside many C extensions (NumPy, hashlib, zlib). So threads *do* help I/O-bound work and some native number crunching.\n- The GIL does **not** make your code thread-safe: threads can be switched between bytecodes, so `x += 1` is still a race.\n- Python 3.13+ ships an optional free-threaded build (no GIL), but the default build still has it.",
+     "code": "import time\nfrom concurrent.futures import ThreadPoolExecutor\n\ndef fetch(i):\n    time.sleep(1)        # releases the GIL\n    return i\n\nwith ThreadPoolExecutor(10) as ex:\n    list(ex.map(fetch, range(10)))   # ~1s, not 10s\n"
+    },
+    {
+     "type": "concept",
+     "title": "Choosing a concurrency model",
+     "body": "| Workload | Best tool | Why |\n|---|---|---|\n| Few blocking I/O calls, legacy blocking libs | `threading` / `ThreadPoolExecutor` | GIL released on I/O |\n| Thousands of sockets | `asyncio` | one thread, cooperative, tiny per-task cost |\n| CPU-bound pure Python | `multiprocessing` / `ProcessPoolExecutor` | separate interpreters and GILs |\n| CPU-bound in NumPy etc. | threads can work | C code releases the GIL |\n\nProcesses have separate memory: arguments and results are **pickled** across the boundary (lambdas and local functions cannot be pickled), startup is costly, and with the `spawn` start method (Windows/macOS) the entry point needs `if __name__ == \"__main__\":`. Threads share memory, so they need locks; processes share nothing, so they need IPC.",
+     "code": "from concurrent.futures import ProcessPoolExecutor\n\ndef cube(n): return n ** 3        # module-level => picklable\n\nif __name__ == \"__main__\":\n    with ProcessPoolExecutor() as ex:\n        print(list(ex.map(cube, range(5))))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "You run a pure-Python CPU-bound function (e.g. nested loops) on 4 threads on a 4-core machine with standard CPython. Compared with running it 4 times sequentially, the total time is typically:",
+     "options": [
+      "About 4x faster",
+      "About the same or slightly slower",
+      "Exactly 2x faster",
+      "Faster only if you use daemon threads"
+     ],
+     "answer": 1,
+     "explanation": "Only one thread runs bytecode at a time, so no parallelism. Contention for the GIL adds overhead. Use `multiprocessing` (or move the hot loop to a C extension / NumPy) for CPU-bound work."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[2, 1, 0]",
+      "[0, 1, 2]",
+      "Unordered, depends on timing",
+      "[0, 2, 1]"
+     ],
+     "answer": 1,
+     "explanation": "`executor.map` returns results in **input order** even though task 2 finishes first. If you want completion order use `as_completed`. Order of results does not tell you which finished first.",
+     "code": "from concurrent.futures import ThreadPoolExecutor\nimport time\n\ndef work(n):\n    time.sleep(0.3 - n * 0.1)\n    return n\n\nwith ThreadPoolExecutor(3) as ex:\n    print(list(ex.map(work, [0, 1, 2])))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "`Pool().map(lambda x: x * 2, data)` fails. Why?",
+     "options": [
+      "Lambdas are not allowed in Python 3",
+      "Arguments sent to workers are pickled and lambdas cannot be pickled by reference",
+      "Pool.map only accepts built-in functions",
+      "The GIL blocks lambdas"
+     ],
+     "answer": 1,
+     "explanation": "multiprocessing sends the function to the worker by pickling its qualified name. Lambdas and nested functions have no importable name. Define the function at module level."
+    },
+    {
+     "type": "fill",
+     "prompt": "Pick the executor for CPU-bound Python work:",
+     "code": "with ____PoolExecutor(max_workers=4) as ex:\n    results = list(ex.map(crunch, chunks))",
+     "answer": [
+      "Process"
+     ],
+     "explanation": "ProcessPoolExecutor uses separate interpreters, each with its own GIL, so CPU-bound work runs in parallel."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Use a ThreadPoolExecutor with 4 workers to run `slow_square` (which sleeps briefly) on 1..8. Print the list of results (in order) and then the sum.",
+     "starter": "import time\nfrom concurrent.futures import ThreadPoolExecutor\n\ndef slow_square(n):\n    time.sleep(0.01)\n    return n * n\n\n# run in a thread pool and print results and sum\n",
+     "solution": "import time\nfrom concurrent.futures import ThreadPoolExecutor\n\ndef slow_square(n):\n    time.sleep(0.01)\n    return n * n\n\nwith ThreadPoolExecutor(max_workers=4) as ex:\n    results = list(ex.map(slow_square, range(1, 9)))\nprint(results)\nprint(sum(results))\n",
+     "expected_output": "[1, 4, 9, 16, 25, 36, 49, 64]\n204",
+     "hint": "ex.map(func, iterable) yields results in input order."
+    }
+   ]
+  },
+  {
+   "id": "py-u9-locks-race-conditions",
+   "track_id": "python",
+   "unit_id": "py-u9",
+   "title": "Race Conditions, Locks & Queues",
+   "minutes": 13,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Why x += 1 is not atomic",
+     "body": "`counter += 1` compiles to separate steps: load `counter`, add 1, store back. The interpreter may switch threads between them, so two threads can both read 5 and both write 6: a **lost update**. The GIL protects interpreter internals, not your logic.\n\nSingle bytecode operations on built-ins like `list.append`, `dict[k] = v` or `queue.put` are atomic in CPython, but compound \"check then act\" sequences (`if k not in d: d[k] = ...`) are not.\n\nFixes: guard with `threading.Lock` (`with lock:`), use thread-safe structures (`queue.Queue`), avoid shared state (message passing, thread-local), or use atomic-ish designs (one owner thread).",
+     "code": "import threading\ncounter = 0\nlock = threading.Lock()\n\ndef work():\n    global counter\n    for _ in range(100_000):\n        with lock:        # makes the read-modify-write one critical section\n            counter += 1\n"
+    },
+    {
+     "type": "concept",
+     "title": "RLock, deadlock, Queue",
+     "body": "A plain `Lock` is **not re-entrant**: acquiring it twice in the same thread blocks forever. `RLock` lets the owning thread re-acquire (needed when a locked method calls another locked method).\n\n**Deadlock** needs a cycle: thread A holds L1 wanting L2 while B holds L2 wanting L1. Prevent by acquiring locks in one global order, using timeouts (`acquire(timeout=...)`), or holding only one lock at a time.\n\n`queue.Queue` is the idiomatic producer/consumer channel: thread-safe, blocking `get()`, and `task_done()/join()`. Signal shutdown with a sentinel value (e.g. `None`). `Event` signals state between threads; `Semaphore` bounds concurrent access.",
+     "code": "import queue\nq = queue.Queue(maxsize=100)   # bounded => back-pressure on producers\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "True False True True",
+      "True True True True",
+      "True False True False",
+      "True False False False"
+     ],
+     "answer": 0,
+     "explanation": "A plain Lock can't be acquired a second time (non-blocking attempt returns False; a blocking one would deadlock). An RLock lets the owning thread acquire again, so both calls return True.",
+     "code": "import threading\n\nl = threading.Lock()\nprint(l.acquire(), l.acquire(blocking=False), end=\" \")\nr = threading.RLock()\nprint(r.acquire(), r.acquire(blocking=False))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement about CPython threading is correct?",
+     "options": [
+      "Because of the GIL, `counter += 1` from many threads is always safe",
+      "`counter += 1` is several bytecodes, so updates can be lost without a lock",
+      "Locks are unnecessary for lists",
+      "The GIL guarantees threads run in the order they started"
+     ],
+     "answer": 1,
+     "explanation": "The GIL serialises bytecodes, not statements. A thread switch can occur between the load and store of `+=`. `dis.dis` shows BINARY_OP between separate LOAD and STORE instructions."
+    },
+    {
+     "type": "mcq",
+     "question": "Thread A acquires `lock1` then `lock2`; thread B acquires `lock2` then `lock1`. What is the standard fix?",
+     "options": [
+      "Use RLock instead",
+      "Make both acquire the locks in the same global order",
+      "Increase the thread priority of A",
+      "Call time.sleep between acquisitions"
+     ],
+     "answer": 1,
+     "explanation": "RLock doesn't help since these are two different locks held by two different threads. A consistent lock ordering removes the cycle condition required for deadlock."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[0, 1, 4, 9]",
+      "[]",
+      "[0, 1, 4, 9, None]",
+      "Deadlocks"
+     ],
+     "answer": 0,
+     "explanation": "The consumer loops on blocking `get()` until it sees the `None` sentinel. `join()` then waits for the thread, so `out` is complete when printed. Without the sentinel the consumer would block forever.",
+     "code": "import queue, threading\n\nq = queue.Queue()\nout = []\n\ndef consumer():\n    while True:\n        x = q.get()\n        if x is None:\n            break\n        out.append(x * x)\n\nt = threading.Thread(target=consumer)\nt.start()\nfor i in range(4):\n    q.put(i)\nq.put(None)\nt.join()\nprint(out)\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Wait for a thread to finish:",
+     "code": "t = threading.Thread(target=work)\nt.start()\nt.____()",
+     "answer": [
+      "join"
+     ],
+     "explanation": "`join()` blocks the caller until the thread terminates (optionally with a timeout)."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Four threads each increment a shared counter 10000 times. Protect the increment with a lock so the final total is exactly right, then print it.",
+     "starter": "import threading\n\ncounter = 0\n\ndef work():\n    global counter\n    for _ in range(10000):\n        counter += 1\n\n# create a lock, start 4 threads, join them\nprint(counter)\n",
+     "solution": "import threading\n\ncounter = 0\nlock = threading.Lock()\n\ndef work():\n    global counter\n    for _ in range(10000):\n        with lock:\n            counter += 1\n\nthreads = [threading.Thread(target=work) for _ in range(4)]\nfor t in threads:\n    t.start()\nfor t in threads:\n    t.join()\nprint(counter)\n",
+     "expected_output": "40000",
+     "hint": "Use `with lock:` around the increment, and join all threads before printing."
+    }
+   ]
+  },
+  {
+   "id": "py-u9-asyncio-basics",
+   "track_id": "python",
+   "unit_id": "py-u9",
+   "title": "asyncio: Coroutines, Tasks & the Event Loop",
+   "minutes": 14,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Coroutines and the event loop",
+     "body": "`async def f()` creates a **coroutine function**; calling it returns a coroutine object and runs **nothing**. `await coro` runs the coroutine and suspends the caller until it finishes. `asyncio.run(main())` creates an event loop and drives `main` to completion.\n\nThe loop is **single-threaded and cooperative**: a task only gives up control at an `await` that actually suspends (e.g. `await asyncio.sleep(...)`, awaiting I/O). Therefore any **blocking call** (`time.sleep`, `requests.get`, heavy CPU) freezes *every* task. Offload with `await asyncio.to_thread(func)` or `loop.run_in_executor`.\n\n`asyncio.create_task(coro)` schedules a coroutine to run concurrently; it first runs when the current task next yields to the loop. Keep a reference to tasks, because the loop holds only weak references and an unreferenced task can be garbage-collected mid-run.",
+     "code": "import asyncio\n\nasync def hello():\n    await asyncio.sleep(0.1)\n    return \"hi\"\n\nasync def main():\n    t = asyncio.create_task(hello())   # starts soon\n    print(\"doing other work\")\n    print(await t)\n\nasyncio.run(main())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "coroutine 1",
+      "int 1",
+      "1 1",
+      "RuntimeWarning only"
+     ],
+     "answer": 0,
+     "explanation": "Calling an async function gives a coroutine object (type name 'coroutine'); the body hasn't run yet. `await x` then executes it and yields 1. Forgetting `await` yields 'coroutine ... was never awaited' warnings and a missing result.",
+     "code": "import asyncio\n\nasync def f():\n    return 1\n\nasync def main():\n    x = f()\n    print(type(x).__name__, end=\" \")\n    print(await x)\n\nasyncio.run(main())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the print order?",
+     "options": [
+      "start 1, main, end 1",
+      "main, start 1, end 1",
+      "main, end 1, start 1",
+      "start 1, end 1, main"
+     ],
+     "answer": 1,
+     "explanation": "`create_task` only *schedules*. `main` keeps running (printing 'main') until it hits `await t`, which yields to the loop. Then the worker runs: 'start 1', hits `sleep(0)` and yields, then 'end 1'.",
+     "code": "import asyncio\n\nasync def worker(n):\n    print(\"start\", n)\n    await asyncio.sleep(0)\n    print(\"end\", n)\n\nasync def main():\n    t = asyncio.create_task(worker(1))\n    print(\"main\")\n    await t\n\nasyncio.run(main())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "a1 b1 a2",
+      "a1 a2 b1",
+      "b1 a1 a2",
+      "a1 b1 a2 b2"
+     ],
+     "answer": 1,
+     "explanation": "`time.sleep` blocks the whole thread and never yields to the loop, so task `a` runs to completion before `b` is ever started. Concurrency requires awaiting `asyncio.sleep`. This is the number-one asyncio performance bug.",
+     "code": "import asyncio, time\n\nasync def a():\n    print(\"a1\")\n    time.sleep(0.01)\n    print(\"a2\")\n\nasync def b():\n    print(\"b1\")\n\nasync def main():\n    await asyncio.gather(a(), b())\n\nasyncio.run(main())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What really happens when you `await` something in an async function?",
+     "options": [
+      "The OS thread blocks until it completes",
+      "The coroutine suspends and control returns to the event loop, which may run other tasks until the awaited thing is ready",
+      "A new thread is spawned for the awaited call",
+      "The call becomes a multiprocessing job"
+     ],
+     "answer": 1,
+     "explanation": "await is a cooperative yield point. No new threads are created; the same thread's loop schedules other ready tasks."
+    },
+    {
+     "type": "fill",
+     "prompt": "Start the event loop and run `main()`:",
+     "code": "asyncio.____(main())",
+     "answer": [
+      "run"
+     ],
+     "explanation": "`asyncio.run` creates a new loop, runs the coroutine to completion and closes the loop."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Run two coroutines concurrently with `asyncio.gather`: `fetch('A', 0.05)` and `fetch('B', 0.01)` each sleep then print `<name> done` and return the name. Print the list of results after both finish.",
+     "starter": "import asyncio\n\nasync def fetch(name, delay):\n    await asyncio.sleep(delay)\n    print(name, \"done\")\n    return name\n\n# run both with gather and print the results\n",
+     "solution": "import asyncio\n\nasync def fetch(name, delay):\n    await asyncio.sleep(delay)\n    print(name, \"done\")\n    return name\n\nasync def main():\n    results = await asyncio.gather(fetch(\"A\", 0.05), fetch(\"B\", 0.01))\n    print(results)\n\nasyncio.run(main())\n",
+     "expected_output": "B done\nA done\n['A', 'B']",
+     "hint": "gather returns results in argument order even though B finishes first."
+    }
+   ]
+  },
+  {
+   "id": "py-u9-asyncio-patterns",
+   "track_id": "python",
+   "unit_id": "py-u9",
+   "title": "asyncio: gather Semantics, Cancellation & Limits",
+   "minutes": 15,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "gather, TaskGroup and exceptions",
+     "body": "`await asyncio.gather(*aws)` returns results **in argument order**. If one awaitable raises, `gather` immediately propagates that exception to the caller, but **the other awaitables are NOT cancelled**; they keep running in the background. With `return_exceptions=True` exceptions come back as values in the result list instead.\n\n`asyncio.TaskGroup` (3.11+) is the structured alternative: if any task fails, the siblings are **cancelled**, and failures arrive as an `ExceptionGroup` (catch with `except*`). Prefer it for new code.\n\nCancellation: `task.cancel()` raises `CancelledError` inside the task at its current `await`. Since 3.8 it derives from `BaseException`, so `except Exception` won't swallow it. If you catch it for cleanup, **re-raise**. `asyncio.timeout()` / `wait_for` use cancellation internally.",
+     "code": "async with asyncio.TaskGroup() as tg:\n    t1 = tg.create_task(fetch(\"a\"))\n    t2 = tg.create_task(fetch(\"b\"))\n# both done here; if one raised, the other was cancelled and an ExceptionGroup propagates\n"
+    },
+    {
+     "type": "concept",
+     "title": "Limiting concurrency and blocking code",
+     "body": "Firing 10,000 requests with `gather` can exhaust sockets or the remote service. Bound it with `asyncio.Semaphore(n)`: `async with sem:` around the call. `asyncio.Queue` with N worker tasks is the other classic pattern.\n\nFor unavoidable blocking calls (legacy libs, file reads, CPU): `await asyncio.to_thread(fn, *args)` (thread; fine for blocking I/O) or `loop.run_in_executor(ProcessPoolExecutor(), ...)` (for CPU-bound). Never call `asyncio.run()` from inside a running loop; it raises `RuntimeError`.",
+     "code": "sem = asyncio.Semaphore(5)\n\nasync def limited(url):\n    async with sem:\n        return await fetch(url)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "['ok', ValueError('bad')]",
+      "ValueError raised",
+      "['ok', None]",
+      "['ok']"
+     ],
+     "answer": 0,
+     "explanation": "With `return_exceptions=True`, `gather` doesn't raise; the exception object takes the failed task's slot in the result list, preserving order.",
+     "code": "import asyncio\n\nasync def ok():\n    await asyncio.sleep(0.02)\n    return \"ok\"\n\nasync def bad():\n    raise ValueError(\"bad\")\n\nasync def main():\n    print(await asyncio.gather(ok(), bad(), return_exceptions=True))\n\nasyncio.run(main())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order?",
+     "options": [
+      "caught",
+      "caught, slow finished",
+      "slow finished, caught",
+      "slow finished"
+     ],
+     "answer": 1,
+     "explanation": "`gather` re-raises `bad`'s ValueError right away, but `slow()` is NOT cancelled, so it finishes later in the background (we wait 0.1s to observe it). If you assumed gather cancels siblings you'd have leaks. TaskGroup does cancel siblings.",
+     "code": "import asyncio\n\nasync def slow():\n    await asyncio.sleep(0.05)\n    print(\"slow finished\")\n\nasync def bad():\n    raise ValueError\n\nasync def main():\n    try:\n        await asyncio.gather(slow(), bad())\n    except ValueError:\n        print(\"caught\")\n    await asyncio.sleep(0.1)\n\nasyncio.run(main())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "exception main saw cancel",
+      "cancelled main saw cancel",
+      "main saw cancel",
+      "cancelled"
+     ],
+     "answer": 1,
+     "explanation": "`CancelledError` is a `BaseException`, so `except Exception` doesn't catch it; the second clause does, prints, and re-raises. Re-raising is what lets `await t` observe the cancellation. Swallowing it breaks timeouts and TaskGroups.",
+     "code": "import asyncio\n\nasync def w():\n    try:\n        await asyncio.sleep(1)\n    except Exception:\n        print(\"exception\")\n    except asyncio.CancelledError:\n        print(\"cancelled\")\n        raise\n\nasync def main():\n    t = asyncio.create_task(w())\n    await asyncio.sleep(0.01)\n    t.cancel()\n    try:\n        await t\n    except asyncio.CancelledError:\n        print(\"main saw cancel\")\n\nasyncio.run(main())\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Cancel a coroutine that takes too long:",
+     "code": "await asyncio.____(slow(), timeout=1.0)",
+     "answer": [
+      "wait_for"
+     ],
+     "explanation": "`asyncio.wait_for` cancels the awaitable and raises TimeoutError when the deadline passes. (`async with asyncio.timeout(1.0):` is the 3.11+ equivalent.)"
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Run 6 jobs with `asyncio.gather` but limit concurrency to 2 using a Semaphore. Track the maximum number of jobs running at once, and print `max concurrent: N` followed by the sorted results (each job returns `i * 2`).",
+     "starter": "import asyncio\n\nrunning = 0\npeak = 0\n\nasync def job(i, sem):\n    global running, peak\n    # acquire the semaphore, track running/peak, simulate work with sleep(0.01)\n    return i * 2\n\nasync def main():\n    sem = asyncio.Semaphore(2)\n    results = await asyncio.gather(*(job(i, sem) for i in range(6)))\n    print(\"max concurrent:\", peak)\n    print(sorted(results))\n\nasyncio.run(main())\n",
+     "solution": "import asyncio\n\nrunning = 0\npeak = 0\n\nasync def job(i, sem):\n    global running, peak\n    async with sem:\n        running += 1\n        peak = max(peak, running)\n        await asyncio.sleep(0.01)\n        running -= 1\n    return i * 2\n\nasync def main():\n    sem = asyncio.Semaphore(2)\n    results = await asyncio.gather(*(job(i, sem) for i in range(6)))\n    print(\"max concurrent:\", peak)\n    print(sorted(results))\n\nasyncio.run(main())\n",
+     "expected_output": "max concurrent: 2\n[0, 2, 4, 6, 8, 10]",
+     "hint": "Wrap the body in `async with sem:` and update the counters inside it."
+    }
+   ]
+  },
+  {
+   "id": "py-u10-refcount-gc",
+   "track_id": "python",
+   "unit_id": "py-u10",
+   "title": "Memory Model: Reference Counting & Cycle GC",
+   "minutes": 13,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Reference counting first, cycle collector second",
+     "body": "In CPython every object carries a **reference count**. Binding a name, storing in a container or passing as an argument increments it; `del`, rebinding, or leaving a scope decrements it. At **zero the object is freed immediately and deterministically**. That is why `with`-less file handles often \"just work\" in CPython (but not in PyPy, which has a tracing GC).\n\nRefcounting cannot free **reference cycles** (`a.o = b; b.o = a`): each keeps the other's count above zero. The **cyclic garbage collector** (module `gc`) periodically scans container objects in generations (0, 1, 2) to find unreachable cycles. `gc.collect()` forces it; `gc.disable()` turns off only the cycle detector, and refcount freeing continues.\n\n`sys.getrefcount(x)` reports one extra reference for its own argument. A **weak reference** (`weakref.ref`) observes an object without keeping it alive, ideal for caches and observer lists.",
+     "code": "import sys\na = []\nprint(sys.getrefcount(a))   # 2: the name `a` plus the call's argument\n"
+    },
+    {
+     "type": "concept",
+     "title": "Finalizers and leaks",
+     "body": "`__del__` is a finalizer, not a destructor: it runs when the object is freed, which for cycles is whenever the GC gets to it. Since Python 3.4 (PEP 442) objects with `__del__` in cycles are collectable, but exceptions in `__del__` are only printed, and at interpreter shutdown ordering is unreliable. Prefer context managers or `weakref.finalize`.\n\nTypical \"leaks\" in Python are really references you forgot: module-level caches, `lru_cache` holding arguments, closures capturing big objects, a stored traceback (`sys.exc_info`) pinning frames, or an unbounded list of results. Tools: `tracemalloc`, `gc.get_referrers`, `objgraph`.",
+     "code": "import weakref\ncache = weakref.WeakValueDictionary()   # entries vanish when the value dies\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "2",
+      "3",
+      "1",
+      "4"
+     ],
+     "answer": 1,
+     "explanation": "References: the name `a`, the name `b`, and the temporary argument inside `getrefcount`. That's 3. The `+1` for the call's own argument is the standard gotcha in this question.",
+     "code": "import sys\na = []\nb = a\nprint(sys.getrefcount(a))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "True None",
+      "True <__main__.A object ...>",
+      "False None",
+      "True True"
+     ],
+     "answer": 0,
+     "explanation": "While `a` exists the weakref dereferences to the object. `del a` drops the only strong reference, the refcount hits zero, the object is freed immediately, and calling the weakref returns `None`.",
+     "code": "import weakref\n\nclass A:\n    pass\n\na = A()\nr = weakref.ref(a)\nprint(r() is a, end=\" \")\ndel a\nprint(r())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "True True",
+      "False True",
+      "False False",
+      "True False"
+     ],
+     "answer": 1,
+     "explanation": "After `del a, b` the two objects still reference each other (refcount 1 each), so reference counting alone cannot free them: the weakref is still alive (`is None` is False). `gc.collect()` finds the unreachable cycle and frees it.",
+     "code": "import gc, weakref\n\nclass N:\n    pass\n\na = N()\nb = N()\na.o = b\nb.o = a\nr = weakref.ref(a)\ndel a, b\nprint(r() is None, end=\" \")\ngc.collect()\nprint(r() is None)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "After `gc.disable()`, what is true?",
+     "options": [
+      "Objects are never freed",
+      "Objects are still freed when their refcount drops to zero, but reference cycles leak until you call gc.collect()",
+      "Objects are freed only at interpreter exit",
+      "del stops working"
+     ],
+     "answer": 1,
+     "explanation": "`gc` is only the *cycle* detector. Plain refcounting is part of the interpreter itself and cannot be disabled. Instagram famously disabled GC in workers to reduce copy-on-write memory growth after fork."
+    },
+    {
+     "type": "fill",
+     "prompt": "Hold an object without keeping it alive:",
+     "code": "r = weakref.____(obj)",
+     "answer": [
+      "ref"
+     ],
+     "explanation": "`weakref.ref(obj)` returns a callable that gives the object or None if it has died."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Use `weakref.WeakValueDictionary` as a cache. Add one `Resource` object under key 'r1', print the cache length, delete the strong reference, and print the length again.",
+     "starter": "import weakref\n\nclass Resource:\n    pass\n\ncache = weakref.WeakValueDictionary()\n# put a Resource into the cache, print len, delete the strong ref, print len\n",
+     "solution": "import weakref\n\nclass Resource:\n    pass\n\ncache = weakref.WeakValueDictionary()\nobj = Resource()\ncache[\"r1\"] = obj\nprint(len(cache))\ndel obj\nprint(len(cache))\n",
+     "expected_output": "1\n0",
+     "hint": "After `del obj` the refcount hits zero in CPython, and the weak dictionary drops the entry."
+    }
+   ]
+  },
+  {
+   "id": "py-u10-identity-interning-copy",
+   "track_id": "python",
+   "unit_id": "py-u10",
+   "title": "Identity, Interning & Copying Gotchas",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "is vs ==, small ints and interning",
+     "body": "`==` asks \"equal values?\" (`__eq__`), `is` asks \"same object?\" (`id`). Use `is` only for singletons (`None`, `True`, sentinels).\n\nCPython caches small ints (-5 to 256) and **interns** some strings (identifier-like literals, and anything passed to `sys.intern`). Identity of other equal values is *implementation-dependent*: constants in one code object may be merged (`x = 1000; y = 1000` is often one object in a script), while values computed at runtime are separate. Never write code that depends on it; the interview question is to explain *why* the results differ.\n\n`sys.intern(s)` returns a canonical copy so repeated dictionary lookups on huge numbers of equal strings can compare by pointer.",
+     "code": "a = int(\"1000\"); b = int(\"1000\")\nprint(a == b, a is b)   # True False\nprint(int(\"100\") is int(\"100\"))   # True: small-int cache\n"
+    },
+    {
+     "type": "concept",
+     "title": "Aliasing, shallow vs deep copy",
+     "body": "Assignment never copies; it binds another name. `[[0]*3]*3` makes **three references to one inner list**. `copy.copy` (or `lst[:]`, `list(lst)`) copies the outer container only; nested objects are shared. `copy.deepcopy` recursively copies and handles cycles via a memo.\n\nAugmented assignment on an element of an immutable container is the famous trap: `t[0] += [2]` executes `t[0] = t[0].__iadd__([2])`. The list is mutated in place **then** the tuple item assignment raises `TypeError`, so you get both the error and the mutation.",
+     "code": "import copy\ngrid = [[0] * 3 for _ in range(3)]   # three distinct rows\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "True True",
+      "False True",
+      "True False",
+      "False False"
+     ],
+     "answer": 1,
+     "explanation": "`int('1000')` creates a fresh object each call (1000 is outside the small-int cache), so `is` is False. `int('100')` returns the cached small int, so True. The values are equal in both cases.",
+     "code": "print(int(\"1000\") is int(\"1000\"), int(\"100\") is int(\"100\"))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[[1, 0], [0, 0]]",
+      "[[1, 0], [1, 0]]",
+      "[[0, 0], [0, 0]]",
+      "[1, 0, 1, 0]"
+     ],
+     "answer": 1,
+     "explanation": "`[[0] * 2] * 2` repeats a reference: both rows are the same list object, so writing through one row shows in both. Build grids with a comprehension so each row is created separately.",
+     "code": "a = [[0] * 2] * 2\na[0][0] = 1\nprint(a)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[1, 9] [1, 9]",
+      "[1, 9] [1]",
+      "[1] [1]",
+      "[1] [1, 9]"
+     ],
+     "answer": 1,
+     "explanation": "The shallow copy `y` shares the inner lists with `x`, so appending to `x[0]` is visible via `y[0]`. The deepcopy `z` has its own inner lists and is unaffected.",
+     "code": "import copy\nx = [[1], [2]]\ny = copy.copy(x)\nz = copy.deepcopy(x)\nx[0].append(9)\nprint(y[0], z[0])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "TypeError ([1],)",
+      "TypeError ([1, 2],)",
+      "([1, 2],)",
+      "([1],)"
+     ],
+     "answer": 1,
+     "explanation": "`t[0] += [2]` first runs `t[0].__iadd__([2])`, which extends the list **in place**, then tries `t[0] = result`, which a tuple forbids: TypeError. The failed statement still left the mutation behind. Using `t[0].extend([2])` avoids the error.",
+     "code": "t = ([1],)\ntry:\n    t[0] += [2]\nexcept TypeError:\n    print(\"TypeError\", end=\" \")\nprint(t)\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Make a fully independent copy of nested data:",
+     "code": "y = copy.____(x)",
+     "answer": [
+      "deepcopy"
+     ],
+     "explanation": "`copy.deepcopy` recursively duplicates nested objects."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Build a 3x3 grid two ways: `bad = [[0]*3]*3` and `good = [[0]*3 for _ in range(3)]`. Print how many distinct row objects each has using `len({id(r) for r in grid})`, separated by a space.",
+     "starter": "bad = None   # fix: [[0]*3]*3\ngood = None  # fix: comprehension version\nprint(len({id(r) for r in bad}), len({id(r) for r in good}))\n",
+     "solution": "bad = [[0] * 3] * 3\ngood = [[0] * 3 for _ in range(3)]\nprint(len({id(r) for r in bad}), len({id(r) for r in good}))\n",
+     "expected_output": "1 3",
+     "hint": "Replace the None values with the two expressions; bad shares one row, good has three."
+    }
+   ]
+  },
+  {
+   "id": "py-u10-descriptors-slots",
+   "track_id": "python",
+   "unit_id": "py-u10",
+   "title": "Descriptors & __slots__",
+   "minutes": 14,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The descriptor protocol",
+     "body": "A **descriptor** is a class attribute whose type defines `__get__(self, obj, owner)`, and optionally `__set__` / `__delete__`. Functions, `property`, `classmethod`, `staticmethod` and `__slots__` entries are all descriptors; they are how methods become *bound* (a function's `__get__` returns a bound method).\n\n**Lookup precedence** for `obj.x`: (1) a **data descriptor** (has `__set__` or `__delete__`) on the type, (2) the instance `__dict__`, (3) a **non-data descriptor** or plain class attribute. That's why a property cannot be shadowed by an instance attribute but a method can.\n\n`__set_name__(self, owner, name)` is called at class creation so the descriptor learns the attribute name it was assigned to; the standard pattern for reusable validators and ORM fields.",
+     "code": "class Positive:\n    def __set_name__(self, owner, name):\n        self.private = \"_\" + name\n    def __get__(self, obj, owner=None):\n        return self if obj is None else getattr(obj, self.private)\n    def __set__(self, obj, value):\n        if value <= 0:\n            raise ValueError(\"must be positive\")\n        setattr(obj, self.private, value)\n\nclass Item:\n    qty = Positive()\n"
+    },
+    {
+     "type": "concept",
+     "title": "__slots__",
+     "body": "`__slots__ = (\"x\", \"y\")` replaces the per-instance `__dict__` with fixed storage: **less memory** (often 40-50% per small object), slightly faster attribute access, and typos like `p.z = 1` raise `AttributeError`. Costs: no arbitrary attributes, no `__weakref__` unless you list it, and no default class-level values for slotted names.\n\nInheritance trap: slots only save memory if **every class in the chain** defines `__slots__`. A subclass that omits it gets a `__dict__` again. Multiple inheritance from two classes with non-empty slots raises a layout conflict.",
+     "code": "class P:\n    __slots__ = (\"x\", \"y\")\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "desc",
+      "inst",
+      "AttributeError",
+      "None"
+     ],
+     "answer": 1,
+     "explanation": "`D` only defines `__get__`: a **non-data** descriptor. Instance `__dict__` beats non-data descriptors, so the value stored in `a.__dict__['x']` wins. Add a `__set__` method to `D` and the descriptor would win.",
+     "code": "class D:\n    def __get__(self, obj, owner):\n        return \"desc\"\n\nclass A:\n    x = D()\n\na = A()\na.__dict__[\"x\"] = \"inst\"\nprint(a.x)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "no y False",
+      "no y True",
+      "2 True",
+      "no y"
+     ],
+     "answer": 0,
+     "explanation": "With `__slots__`, only the listed attributes exist and there is no instance `__dict__`, so setting `y` raises AttributeError and `hasattr(p, '__dict__')` is False.",
+     "code": "class P:\n    __slots__ = (\"x\",)\n\np = P()\np.x = 1\ntry:\n    p.y = 2\nexcept AttributeError:\n    print(\"no y\", end=\" \")\nprint(hasattr(p, \"__dict__\"))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "AttributeError",
+      "1",
+      "None",
+      "TypeError"
+     ],
+     "answer": 1,
+     "explanation": "Class `C` doesn't declare `__slots__`, so Python gives it a normal `__dict__`, defeating the memory saving. To keep slots in a subclass declare `__slots__ = ()` (or its own names).",
+     "code": "class B:\n    __slots__ = (\"a\",)\n\nclass C(B):\n    pass\n\nc = C()\nc.zzz = 1\nprint(c.zzz)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "True True",
+      "True False",
+      "False False",
+      "False True"
+     ],
+     "answer": 1,
+     "explanation": "Function objects are non-data descriptors: each `a.f` access calls `function.__get__` and builds a **new bound-method object**. They compare equal (same function and same `self`) but are different objects.",
+     "code": "class A:\n    def f(self):\n        pass\n\na = A()\nprint(a.f == a.f, a.f is a.f)\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Which hook tells a descriptor the attribute name it was assigned to?",
+     "code": "def ____(self, owner, name):\n    self.name = name",
+     "answer": [
+      "__set_name__"
+     ],
+     "explanation": "`__set_name__` is called once per descriptor when the owning class body finishes executing."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Implement a `Positive` data descriptor (with `__set_name__`, `__get__`, `__set__`) that rejects values <= 0 by raising ValueError. Create `Item` with `qty = Positive()`. Print `item.qty` after setting 5, then catch and print the error message after trying to set -1.",
+     "starter": "class Positive:\n    pass  # implement\n\nclass Item:\n    qty = Positive()\n\nitem = Item()\nitem.qty = 5\nprint(item.qty)\ntry:\n    item.qty = -1\nexcept ValueError as e:\n    print(e)\n",
+     "solution": "class Positive:\n    def __set_name__(self, owner, name):\n        self.private = \"_\" + name\n    def __get__(self, obj, owner=None):\n        if obj is None:\n            return self\n        return getattr(obj, self.private)\n    def __set__(self, obj, value):\n        if value <= 0:\n            raise ValueError(\"must be positive\")\n        setattr(obj, self.private, value)\n\nclass Item:\n    qty = Positive()\n\nitem = Item()\nitem.qty = 5\nprint(item.qty)\ntry:\n    item.qty = -1\nexcept ValueError as e:\n    print(e)\n",
+     "expected_output": "5\nmust be positive",
+     "hint": "Store the real value under a private name on the instance (e.g. '_qty') so you don't recurse into __set__."
+    }
+   ]
+  },
+  {
+   "id": "py-u10-new-init-metaclass",
+   "track_id": "python",
+   "unit_id": "py-u10",
+   "title": "__new__ vs __init__, Metaclasses, __init_subclass__",
+   "minutes": 15,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Instance creation pipeline",
+     "body": "`Cls(args)` runs `type.__call__(Cls, args)`, which does: (1) `obj = Cls.__new__(Cls, args)` — **allocates** and returns the instance; (2) if `obj` is an instance of `Cls`, calls `obj.__init__(args)` — **initialises**. If `__new__` returns something else, `__init__` is skipped.\n\nUse `__new__` for immutable types (`int`, `str`, `tuple` subclasses fix their value at creation), singletons, and instance caching. A singleton built on `__new__` re-runs `__init__` on **every** call, a common bug.\n\n**Metaclasses**: classes are instances of `type`. `class A(metaclass=Meta)` calls `Meta(name, bases, namespace)`, so `Meta.__new__`/`__init__` run when the class is *created*. `Meta.__call__` customises *instantiation*. Use cases: registries, ORMs, API enforcement.\n\nBefore reaching for a metaclass, consider `__init_subclass__` (hook called on the parent when a subclass is defined) or a class decorator: simpler and composable. \"If you wonder whether you need a metaclass, you don't.\"",
+     "code": "class Plugin:\n    registry = {}\n    def __init_subclass__(cls, **kw):\n        super().__init_subclass__(**kw)\n        Plugin.registry[cls.__name__] = cls\n\nclass CsvPlugin(Plugin): pass     # auto-registered\nprint(Plugin.registry)\n"
+    },
+    {
+     "type": "concept",
+     "title": "type() as a class factory",
+     "body": "`type(name, bases, namespace)` is what the `class` statement ultimately calls, so you can build classes dynamically: `Dyn = type(\"Dyn\", (Base,), {\"x\": 1, \"hello\": lambda self: \"hi\"})`. Metaclass conflicts arise when bases have different metaclasses: the derived metaclass must subclass all of them.",
+     "code": "Point = type(\"Point\", (), {\"dims\": 2})\nprint(Point.dims, type(Point))    # 2 <class 'type'>\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "new init 42",
+      "new 42",
+      "init 42",
+      "42"
+     ],
+     "answer": 1,
+     "explanation": "`__new__` returns `42`, an int, not an instance of `A`, so `type.__call__` skips `A.__init__`. `print(A())` then prints the object returned by `__new__`.",
+     "code": "class A:\n    def __new__(cls):\n        print(\"new\")\n        return 42\n    def __init__(self):\n        print(\"init\")\n\nprint(A())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "init",
+      "init init",
+      "Nothing",
+      "init (once), second call returns cached"
+     ],
+     "answer": 1,
+     "explanation": "The singleton returns the same object from `__new__` both times, but because it is an instance of `S`, Python still calls `__init__` each time. Put one-time setup in `__new__` or guard it.",
+     "code": "class S:\n    _i = None\n    def __new__(cls):\n        if cls._i is None:\n            cls._i = super().__new__(cls)\n        return cls._i\n    def __init__(self):\n        print(\"init\")\n\nS()\nS()\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the print order?",
+     "options": [
+      "Meta.new A / Meta.init A / body",
+      "body / Meta.new A / Meta.init A",
+      "body / Meta.init A / Meta.new A",
+      "Meta.init A / body / Meta.new A"
+     ],
+     "answer": 1,
+     "explanation": "The class body executes first to build the namespace (prints 'body'), then the metaclass is called with that namespace: `Meta.__new__` creates the class, then `Meta.__init__` initialises it.",
+     "code": "class Meta(type):\n    def __new__(m, n, b, d):\n        print(\"Meta.new\", n)\n        return super().__new__(m, n, b, d)\n    def __init__(c, n, b, d):\n        print(\"Meta.init\", n)\n        super().__init__(n, b, d)\n\nclass A(metaclass=Meta):\n    print(\"body\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "['A', 'B'] <class 'type'>",
+      "[] <class 'Plugin'>",
+      "['A', 'B'] <class 'Plugin'>",
+      "['Plugin', 'A', 'B'] <class 'type'>"
+     ],
+     "answer": 0,
+     "explanation": "`__init_subclass__` is invoked on the parent once per subclass definition (not for `Plugin` itself). It needs no metaclass; `type(A)` is still plain `type`.",
+     "code": "class Plugin:\n    reg = []\n    def __init_subclass__(cls, **kw):\n        super().__init_subclass__(**kw)\n        Plugin.reg.append(cls.__name__)\n\nclass A(Plugin):\n    pass\n\nclass B(Plugin):\n    pass\n\nprint(Plugin.reg, type(A))\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Create a class dynamically:",
+     "code": "Dyn = ____(\"Dyn\", (), {\"x\": 1})",
+     "answer": [
+      "type"
+     ],
+     "explanation": "`type(name, bases, namespace)` is the default metaclass constructor, the same call the class statement makes."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write a metaclass `FieldMeta` that adds a `fields` class attribute listing, in definition order, the non-callable public attributes (names not starting with `_`) of every class it creates. Define `Model(metaclass=FieldMeta)` with `name = ''`, `age = 0` and a method, then print `Model.fields`.",
+     "starter": "class FieldMeta(type):\n    pass  # implement __new__\n\nclass Model(metaclass=FieldMeta):\n    name = \"\"\n    age = 0\n    def greet(self):\n        return \"hi\"\n\nprint(Model.fields)\n",
+     "solution": "class FieldMeta(type):\n    def __new__(mcls, name, bases, ns):\n        ns[\"fields\"] = [k for k, v in ns.items() if not k.startswith(\"_\") and not callable(v)]\n        return super().__new__(mcls, name, bases, ns)\n\nclass Model(metaclass=FieldMeta):\n    name = \"\"\n    age = 0\n    def greet(self):\n        return \"hi\"\n\nprint(Model.fields)\n",
+     "expected_output": "['name', 'age']",
+     "hint": "Mutate the namespace dict before delegating to super().__new__; dicts keep definition order."
+    }
+   ]
+  },
+  {
+   "id": "py-u10-mro-getattr",
+   "track_id": "python",
+   "unit_id": "py-u10",
+   "title": "MRO, super() & Attribute Access Hooks",
+   "minutes": 14,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "C3 linearization and super()",
+     "body": "Python computes a **method resolution order** with C3 linearization: children before parents, bases in their listed order, and each class appears once, preserving every parent's own MRO ordering. Inspect with `Cls.__mro__` or `Cls.mro()`. If no consistent ordering exists (e.g. `class X(A, B)` where `B` subclasses `A`), class creation raises `TypeError`.\n\n`super()` does **not** mean \"my parent\". It means \"the next class after the current one in `type(self).__mro__`\". In a diamond (D inherits B and C which both inherit A), `super().f()` in B calls **C's** `f` when `self` is a D. For this to work every class must call `super()` and accept `**kwargs` — *cooperative multiple inheritance*.",
+     "code": "class A: pass\nclass B(A): pass\nclass C(A): pass\nclass D(B, C): pass\nprint([k.__name__ for k in D.__mro__])   # ['D', 'B', 'C', 'A', 'object']\n"
+    },
+    {
+     "type": "concept",
+     "title": "__getattr__ vs __getattribute__",
+     "body": "`obj.name` first calls **`__getattribute__`** (on every access, for every name). The default one implements the descriptor/instance-dict/class lookup. Only if that raises `AttributeError` does Python call **`__getattr__`** as a fallback. So `__getattr__` is for *missing* attributes (lazy loading, proxies, delegation), while overriding `__getattribute__` intercepts *everything* (and risks infinite recursion: always reach storage via `object.__getattribute__(self, name)` or `super()`).\n\n`__setattr__` is called on every assignment (use `super().__setattr__` / `object.__setattr__`). Special-method lookups (`len(x)`) bypass instance `__getattr__` and go through the type.",
+     "code": "class Proxy:\n    def __init__(self, target):\n        object.__setattr__(self, \"_t\", target)\n    def __getattr__(self, name):          # only for names not found normally\n        return getattr(self._t, name)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print (first lines) and what is D's MRO?",
+     "options": [
+      "D B C A / ['D','B','C','A','object']",
+      "D B A / ['D','B','A','object']",
+      "D B A C A / ['D','B','C','A','object']",
+      "D B C A / ['D','B','A','C','object']"
+     ],
+     "answer": 0,
+     "explanation": "`super()` in B delegates to the next class in D's MRO, which is C (not A). C then delegates to A. A is visited exactly once because the MRO linearises the diamond.",
+     "code": "class A:\n    def f(self):\n        print(\"A\")\n\nclass B(A):\n    def f(self):\n        print(\"B\")\n        super().f()\n\nclass C(A):\n    def f(self):\n        print(\"C\")\n        super().f()\n\nclass D(B, C):\n    def f(self):\n        print(\"D\")\n        super().f()\n\nD().f()\nprint([k.__name__ for k in D.__mro__])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "TypeError",
+      "X",
+      "Error only when instantiated",
+      "None"
+     ],
+     "answer": 0,
+     "explanation": "`X(A, B)` demands A before B, but B's own MRO demands B before A. No linearisation satisfies both, so class creation raises `TypeError: Cannot create a consistent method resolution order`. Fix the base order: `X(B, A)`.",
+     "code": "class A:\n    pass\n\nclass B(A):\n    pass\n\ntry:\n    class X(A, B):\n        pass\nexcept TypeError:\n    print(\"TypeError\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "1 missing b",
+      "1 1",
+      "missing a missing b",
+      "AttributeError"
+     ],
+     "answer": 0,
+     "explanation": "`a` exists in the instance dict, so normal lookup succeeds and `__getattr__` is never called. `b` is absent, normal lookup raises AttributeError, and Python falls back to `__getattr__`.",
+     "code": "class T:\n    def __init__(self):\n        self.a = 1\n    def __getattr__(self, n):\n        return f\"missing {n}\"\n\nt = T()\nprint(t.a, t.b)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "intercepted fallback",
+      "5 fallback",
+      "intercepted intercepted",
+      "5 5"
+     ],
+     "answer": 0,
+     "explanation": "`__getattribute__` runs for every access, including `u.x`, so it wins even though `x=5` is in the instance dict. For `y`, `super().__getattribute__` raises AttributeError, which triggers `__getattr__`, returning 'fallback'.",
+     "code": "class U:\n    def __getattribute__(self, n):\n        if n == \"x\":\n            return \"intercepted\"\n        return super().__getattribute__(n)\n    def __getattr__(self, n):\n        return \"fallback\"\n\nu = U()\nu.x = 5\nprint(u.x, u.y)\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Name of the attribute holding a class's resolution order:",
+     "code": "print(D.____)",
+     "answer": [
+      "__mro__"
+     ],
+     "explanation": "`__mro__` is a tuple of classes in lookup order; `D.mro()` returns the same as a list."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Using cooperative `super().__init__(**kw)`, make each of the classes A, B, C, D (D inherits B, C; B and C inherit A) append its own name to a shared list *after* calling super. Instantiate D and print the list.",
+     "starter": "order = []\n\nclass A:\n    def __init__(self, **kw):\n        pass  # implement\n\nclass B(A):\n    pass\n\nclass C(A):\n    pass\n\nclass D(B, C):\n    pass\n\nD()\nprint(order)\n",
+     "solution": "order = []\n\nclass A:\n    def __init__(self, **kw):\n        super().__init__(**kw)\n        order.append(\"A\")\n\nclass B(A):\n    def __init__(self, **kw):\n        super().__init__(**kw)\n        order.append(\"B\")\n\nclass C(A):\n    def __init__(self, **kw):\n        super().__init__(**kw)\n        order.append(\"C\")\n\nclass D(B, C):\n    def __init__(self, **kw):\n        super().__init__(**kw)\n        order.append(\"D\")\n\nD()\nprint(order)\n",
+     "expected_output": "['A', 'C', 'B', 'D']",
+     "hint": "The MRO is D, B, C, A; appending after super() means the deepest class (A) appends first."
+    }
+   ]
+  },
+  {
+   "id": "py-u11-profiling",
+   "track_id": "python",
+   "unit_id": "py-u11",
+   "title": "Profiling: timeit, cProfile, tracemalloc",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Measure before you optimise",
+     "body": "**`timeit`** benchmarks small snippets: it disables GC during the run, uses the best clock (`perf_counter`), and lets you separate `setup` (not timed) from `stmt`. Use `timeit.repeat(...)` and take the **minimum** of the runs: noise (other processes, cache effects) only ever *adds* time, so the minimum is the best estimate of the true cost; the mean is polluted by outliers.\n\n**`cProfile`** is a *deterministic* profiler: it hooks every function call/return and records call counts and times. In `pstats`, **`tottime`** is time inside the function itself (excluding callees) while **`cumtime`** includes callees. Look for high `tottime` for hotspots and high `cumtime` to find expensive call trees. It adds overhead (distorting tiny functions), whereas *sampling* profilers (py-spy, scalene) have low overhead and can attach to a live process.\n\n**`tracemalloc`** tracks allocations: `take_snapshot().statistics(\"lineno\")` shows which lines allocate the most. `time.perf_counter()` is the right clock for elapsed time; `time.time()` can jump (NTP) and is lower resolution.",
+     "code": "import cProfile, pstats\ncProfile.run(\"main()\", \"out.prof\")\npstats.Stats(\"out.prof\").sort_stats(\"cumulative\").print_stats(10)\n"
+    },
+    {
+     "type": "concept",
+     "title": "Typical wins",
+     "body": "Algorithmic fixes dwarf micro-optimisations: replace a list membership test with a set, a nested loop with a dict lookup, repeated `str +=` with `\"\".join`, `list.pop(0)` with `deque.popleft`, repeated recomputation with `lru_cache`. After that: local-variable aliasing in hot loops, comprehensions over append loops, generators for memory, NumPy/vectorisation, or moving a kernel to C/Cython/Rust. Always re-measure; profile on realistic data.",
+     "code": "# O(n) per lookup -> O(1)\nseen = set(items)\nhits = [x for x in queries if x in seen]\n"
+    },
+    {
+     "type": "mcq",
+     "question": "In a `pstats` report, function `f` has `tottime` 0.01s and `cumtime` 2.0s. What does that tell you?",
+     "options": [
+      "f itself is the hotspot",
+      "f spends little time in its own body; almost all the time is in functions it calls, so inspect its callees",
+      "f was called exactly 2 times",
+      "The profile is corrupted"
+     ],
+     "answer": 1,
+     "explanation": "`tottime` excludes callees; `cumtime` includes them. A big gap means the cost is below `f` in the call tree."
+    },
+    {
+     "type": "mcq",
+     "question": "You benchmark with `timeit.repeat(stmt, number=1000, repeat=5)`. Which statistic should you report and why?",
+     "options": [
+      "The mean, because it uses all the data",
+      "The minimum, because noise only adds time so the minimum is closest to the true cost",
+      "The maximum, to be conservative",
+      "The median of the first two runs"
+     ],
+     "answer": 1,
+     "explanation": "Interference from the OS, GC or other processes can slow a run but never speed it up beyond the real cost. The minimum approximates the noise-free time (the timeit docs recommend this)."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[('f', 1), ('g', 2)]",
+      "[('f', 1), ('g', 1)]",
+      "[('f', 2), ('g', 1)]",
+      "[('g', 2)]"
+     ],
+     "answer": 0,
+     "explanation": "cProfile counts calls: `f` was called once and it called `g` twice. Call counts are exact (unlike times), which makes them useful in tests and for spotting accidental repeated work such as N+1 queries.",
+     "code": "import cProfile, pstats\n\ndef g():\n    return 1\n\ndef f():\n    return g() + g()\n\npr = cProfile.Profile()\npr.enable()\nf()\npr.disable()\nst = pstats.Stats(pr)\nprint(sorted((k[2], v[1]) for k, v in st.stats.items() if k[2] in (\"f\", \"g\")))\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Highest-resolution monotonic clock for timing code:",
+     "code": "start = time.____()",
+     "answer": [
+      "perf_counter"
+     ],
+     "explanation": "`time.perf_counter()` is monotonic with the best available resolution; `time.time()` is wall-clock and can go backwards."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Count how many calls the naive recursive `fib(15)` makes versus the `lru_cache` version. Use a global counter incremented inside each function. Print the two counts separated by a space.",
+     "starter": "from functools import lru_cache\n\ncalls = 0\n\ndef fib_naive(n):\n    # count the call\n    return n if n < 2 else fib_naive(n - 1) + fib_naive(n - 2)\n\ndef fib_cached(n):\n    # count the call and cache the function\n    return n if n < 2 else fib_cached(n - 1) + fib_cached(n - 2)\n\nfib_naive(15)\na = calls\ncalls = 0\nfib_cached(15)\nprint(a, calls)\n",
+     "solution": "from functools import lru_cache\n\ncalls = 0\n\ndef fib_naive(n):\n    global calls\n    calls += 1\n    return n if n < 2 else fib_naive(n - 1) + fib_naive(n - 2)\n\n@lru_cache(maxsize=None)\ndef fib_cached(n):\n    global calls\n    calls += 1\n    return n if n < 2 else fib_cached(n - 1) + fib_cached(n - 2)\n\nfib_naive(15)\na = calls\ncalls = 0\nfib_cached(15)\nprint(a, calls)\n",
+     "expected_output": "1973 16",
+     "hint": "Use `global calls; calls += 1` at the top of both; decorate fib_cached with @lru_cache(maxsize=None). The cached body runs once per distinct n (16 values)."
+    }
+   ]
+  },
+  {
+   "id": "py-u11-builtin-complexity",
+   "track_id": "python",
+   "unit_id": "py-u11",
+   "title": "Complexity of Built-ins",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The table you must know",
+     "body": "**list**: index/`append`/`pop()` O(1) (append amortised), `insert(i)`/`pop(0)`/`remove`/`in`/`index` O(n), slicing O(k), `sort` O(n log n), `a + b` O(n+m).\n**dict / set**: get/set/delete/`in` O(1) *average*, O(n) worst case when many keys collide (hash flooding). Iteration O(n). Set ops: `a & b` O(min(len)), `a | b` O(len a + len b).\n**deque**: O(1) at both ends, O(n) indexing in the middle. **heapq**: push/pop O(log n), `heapify` O(n), `nlargest(k)` O(n log k).\n**str**: immutable; `s += c` in a loop can be O(n²) (CPython sometimes optimises a refcount-1 left operand but it's not guaranteed); `\"\".join(parts)` is O(total). `in` is substring search.\n**sorting**: Timsort is **stable**, adaptive (O(n) on already sorted or reverse-sorted runs), O(n log n) worst, O(n) extra space.\n`len()` O(1). `x in range(...)` is O(1) arithmetic, not a scan. `bisect` search O(log n) but `insort` O(n) due to shifting.",
+     "code": "from collections import deque\nq = deque([1, 2, 3])\nq.appendleft(0)   # O(1); list.insert(0, 0) would be O(n)\n"
+    },
+    {
+     "type": "concept",
+     "title": "Amortised analysis",
+     "body": "Why is `append` O(1) amortised? A list over-allocates: it grows by roughly 1.125x each time it's full (not doubling), so reallocations happen rarely and the total copying across n appends is O(n). A single append can be O(n), but the average is O(1). The same argument applies to dict resizing. Interviewers often ask for the *worst-case* single operation: that is O(n) for append and dict insert.",
+     "code": "import sys\nl = []\nfor i in range(5):\n    print(len(l), sys.getsizeof(l))   # size jumps in steps, not on every append\n    l.append(i)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the time complexity of draining a list of n elements with `while lst: lst.pop(0)`?",
+     "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(n^2)",
+      "O(1)"
+     ],
+     "answer": 2,
+     "explanation": "Each `pop(0)` shifts all remaining elements left: O(n). Done n times that is O(n^2). Use `collections.deque.popleft()` for O(1) each, or reverse the list and `pop()` from the end."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print, and how fast?",
+     "options": [
+      "True instantly",
+      "MemoryError",
+      "True after a very long scan",
+      "False"
+     ],
+     "answer": 0,
+     "explanation": "`range` implements `__contains__` with arithmetic (start, stop, step), so membership is O(1) for ints. A `list(range(10**12))` would be the memory disaster.",
+     "code": "print(10**11 in range(10**12))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[('c', 1), ('b', 2), ('a', 2)]",
+      "[('c', 1), ('a', 2), ('b', 2)]",
+      "[('b', 2), ('a', 2), ('c', 1)]",
+      "[('a', 2), ('b', 2), ('c', 1)]"
+     ],
+     "answer": 0,
+     "explanation": "Python's sort is stable: elements with equal keys keep their original relative order. ('b', 2) was before ('a', 2) in the input, so it stays before it. This is why multi-pass sorting (sort by secondary key first, then primary) works.",
+     "code": "data = [(\"b\", 2), (\"a\", 2), (\"c\", 1)]\nprint(sorted(data, key=lambda t: t[1]))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "You need the 10 largest items from a stream of n = 10 million numbers. Best approach?",
+     "options": [
+      "sorted(stream)[-10:], O(n log n) time and O(n) memory",
+      "A min-heap of size 10 (heapq.nlargest), O(n log 10) time and O(10) memory",
+      "list.sort() twice",
+      "Put them in a set"
+     ],
+     "answer": 1,
+     "explanation": "Keep a min-heap of the 10 best so far; each new element is compared with the heap root (the smallest of the top 10) and pushes/pops only if bigger. Memory stays tiny and works on streams."
+    },
+    {
+     "type": "fill",
+     "prompt": "Double-ended queue with O(1) pops on both ends:",
+     "code": "from collections import ____",
+     "answer": [
+      "deque"
+     ],
+     "explanation": "`deque` is a doubly-linked list of blocks; `popleft`/`appendleft` are O(1) unlike `list`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Use a monotonic `deque` to compute the maximum of every sliding window of size 3 in `[1, 3, -1, -3, 5, 3, 6, 7]` in O(n). Print the resulting list.",
+     "starter": "from collections import deque\n\nnums = [1, 3, -1, -3, 5, 3, 6, 7]\nk = 3\nresult = []\ndq = deque()   # holds indexes, values decreasing\n# fill result\nprint(result)\n",
+     "solution": "from collections import deque\n\nnums = [1, 3, -1, -3, 5, 3, 6, 7]\nk = 3\nresult = []\ndq = deque()\nfor i, x in enumerate(nums):\n    while dq and nums[dq[-1]] <= x:\n        dq.pop()\n    dq.append(i)\n    if dq[0] <= i - k:\n        dq.popleft()\n    if i >= k - 1:\n        result.append(nums[dq[0]])\nprint(result)\n",
+     "expected_output": "[3, 3, 5, 5, 6, 7]",
+     "hint": "Pop smaller values from the back before pushing; pop the front when its index leaves the window; the front is the max."
+    }
+   ]
+  },
+  {
+   "id": "py-u11-itertools-collections",
+   "track_id": "python",
+   "unit_id": "py-u11",
+   "title": "itertools, functools & collections Deep Cuts",
+   "minutes": 14,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "itertools you should know cold",
+     "body": "- `groupby(it, key)` groups only **consecutive** equal keys, so sort first. Each group is a lazy iterator that is **invalidated when you advance** the outer iterator; consume it immediately (`list(g)`).\n- `accumulate(it, func)` running totals; `chain.from_iterable` flattens one level; `islice` slices any iterator; `zip_longest` pads; `pairwise` (3.10) adjacent pairs; `batched` (3.12) fixed-size chunks.\n- `product`, `permutations`, `combinations`, `combinations_with_replacement` — lazy; know the counts (n!/(n-k)!, C(n,k)).\n- `tee(it, n)` makes independent iterators but buffers consumed items; never use the original after teeing; if one copy runs far ahead memory grows. `count`, `cycle`, `repeat` are infinite.",
+     "code": "from itertools import groupby, accumulate, pairwise\nlist(accumulate([1, 2, 3, 4]))      # [1, 3, 6, 10]\nlist(pairwise(\"abc\"))               # [('a', 'b'), ('b', 'c')]\n"
+    },
+    {
+     "type": "concept",
+     "title": "functools & collections",
+     "body": "`functools`: `partial` pre-fills arguments; `reduce` folds (pass an initial value for empty input); `singledispatch` overloads on the first argument's type; `cached_property` computes once per instance; `total_ordering` derives comparisons from `__eq__` + one of `<`..; `cmp_to_key` adapts old cmp functions for `sorted`.\n\n`collections`: `Counter` (`most_common(k)`; arithmetic **drops zero/negative counts**), `defaultdict` (**reading** a missing key *creates* it; `.get` doesn't), `deque(maxlen=n)` ring buffer, `OrderedDict.move_to_end` (LRU cache building block), `ChainMap` layered lookups, `namedtuple` (immutable, tuple-compatible).",
+     "code": "from collections import Counter\nc = Counter(\"abracadabra\")\nprint(c.most_common(2))     # [('a', 5), ('b', 2)]\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[('a', 4), ('b', 1)]",
+      "[('a', 2), ('b', 1), ('a', 2)]",
+      "[('a', 2), ('b', 1)]",
+      "[('a', 2), ('a', 2), ('b', 1)]"
+     ],
+     "answer": 1,
+     "explanation": "`groupby` starts a new group each time the key changes, it does not collect all equal keys. 'aabaa' gives runs a,a / b / a,a. Sort the input (or use a dict/Counter) if you want global grouping.",
+     "code": "from itertools import groupby\nprint([(k, len(list(g))) for k, g in groupby(\"aabaa\")])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "['a', 'a']",
+      "[]",
+      "['a']",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "Each group iterator shares the underlying iterator. `list(groupby(...))` advances the outer iterator past the first group before you read it, which invalidates that group, so it looks empty. Consume each group before moving on.",
+     "code": "from itertools import groupby\npairs = list(groupby(\"aab\"))\nprint(list(pairs[0][1]))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "Counter({'a': 1})",
+      "Counter({'a': 1, 'b': -1})",
+      "Counter()",
+      "Counter({'a': 1, 'b': 0})"
+     ],
+     "answer": 0,
+     "explanation": "Counter subtraction with the `-` operator keeps only positive counts: a: 2-1=1 stays; b: 1-2=-1 is dropped. Use `.subtract()` if you want to keep zero and negative counts.",
+     "code": "from collections import Counter\nprint(Counter(\"aab\") - Counter(\"abb\"))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "False 0 None 0",
+      "True 1 None 1",
+      "True 1 None 2",
+      "False 0 None 1"
+     ],
+     "answer": 1,
+     "explanation": "Just *reading* `d['x']` calls `__missing__`, which inserts a new default value, so the dict grows. `d.get('y')` does not trigger the factory and doesn't insert. This matters when probing a defaultdict in code that later iterates its keys.",
+     "code": "from collections import defaultdict\nd = defaultdict(list)\nd[\"x\"]\nprint(\"x\" in d, len(d), d.get(\"y\"), len(d))\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Take the first two items from any iterator without a list:",
+     "code": "from itertools import ____\nlist(____(it, 2))",
+     "answer": [
+      "islice"
+     ],
+     "explanation": "`islice(it, stop)` returns a lazy slice and works on iterators that don't support indexing."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Implement run-length encoding with `itertools.groupby`: encode `'aaabccdddd'` into `'a3b1c2d4'`, then decode it back with a regex or a loop, printing both strings on separate lines.",
+     "starter": "from itertools import groupby\n\ns = \"aaabccdddd\"\n# encode with groupby, then decode and print both\n",
+     "solution": "from itertools import groupby\nimport re\n\ns = \"aaabccdddd\"\nenc = \"\".join(f\"{k}{len(list(g))}\" for k, g in groupby(s))\nprint(enc)\ndec = \"\".join(ch * int(n) for ch, n in re.findall(r\"(\\D)(\\d+)\", enc))\nprint(dec)\n",
+     "expected_output": "a3b1c2d4\naaabccdddd",
+     "hint": "len(list(g)) counts the run; for decoding, pair each non-digit with the number after it."
+    }
+   ]
+  },
+  {
+   "id": "py-u11-tricky-questions",
+   "track_id": "python",
+   "unit_id": "py-u11",
+   "title": "Classic Tricky Interview Questions",
+   "minutes": 15,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The gotcha checklist",
+     "body": "These come up constantly in senior screens; for each you should be able to explain *why*:\n\n1. **Late-binding closures**: a closure captures the *variable*, not its value at definition time, so loops create functions that all see the final value. Fix with a default argument (`lambda i=i: i`), `functools.partial`, or a factory function.\n2. **Mutable default arguments**: defaults are evaluated **once at `def` time** and stored in `f.__defaults__`; mutating them persists across calls. Use `None` and create inside.\n3. **`finally` beats `return`**: a `return` in `finally` overrides the try's return and even swallows exceptions.\n4. **Hash/equality collisions**: `1 == 1.0 == True` and they hash alike, so they are the same dict key (the first inserted key object is kept, the last value wins).\n5. **Class vs instance attributes**: `self.n += 1` reads the class attribute and writes a new *instance* attribute (rebinding), while `self.xs.append(...)` mutates the shared class-level list.\n6. The name bound by `except E as e` is **deleted** after the block.",
+     "code": "def append_to(x, bucket=[]):      # one list, created at def time\n    bucket.append(x)\n    return bucket\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[0, 1, 2] [0, 1, 2]",
+      "[0, 1, 2] [2, 2, 2]",
+      "[2, 2, 2] [2, 2, 2]",
+      "[0, 1, 2] [0, 0, 0]"
+     ],
+     "answer": 1,
+     "explanation": "The lambdas in `gs` all share the loop variable `i`, which is 2 when they are finally called (late binding). `fs` uses `i=i` as a default argument, evaluated at definition time, so each lambda stores its own value.",
+     "code": "fs = [lambda i=i: i for i in range(3)]\ngs = [lambda: i for i in range(3)]\nprint([f() for f in fs], [g() for g in gs])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "False [2] ([2],)",
+      "True [1, 2] ([1, 2],)",
+      "True [2] ([],)",
+      "False [1, 2] ([1, 2],)"
+     ],
+     "answer": 1,
+     "explanation": "The default list is created once and stored in `add.__defaults__`. Both calls return that same list, which now contains both items. `a is b` is True and the defaults tuple holds the mutated list.",
+     "code": "def add(x, acc=[]):\n    acc.append(x)\n    return acc\n\na = add(1)\nb = add(2)\nprint(a is b, b, add.__defaults__)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "try",
+      "finally",
+      "try finally",
+      "RuntimeError"
+     ],
+     "answer": 1,
+     "explanation": "The return value `'try'` is computed, then `finally` runs and its own `return` replaces it. (A `return`/`break`/`continue` in `finally` also discards any in-flight exception, which is why linters warn about it, and 3.14 emits a SyntaxWarning.)",
+     "code": "def f():\n    try:\n        return \"try\"\n    finally:\n        return \"finally\"\n\nprint(f())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "{1: 'a', 1.0: 'b', True: 'c'}",
+      "{1: 'c'}",
+      "{1: 'a'}",
+      "{1: 'a', True: 'c'}"
+     ],
+     "answer": 1,
+     "explanation": "`1`, `1.0` and `True` are equal and have equal hashes, so each assignment hits the same slot. The first key object (`1`) is kept; the value is overwritten by the last one, `'c'`.",
+     "code": "print({1: \"a\", 1.0: \"b\", True: \"c\"})\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "[1] 1 1",
+      "[1] 0 0",
+      "[] 0 0",
+      "[1] 1 0"
+     ],
+     "answer": 1,
+     "explanation": "`a.xs.append(1)` mutates the list shared on the class, so `b.xs` sees it. `a.n += 1` computes `a.n + 1` from the class value 0, then creates a *new instance attribute* on `a` only; `b.n` and `A.n` stay 0.",
+     "code": "class A:\n    xs = []\n    n = 0\n\na, b = A(), A()\na.xs.append(1)\na.n += 1\nprint(b.xs, b.n, A.n)\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "The safe idiom for an optional mutable parameter:",
+     "code": "def f(x, acc=____):\n    if acc is None:\n        acc = []",
+     "answer": [
+      "None"
+     ],
+     "explanation": "A `None` sentinel is immutable and shared harmlessly; the real list is created fresh inside each call."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Implement `make_multipliers(n)` returning a list of n functions where function i multiplies its argument by i. Ensure no late-binding bug. Print `[f(10) for f in make_multipliers(4)]`.",
+     "starter": "def make_multipliers(n):\n    # return a list of n closures\n    pass\n\nprint([f(10) for f in make_multipliers(4)])\n",
+     "solution": "def make_multipliers(n):\n    return [lambda x, i=i: x * i for i in range(n)]\n\nprint([f(10) for f in make_multipliers(4)])\n",
+     "expected_output": "[0, 10, 20, 30]",
+     "hint": "Bind the loop variable as a default argument (i=i) or build the closure in a helper function."
+    }
+   ]
+  }
+ ]
+}

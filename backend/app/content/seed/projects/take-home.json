@@ -1,0 +1,2904 @@
+{
+ "projects": [
+  {
+   "id": "proj-fe-crypto-dashboard",
+   "title": "Real-time Crypto Price Dashboard",
+   "niche": "Frontend",
+   "level": "Intermediate",
+   "hours": 8,
+   "summary": "Build a live-updating market dashboard with a sortable watchlist and price chart.",
+   "brief": "Northwind Trading wants an internal dashboard for traders to watch a handful of crypto pairs. You will consume the public Coinbase Exchange WebSocket feed (wss://ws-feed.exchange.coinbase.com, channel `ticker`, products such as BTC-USD, ETH-USD, SOL-USD) and the REST candles endpoint (`/products/{id}/candles?granularity=60`) for history.\n\nThe main screen shows a watchlist table (symbol, last price, 24h change %, volume) that updates as ticks arrive, plus a detail panel with a 1-hour candlestick or line chart for the selected pair. Traders keep this open all day on a second monitor, so it must not leak memory, must reconnect after network loss and must stay responsive when ticks arrive several times per second.\n\nYou may choose any chart library. Design is secondary to clarity: price changes should be visually obvious (flash or colour) without being distracting, and the layout must work from 1024px wide up.",
+   "requirements": [
+    "Subscribe to the ticker channel for at least 5 products and update rows in place",
+    "Sortable columns (symbol, price, change %) with sort state kept while ticks arrive",
+    "Selected pair shows a chart seeded from REST candles and extended live from ticks",
+    "Automatic reconnect with exponential backoff and a visible connection-status indicator",
+    "Throttle or batch rendering so the UI stays smooth at 10+ updates per second",
+    "Add and remove pairs from the watchlist, persisted in localStorage",
+    "Loading, empty and error states for every async view",
+    "Unit tests for the data-normalisation and sort logic plus at least one component test"
+   ],
+   "stretch": [
+    "Price alerts with browser notifications",
+    "Dark/light theme following system preference",
+    "Keyboard navigation of the table",
+    "Playwright smoke test of the happy path"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "React",
+    "TypeScript",
+    "WebSocket",
+    "Vite",
+    "Vitest"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "Live updates match the feed, change % is computed correctly, reconnect works after the socket is killed"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 20,
+     "description": "Typed message models, small components, no stray any, clean hooks with proper cleanup"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Feed handling separated from UI, state updates batched, sensible state ownership"
+    },
+    {
+     "criterion": "Performance",
+     "weight": 15,
+     "description": "No unnecessary re-renders, no leaked sockets or timers, profiler evidence or reasoning in README"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 10,
+     "description": "Meaningful tests of pure logic and one UI behaviour; not snapshot-only"
+    },
+    {
+     "criterion": "UX & accessibility",
+     "weight": 10,
+     "description": "Clear status states, colour is not the only change signal, semantic table markup"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Setup, decisions and trade-offs are easy to follow"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io"
+   ]
+  },
+  {
+   "id": "proj-fe-design-system",
+   "title": "Accessible Component Library",
+   "niche": "Frontend",
+   "level": "Advanced",
+   "hours": 16,
+   "summary": "Create a small themeable component library with documentation and accessibility guarantees.",
+   "brief": "Brightside Health is consolidating three web apps onto one design system. They need a first release of a React component library covering Button, TextField, Select (listbox pattern), Modal Dialog, Tabs and Toast, with theming through CSS variables and a Storybook (or equivalent) documentation site.\n\nAccessibility is the primary acceptance criterion: components must follow the WAI-ARIA Authoring Practices patterns, be fully keyboard operable, trap and restore focus in dialogs, announce toasts through a live region and meet WCAG 2.1 AA contrast in both themes. Visual polish matters less than correctness of behaviour.\n\nThe library will be published to a private npm registry, so treat the public API as a contract: props must be typed, components must forward refs and spread native attributes, and the build must output ESM and CJS with type declarations and tree-shakeable exports.",
+   "requirements": [
+    "Six components with typed props and ref forwarding",
+    "Light and dark themes driven purely by CSS custom properties",
+    "Dialog traps focus, closes on Escape and restores focus to the trigger",
+    "Select supports type-ahead, arrow-key navigation and aria-activedescendant",
+    "Tabs support automatic and manual activation modes",
+    "Toast queue announced via aria-live with configurable duration and pause on hover",
+    "Interaction tests with Testing Library and automated axe checks per component",
+    "Build outputs ESM, CJS and .d.ts files; package.json exports map is correct"
+   ],
+   "stretch": [
+    "Published bundle-size report in CI",
+    "Visual regression tests",
+    "Controlled and uncontrolled modes for every input component",
+    "RTL layout support"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "React",
+    "TypeScript",
+    "Storybook",
+    "Testing Library",
+    "axe-core",
+    "Rollup or tsup"
+   ],
+   "rubric": [
+    {
+     "criterion": "Accessibility",
+     "weight": 25,
+     "description": "Correct roles, states, focus management, keyboard maps and contrast, verified by tests not only claims"
+    },
+    {
+     "criterion": "Correctness",
+     "weight": 15,
+     "description": "Components behave as documented in controlled and uncontrolled use"
+    },
+    {
+     "criterion": "API design",
+     "weight": 15,
+     "description": "Consistent props, composability, forwardRef, sensible defaults, minimal surprise"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Strict TypeScript, no duplication between components, clear hooks"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Behavioural tests with Testing Library plus axe; edge cases such as nested dialogs"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Stories show each state, docs explain accessibility behaviour and theming"
+    },
+    {
+     "criterion": "Build & packaging",
+     "weight": 5,
+     "description": "Working exports map, treeshaking, types published"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Stripe-style",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-fe-kanban",
+   "title": "Offline-first Kanban Board",
+   "niche": "Frontend",
+   "level": "Basic",
+   "hours": 4,
+   "summary": "Build a drag-and-drop task board that persists locally and works offline.",
+   "brief": "A small agency wants a lightweight Kanban board for their own use. Users can create columns (To do, Doing, Done by default), add cards with a title and optional description, and drag cards between and within columns. Everything must persist in the browser so a refresh never loses work.\n\nThe agency is not asking for accounts or a backend. They care that the board is quick, that drag and drop also works with the keyboard, and that the code is simple enough that a junior teammate can extend it next quarter.\n\nSeed data is not provided; the first-run experience should create the three default columns and one example card.",
+   "requirements": [
+    "Create, rename and delete columns",
+    "Create, edit and delete cards",
+    "Drag cards between and within columns, order is preserved",
+    "Keyboard alternative for moving cards (for example buttons or key shortcuts)",
+    "State persisted to localStorage and restored on load",
+    "Basic search box filtering cards by title",
+    "Responsive layout that scrolls horizontally on narrow screens",
+    "Tests covering the reducer or state-management logic"
+   ],
+   "stretch": [
+    "Undo/redo",
+    "Card labels and colours",
+    "Export/import board as JSON",
+    "PWA manifest and service worker"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "React or Vue",
+    "TypeScript",
+    "HTML5 drag and drop or dnd-kit"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 30,
+     "description": "All operations work and order is stable after reload"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 25,
+     "description": "Readable components, predictable state transitions, sensible naming"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "State logic tested including move edge cases such as empty columns"
+    },
+    {
+     "criterion": "UX & accessibility",
+     "weight": 20,
+     "description": "Keyboard support, focus handling, clear affordances on drag"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Clear README and notes on trade-offs"
+    }
+   ],
+   "companies": [
+    "Lemon.io",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-be-url-shortener",
+   "title": "URL Shortener with Analytics API",
+   "niche": "Backend",
+   "level": "Intermediate",
+   "hours": 8,
+   "summary": "Build a production-minded URL shortening service with click analytics and rate limiting.",
+   "brief": "LinkLoop needs a REST service that creates short links, redirects visitors and reports click statistics. A client posts `POST /api/links {\"url\": \"https://example.com/long\", \"alias\": \"optional\", \"expires_at\": \"ISO-8601 optional\"}` and receives a short code. `GET /{code}` redirects with 302 (or 404 / 410 for unknown or expired codes).\n\nEvery redirect must be recorded (timestamp, user-agent family, referrer host, country if you can derive it cheaply). `GET /api/links/{code}/stats?from=&to=&interval=day` returns total clicks and a time series. Redirect latency is the key metric: the p95 target is under 30ms on a single instance at 500 req/s, so recording clicks must not block the response.\n\nAuthentication is by API key header for the management endpoints. Redirects are public. Use a real database (PostgreSQL preferred) and provide migrations.",
+   "requirements": [
+    "Create links with random 7-character base62 codes, collision-safe, or a user alias with validation",
+    "Reject invalid URLs and dangerous schemes (javascript:, data:)",
+    "Redirect endpoint with 302, 404 and 410 handling",
+    "Click events recorded asynchronously (queue, background task or batched insert)",
+    "Stats endpoint with date range and day/hour bucketing",
+    "API key auth on management endpoints, per-key rate limiting (for example 60 requests/min) returning 429 with Retry-After",
+    "Database migrations and an index strategy explained in the README",
+    "Automated tests for creation, redirect, expiry, rate limit and stats"
+   ],
+   "stretch": [
+    "Redis cache for hot redirects",
+    "Bulk create endpoint",
+    "OpenAPI spec generated from code",
+    "Load test script with results (k6 or wrk)"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs",
+    "docker-compose.yml that starts the service and database"
+   ],
+   "tech": [
+    "Python (FastAPI) or Node (NestJS) or Go",
+    "PostgreSQL",
+    "Docker Compose"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "Redirect semantics, expiry, collisions and stats totals are right"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Layered structure, validation, error handling, no god-modules"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Redirect path kept fast, async click recording, sensible schema and indexes"
+    },
+    {
+     "criterion": "Security",
+     "weight": 15,
+     "description": "URL scheme validation, key handling, rate limiting, no SQL injection or open-redirect surprises"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Integration tests against a real DB, edge cases covered"
+    },
+    {
+     "criterion": "Performance",
+     "weight": 10,
+     "description": "Evidence of measurement and reasoned bottleneck choices"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "API docs, run instructions, design notes"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io"
+   ]
+  },
+  {
+   "id": "proj-be-payments-ledger",
+   "title": "Double-entry Payments Ledger",
+   "niche": "Backend",
+   "level": "Expert",
+   "hours": 20,
+   "summary": "Design an idempotent, auditable ledger service that never loses or invents money.",
+   "brief": "A fintech start-up needs the core of its wallet product: a ledger service that records transfers between accounts using double-entry bookkeeping. Every transfer creates two or more immutable entries that sum to zero per currency. Balances are derived from entries, but a materialised balance must be available with strong consistency for authorisation checks.\n\nThe API exposes `POST /transfers` (with an `Idempotency-Key` header), `GET /accounts/{id}/balance` and `GET /accounts/{id}/entries?cursor=`. Clients retry aggressively and several requests for the same account arrive concurrently, so you must prevent overdrafts under concurrency, prevent double-processing on retries, and make partial failure impossible.\n\nYou are free to choose the stack but must use a relational database with real transactions. Include a concurrency test that fires at least 200 parallel transfers against two accounts and asserts that the invariants hold afterwards.",
+   "requirements": [
+    "Accounts with currency and optional overdraft policy",
+    "Immutable entries, no updates or deletes, enforced at database level where possible",
+    "Transfers atomically create balanced entries and update materialised balances",
+    "Idempotency keys: same key and payload returns the original result, same key with different payload returns 409",
+    "Concurrency control that prevents overdrafts (row locks, serialisable isolation or equivalent) with the choice justified",
+    "Cursor-based pagination of entries",
+    "Money stored as integer minor units, never floats; reject cross-currency transfers without an explicit FX entry",
+    "Concurrency and property-style tests asserting global sum is zero and no balance goes below the allowed limit",
+    "A reconciliation endpoint or script that recomputes balances from entries and reports drift"
+   ],
+   "stretch": [
+    "Outbox table publishing transfer events",
+    "Holds/authorisations with capture and release",
+    "Audit log with hash chaining of entries",
+    "Multi-currency transfers via an FX account"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "PostgreSQL",
+    "Go or Java or TypeScript or Python",
+    "Docker"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "Invariants hold: zero-sum entries, no overdraft, idempotent retries"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 20,
+     "description": "Transaction boundaries, isolation choice and schema constraints are justified"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Domain model separated from transport, money type, clear errors"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 20,
+     "description": "Real concurrency tests, idempotency and failure-injection tests"
+    },
+    {
+     "criterion": "Security",
+     "weight": 10,
+     "description": "Input validation, no sensitive data in logs, safe error messages"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Explains consistency model, failure modes and what was deliberately left out"
+    }
+   ],
+   "companies": [
+    "Stripe-style",
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-be-notification-service",
+   "title": "Event-driven Notification Service",
+   "niche": "Backend",
+   "level": "Advanced",
+   "hours": 14,
+   "summary": "Build a service that fans out notifications to email, SMS and webhook channels with retries.",
+   "brief": "A SaaS product emits events such as `invoice.paid` or `user.invited`. A notification service must accept them via `POST /events`, look up each user's channel preferences and templates, and deliver through pluggable channel adapters (email, SMS, webhook). Real providers are not required; implement fake adapters that randomly fail 20% of the time so your retry logic is exercised.\n\nDelivery must be at-least-once with de-duplication so users never see the same notification twice, and one failing channel must not block others. Failed deliveries retry with exponential backoff and jitter up to 5 attempts, then land in a dead-letter list that operators can inspect and replay through an admin endpoint.\n\nExpose basic observability: structured logs with a correlation id, a `/metrics` endpoint (Prometheus format) with sent, failed and retried counters, and a `/health` endpoint.",
+   "requirements": [
+    "Event ingestion endpoint with schema validation and 202 responses",
+    "Per-user channel preferences and per-event-type templates with variable substitution",
+    "Worker consuming from a durable queue (Redis, RabbitMQ, SQS-compatible or database-backed)",
+    "Channel adapter interface with at least three fake implementations",
+    "Retry with exponential backoff and jitter, dead-letter storage, replay endpoint",
+    "Idempotent delivery keyed by event id + channel + recipient",
+    "Prometheus metrics and structured logging with correlation ids",
+    "Tests for retry timing, dedupe and failure isolation"
+   ],
+   "stretch": [
+    "Quiet hours and digest batching",
+    "Per-tenant rate limiting",
+    "Graceful shutdown that drains in-flight jobs",
+    "Docker Compose with Grafana dashboard"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Node/TypeScript or Python or Go",
+    "Redis or RabbitMQ",
+    "PostgreSQL",
+    "Docker Compose"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Events delivered once per channel, retries and DLQ behave as specified"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 20,
+     "description": "Clean adapter interface, durable queue, separation of API and workers"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Readable modules, typed events, configuration via env"
+    },
+    {
+     "criterion": "Reliability",
+     "weight": 15,
+     "description": "Failure isolation, graceful shutdown, backoff with jitter"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Deterministic tests for time-based retry logic, dedupe tests"
+    },
+    {
+     "criterion": "Observability",
+     "weight": 10,
+     "description": "Useful metrics and logs, health endpoint"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Event contract, architecture diagram, operations notes"
+    }
+   ],
+   "companies": [
+    "Turing",
+    "Toptal",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-fs-booking",
+   "title": "Appointment Booking Platform",
+   "niche": "Full Stack",
+   "level": "Intermediate",
+   "hours": 12,
+   "summary": "Build a booking app where customers reserve time slots with double-booking prevention.",
+   "brief": "Glow Studio, a salon with five stylists, wants online booking. Customers pick a service (30, 60 or 90 minutes), a stylist (or 'any') and an available slot, then confirm with name and email. Stylists have weekly working hours and may have days off. Seed five stylists, six services and Monday to Saturday hours of 09:00 to 18:00.\n\nThe critical rule is that two customers must never hold the same stylist at overlapping times, even when they click Confirm at the same moment. The studio is in one time zone but customers travel, so slots display in the studio's zone with a clear label and are stored in UTC.\n\nA simple admin view (basic auth or a seeded login is fine) lists the day's bookings and lets staff cancel one. Confirmation emails can be logged to the console.",
+   "requirements": [
+    "Seeded stylists, services and working hours",
+    "Availability endpoint returning free slots for a date, service and optional stylist",
+    "Booking endpoint that is race-safe (database constraint or transaction) and returns 409 on conflict",
+    "Frontend flow: service, stylist, date/slot, details, confirmation page",
+    "'Any stylist' assignment picks the least-busy available stylist",
+    "Booking cancellation through a signed link and via admin",
+    "Admin day view of bookings",
+    "Tests for overlap detection, working-hours edges and the concurrent-booking race"
+   ],
+   "stretch": [
+    "Google Calendar style .ics download",
+    "Waitlist for fully booked days",
+    "Reminder emails via a scheduled job",
+    "Playwright end-to-end test"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "React or Next.js",
+    "Node or Python backend",
+    "PostgreSQL or SQLite"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "No double bookings, correct slot generation across edges such as end of day"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Clear API contract, time handled in UTC, DB-level protection"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Shared types or validated contracts, readable components and services"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Race-condition test, unit tests for slot maths, at least one UI test"
+    },
+    {
+     "criterion": "UX",
+     "weight": 15,
+     "description": "Clear flow, errors for taken slots, mobile friendly"
+    },
+    {
+     "criterion": "Security",
+     "weight": 10,
+     "description": "Input validation, protected admin routes, unguessable cancel tokens"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Setup, schema, decisions"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io"
+   ]
+  },
+  {
+   "id": "proj-fs-team-chat",
+   "title": "Real-time Team Chat",
+   "niche": "Full Stack",
+   "level": "Advanced",
+   "hours": 16,
+   "summary": "Build channel-based chat with presence, typing indicators and message history.",
+   "brief": "Relay is an internal chat tool for a 200-person company. Users sign in (email + password is enough), join public channels and exchange messages in real time. Messages persist and load with infinite scroll upward. Presence (online/offline) and typing indicators are shown per channel.\n\nThe backend must work across more than one server process, so a message sent to instance A reaches subscribers on instance B (use Redis pub/sub or a similar broker). Messages must arrive in order per channel, survive a page refresh and not be duplicated when the client reconnects and resends.\n\nProvide a Docker Compose set-up that runs two backend instances behind a simple reverse proxy so reviewers can verify cross-instance delivery.",
+   "requirements": [
+    "Registration and login with hashed passwords and session or JWT auth",
+    "Create, list and join channels",
+    "WebSocket (or SSE plus POST) messaging authenticated per connection",
+    "Cursor-paginated history with infinite scroll",
+    "Client-generated message ids for de-duplication on retry",
+    "Presence and typing indicators with timeouts",
+    "Cross-instance fan-out via a broker, proven by the Compose set-up",
+    "Optimistic UI with failed-send state and retry button",
+    "Tests for auth, history pagination and message de-duplication"
+   ],
+   "stretch": [
+    "Unread counts and last-read markers",
+    "Message edit and delete",
+    "Emoji reactions",
+    "Rate limiting on send"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "React",
+    "Node (TypeScript) or Go",
+    "WebSocket",
+    "Redis",
+    "PostgreSQL",
+    "Docker Compose"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Ordering, dedupe and cross-instance delivery all work"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 20,
+     "description": "Broker use, connection auth, state kept out of process memory"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Typed protocol messages shared between client and server"
+    },
+    {
+     "criterion": "Security",
+     "weight": 10,
+     "description": "Socket auth, authorisation on channels, XSS-safe message rendering"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Integration tests with real sockets, pagination tests"
+    },
+    {
+     "criterion": "UX & performance",
+     "weight": 15,
+     "description": "Smooth scrolling, virtualised or windowed list, optimistic sends"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Protocol description and architecture notes"
+    }
+   ],
+   "companies": [
+    "Turing",
+    "Toptal",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-fs-expense-tracker",
+   "title": "Personal Expense Tracker",
+   "niche": "Full Stack",
+   "level": "Basic",
+   "hours": 5,
+   "summary": "Build a small CRUD app for tracking expenses with category totals and CSV export.",
+   "brief": "A freelancer asks for a simple web app to record expenses. Each expense has an amount, currency (single currency is fine), date, category and optional note. Users register, log in and see only their own data.\n\nThe dashboard shows the current month's total, a breakdown by category and the ten most recent expenses. A filter bar limits the list by date range and category, and a button exports the filtered list as CSV.\n\nKeep it simple and well-tested: the client wants something they can host cheaply, so SQLite is acceptable, and a single deployable unit is a plus.",
+   "requirements": [
+    "User registration and login with hashed passwords",
+    "CRUD for expenses scoped to the logged-in user",
+    "Server-side validation (positive amount, valid date, known category)",
+    "List endpoint with filters and pagination",
+    "Dashboard with monthly total and per-category summary computed server-side",
+    "CSV export of the filtered result",
+    "Frontend forms with inline validation errors",
+    "Tests for auth scoping (user A cannot read user B's data) and summary maths"
+   ],
+   "stretch": [
+    "Monthly budget with over-budget warning",
+    "Receipt image upload",
+    "Recurring expenses",
+    "Simple chart of spending by month"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Any mainstream web stack",
+    "SQLite or PostgreSQL"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 30,
+     "description": "CRUD, filters, totals and export are right"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 20,
+     "description": "Structure, naming, separation of concerns"
+    },
+    {
+     "criterion": "Security",
+     "weight": 15,
+     "description": "Password hashing, per-user scoping, CSV injection awareness"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 20,
+     "description": "Auth isolation and aggregation tested"
+    },
+    {
+     "criterion": "UX",
+     "weight": 10,
+     "description": "Usable forms and clear error messages"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Run instructions"
+    }
+   ],
+   "companies": [
+    "Lemon.io",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-mob-habit-tracker",
+   "title": "Habit Tracker with Streaks",
+   "niche": "Mobile",
+   "level": "Basic",
+   "hours": 6,
+   "summary": "Build a cross-platform habit tracker with local storage, streaks and daily reminders.",
+   "brief": "A wellness start-up wants a prototype habit tracker. Users add habits (name, colour, target days of the week), tick them off each day and see current and longest streaks. Data is local to the device; there is no backend.\n\nStreak logic is where bugs hide: a habit scheduled Monday, Wednesday, Friday keeps its streak across Tuesday and Thursday, a missed scheduled day resets it, and changing the device time zone must not corrupt history. Daily reminders fire at a user-chosen time via local notifications.\n\nThe app should feel native, support both light and dark mode and be usable with large system font sizes.",
+   "requirements": [
+    "Create, edit, archive and delete habits",
+    "Weekly schedule per habit",
+    "Today screen to check habits off, with undo",
+    "Streak calculation honouring schedules, with unit tests including time zone and DST edge cases",
+    "Calendar or heatmap history view per habit",
+    "Local persistence (SQLite, Room, Core Data or equivalent)",
+    "Local notification reminder with permission handling",
+    "Light/dark mode and dynamic type support"
+   ],
+   "stretch": [
+    "Home-screen widget",
+    "Export data as JSON",
+    "Haptic feedback on completion",
+    "Biometric lock"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "React Native or Flutter or Kotlin or Swift"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "Streak logic and scheduling are right, including edge cases"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 20,
+     "description": "Separation of UI and domain logic, idiomatic patterns"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Persistence layer abstraction, state management choice"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Streak tests with time zones, a UI or integration test"
+    },
+    {
+     "criterion": "UX",
+     "weight": 15,
+     "description": "Native feel, accessibility, permission flows"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Setup for emulator/device and design notes"
+    }
+   ],
+   "companies": [
+    "Lemon.io",
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "proj-mob-offline-field-app",
+   "title": "Offline-first Field Inspection App",
+   "niche": "Mobile",
+   "level": "Advanced",
+   "hours": 18,
+   "summary": "Build a mobile app that collects inspection forms offline and syncs reliably when online.",
+   "brief": "A utilities company sends inspectors to remote sites with poor connectivity. The app downloads assigned inspections (`GET /api/inspections?updated_since=`), lets the inspector fill checklists, take photos and add notes offline, and uploads results when a connection returns. You will build the app and a small mock API to sync with.\n\nSync is the hard part. Edits made offline must never be lost, uploads must be resumable and idempotent (the network may drop mid-upload), and conflicts (the office edited the same inspection) must be detected using a version field and surfaced to the user rather than silently overwritten.\n\nThe app must remain usable on a 3-year-old mid-range phone: photos are compressed before upload and large lists are virtualised.",
+   "requirements": [
+    "Local database as source of truth for the UI",
+    "Download assigned inspections incrementally using updated_since",
+    "Checklist form with required fields, validation and draft autosave",
+    "Photo capture with on-device compression and queued uploads",
+    "Sync queue with retry, backoff and idempotency keys",
+    "Conflict detection via version numbers with a resolution screen",
+    "Visible sync status per inspection (pending, syncing, synced, conflict)",
+    "Mock API with deliberate failures (random 500s, dropped connections) to prove robustness",
+    "Tests for the sync engine including conflict and retry paths"
+   ],
+   "stretch": [
+    "Background sync when connectivity returns",
+    "Barcode scan to open an inspection",
+    "Signature capture",
+    "End-to-end encryption of local data"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "React Native or Flutter or native",
+    "SQLite",
+    "Node or Python mock API"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "No lost edits, resumable uploads, conflicts detected"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 25,
+     "description": "Clear sync engine, local-first data flow, idempotent operations"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Testable sync module separated from UI"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Fault-injection tests of sync paths"
+    },
+    {
+     "criterion": "Performance",
+     "weight": 10,
+     "description": "Compression, virtualised lists, reasonable battery/network behaviour"
+    },
+    {
+     "criterion": "UX",
+     "weight": 10,
+     "description": "Clear status and conflict handling"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Sync protocol and failure-mode description"
+    }
+   ],
+   "companies": [
+    "Turing",
+    "A.Team",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "proj-mob-ride-share-ui",
+   "title": "Live Ride Tracking Screen",
+   "niche": "Mobile",
+   "level": "Intermediate",
+   "hours": 10,
+   "summary": "Implement a ride-tracking map screen with smooth marker animation and ETA updates.",
+   "brief": "A ride-hailing client needs the rider-side tracking screen. A mock location feed (provided by you as a WebSocket or polling server) emits driver coordinates every 2 seconds along a route, plus status changes: `searching`, `driver_assigned`, `arriving`, `in_trip`, `completed`.\n\nThe map shows pickup, destination and the driver's marker, which must move smoothly between updates, rotate towards its heading and never jump backwards. A bottom sheet shows driver details, vehicle, ETA and a cancel action that is only available before `in_trip`.\n\nHandle real-world mess: GPS updates arrive out of order or duplicated, the app goes to background and returns, and connectivity drops for ten seconds. The screen must recover cleanly.",
+   "requirements": [
+    "Map view with pickup, destination and route polyline",
+    "Driver marker animation interpolated between updates, with heading",
+    "State machine for ride status driving the bottom sheet content",
+    "Ignore stale or duplicate location updates using sequence numbers or timestamps",
+    "ETA text derived from remaining distance and recent speed",
+    "Cancel flow with confirmation, disabled after trip start",
+    "Reconnect handling and a 'reconnecting' banner",
+    "Unit tests for the state machine and update-filtering logic"
+   ],
+   "stretch": [
+    "Share-trip link",
+    "Driver arrival push notification",
+    "Recorded replay of a trip for demo",
+    "Accessibility labels for map elements"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "React Native or Flutter or native",
+    "WebSocket",
+    "Map SDK (Google Maps, Mapbox or MapLibre)"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "State transitions, stale update handling and ETA are right"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 20,
+     "description": "Clean separation of feed, state machine and UI"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Testable domain layer, lifecycle-aware subscriptions"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Unit tests for pure logic, simulated bad feeds"
+    },
+    {
+     "criterion": "UX & performance",
+     "weight": 20,
+     "description": "Smooth animation, no jank, graceful reconnect"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Mock server instructions and design notes"
+    }
+   ],
+   "companies": [
+    "Turing",
+    "Toptal",
+    "Lemon.io"
+   ]
+  },
+  {
+   "id": "proj-ml-support-rag",
+   "title": "Customer Support RAG Assistant",
+   "niche": "AI / ML",
+   "level": "Intermediate",
+   "hours": 10,
+   "summary": "Build a retrieval-augmented question answering service with citations and an evaluation harness.",
+   "brief": "HelpDesk Co. has 300 markdown help-centre articles and wants an assistant that answers customer questions using only those articles, with citations. You may use any open or hosted embedding model and LLM; the grader will run your code with their own API key via environment variables, so no keys in the repo. Use a public documentation set (for example a project's docs) if you do not have articles of your own, and say which in the README.\n\nBuild an ingestion script that chunks documents (justify chunk size and overlap), embeds them and stores vectors (FAISS, Chroma, pgvector or similar). Expose `POST /ask {\"question\": \"...\"}` returning `{\"answer\": ..., \"sources\": [{\"doc\": ..., \"chunk\": ..., \"score\": ...}]}`. If retrieved context does not support an answer, the service must say it does not know instead of guessing.\n\nThe differentiator is evaluation. Write 25 or more question/expected-source pairs (a golden set), measure retrieval hit rate@k and a simple answer-faithfulness check, and report numbers plus at least one experiment (for example chunk size or reranking) showing what improved.",
+   "requirements": [
+    "Ingestion pipeline with documented chunking strategy and metadata",
+    "Vector store with top-k retrieval and optional metadata filters",
+    "HTTP endpoint returning answer and source citations",
+    "Prompt that restricts answers to retrieved context and returns an explicit refusal when evidence is missing",
+    "Golden set of 25+ questions including 5 unanswerable ones",
+    "Evaluation script reporting hit rate@k, refusal accuracy and a faithfulness measure",
+    "At least one measured experiment with before/after numbers",
+    "Prompt-injection awareness: retrieved text is treated as data, with a test or note",
+    "Unit tests for chunking and for the endpoint using a stubbed LLM"
+   ],
+   "stretch": [
+    "Hybrid search (BM25 plus vectors) with reranking",
+    "Response streaming",
+    "Caching of repeated questions",
+    "Conversation memory with query rewriting"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python",
+    "FastAPI",
+    "Embeddings",
+    "Vector DB",
+    "An LLM API or local model"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Answers grounded in sources, refusals when evidence is absent, citations point to the right chunks"
+    },
+    {
+     "criterion": "Evaluation rigour",
+     "weight": 25,
+     "description": "Meaningful golden set, honest metrics, a real experiment with conclusions"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Clean separation of ingest, retrieve, generate; swappable providers"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Typed, configurable, no secrets in code"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 10,
+     "description": "Deterministic tests using stubs"
+    },
+    {
+     "criterion": "Security",
+     "weight": 10,
+     "description": "Prompt-injection handling, input limits, key management"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Reproducible instructions and clear write-up of results"
+    }
+   ],
+   "companies": [
+    "Turing",
+    "Toptal",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-ml-churn-model",
+   "title": "Churn Prediction Service",
+   "niche": "AI / ML",
+   "level": "Basic",
+   "hours": 6,
+   "summary": "Train, evaluate and serve a customer churn classifier from tabular data.",
+   "brief": "A subscription business gives you a CSV of 7,000 customers with columns such as tenure, monthly charges, contract type, support tickets and a binary `churned` label (use the public Telco Customer Churn dataset if you do not have one). Your job is to produce a model the retention team can trust and a small API to score new customers.\n\nThe team cares more about sound methodology than a fancy algorithm. Avoid leakage, split data correctly, choose metrics suited to class imbalance and explain what the model learned. A logistic regression baseline is required before anything more complex.\n\nFinally wrap the best model in a service: `POST /predict` accepts one customer JSON and returns a churn probability and the top three contributing features.",
+   "requirements": [
+    "Exploratory analysis notebook with data quality findings",
+    "Train/validation/test split strategy that avoids leakage (for example fitting encoders on train only)",
+    "Baseline logistic regression and at least one tree-based model",
+    "Metrics beyond accuracy: precision, recall, PR-AUC, with a chosen decision threshold justified",
+    "Cross-validation with reported variance",
+    "Feature importance or SHAP-style explanation",
+    "scikit-learn pipeline persisted to disk and loaded by the API",
+    "Prediction API with input validation and a test"
+   ],
+   "stretch": [
+    "Calibration plot and calibrated probabilities",
+    "Model card documenting limits and fairness checks",
+    "Dockerfile",
+    "Simple drift check on input features"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python",
+    "pandas",
+    "scikit-learn",
+    "FastAPI"
+   ],
+   "rubric": [
+    {
+     "criterion": "Methodology",
+     "weight": 30,
+     "description": "No leakage, appropriate metrics, baseline first, threshold reasoning"
+    },
+    {
+     "criterion": "Correctness",
+     "weight": 15,
+     "description": "Model and API produce consistent, valid predictions"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Pipeline objects rather than ad-hoc notebooks cells, reproducible seeds"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 10,
+     "description": "API and preprocessing tests"
+    },
+    {
+     "criterion": "Insight & communication",
+     "weight": 20,
+     "description": "Findings explained to a business audience, limitations stated"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Reproducible instructions"
+    }
+   ],
+   "companies": [
+    "Lemon.io",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-ml-llm-agent-eval",
+   "title": "Tool-using LLM Agent with Evals",
+   "niche": "AI / ML",
+   "level": "Expert",
+   "hours": 22,
+   "summary": "Build a function-calling agent for a booking domain and a regression test suite to measure it.",
+   "brief": "A travel start-up wants an LLM agent that helps users change flights. The agent has four tools backed by a mock service you write: `search_flights`, `get_booking`, `change_booking` and `escalate_to_human`. Policy: changes within 24 hours of departure are not allowed, fare differences above 200 EUR need explicit user confirmation, and the agent never reveals other customers' bookings.\n\nImplement the agent loop yourself (do not rely on a framework's black-box agent executor): maintain message history, parse tool calls, validate arguments against JSON schemas, execute tools, handle tool errors and cap iterations and spend. Trace every run to a JSONL file with prompts, tool calls, latency and token counts.\n\nThen build the evaluation suite: at least 30 scripted scenarios (happy path, policy violations, ambiguous requests, adversarial prompt injection in a booking note, tool failures). Score with deterministic checks first (final state of the mock DB, tools called) and an LLM-judge only for tone. Report pass rates and iterate on prompts or tools, documenting what changed.",
+   "requirements": [
+    "Agent loop with tool schemas, argument validation and bounded iterations",
+    "Mock flight service with seeded data and injectable faults",
+    "Policy enforcement in code (not only in the prompt) for the 24-hour and 200 EUR rules",
+    "Per-user authorisation so tools cannot read other users' bookings",
+    "Structured trace logging with token and latency accounting",
+    "30+ eval scenarios with deterministic assertions on final state",
+    "Prompt-injection scenarios whose results are reported honestly",
+    "Eval runner with parallelism, retries and a summary table",
+    "Written iteration log showing at least two measured improvements"
+   ],
+   "stretch": [
+    "Cost budget per conversation with graceful degradation",
+    "Self-consistency or retry-on-invalid-tool-call strategy",
+    "Streaming responses with partial tool-call handling",
+    "CI job running a smoke subset of evals"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python or TypeScript",
+    "An LLM API with tool calling",
+    "pytest or similar"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Policies enforced in code, final states correct across scenarios"
+    },
+    {
+     "criterion": "Evaluation rigour",
+     "weight": 25,
+     "description": "Scenario coverage, deterministic scoring, honest reporting of failures"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Own agent loop, clean tool abstraction, observability"
+    },
+    {
+     "criterion": "Safety",
+     "weight": 15,
+     "description": "Injection resistance, authorisation, spend and loop limits"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Typed schemas, modular, reproducible runs"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 15,
+     "description": "Iteration log, trade-offs, limitations clearly stated"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "A.Team",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-ds-ab-test-analysis",
+   "title": "A/B Test Analysis and Recommendation",
+   "niche": "Data Science",
+   "level": "Intermediate",
+   "hours": 8,
+   "summary": "Analyse an experiment, check validity, and write a decision memo for stakeholders.",
+   "brief": "An e-commerce team ran a checkout redesign for three weeks. You receive `assignments.csv` (user_id, variant, assigned_at, platform, country) and `events.csv` (user_id, event, timestamp, revenue). Generate a realistic synthetic dataset yourself if you do not have one: roughly 120,000 users, 50/50 split, baseline conversion near 4.2% and a small true lift.\n\nBefore looking at the result, validate the experiment: check sample ratio mismatch, balance of covariates across variants, novelty effects over time and instrumentation problems such as duplicate events or users in both arms. Then estimate the effect on conversion and revenue per user with confidence intervals, using appropriate tests (and a bootstrap for the skewed revenue metric).\n\nDeliver a notebook and a one-page decision memo for a product manager with no statistics background: ship, do not ship or extend the test, and why.",
+   "requirements": [
+    "Data cleaning with documented decisions on duplicates and bot-like traffic",
+    "Sample ratio mismatch test",
+    "Covariate balance table",
+    "Conversion lift with confidence interval (two-proportion test or equivalent)",
+    "Revenue per user lift using bootstrap or a robust method",
+    "Segment analysis (platform, country) with multiple-comparison caveats",
+    "Time-based view to detect novelty or primacy effects",
+    "Power / minimum detectable effect discussion",
+    "One-page recommendation memo in plain language"
+   ],
+   "stretch": [
+    "CUPED variance reduction",
+    "Sequential testing discussion",
+    "Bayesian estimate of probability to be best",
+    "Dashboard-ready summary table"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python",
+    "pandas",
+    "scipy/statsmodels",
+    "Jupyter"
+   ],
+   "rubric": [
+    {
+     "criterion": "Statistical correctness",
+     "weight": 30,
+     "description": "Right tests, valid intervals, SRM and balance checks done before conclusions"
+    },
+    {
+     "criterion": "Data handling",
+     "weight": 15,
+     "description": "Cleaning decisions are justified and reproducible"
+    },
+    {
+     "criterion": "Insight & communication",
+     "weight": 25,
+     "description": "Memo is clear, honest about uncertainty, gives an actionable decision"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Readable, reproducible notebook with fixed seeds, helper functions"
+    },
+    {
+     "criterion": "Visualisation",
+     "weight": 10,
+     "description": "Clear, labelled charts that support the argument"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Environment and data instructions"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io"
+   ]
+  },
+  {
+   "id": "proj-ds-demand-forecast",
+   "title": "Retail Demand Forecasting",
+   "niche": "Data Science",
+   "level": "Advanced",
+   "hours": 14,
+   "summary": "Forecast daily SKU-level demand with proper time-series validation and prediction intervals.",
+   "brief": "A grocery chain wants 14-day demand forecasts for 50 SKUs across 10 stores. The data has daily unit sales, price, promotion flag, weather and holiday calendar columns (the public M5 or Store Item Demand datasets are acceptable substitutes). Many series are intermittent with zero-sales days, and promotions cause large spikes.\n\nSet up honest evaluation first: rolling-origin cross-validation with a 14-day horizon, never random splits. Compare at least three approaches: a seasonal naive baseline, a classical model (ETS or ARIMA, or Prophet) and a gradient-boosted model with lag and calendar features. Report MASE or WAPE per segment, not only an overall average.\n\nThe business also needs uncertainty: produce 80% prediction intervals and report their empirical coverage on the backtest. Finish with a short analysis of where forecasts fail and what extra data would help.",
+   "requirements": [
+    "Data loading with checks for gaps, negative values and stockouts masquerading as zero demand",
+    "Rolling-origin backtest harness reusable across models",
+    "Seasonal naive baseline plus two or more additional models",
+    "Feature engineering with no future leakage (lags, rolling means, promo and holiday features)",
+    "Metrics reported by segment (fast vs intermittent sellers)",
+    "Prediction intervals with measured coverage",
+    "Error analysis with example failure cases",
+    "Reproducible script that regenerates the forecasts and report"
+   ],
+   "stretch": [
+    "Hierarchical reconciliation (SKU, store, total)",
+    "Hyperparameter search inside the backtest without leaking",
+    "Inventory impact simulation using the forecast",
+    "Model comparison dashboard"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python",
+    "pandas",
+    "statsmodels or Prophet",
+    "LightGBM or XGBoost"
+   ],
+   "rubric": [
+    {
+     "criterion": "Methodology",
+     "weight": 30,
+     "description": "Time-aware validation, leakage-free features, fair baselines"
+    },
+    {
+     "criterion": "Correctness",
+     "weight": 15,
+     "description": "Metrics computed correctly, intervals calibrated and checked"
+    },
+    {
+     "criterion": "Insight & analysis",
+     "weight": 20,
+     "description": "Segment and failure analysis lead to real conclusions"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Reusable backtest harness, modular pipeline"
+    },
+    {
+     "criterion": "Visualisation",
+     "weight": 10,
+     "description": "Forecast vs actual plots by segment"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Clear write-up of choices and limits"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-ds-eda-health",
+   "title": "Hospital Readmission Exploratory Analysis",
+   "niche": "Data Science",
+   "level": "Basic",
+   "hours": 4,
+   "summary": "Explore a messy clinical dataset and present clear, defensible insights.",
+   "brief": "A hospital group shares a de-identified dataset of 100,000 patient encounters with age band, diagnosis group, length of stay, number of prior visits, medications and a `readmitted_30d` flag (the public UCI Diabetes 130-US hospitals dataset works). Management wants to know which factors are associated with 30-day readmission and where to focus follow-up calls.\n\nExpect missing values coded as '?', high-cardinality diagnosis codes and heavy class imbalance. Document how you treat each. Produce clean visualisations and a short report: what the data says, what it cannot say (association versus causation) and what you would ask the hospital next.\n\nNo model is required, but a simple interpretable logistic regression to quantify associations is welcome.",
+   "requirements": [
+    "Data dictionary and missing-value audit",
+    "Cleaning pipeline in code, not manual edits",
+    "Readmission rate by age, prior visits, length of stay and primary diagnosis group",
+    "Handling of high-cardinality categories with a justified grouping",
+    "At least five clear, labelled visualisations",
+    "Statistical test or confidence interval for at least two headline comparisons",
+    "Short written report with caveats on causation and data quality",
+    "Ethics note on privacy and potential bias"
+   ],
+   "stretch": [
+    "Interpretable logistic regression with odds ratios",
+    "Interactive dashboard (Streamlit or similar)",
+    "Fairness slice by demographic group"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python",
+    "pandas",
+    "matplotlib/seaborn",
+    "Jupyter"
+   ],
+   "rubric": [
+    {
+     "criterion": "Analysis quality",
+     "weight": 30,
+     "description": "Findings supported by data and statistically sound"
+    },
+    {
+     "criterion": "Data handling",
+     "weight": 20,
+     "description": "Missing values and categories handled sensibly and documented"
+    },
+    {
+     "criterion": "Communication",
+     "weight": 20,
+     "description": "Report is readable by non-technical stakeholders, caveats stated"
+    },
+    {
+     "criterion": "Visualisation",
+     "weight": 15,
+     "description": "Clear, honest charts"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Reproducible notebook, functions over copy-paste"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Environment and data source notes"
+    }
+   ],
+   "companies": [
+    "Lemon.io",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-de-etl-pipeline",
+   "title": "Daily Sales ETL Pipeline",
+   "niche": "Data Engineering",
+   "level": "Intermediate",
+   "hours": 10,
+   "summary": "Build an idempotent batch pipeline that loads raw sales files into a warehouse star schema.",
+   "brief": "A retailer drops CSV files into an `incoming/` folder every night: `orders_YYYYMMDD.csv`, `order_items_YYYYMMDD.csv` and `customers_YYYYMMDD.csv`. Files sometimes arrive late, twice or with malformed rows. You must load them into a warehouse (PostgreSQL, DuckDB or BigQuery emulator) as a star schema with `fact_order_items`, `dim_customer` (type 2 slowly changing on address) and `dim_date`.\n\nThe pipeline must be idempotent: re-running a day's load must not duplicate rows, and re-processing a corrected file must update facts correctly. Bad rows go to a quarantine table with a reason rather than failing the whole batch, and a data-quality report shows row counts, null rates and rejected-row counts per run.\n\nOrchestrate with Airflow, Prefect, Dagster or a well-structured CLI with a scheduler config. Provide a data generator so reviewers can run 7 simulated days.",
+   "requirements": [
+    "Raw landing layer preserving original files and load metadata",
+    "Schema validation with a quarantine table for rejected rows",
+    "Star schema with SCD type 2 on customer address",
+    "Idempotent loads using upsert/merge or partition overwrite",
+    "Handling for late-arriving and duplicate files",
+    "Data-quality checks failing the run on defined thresholds (for example more than 5% rejects)",
+    "Orchestration definition with retries and task dependencies",
+    "Data generator and tests for transformations and idempotency (run twice, compare)"
+   ],
+   "stretch": [
+    "Incremental dbt models on top of the warehouse",
+    "Alerting on failed quality checks",
+    "Backfill command for a date range",
+    "Lineage documentation"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python",
+    "SQL",
+    "PostgreSQL or DuckDB",
+    "Airflow or Prefect or Dagster",
+    "Docker"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "Facts and dimensions are right, SCD2 history correct"
+    },
+    {
+     "criterion": "Reliability",
+     "weight": 20,
+     "description": "Idempotent reruns, late files and quarantines handled"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Layered design, orchestration, clear data contracts"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Testable transformations, config over hard-coding"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Idempotency and DQ tests with fixtures"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Data model diagram and operating instructions"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-de-streaming-clickstream",
+   "title": "Streaming Clickstream Aggregation",
+   "niche": "Data Engineering",
+   "level": "Advanced",
+   "hours": 16,
+   "summary": "Process a Kafka clickstream into windowed metrics with exactly-once-style guarantees.",
+   "brief": "A media site emits click events (`user_id`, `session_id`, `url`, `event_time`, `device`) to Kafka at around 2,000 events per second. Product wants near-real-time metrics: active users per minute, top 10 pages in a sliding 15-minute window and session counts with a 30-minute inactivity gap.\n\nEvents arrive out of order by up to two minutes and occasionally duplicate. Use event time with watermarks, not processing time, and handle late events beyond the watermark by routing them to a side output rather than dropping silently. Results are written to a store that a dashboard can query (PostgreSQL, ClickHouse or Redis).\n\nYou may use Flink, Spark Structured Streaming, Kafka Streams, Faust or a hand-built consumer, but must explain delivery semantics and how restart recovery avoids double counting.",
+   "requirements": [
+    "Docker Compose with Kafka (or Redpanda), your processor and the sink",
+    "Event generator producing out-of-order and duplicate events at configurable rate",
+    "De-duplication keyed on event id within a bounded window",
+    "Event-time tumbling and sliding windows with watermarks",
+    "Session windows with 30-minute gap",
+    "Late events sent to a side output/dead-letter topic with metrics",
+    "Checkpointing or offset management proving restart recovery without double counting",
+    "Tests with a deterministic synthetic stream asserting window outputs",
+    "A written explanation of delivery semantics and failure scenarios"
+   ],
+   "stretch": [
+    "Backpressure demonstration and tuning",
+    "Schema registry with Avro/Protobuf",
+    "Grafana dashboard",
+    "Reprocessing from earliest offset"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Kafka",
+    "Flink or Spark Streaming or Kafka Streams",
+    "Python/Java/Scala",
+    "Docker Compose"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "Windows, sessions and dedupe produce correct results on out-of-order data"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 20,
+     "description": "Event-time design, sink idempotency, recovery strategy"
+    },
+    {
+     "criterion": "Reliability",
+     "weight": 15,
+     "description": "Restart without double counting, late data handled visibly"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Clear job structure and configuration"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Deterministic stream tests"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 15,
+     "description": "Semantics explanation, runbook, trade-offs"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-de-lakehouse-quality",
+   "title": "Data Quality and Lineage Framework",
+   "niche": "Data Engineering",
+   "level": "Expert",
+   "hours": 20,
+   "summary": "Create a reusable data-quality framework with contracts, anomaly detection and lineage.",
+   "brief": "A data platform team runs 150 tables across a lake. Failures are discovered by analysts, days late. They want an internal framework where each dataset declares a contract in YAML (schema, primary key, freshness SLA, null thresholds, value ranges, referential checks) and a runner validates data in Parquet files or a warehouse after each load.\n\nBeyond static rules, implement simple statistical anomaly detection on volume and distribution (for example z-score or seasonal comparison against the last 8 weeks) that is aware of weekly seasonality. Results are stored in a results table, with a CLI report and a failing exit code for CI use.\n\nFinally capture lineage: given job definitions that declare inputs and outputs, produce a dependency graph and an impact-analysis command: 'if table X is late or fails, which downstream datasets and dashboards are affected?'",
+   "requirements": [
+    "YAML data contract spec with validation of the spec itself",
+    "Runner supporting Parquet and one SQL engine (DuckDB acceptable)",
+    "Checks: schema drift, uniqueness, null rate, accepted values, freshness, referential integrity",
+    "Volume and distribution anomaly detection with weekly seasonality",
+    "Persisted results with run ids and history",
+    "CLI with human-readable report and machine-readable exit codes",
+    "Lineage graph from job definitions and an impact-analysis command",
+    "Severity levels (warn vs block) and ownership metadata per dataset",
+    "Tests including intentionally corrupted fixtures that must be caught"
+   ],
+   "stretch": [
+    "Auto-generated contract suggestions from existing data",
+    "Slack/webhook notifications",
+    "Great Expectations or dbt test import",
+    "Web UI for results"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python",
+    "DuckDB or Spark",
+    "Parquet",
+    "YAML",
+    "pytest"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Checks detect the injected faults without noisy false positives"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 25,
+     "description": "Extensible check plugins, clean contract model, lineage design"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Typed, modular, good error messages"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 20,
+     "description": "Corrupted fixtures, seasonality test cases"
+    },
+    {
+     "criterion": "Usability",
+     "weight": 10,
+     "description": "CLI ergonomics and report clarity"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Contract reference and design decisions"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-do-cicd-iac",
+   "title": "CI/CD and Infrastructure as Code for a Web API",
+   "niche": "DevOps & Cloud",
+   "level": "Intermediate",
+   "hours": 10,
+   "summary": "Containerise a sample API, provision cloud infrastructure with Terraform and ship it with a CI/CD pipeline.",
+   "brief": "You are given (or may write) a small stateless HTTP API with a `/health` endpoint and a PostgreSQL dependency. The client wants it deployed to AWS, GCP or Azure with everything reproducible from code. A free-tier or local emulation (LocalStack, kind) is acceptable if you document it; the graders will read your code and, ideally, run `terraform plan`.\n\nProvision networking, a managed database, a container runtime (ECS/Fargate, Cloud Run, AKS or Kubernetes) and a load balancer using Terraform with remote-state guidance and separate `staging` and `production` configurations that share modules. Secrets must come from a secrets manager or CI secrets, never from the repo.\n\nBuild a pipeline (GitHub Actions or GitLab CI) that lints, tests, builds a minimal non-root Docker image, scans it, pushes it, deploys to staging automatically and to production after manual approval, with a rollback path.",
+   "requirements": [
+    "Multi-stage Dockerfile producing a small non-root image with a health check",
+    "Terraform modules for network, database and compute with variables and outputs",
+    "Separate staging and production environments without copy-paste",
+    "Secrets handled via secret manager or CI secrets, with least-privilege IAM roles",
+    "Pipeline stages: lint, test, build, image scan, push, deploy",
+    "Manual approval gate before production",
+    "Rollback mechanism documented and demonstrable (previous image tag redeploy)",
+    "Basic monitoring: health checks, log shipping or dashboards, at least one alarm",
+    "Cost and security notes in the README"
+   ],
+   "stretch": [
+    "Blue/green or canary deployment",
+    "Terraform plan comment on pull requests",
+    "Policy-as-code checks (tfsec, OPA, Checkov)",
+    "Ephemeral preview environments per PR"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Terraform",
+    "Docker",
+    "GitHub Actions or GitLab CI",
+    "AWS or GCP or Azure"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Pipeline and infrastructure code are valid and would work as described"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 20,
+     "description": "Module reuse, environment separation, sensible network layout"
+    },
+    {
+     "criterion": "Security",
+     "weight": 20,
+     "description": "Least privilege, secret handling, image scanning, no public database"
+    },
+    {
+     "criterion": "Reliability",
+     "weight": 15,
+     "description": "Health checks, rollback, deploy safety"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Readable HCL and pipeline YAML, DRY"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 15,
+     "description": "Runbook, diagram, cost notes"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io"
+   ]
+  },
+  {
+   "id": "proj-do-k8s-observability",
+   "title": "Kubernetes Deployment with Observability",
+   "niche": "DevOps & Cloud",
+   "level": "Advanced",
+   "hours": 14,
+   "summary": "Deploy a multi-service app to Kubernetes with autoscaling, SLOs and alerting.",
+   "brief": "Run a three-service demo app (frontend, API, worker with a Redis queue; you may use an open-source sample such as a voting or microservices demo) on Kubernetes (kind, minikube or a managed cluster). The client wants production-grade manifests, not a quick tutorial deployment.\n\nPackage with Helm or Kustomize with environment overlays. Every workload needs resource requests and limits, liveness and readiness probes, a PodDisruptionBudget where sensible, a non-root security context and NetworkPolicies that only allow required traffic. Configure a HorizontalPodAutoscaler for the API driven by CPU or a custom metric and prove it with a load test.\n\nAdd observability: Prometheus scraping, a Grafana dashboard showing the four golden signals, structured logs shipped to Loki or similar, and an SLO of 99.5% of API requests succeeding under 300ms with a burn-rate alert. Include a short incident runbook for 'API latency high'.",
+   "requirements": [
+    "Helm chart or Kustomize base and overlays for dev and prod",
+    "Resource requests/limits, probes and PodDisruptionBudgets on all workloads",
+    "Pod security context (non-root, read-only root filesystem where possible)",
+    "NetworkPolicies denying all by default and allowing only required flows",
+    "HPA with documented load-test evidence of scale up and down",
+    "Prometheus metrics, Grafana dashboard exported as JSON",
+    "SLO definition with multi-window burn-rate alert rules",
+    "Centralised logging pipeline",
+    "Runbook for a latency incident, with the steps to diagnose from your dashboards",
+    "Rolling update strategy with zero-downtime verification"
+   ],
+   "stretch": [
+    "GitOps with Argo CD or Flux",
+    "Distributed tracing with OpenTelemetry",
+    "Chaos experiment (kill a pod during load)",
+    "Cluster cost estimate"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Kubernetes",
+    "Helm or Kustomize",
+    "Prometheus",
+    "Grafana",
+    "Loki"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Manifests apply cleanly and the system works under load and disruption"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 20,
+     "description": "Environment overlays, scaling design, network segmentation"
+    },
+    {
+     "criterion": "Reliability & SLOs",
+     "weight": 20,
+     "description": "Meaningful SLO, burn-rate alerts, PDBs, zero-downtime updates"
+    },
+    {
+     "criterion": "Security",
+     "weight": 15,
+     "description": "Security contexts, NetworkPolicies, secrets handling"
+    },
+    {
+     "criterion": "Observability",
+     "weight": 10,
+     "description": "Useful dashboard and logs"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 15,
+     "description": "Runbook quality and evidence from load tests"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-do-backup-automation",
+   "title": "Automated Backup and Restore Tooling",
+   "niche": "DevOps & Cloud",
+   "level": "Basic",
+   "hours": 4,
+   "summary": "Write scripts that back up a database and files to object storage, verify them and test restores.",
+   "brief": "A small company runs a PostgreSQL database and an uploads folder on one VM, and their only backup is a manual copy from a laptop. Write a reliable, scheduled backup solution using shell or Python plus cron or systemd timers, storing encrypted archives in S3-compatible object storage (MinIO in Docker is fine for the assignment).\n\nBackups must be consistent (use `pg_dump` correctly), compressed, encrypted before upload and named with timestamps. A retention policy keeps 7 daily, 4 weekly and 6 monthly backups and deletes the rest safely. The tooling must alert (exit code plus a webhook call) on failure.\n\nThe most important feature is the restore test: a second script restores the latest backup into a scratch database and runs sanity checks (row counts, a checksum of a known table), because an untested backup is not a backup.",
+   "requirements": [
+    "Backup script with consistent database dump and file archive",
+    "Encryption before upload (age or gpg) with key handling documented",
+    "Upload to S3-compatible storage with checksum verification",
+    "Retention pruning for daily/weekly/monthly sets with a dry-run mode",
+    "Failure notification via webhook and non-zero exit codes",
+    "Automated restore-and-verify script against a scratch database",
+    "Scheduling with cron or systemd timer files",
+    "Tests or a demo script showing a full backup, corruption detection and restore"
+   ],
+   "stretch": [
+    "Point-in-time recovery notes using WAL archiving",
+    "Docker Compose demo environment",
+    "Backup size and duration metrics",
+    "Restore time objective report"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Bash or Python",
+    "PostgreSQL",
+    "MinIO or S3",
+    "cron/systemd"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 30,
+     "description": "Backups are consistent and restores really work"
+    },
+    {
+     "criterion": "Reliability",
+     "weight": 20,
+     "description": "Error handling, retention safety, idempotent runs"
+    },
+    {
+     "criterion": "Security",
+     "weight": 20,
+     "description": "Encryption, key and credential handling, no secrets in logs"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Readable scripts, set -euo pipefail or equivalent, parameters not hard-coded"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 15,
+     "description": "Operator-friendly instructions and recovery steps"
+    }
+   ],
+   "companies": [
+    "Lemon.io",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-qa-e2e-framework",
+   "title": "End-to-end Test Framework for an E-commerce Site",
+   "niche": "QA Automation",
+   "level": "Intermediate",
+   "hours": 10,
+   "summary": "Design a maintainable Playwright or Cypress framework with page objects, fixtures and CI reporting.",
+   "brief": "Choose a public demo shop (for example saucedemo.com or a similar practice site) and build an automated regression suite for the main journeys: login, product search and sorting, cart add/remove, checkout with validation errors, and order confirmation. Include negative cases such as locked-out users, empty cart checkout and invalid card details.\n\nThe client has been burned by flaky tests, so reliability is the key criterion. Avoid fixed sleeps, use auto-waiting and resilient locators (roles, labels, test ids), isolate test data and run tests in parallel across at least two browsers. Authentication should be set up once and reused.\n\nProduce a framework another QA engineer can extend: page objects or a screenplay-style layer, typed fixtures, environment configuration and CI with HTML reports, traces and screenshots on failure. Include a short test plan with priorities.",
+   "requirements": [
+    "Test plan with risk-based priorities and traceability to tests",
+    "At least 20 meaningful automated tests across the main journeys",
+    "Page object or equivalent abstraction with no assertions hidden in the wrong layer",
+    "Reusable authentication state and data setup via API or storage state",
+    "Parallel execution on Chromium and one other browser",
+    "No fixed sleeps; flake-resistant locators",
+    "CI workflow publishing HTML report, traces and failure screenshots",
+    "Tags/projects to run smoke versus full regression",
+    "Evidence of flake checking (for example 10 repeated runs and results)"
+   ],
+   "stretch": [
+    "Visual comparison tests",
+    "Accessibility checks with axe in key flows",
+    "API-level tests complementing UI tests",
+    "Test data builder library"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Playwright or Cypress",
+    "TypeScript",
+    "GitHub Actions"
+   ],
+   "rubric": [
+    {
+     "criterion": "Reliability",
+     "weight": 25,
+     "description": "Stable across repeated runs, proper waits, isolated data"
+    },
+    {
+     "criterion": "Coverage & test design",
+     "weight": 20,
+     "description": "Risk-based selection, negative and edge cases, clear assertions"
+    },
+    {
+     "criterion": "Framework architecture",
+     "weight": 20,
+     "description": "Layering, fixtures, config, ease of extension"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Typed, readable, DRY without over-abstraction"
+    },
+    {
+     "criterion": "CI & reporting",
+     "weight": 10,
+     "description": "Useful artifacts on failure"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Test plan and contributor guide"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "Lemon.io"
+   ]
+  },
+  {
+   "id": "proj-qa-api-contract-tests",
+   "title": "API Test Suite and Contract Testing",
+   "niche": "QA Automation",
+   "level": "Basic",
+   "hours": 5,
+   "summary": "Write a thorough automated API test suite and contract tests for a REST service.",
+   "brief": "Use a public REST API with documented behaviour (for example a pet store or a todo demo API such as reqres.in or the Swagger Petstore) or a local mock you write. The assignment is to design and automate API tests covering CRUD flows, authentication, validation errors, pagination, idempotency of PUT/DELETE and rate-limit headers where available.\n\nThink like a tester, not a script writer: use equivalence partitioning and boundary values for inputs, test status codes and response bodies, verify schemas and check that error messages do not leak internals. Tests must clean up after themselves and run in any order.\n\nAdd consumer-driven contract tests (Pact or schema-based) for two endpoints so that a breaking change in the provider is caught by CI before deployment. Produce a short defect report listing any real bugs or documentation mismatches you discover.",
+   "requirements": [
+    "Test suite of at least 30 tests organised by feature",
+    "Schema validation of responses (JSON Schema or OpenAPI)",
+    "Boundary and equivalence-class tests for input fields",
+    "Auth tests: missing, expired and insufficient-permission tokens",
+    "Independent tests with setup and teardown, runnable in random order",
+    "Contract tests for two endpoints demonstrating a detected breaking change",
+    "CI run with a readable report",
+    "Defect report with reproduction steps and severity"
+   ],
+   "stretch": [
+    "Performance smoke test with k6",
+    "Data-driven tests from CSV",
+    "Mutation testing of a small module",
+    "Postman/Newman collection export"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python (pytest + requests) or JavaScript (Jest/supertest)",
+    "Pact or OpenAPI validators"
+   ],
+   "rubric": [
+    {
+     "criterion": "Test design",
+     "weight": 30,
+     "description": "Equivalence/boundary analysis, negative cases, meaningful assertions"
+    },
+    {
+     "criterion": "Reliability",
+     "weight": 20,
+     "description": "Independence, cleanup, no hidden ordering"
+    },
+    {
+     "criterion": "Contract testing",
+     "weight": 15,
+     "description": "Contract demonstrably catches a break"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Readable helpers and fixtures"
+    },
+    {
+     "criterion": "Defect reporting",
+     "weight": 10,
+     "description": "Clear, reproducible bug reports"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "How to run and extend"
+    }
+   ],
+   "companies": [
+    "Lemon.io",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-qa-perf-testing",
+   "title": "Performance Test and Capacity Report",
+   "niche": "QA Automation",
+   "level": "Advanced",
+   "hours": 12,
+   "summary": "Load test a web API, find its bottleneck and report capacity with evidence.",
+   "brief": "Take an open-source or self-written web API with a database (for example a simple shop API with product search, cart and checkout) and run it locally in Docker with resource limits (1 CPU, 512 MB for the app) so results are comparable. The client wants to know how many concurrent users it supports before response times exceed an SLA of p95 under 400 ms and error rate under 1%.\n\nDesign realistic workload models with k6, Gatling or Locust: a weighted mix of browse, search and checkout, think times, ramp-up, steady-state, spike and soak scenarios. Use thresholds as pass/fail criteria and avoid coordinated omission pitfalls by explaining how your tool measures latency.\n\nCollect server-side metrics at the same time (CPU, memory, DB connections, slow queries) and identify the bottleneck. Make one targeted fix (index, connection pool size, caching), re-run and show before/after results. Deliver a capacity report an engineering manager can act on.",
+   "requirements": [
+    "Workload model document with scenario mix and rationale",
+    "Load, stress, spike and soak scripts with thresholds",
+    "Test data generation that avoids cache-only results",
+    "Server-side monitoring captured alongside client metrics",
+    "Bottleneck identification with evidence (profiles, query plans, metrics)",
+    "One fix applied and re-measured with before/after comparison",
+    "Capacity estimate with headroom recommendation",
+    "Reproducible environment via Docker Compose and run instructions",
+    "Report with graphs and clear conclusions"
+   ],
+   "stretch": [
+    "Run in CI as a nightly job with trend storage",
+    "Distributed load generation",
+    "Comparison of two configurations (for example pool sizes)",
+    "Latency histogram analysis"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "k6 or Gatling or Locust",
+    "Docker Compose",
+    "Prometheus/Grafana"
+   ],
+   "rubric": [
+    {
+     "criterion": "Methodology",
+     "weight": 30,
+     "description": "Realistic workloads, valid measurement, thresholds tied to SLA"
+    },
+    {
+     "criterion": "Analysis",
+     "weight": 25,
+     "description": "Bottleneck found with evidence and fixed measurably"
+    },
+    {
+     "criterion": "Reproducibility",
+     "weight": 15,
+     "description": "Environment and scripts anyone can rerun"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Clean scripts, parameterised"
+    },
+    {
+     "criterion": "Reporting",
+     "weight": 15,
+     "description": "Clear graphs and actionable capacity numbers"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Assumptions and limits stated"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-sec-vuln-app-audit",
+   "title": "Security Audit of a Vulnerable Web App",
+   "niche": "Security",
+   "level": "Intermediate",
+   "hours": 10,
+   "summary": "Audit an intentionally vulnerable app, document findings and fix the top issues.",
+   "brief": "Run OWASP Juice Shop, DVWA or WebGoat locally in Docker (an isolated environment you control; do not test anything you do not own). The client wants a professional-grade penetration-test style report for the application as if it were their staging environment.\n\nFind and document at least eight distinct vulnerabilities spanning different OWASP Top 10 categories, for example injection, broken access control, cryptographic failures, XSS and security misconfiguration. For each: description, affected endpoint, reproduction steps, evidence, CVSS-style severity with reasoning, business impact and remediation advice.\n\nThen choose three findings and implement fixes in a fork or patch set (for example parameterised queries, proper authorisation checks, output encoding, security headers), with tests proving the exploit no longer works. Finish with an executive summary suitable for non-technical stakeholders.",
+   "requirements": [
+    "Methodology section covering scope, tools and rules of engagement",
+    "At least eight findings mapped to OWASP Top 10 and CWE identifiers",
+    "Reproduction steps another tester can follow, with evidence",
+    "Severity ratings with reasoning (CVSS vector or similar)",
+    "Remediation advice that is specific, not generic",
+    "Code fixes for three findings with regression tests",
+    "Verification that fixes block the original exploit",
+    "Executive summary and prioritised remediation roadmap"
+   ],
+   "stretch": [
+    "Automated scanning in CI (ZAP baseline)",
+    "Threat model of the application using STRIDE",
+    "Security headers and CSP policy design",
+    "Detection rules/log signatures for the exploited attacks"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Docker",
+    "OWASP ZAP or Burp Community",
+    "Any language for fixes"
+   ],
+   "rubric": [
+    {
+     "criterion": "Findings quality",
+     "weight": 30,
+     "description": "Real, distinct, correctly classified vulnerabilities with reproducible evidence"
+    },
+    {
+     "criterion": "Remediation",
+     "weight": 25,
+     "description": "Fixes are correct, minimal and tested"
+    },
+    {
+     "criterion": "Risk analysis",
+     "weight": 15,
+     "description": "Severity and business impact reasoning"
+    },
+    {
+     "criterion": "Communication",
+     "weight": 20,
+     "description": "Report structure, executive summary, clarity"
+    },
+    {
+     "criterion": "Professionalism",
+     "weight": 10,
+     "description": "Scope discipline, ethics, no unsafe advice"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-sec-auth-service",
+   "title": "Secure Authentication Service",
+   "niche": "Security",
+   "level": "Advanced",
+   "hours": 14,
+   "summary": "Implement login, MFA, sessions and password reset that withstand common attacks.",
+   "brief": "A client needs an authentication microservice for several internal apps. Implement registration, login, logout, password reset by email token and TOTP-based multi-factor authentication. Choose between server-side sessions with secure cookies or short-lived access tokens with rotating refresh tokens, and defend the decision in the README.\n\nThe focus is security detail. Store passwords with Argon2id or bcrypt with appropriate cost, compare tokens in constant time, make reset tokens single-use, short-lived and stored hashed, and never reveal whether an email exists. Add rate limiting and progressive lockout against credential stuffing, detect refresh-token reuse and revoke the whole token family, and set cookie flags and CSRF protection correctly.\n\nWrite a threat model (STRIDE or attack tree) and automated tests that act as the attacker: brute force, token replay, session fixation, timing differences and enumeration.",
+   "requirements": [
+    "Registration with password policy aligned to current NIST guidance (length over composition, breached-password check optional)",
+    "Login with Argon2id or bcrypt and constant-time comparisons",
+    "TOTP MFA enrolment, verification and recovery codes",
+    "Password reset with hashed, single-use, expiring tokens and non-enumerating responses",
+    "Session or refresh token handling with rotation and reuse detection",
+    "Rate limiting and lockout per account and per IP",
+    "Secure cookie attributes and CSRF defence",
+    "Audit log of security events without storing secrets",
+    "Attacker-style tests for brute force, replay, fixation and enumeration",
+    "Threat model document"
+   ],
+   "stretch": [
+    "WebAuthn/passkey support",
+    "OAuth2/OIDC provider endpoints",
+    "Device management page",
+    "Pwned-password k-anonymity check"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Any backend language",
+    "PostgreSQL or Redis",
+    "TOTP library"
+   ],
+   "rubric": [
+    {
+     "criterion": "Security correctness",
+     "weight": 35,
+     "description": "Credential storage, token handling, anti-enumeration and lockout implemented properly"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 20,
+     "description": "Attacker-perspective tests that would fail on weaker implementations"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Clear flows, threat-model-driven design, sensible storage"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Readable, no secrets in logs, safe defaults"
+    },
+    {
+     "criterion": "Threat modelling",
+     "weight": 10,
+     "description": "Realistic threats and mitigations identified"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Decisions defended, limitations noted"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Stripe-style",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-sec-secrets-scanner",
+   "title": "Secrets Scanner and Dependency Auditor",
+   "niche": "Security",
+   "level": "Basic",
+   "hours": 5,
+   "summary": "Build a CLI that finds leaked secrets and vulnerable dependencies in a repository.",
+   "brief": "Engineers regularly commit API keys by accident. Build a command-line tool that scans a directory (and optionally git history) for secrets: AWS access keys, private key headers, generic high-entropy strings assigned to names like `password` or `token`, and JWTs. It should output findings with file, line, rule name and a redacted preview, and exit non-zero when findings exist so it can run as a pre-commit hook.\n\nFalse positives kill adoption. Support an allowlist file with path globs and inline `# scanner:ignore` comments, skip binary files and vendored directories, and keep scan time reasonable on a repository with 10,000 files.\n\nA second command parses `requirements.txt` or `package-lock.json` and checks versions against a small local advisory file (JSON you define) and reports affected packages with fixed versions.",
+   "requirements": [
+    "Rule engine with at least six secret patterns and a configurable entropy check",
+    "Redacted output so the scanner itself never prints full secrets",
+    "Text and JSON output formats with stable exit codes",
+    "Allowlist file and inline ignore comments",
+    "Binary and ignored-directory skipping",
+    "Optional scan of git history for removed secrets",
+    "Dependency audit command with semver range comparison",
+    "Test fixtures containing fake secrets, covering true and false positives",
+    "Pre-commit hook configuration example"
+   ],
+   "stretch": [
+    "SARIF output for GitHub code scanning",
+    "Verification of AWS keys format checksum",
+    "Parallel scanning",
+    "Baseline file to ignore existing findings"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python or Go or Node",
+    "git"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 30,
+     "description": "Detects the planted secrets, low false-positive rate, semver comparison right"
+    },
+    {
+     "criterion": "Security practices",
+     "weight": 15,
+     "description": "Redaction, safe file handling, no secret echo in logs"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 20,
+     "description": "Pluggable rules, readable code"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 20,
+     "description": "Positive and negative fixtures, edge cases"
+    },
+    {
+     "criterion": "Usability",
+     "weight": 10,
+     "description": "CLI ergonomics, exit codes, helpful messages"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Usage and rule authoring guide"
+    }
+   ],
+   "companies": [
+    "Lemon.io",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-sec-zero-trust-gateway",
+   "title": "API Gateway with Zero-trust Controls",
+   "niche": "Security",
+   "level": "Expert",
+   "hours": 22,
+   "summary": "Build a gateway enforcing mTLS, JWT validation, authorisation policy and abuse protection.",
+   "brief": "A platform team wants a small API gateway in front of three internal services. Every request must be authenticated and authorised on its own merits: service-to-service calls use mutual TLS with short-lived certificates (generate a private CA for the assignment), and end-user calls carry JWTs validated against a JWKS endpoint with key rotation support.\n\nAuthorisation decisions come from a policy engine (OPA/Rego, Cedar or your own declarative rules) evaluating subject, action, resource and context such as tenant id and time. The gateway must prevent cross-tenant access, strip untrusted headers, propagate verified identity downstream in a signed header and refuse requests with oversized bodies, slow-loris style behaviour or malformed JSON.\n\nAdd abuse protection (per-client token-bucket limits), structured audit logs for every decision and a test suite that attempts real attacks: JWT algorithm confusion, expired and not-yet-valid tokens, kid injection, header smuggling, tenant escape and replayed certificates.",
+   "requirements": [
+    "Private CA setup script and mTLS between gateway and services",
+    "JWT validation with algorithm allow-list, issuer/audience checks and JWKS caching with rotation",
+    "Declarative authorisation policy with tests of allow and deny cases",
+    "Tenant isolation enforced at gateway and verified by tests",
+    "Header sanitisation and signed identity propagation",
+    "Request size, timeout and slow-client limits",
+    "Token-bucket rate limiting per client identity",
+    "Audit log of decisions with reasons and request ids",
+    "Attack test suite covering algorithm confusion, kid injection, replay and tenant escape",
+    "Threat model and residual-risk list"
+   ],
+   "stretch": [
+    "Certificate revocation or very short lifetimes with automated renewal",
+    "Policy hot reload with validation",
+    "Anomaly alerting on denied-request spikes",
+    "Fuzzing of the JSON parsing layer"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Go or Rust or Node or Java",
+    "Envoy/Nginx optional",
+    "OPA or equivalent",
+    "OpenSSL"
+   ],
+   "rubric": [
+    {
+     "criterion": "Security correctness",
+     "weight": 35,
+     "description": "Controls hold up against the included attacks; defaults are deny"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 20,
+     "description": "Clear trust boundaries, policy separated from enforcement"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 20,
+     "description": "Realistic attack tests and policy tests"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Readable, minimal dependencies, safe parsing"
+    },
+    {
+     "criterion": "Threat modelling & docs",
+     "weight": 15,
+     "description": "Threat model, assumptions, residual risks, operations notes"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "A.Team",
+    "Stripe-style"
+   ]
+  },
+  {
+   "id": "proj-bc-erc20-staking",
+   "title": "Token Staking Contract Suite",
+   "niche": "Blockchain",
+   "level": "Intermediate",
+   "hours": 10,
+   "summary": "Write, test and document a secure ERC-20 staking contract with rewards.",
+   "brief": "A DeFi project wants a staking contract where users deposit an ERC-20 token and earn rewards from a second reward token at a rate set by the owner (tokens per second shared proportionally among stakers). Users can stake, unstake partially or fully, claim rewards and emergency-withdraw without rewards if the pool is paused.\n\nUse Solidity ^0.8 with Foundry or Hardhat. Rewards must use the standard accumulator-per-share pattern so gas is O(1) per action regardless of staker count. Guard against reentrancy, fee-on-transfer tokens, rounding exploits (first-depositor style issues) and owner abuse: the owner can fund rewards and pause but can never withdraw staked principal.\n\nTests must cover happy paths, access control, events, edge cases and fuzz/invariant checks such as 'total claimable rewards never exceed funded rewards'. Include a gas report and a short security analysis listing attack vectors considered.",
+   "requirements": [
+    "Stake, unstake, claim and emergencyWithdraw functions with events",
+    "Accumulator-based reward accounting with O(1) gas",
+    "Owner functions: fund rewards, set rate, pause/unpause, with two-step ownership transfer",
+    "Reentrancy protection and checks-effects-interactions ordering",
+    "Safe handling of non-standard ERC-20s (SafeERC20) and fee-on-transfer rejection or support",
+    "Unit tests above 95% line coverage",
+    "Fuzz tests and at least two invariant tests",
+    "Gas snapshot and optimisation notes",
+    "Security analysis document and NatSpec comments on public functions"
+   ],
+   "stretch": [
+    "Time-locked boosted rewards",
+    "Upgradeable proxy version with storage-layout checks",
+    "Deployment and verification scripts for a testnet",
+    "Slither run with triaged findings"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Solidity",
+    "Foundry or Hardhat",
+    "OpenZeppelin"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "Reward maths exact, no principal loss, correct events"
+    },
+    {
+     "criterion": "Security",
+     "weight": 30,
+     "description": "Reentrancy, access control, rounding and token-quirk handling considered and tested"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 20,
+     "description": "Coverage, fuzz and invariant tests that would catch real bugs"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Clear structure, NatSpec, custom errors, minimal storage writes"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 15,
+     "description": "Security analysis, gas notes, deployment guide"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-bc-nft-marketplace",
+   "title": "NFT Marketplace dApp",
+   "niche": "Blockchain",
+   "level": "Advanced",
+   "hours": 18,
+   "summary": "Build contracts and a web front end for listing, buying and royalty-aware NFT sales.",
+   "brief": "A creative collective wants a minimal NFT marketplace on an EVM testnet. Contracts: an ERC-721 collection with metadata on IPFS (or a mock), and a marketplace contract supporting fixed-price listings, cancelling, buying and ERC-2981 royalty payments. Sellers keep custody until sale via approvals, not escrow, and the contract must handle stale listings (token moved or approval revoked) safely.\n\nThe front end connects with a wallet (wagmi/ethers), shows the collection, lets owners list and cancel, lets buyers purchase and surfaces transaction states: pending, confirmed, failed and rejected-by-user. Index events with The Graph, a small indexer script or direct log queries so the UI can show listings and sale history without scanning the whole chain.\n\nSecurity matters: avoid reentrancy during payouts, use pull payments or careful ordering, prevent price manipulation via listing edits, and handle wrong-network and multiple-account scenarios in the UI.",
+   "requirements": [
+    "ERC-721 collection with mint control and tokenURI",
+    "Marketplace with list, cancel, buy and update-price functions",
+    "ERC-2981 royalty support and correct fee splitting with rounding handled",
+    "Stale-listing protection (ownership and approval checked at purchase)",
+    "Events designed for indexing, plus an indexer or subgraph",
+    "Front end: wallet connect, network check, list/buy/cancel flows",
+    "Transaction lifecycle UI including errors and user rejection",
+    "Contract tests including malicious receiver contracts",
+    "Local deployment scripts and a testnet deployment address list"
+   ],
+   "stretch": [
+    "Offers and auctions (English auction with anti-sniping)",
+    "Lazy minting with EIP-712 signatures",
+    "ERC-1155 support",
+    "Gas-sponsored listings with meta-transactions"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Solidity",
+    "Foundry/Hardhat",
+    "React",
+    "wagmi/viem or ethers",
+    "IPFS"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Listing, purchase and royalty flows behave as specified"
+    },
+    {
+     "criterion": "Security",
+     "weight": 25,
+     "description": "Reentrancy, stale listings, receiver contracts and access control handled"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "Contract separation, event design, indexing approach"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Typed front end, clean contract code"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Contract tests including adversarial cases; UI logic tests"
+    },
+    {
+     "criterion": "UX",
+     "weight": 10,
+     "description": "Clear transaction states and errors"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 5,
+     "description": "Setup and deployment"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-bc-wallet-tracker",
+   "title": "Multi-chain Portfolio Tracker",
+   "niche": "Blockchain",
+   "level": "Basic",
+   "hours": 5,
+   "summary": "Read on-chain balances and transactions to build a simple read-only portfolio view.",
+   "brief": "A user pastes an Ethereum address and sees a portfolio overview. Using a public JSON-RPC provider (Alchemy, Infura, public endpoints) or an explorer API, show the ETH balance, balances for a configurable list of ERC-20 tokens (USDC, DAI, WETH), and the last 20 transactions with direction, counterparty, value and timestamp.\n\nPrices come from a public price API such as CoinGecko; show total portfolio value in USD with a clear note when prices are cached or unavailable. The app is strictly read-only: no private keys, no signing. Handle addresses properly: validate checksums, accept ENS names, and treat unreadable data gracefully.\n\nWrite the data-access layer carefully. Token balances need correct decimals handling with BigInt or a decimal library, never JavaScript floats.",
+   "requirements": [
+    "Address input with checksum validation and ENS resolution",
+    "ETH and ERC-20 balances with correct decimals (BigInt arithmetic)",
+    "Last 20 transactions with direction and human-readable amounts",
+    "USD valuation using cached price data with rate-limit awareness",
+    "Loading, error and rate-limited states",
+    "No private keys or secrets in the client; API keys proxied or documented",
+    "Unit tests for decimal formatting and valuation",
+    "Basic responsive layout"
+   ],
+   "stretch": [
+    "Second chain (Polygon or Arbitrum) support",
+    "Historical portfolio value chart",
+    "Export to CSV",
+    "Watchlist of addresses saved locally"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "TypeScript",
+    "ethers or viem",
+    "React or Vue"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 30,
+     "description": "Balances and values correct, decimals handled without float errors"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 20,
+     "description": "Clean data layer, typed responses"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Formatting and valuation tests"
+    },
+    {
+     "criterion": "Reliability",
+     "weight": 15,
+     "description": "Rate limits, failures, caching handled"
+    },
+    {
+     "criterion": "UX",
+     "weight": 10,
+     "description": "Clear states and readable numbers"
+    },
+    {
+     "criterion": "Security & documentation",
+     "weight": 10,
+     "description": "No keys exposed, clear setup"
+    }
+   ],
+   "companies": [
+    "Lemon.io",
+    "Turing"
+   ]
+  },
+  {
+   "id": "proj-game-platformer",
+   "title": "2D Platformer Vertical Slice",
+   "niche": "Game Development",
+   "level": "Intermediate",
+   "hours": 12,
+   "summary": "Build one polished level of a 2D platformer with tight controls and enemies.",
+   "brief": "An indie studio wants a vertical slice to test their game feel. Using Unity, Godot or a web engine such as Phaser, deliver one level with a player character that runs, jumps with variable height, double jumps, has coyote time and jump buffering, and can collect coins and reach an exit. Two enemy types (a patroller and a shooter) and one hazard type should exist.\n\nControl feel is the main criterion, so expose tuning values (gravity, jump velocity, acceleration, coyote window) in a configuration file or inspector, and document the numbers you chose and why. Physics must be frame-rate independent and behave identically at 30, 60 and 144 FPS.\n\nInclude a main menu, pause, a HUD (health, coins), restart on death, simple audio and a game-state architecture that does not depend on global singletons everywhere. Unit-test the pure logic such as scoring and state transitions.",
+   "requirements": [
+    "Player controller with variable jump height, coyote time and jump buffering",
+    "Frame-rate independent movement (fixed timestep or delta-time correct)",
+    "Two enemy types with distinct behaviours and a hazard",
+    "Collectibles, score and a level exit with win state",
+    "Health, damage with invulnerability frames and respawn/restart",
+    "Main menu, pause and HUD",
+    "Tuning values externalised and documented",
+    "Sound effects and at least basic camera follow with smoothing",
+    "Tests for state and scoring logic; build or run instructions for a playable version"
+   ],
+   "stretch": [
+    "Moving platforms and one-way platforms",
+    "Level loading from data (Tiled JSON)",
+    "Gamepad support",
+    "Screen shake and particle feedback"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Unity (C#) or Godot (GDScript/C#) or Phaser (TypeScript)"
+   ],
+   "rubric": [
+    {
+     "criterion": "Game feel & correctness",
+     "weight": 30,
+     "description": "Controls are responsive and consistent across frame rates; edge cases like corner clipping handled"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 20,
+     "description": "Clear components, no global-state sprawl, tuning data separated"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "State machine for player and enemies, event usage"
+    },
+    {
+     "criterion": "Gameplay polish",
+     "weight": 15,
+     "description": "HUD, feedback, readable level design"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 10,
+     "description": "Logic tests, play-test notes"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Controls, tuning rationale, build steps"
+    }
+   ],
+   "companies": [
+    "Turing",
+    "Lemon.io",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "proj-game-multiplayer-arena",
+   "title": "Authoritative Multiplayer Arena Prototype",
+   "niche": "Game Development",
+   "level": "Expert",
+   "hours": 24,
+   "summary": "Build a server-authoritative 2D arena shooter with client prediction and lag compensation.",
+   "brief": "A studio is evaluating netcode skills. Build a top-down arena where 4 to 8 players move and shoot, using a server-authoritative model: clients send inputs, the server simulates at a fixed 30 Hz tick and broadcasts snapshots. Cheating (speed hacks, teleporting, rapid fire) must be impossible by construction because the server validates and simulates everything.\n\nTo keep movement responsive under 100 ms latency, implement client-side prediction with server reconciliation for the local player, and entity interpolation for remote players. Shots use simple lag compensation: the server rewinds target positions to the shooter's view time within a limit before hit-testing.\n\nProvide a network simulator (configurable latency, jitter and packet loss) and demonstrate the system staying playable at 120 ms, 5% loss. Include automated headless tests where bots connect and play, asserting determinism of the simulation and bounded divergence between client prediction and server state.",
+   "requirements": [
+    "Fixed-timestep server simulation with input queues and snapshots",
+    "Binary or compact message protocol with sequence numbers and acknowledgements",
+    "Client prediction and reconciliation for the local player",
+    "Remote entity interpolation with a jitter buffer",
+    "Server-side validation of movement and fire rate",
+    "Lag-compensated hit detection with a rewind cap",
+    "Built-in network condition simulator",
+    "Headless bot tests proving determinism and bounded error",
+    "Debug overlay showing RTT, packet loss, prediction error and tick rate",
+    "Written analysis of bandwidth per player and how it was reduced"
+   ],
+   "stretch": [
+    "Delta compression of snapshots",
+    "Interest management / area-of-interest filtering",
+    "Rollback replays for local player hit effects",
+    "Matchmaking lobby service"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Node/TypeScript or Go or C# or Rust",
+    "WebSocket/UDP",
+    "Canvas/Unity/Godot client"
+   ],
+   "rubric": [
+    {
+     "criterion": "Netcode correctness",
+     "weight": 30,
+     "description": "Prediction, reconciliation, interpolation and lag compensation behave correctly under adverse networks"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 20,
+     "description": "Deterministic simulation shared or mirrored between client and server, clean protocol layer"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 20,
+     "description": "Headless bot tests, determinism and divergence assertions"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Readable simulation code, clear modules"
+    },
+    {
+     "criterion": "Anti-cheat design",
+     "weight": 10,
+     "description": "Server authority is real, inputs validated"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Protocol, bandwidth analysis and limits"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-game-procgen-dungeon",
+   "title": "Procedural Dungeon Generator",
+   "niche": "Game Development",
+   "level": "Advanced",
+   "hours": 12,
+   "summary": "Generate playable dungeons procedurally with seeds, connectivity guarantees and a pathfinding demo.",
+   "brief": "A roguelike team needs a dungeon generation library plus a small playable demo. Given a seed, width and height, it produces a grid-based dungeon with rooms, corridors, doors, a start, an exit and optional keys/locked doors. The same seed must always produce the same dungeon on every platform.\n\nEvery dungeon must be solvable: the exit is reachable from the start, keys appear before the doors they open, and no required item sits in an unreachable pocket. Use a documented algorithm (BSP, random walk with room placement, wave function collapse or cellular automata plus post-processing) and validate every output with an automated solver.\n\nProvide a visual demo (browser canvas, terminal or engine view) where an agent navigates using A* to collect the key and reach the exit, plus a batch tool that generates 10,000 seeds and reports the failure rate, average generation time and distribution of room counts.",
+   "requirements": [
+    "Deterministic seeded generator with documented algorithm",
+    "Configurable parameters (size, room count, loop density)",
+    "Doors, keys and an exit with ordering guarantees",
+    "Validator that proves solvability via BFS/graph checks",
+    "A* pathfinding agent demo with visualisation",
+    "Batch statistics tool over 10,000 seeds",
+    "Performance target under 50 ms for a 100x100 dungeon, measured",
+    "Unit tests including regression seeds that failed during development"
+   ],
+   "stretch": [
+    "Themed tilesets or biomes",
+    "Difficulty scoring model",
+    "Minimap and fog of war",
+    "Constraint-based key/lock puzzle generation"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Any language",
+    "Canvas/terminal/engine for the demo"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 30,
+     "description": "Always solvable, deterministic, ordering guarantees hold on large seed sets"
+    },
+    {
+     "criterion": "Algorithm design",
+     "weight": 20,
+     "description": "Appropriate algorithm, complexity understood and documented"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 15,
+     "description": "Pure, testable generator separate from rendering"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Seed regressions, property-style tests"
+    },
+    {
+     "criterion": "Demo & visualisation",
+     "weight": 10,
+     "description": "Clear pathfinding demo"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Algorithm explanation and statistics"
+    }
+   ],
+   "companies": [
+    "Turing",
+    "Lemon.io",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "proj-emb-sensor-node",
+   "title": "Low-power Sensor Node Firmware",
+   "niche": "Embedded & IoT",
+   "level": "Intermediate",
+   "hours": 10,
+   "summary": "Write firmware that samples a sensor, filters data and reports reliably over MQTT.",
+   "brief": "A greenhouse operator needs battery-powered nodes reporting temperature and humidity every 5 minutes. Target an ESP32, STM32 or Raspberry Pi Pico (or a simulator such as Wokwi or Renode if you have no hardware). A DHT22/BME280-style sensor is read over GPIO or I2C and values are published to an MQTT broker as JSON with a timestamp and node id.\n\nPower and reliability dominate: sleep between samples (deep sleep or low-power mode) and wake only to measure and transmit. Readings must be filtered (median of several samples) to reject spikes, implausible values must be flagged, and messages must survive Wi-Fi outages by buffering up to 100 readings in flash or RAM and flushing in order on reconnect.\n\nSeparate hardware access from logic through a thin hardware-abstraction layer so the filtering, buffering and message formatting can be unit-tested on a desktop without a device.",
+   "requirements": [
+    "Sensor driver behind an abstraction interface",
+    "Median filter and plausibility checks (range and rate of change)",
+    "MQTT client with QoS 1, last-will message and reconnect handling",
+    "Ring buffer for offline readings with ordered flush",
+    "Low-power duty cycle with documented estimated battery life",
+    "Configuration (Wi-Fi, broker, interval) outside the source via NVS or config file, no hard-coded credentials",
+    "Watchdog usage and safe handling of failures",
+    "Host-side unit tests for filter, buffer and JSON formatting",
+    "Wiring diagram or simulator project file"
+   ],
+   "stretch": [
+    "Over-the-air firmware update",
+    "TLS to the broker with certificate validation",
+    "Local OLED status display",
+    "Time sync via SNTP with drift handling"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "C or C++ or Rust or MicroPython",
+    "ESP-IDF/Arduino/Zephyr",
+    "MQTT",
+    "Mosquitto"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 25,
+     "description": "Sampling, filtering and buffering behave as specified including outages"
+    },
+    {
+     "criterion": "Embedded practices",
+     "weight": 20,
+     "description": "Sleep strategy, watchdog, no dynamic allocation in critical paths, resource awareness"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 15,
+     "description": "HAL separation, testable core logic"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 20,
+     "description": "Host-side unit tests with edge cases"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Readable, const-correct, no magic numbers"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Wiring, power budget and setup"
+    }
+   ],
+   "companies": [
+    "Turing",
+    "Toptal",
+    "Lemon.io"
+   ]
+  },
+  {
+   "id": "proj-emb-rtos-controller",
+   "title": "RTOS Motor and Safety Controller",
+   "niche": "Embedded & IoT",
+   "level": "Expert",
+   "hours": 20,
+   "summary": "Implement a multi-task RTOS controller with PID speed control, fault handling and a command interface.",
+   "brief": "A small automation company wants control firmware for a DC motor with an encoder. Use FreeRTOS or Zephyr on an STM32/ESP32 target or a simulator with a motor model. Tasks: a 1 kHz control loop running PID speed control from encoder counts, a command task parsing a serial protocol (`SET RPM 1200`, `GET STATUS`, `STOP`), a telemetry task streaming status at 10 Hz and a supervisor monitoring faults.\n\nSafety requirements are strict: overcurrent, stalled motor (commanded duty high but no encoder movement), command timeout (no valid command for 2 seconds) and watchdog expiry must all drive the output to a safe state within 10 ms. The control loop must meet deadlines, so avoid blocking calls, dynamic allocation and unbounded priority inversion (use mutexes with priority inheritance or lock-free queues).\n\nProvide timing evidence: measured loop jitter, worst-case execution time and stack high-water marks per task. Test the PID and protocol parser on the host, and fault logic using injected faults in the simulator or a hardware-in-the-loop harness.",
+   "requirements": [
+    "Task design document with priorities, periods and inter-task communication",
+    "PID with anti-windup, output clamping and tunable gains",
+    "Encoder speed estimation handling counter wraparound",
+    "Serial command parser with bounds checking and checksum or framing",
+    "Fault supervisor with defined safe state and recovery rules",
+    "Command timeout and independent watchdog integration",
+    "Measured jitter, WCET and stack usage report",
+    "Host unit tests for PID, parser and wraparound",
+    "Fault-injection tests for overcurrent, stall and timeout",
+    "Notes on how the design addresses priority inversion and race conditions"
+   ],
+   "stretch": [
+    "Auto-tuning (relay method) for PID gains",
+    "CAN bus command interface",
+    "Persistent fault log in flash",
+    "Static analysis (MISRA subset, clang-tidy) results"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "C or C++ or Rust",
+    "FreeRTOS or Zephyr",
+    "STM32 or ESP32 or simulator"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Control and fault behaviour meet specified timing and safe-state rules"
+    },
+    {
+     "criterion": "Real-time design",
+     "weight": 25,
+     "description": "Priorities, synchronisation and deadlines justified and measured"
+    },
+    {
+     "criterion": "Safety",
+     "weight": 20,
+     "description": "Fault paths tested and fail-safe by default"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Bounded, deterministic code, MISRA-minded style"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Host and fault-injection tests"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Task design and timing report"
+    }
+   ],
+   "companies": [
+    "Toptal",
+    "Turing",
+    "A.Team"
+   ]
+  },
+  {
+   "id": "proj-emb-iot-gateway",
+   "title": "Smart Home IoT Gateway",
+   "niche": "Embedded & IoT",
+   "level": "Advanced",
+   "hours": 14,
+   "summary": "Build a gateway bridging BLE/Zigbee-style devices to the cloud with secure provisioning.",
+   "brief": "A smart-home start-up needs a gateway service for a Raspberry Pi class device. Simulated local devices (door sensors, smart plugs, thermostats) speak a simple local protocol over MQTT or BLE-like characteristics. The gateway discovers them, normalises their data into a common device model, forwards state to a cloud MQTT/HTTP endpoint and applies commands coming back.\n\nSecurity is first-class: devices are onboarded through a provisioning flow that exchanges per-device credentials (no shared default passwords), cloud connections use TLS with certificate validation and device state is accepted only from enrolled identities. Commands from the cloud are authenticated and replay-protected.\n\nThe gateway must keep working when the internet is down: local automations (for example 'if door opens after 22:00, turn on hallway plug') run locally from a rules file, state is queued and synced on reconnect, and a local REST API exposes current status.",
+   "requirements": [
+    "Device model abstraction with at least three simulated device types",
+    "Discovery and onboarding with per-device credentials",
+    "TLS-secured cloud uplink with reconnect and backoff",
+    "Offline queue and ordered sync after outage",
+    "Local rules engine executing automations from a config file",
+    "Authenticated commands with nonces or timestamps to stop replay",
+    "Local REST API with current device state",
+    "Structured logging and health reporting",
+    "Tests for the rules engine, replay protection and offline queue"
+   ],
+   "stretch": [
+    "Firmware update orchestration with signature checks",
+    "Matter or Home Assistant discovery compatibility",
+    "Power-consumption-aware polling",
+    "Mobile companion UI"
+   ],
+   "deliverables": [
+    "Public Git repository with a meaningful commit history",
+    "README covering setup, run and test commands, design decisions and known trade-offs"
+   ],
+   "tech": [
+    "Python or Go or Rust",
+    "MQTT",
+    "Raspberry Pi",
+    "TLS"
+   ],
+   "rubric": [
+    {
+     "criterion": "Correctness",
+     "weight": 20,
+     "description": "Device state, commands and offline behaviour work as specified"
+    },
+    {
+     "criterion": "Security",
+     "weight": 25,
+     "description": "Provisioning, TLS validation, replay protection, no default credentials"
+    },
+    {
+     "criterion": "Architecture",
+     "weight": 20,
+     "description": "Device abstraction, uplink/local separation, resilient queueing"
+    },
+    {
+     "criterion": "Code quality",
+     "weight": 10,
+     "description": "Readable and testable modules"
+    },
+    {
+     "criterion": "Testing",
+     "weight": 15,
+     "description": "Rules, replay and outage tests"
+    },
+    {
+     "criterion": "Documentation",
+     "weight": 10,
+     "description": "Provisioning flow and threat notes"
+    }
+   ],
+   "companies": [
+    "Turing",
+    "Toptal",
+    "A.Team"
+   ]
+  }
+ ]
+}

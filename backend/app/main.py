@@ -1,0 +1,39 @@
+import logging
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .config import get_settings
+from .content import store
+from .database import SessionLocal
+from .migrate import upgrade
+from .routers import activity, admin, ai, auth, dashboard, dsa, interviews, learn, paths, projects, questions, tests
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+
+settings = get_settings()
+upgrade()
+with SessionLocal() as _db:
+    store.seed(_db)
+
+app = FastAPI(
+    title="Programming Haven API",
+    description="AI-powered preparation for remote developer screening pipelines.",
+    version="0.2.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+for module in (auth, dashboard, learn, dsa, tests, interviews, paths, ai, questions, projects, activity, admin):
+    app.include_router(module.router)
+
+
+@app.get("/api/health", tags=["meta"])
+def health():
+    return {"status": "ok", "ai": settings.ai_enabled}

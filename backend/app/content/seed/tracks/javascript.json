@@ -1,0 +1,2573 @@
+{
+ "tracks": [
+  {
+   "id": "javascript",
+   "title": "JavaScript",
+   "icon": "⚡",
+   "color": "#eab308",
+   "available": true,
+   "order": 100,
+   "description": "From coercion and closures to the event loop, polyfills and concurrency control - everything frontend and Node.js interviews at top companies probe.",
+   "units": [
+    {
+     "id": "js-u1",
+     "title": "Foundations",
+     "description": "Types, coercion, hoisting and functions - the basics every screen starts with",
+     "level": "Basic"
+    },
+    {
+     "id": "js-u2",
+     "title": "Scope, Closures & this",
+     "description": "Lexical scope, closures and the rules that decide what `this` is",
+     "level": "Basic"
+    },
+    {
+     "id": "js-u3",
+     "title": "Data & Collections",
+     "description": "Array methods, destructuring, immutability and Map/Set",
+     "level": "Intermediate"
+    },
+    {
+     "id": "js-u4",
+     "title": "Prototypes, Classes & Errors",
+     "description": "Prototype chain, classes, modules and robust error handling",
+     "level": "Intermediate"
+    },
+    {
+     "id": "js-u5",
+     "title": "Async JavaScript",
+     "description": "Event loop, promises, async/await and combinators",
+     "level": "Advanced"
+    },
+    {
+     "id": "js-u6",
+     "title": "Iterators, JSON & Regex",
+     "description": "Iteration protocols, generators, JSON quirks and regular expressions",
+     "level": "Advanced"
+    },
+    {
+     "id": "js-u7",
+     "title": "Expert Utilities",
+     "description": "Debounce, currying, memoization, deep clone and polyfills",
+     "level": "Expert"
+    },
+    {
+     "id": "js-u8",
+     "title": "Performance, Patterns & Concurrency",
+     "description": "Memory, performance, design patterns, concurrency control and event loop puzzles",
+     "level": "Expert"
+    }
+   ]
+  }
+ ],
+ "lessons": [
+  {
+   "id": "js-types",
+   "track_id": "javascript",
+   "unit_id": "js-u1",
+   "title": "Types & typeof",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Seven primitives, one object type",
+     "body": "JavaScript has seven primitive types: `string`, `number`, `bigint`, `boolean`, `undefined`, `null` and `symbol`. Everything else (arrays, functions, dates, maps) is an object.\n\n`typeof` tells you the primitive category but has famous quirks: `typeof null` is `\"object\"` (a historical bug that can never be fixed), arrays are `\"object\"`, and functions are `\"function\"`. Use `Array.isArray` for arrays and `=== null` for null.",
+     "code": "console.log(typeof 42);          // \"number\"\nconsole.log(typeof 10n);         // \"bigint\"\nconsole.log(typeof undefined);   // \"undefined\"\nconsole.log(typeof null);        // \"object\" (!)\nconsole.log(typeof []);          // \"object\"\nconsole.log(typeof (() => 1));   // \"function\""
+    },
+    {
+     "type": "mcq",
+     "question": "What does `typeof null` evaluate to?",
+     "options": [
+      "\"null\"",
+      "\"undefined\"",
+      "\"object\"",
+      "It throws a TypeError"
+     ],
+     "answer": 2,
+     "explanation": "`typeof null` is `\"object\"` because of a bug in the first JS engine's type tags that was kept for backward compatibility. Check null with `value === null`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "console.log(0.1 + 0.2);",
+     "options": [
+      "true",
+      "false",
+      "NaN",
+      "0.30000000000000004"
+     ],
+     "answer": 3,
+     "explanation": "Numbers are IEEE-754 doubles, so 0.1 + 0.2 is not exactly 0.3. The sum prints `0.30000000000000004`. Compare floats with a tolerance such as `Math.abs(a - b) < Number.EPSILON`."
+    },
+    {
+     "type": "mcq",
+     "question": "Which expression is `true`?",
+     "options": [
+      "`typeof NaN === \"nan\"`",
+      "`NaN === NaN`",
+      "`Number.isNaN(NaN)`",
+      "`isNaN(\"hello\") === false`"
+     ],
+     "answer": 2,
+     "explanation": "`NaN` is the only value not equal to itself, so use `Number.isNaN`. `typeof NaN` is `\"number\"`. The global `isNaN(\"hello\")` coerces to a number first and returns `true`, which is why `Number.isNaN` is safer."
+    },
+    {
+     "type": "fill",
+     "prompt": "Write a BigInt literal.",
+     "code": "const big = 12345678901234567890____;\nconsole.log(typeof big);",
+     "answer": [
+      "n"
+     ],
+     "explanation": "A trailing `n` makes a BigInt literal; BigInts cannot be mixed with regular numbers in arithmetic."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Write `describe(v)` that returns `\"null\"` for null, `\"array\"` for arrays, and otherwise the result of `typeof`. Print the descriptions of every value in `values` joined by commas.",
+     "starter": "function describe(v) {\n  // TODO\n}\nconst values = [42, \"hi\", null, undefined, [], () => 1, 10n, {}];\nconsole.log(values.map(describe).join(\",\"));\n",
+     "solution": "function describe(v) {\n  if (v === null) return \"null\";\n  if (Array.isArray(v)) return \"array\";\n  return typeof v;\n}\nconst values = [42, \"hi\", null, undefined, [], () => 1, 10n, {}];\nconsole.log(values.map(describe).join(\",\"));\n",
+     "expected_output": "number,string,null,undefined,array,function,bigint,object",
+     "hint": "Check null and Array.isArray before falling back to typeof."
+    }
+   ]
+  },
+  {
+   "id": "js-equality",
+   "track_id": "javascript",
+   "unit_id": "js-u1",
+   "title": "Coercion: == vs ===",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Strict vs loose equality",
+     "body": "`===` compares type and value with no conversion. `==` runs the Abstract Equality algorithm: if types differ it converts operands (objects to primitives, then mostly to numbers), with the special rule that `null == undefined` and neither equals anything else.\n\nIn interviews and code reviews: default to `===`. The one common accepted use of `==` is `x == null` to test for both `null` and `undefined`. For `NaN` and `-0` use `Object.is`.",
+     "code": "console.log(1 == \"1\");          // true\nconsole.log(1 === \"1\");         // false\nconsole.log(null == undefined); // true\nconsole.log(null == 0);         // false\nconsole.log(NaN == NaN);        // false\nconsole.log(Object.is(NaN, NaN)); // true\nconsole.log(Object.is(0, -0));    // false"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "console.log([] == false);",
+     "options": [
+      "true",
+      "false",
+      "undefined",
+      "TypeError"
+     ],
+     "answer": 0,
+     "explanation": "`[]` converts to the primitive `\"\"`, then to `0`; `false` converts to `0`. `0 == 0` is `true`. This is exactly why `==` is discouraged."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "console.log(null == 0, null >= 0);",
+     "options": [
+      "false false",
+      "false true",
+      "true true",
+      "true false"
+     ],
+     "answer": 1,
+     "explanation": "`==` with null never coerces to a number, so `null == 0` is false. But the relational `>=` operator does convert null to `0`, so `null >= 0` is true."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "console.log([1, 2] + [3]);",
+     "options": [
+      "\"1,23\"",
+      "\"123\"",
+      "[1, 2, 3]",
+      "6"
+     ],
+     "answer": 0,
+     "explanation": "`+` with non-numbers converts both sides to primitives. Arrays become strings via `join(\",\")`: `\"1,2\"` and `\"3\"`, which concatenate to `\"1,23\"`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "console.log(\"2\" + 1);",
+     "options": [
+      "3",
+      "\"21\"",
+      "\"3\"",
+      "NaN"
+     ],
+     "answer": 1,
+     "explanation": "`+` with a string operand concatenates, so the number `1` becomes `\"1\"` and the result is the string `\"21\"`, not `3`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the method that treats `NaN` as equal to itself.",
+     "code": "console.log(Object.____(NaN, NaN)); // true",
+     "answer": [
+      "is"
+     ],
+     "explanation": "`Object.is` uses SameValue semantics: `NaN` equals `NaN`, but `0` and `-0` differ."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Write `same(a, b)` using `Object.is`, and print `same(NaN, NaN)`, `same(0, -0)` and `same(1, 1)` on separate lines.",
+     "starter": "function same(a, b) {\n  // TODO\n}\nconsole.log(same(NaN, NaN));\nconsole.log(same(0, -0));\nconsole.log(same(1, 1));\n",
+     "solution": "function same(a, b) {\n  return Object.is(a, b);\n}\nconsole.log(same(NaN, NaN));\nconsole.log(same(0, -0));\nconsole.log(same(1, 1));\n",
+     "expected_output": "true\nfalse\ntrue"
+    }
+   ]
+  },
+  {
+   "id": "js-vars-hoisting",
+   "track_id": "javascript",
+   "unit_id": "js-u1",
+   "title": "var, let, const & Hoisting",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Scope, hoisting and the TDZ",
+     "body": "`var` is function-scoped and hoisted: the declaration moves to the top and is initialised to `undefined`. `let` and `const` are block-scoped and also hoisted, but they stay uninitialised in the **temporal dead zone (TDZ)** until the declaration runs; touching them early throws a `ReferenceError`.\n\nFunction declarations are hoisted completely (name and body). Function expressions assigned to `var` are only hoisted as `undefined`. `const` prevents rebinding, not mutation of the object it points at.",
+     "code": "console.log(a);   // undefined (var hoisted)\nvar a = 1;\n\n// console.log(b); // ReferenceError: TDZ\nlet b = 2;\n\nhello();          // works: declaration hoisted\nfunction hello() { console.log(\"hi\"); }"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "console.log(a);\nvar a = 1;",
+     "options": [
+      "1",
+      "undefined",
+      "ReferenceError",
+      "null"
+     ],
+     "answer": 1,
+     "explanation": "`var a` is hoisted and initialised to `undefined`; the assignment happens later."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens?",
+     "code": "console.log(typeof b);\nlet b = 1;",
+     "options": [
+      "Prints \"undefined\"",
+      "Prints \"object\"",
+      "Throws ReferenceError",
+      "Prints nothing"
+     ],
+     "answer": 2,
+     "explanation": "Even `typeof`, which is normally safe for undeclared names, throws for a binding in the TDZ."
+    },
+    {
+     "type": "mcq",
+     "question": "What are the two lines printed?",
+     "code": "console.log(typeof foo);\nvar foo = 1;\nfunction foo() {}\nconsole.log(typeof foo);",
+     "options": [
+      "\"function\" then \"function\"",
+      "\"function\" then \"number\"",
+      "\"undefined\" then \"number\"",
+      "\"number\" then \"number\""
+     ],
+     "answer": 1,
+     "explanation": "Function declarations are hoisted above `var` initialisation, so the first `typeof` is `\"function\"`. Then `foo = 1` runs and overwrites the binding, so the second is `\"number\"`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "const o = { a: 1 };\no.a = 2;\nconsole.log(o.a);",
+     "options": [
+      "1",
+      "2",
+      "TypeError: Assignment to constant variable",
+      "undefined"
+     ],
+     "answer": 1,
+     "explanation": "`const` only freezes the binding. Mutating a property of the object it references is allowed."
+    },
+    {
+     "type": "fill",
+     "prompt": "Declare a binding that can never be reassigned.",
+     "code": "____ PI = 3.14159;",
+     "answer": [
+      "const"
+     ],
+     "explanation": "`const` creates a block-scoped, non-reassignable binding."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Using try/catch, print the `name` of the error thrown by reading `a` before its `let` declaration, then print what reading the hoisted `var b` before assignment gives. Expected two lines: `ReferenceError` then `undefined`.",
+     "starter": "try {\n  console.log(a);\n} catch (e) {\n  // TODO print e.name\n}\nlet a = 1;\n// TODO print b before it is assigned\nvar b = 2;\n",
+     "solution": "try {\n  console.log(a);\n} catch (e) {\n  console.log(e.name);\n}\nlet a = 1;\nconsole.log(b);\nvar b = 2;\n",
+     "expected_output": "ReferenceError\nundefined"
+    }
+   ]
+  },
+  {
+   "id": "js-functions",
+   "track_id": "javascript",
+   "unit_id": "js-u1",
+   "title": "Functions & Parameters",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Functions are values",
+     "body": "Functions are first-class: store them in variables, pass them as arguments, return them. Parameters can have **defaults** (evaluated at call time, only when the argument is `undefined`) and a **rest parameter** `...args` collects the remaining arguments into a real array (unlike the legacy `arguments` object).\n\nArrow functions are concise and inherit `this`, but have no `arguments`, cannot be used with `new`, and cannot be generators.",
+     "code": "const greet = (name = \"friend\", ...rest) => `Hi ${name} (+${rest.length})`;\nconsole.log(greet());            // Hi friend (+0)\nconsole.log(greet(\"Ada\", 1, 2)); // Hi Ada (+2)"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "function f(a, b = a * 2) { return a + b; }\nconsole.log(f(1, null));",
+     "options": [
+      "3",
+      "1",
+      "NaN",
+      "undefined"
+     ],
+     "answer": 1,
+     "explanation": "Defaults apply only when the argument is `undefined`. `null` is a real value, so `b` is `null`, which coerces to `0` in `1 + null`, giving `1`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "console.log([\"1\", \"2\", \"3\"].map(parseInt));",
+     "options": [
+      "[1, 2, 3]",
+      "[1, NaN, NaN]",
+      "[0, 1, 2]",
+      "[NaN, NaN, NaN]"
+     ],
+     "answer": 1,
+     "explanation": "`map` passes `(value, index, array)`, so `parseInt` receives the index as radix: `parseInt('1', 0)` is 1, `parseInt('2', 1)` is NaN and `parseInt('3', 2)` is NaN."
+    },
+    {
+     "type": "mcq",
+     "question": "What is logged?",
+     "code": "function f(a, b = a * 2) { return a + b; }\nconsole.log(f(1));",
+     "options": [
+      "3",
+      "0",
+      "undefined",
+      "ReferenceError"
+     ],
+     "answer": 0,
+     "explanation": "Parameter defaults can reference earlier parameters. `f(1)` uses `b = a * 2 = 2` and returns `3`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Collect all remaining arguments into an array.",
+     "code": "const sum = (...____) => args.reduce((a, b) => a + b, 0);",
+     "answer": [
+      "args"
+     ],
+     "explanation": "The rest parameter name must match the identifier used in the body, here `args`."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Write `sum(...nums)` returning the total (0 for no arguments). Print `sum(1, 2, 3)` and `sum()`.",
+     "starter": "function sum() {\n  // TODO use a rest parameter\n}\nconsole.log(sum(1, 2, 3));\nconsole.log(sum());\n",
+     "solution": "function sum(...nums) {\n  return nums.reduce((a, b) => a + b, 0);\n}\nconsole.log(sum(1, 2, 3));\nconsole.log(sum());\n",
+     "expected_output": "6\n0"
+    }
+   ]
+  },
+  {
+   "id": "js-scope-closures",
+   "track_id": "javascript",
+   "unit_id": "js-u2",
+   "title": "Scope & Closures",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Lexical scope and closures",
+     "body": "JavaScript uses **lexical scope**: a function sees the variables of the scope where it was *written*. A **closure** is a function plus a live reference to its surrounding variables, which stay alive as long as the function does. Closures capture *variables*, not values.\n\nThis is the foundation for private state, factories, callbacks, and a classic loop bug with `var`.",
+     "code": "function makeCounter() {\n  let count = 0;\n  return () => ++count;\n}\nconst c = makeCounter();\nc(); c();\nconsole.log(c()); // 3"
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "function make() { let c = 0; return () => ++c; }\nconst a = make(), b = make();\na(); a();\nconsole.log(a(), b());",
+     "options": [
+      "3 3",
+      "3 1",
+      "1 1",
+      "1 3"
+     ],
+     "answer": 1,
+     "explanation": "Each call to `make` creates a fresh `c`. `a` was called 3 times, `b` once."
+    },
+    {
+     "type": "mcq",
+     "question": "What does the loop print (asynchronously)?",
+     "code": "for (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 0);\n}",
+     "options": [
+      "0 1 2",
+      "3 3 3",
+      "undefined x3",
+      "0 0 0"
+     ],
+     "answer": 1,
+     "explanation": "`var i` is a single function-scoped variable. All three callbacks run after the loop ended, when `i` is 3."
+    },
+    {
+     "type": "mcq",
+     "question": "Same loop with `let`. What is printed?",
+     "code": "for (let i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 0);\n}",
+     "options": [
+      "3 3 3",
+      "0 1 2",
+      "0 0 0",
+      "1 2 3"
+     ],
+     "answer": 1,
+     "explanation": "`let` creates a new binding per iteration, so each closure captures its own `i`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Make each iteration capture its own variable.",
+     "code": "for (____ i = 0; i < 3; i++) setTimeout(() => console.log(i));",
+     "answer": [
+      "let"
+     ],
+     "explanation": "Per-iteration binding semantics come from `let`."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Write `makeCounter()` returning an object with `inc()`, `dec()` and `value()` that share private state. Call inc, inc, dec and print `value()`, then print `typeof counter.count`.",
+     "starter": "function makeCounter() {\n  // TODO\n}\nconst counter = makeCounter();\ncounter.inc();\ncounter.inc();\ncounter.dec();\nconsole.log(counter.value());\nconsole.log(typeof counter.count);\n",
+     "solution": "function makeCounter() {\n  let count = 0;\n  return {\n    inc: () => { count++; },\n    dec: () => { count--; },\n    value: () => count,\n  };\n}\nconst counter = makeCounter();\ncounter.inc();\ncounter.inc();\ncounter.dec();\nconsole.log(counter.value());\nconsole.log(typeof counter.count);\n",
+     "expected_output": "1\nundefined"
+    }
+   ]
+  },
+  {
+   "id": "js-closure-patterns",
+   "track_id": "javascript",
+   "unit_id": "js-u2",
+   "title": "Closure Patterns",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Real-world closure patterns",
+     "body": "Closures power: **private state** (module pattern), **function factories** (`makeMultiplier(3)`), **once/memoize wrappers**, **partial application**, and event handlers that remember context.\n\nGotchas: closures capture variables, so mutating the variable later changes what the closure sees; and closures can keep large objects alive (memory leaks) if they reference them.",
+     "code": "function once(fn) {\n  let called = false, result;\n  return (...args) => {\n    if (!called) { called = true; result = fn(...args); }\n    return result;\n  };\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "function makeLogger() {\n  let msg = \"a\";\n  const log = () => console.log(msg);\n  msg = \"b\";\n  return log;\n}\nmakeLogger()();",
+     "options": [
+      "\"a\"",
+      "\"b\"",
+      "undefined",
+      "ReferenceError"
+     ],
+     "answer": 1,
+     "explanation": "The closure keeps a reference to the variable `msg`, not a copy of its value at creation time. By the time `log()` runs, `msg` is `\"b\"`."
+    },
+    {
+     "type": "mcq",
+     "question": "Given a correct `once(fn)` that caches the first result, what is printed?",
+     "code": "let n = 0;\nconst f = once(() => ++n);\nconsole.log(f(), f(), f());",
+     "options": [
+      "1 1 1",
+      "1 2 3",
+      "1 1 3",
+      "undefined"
+     ],
+     "answer": 0,
+     "explanation": "`once` ignores later calls and returns the cached result of the first one."
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement about this module is true?",
+     "code": "const api = (function () {\n  const secret = 42;\n  return { reveal: () => secret };\n})();",
+     "options": [
+      "`api.secret` returns 42",
+      "`api.secret` is `undefined`, but `api.reveal()` returns 42",
+      "Calling `api.reveal()` throws",
+      "`secret` is a global"
+     ],
+     "answer": 1,
+     "explanation": "`secret` lives only in the IIFE's scope. The returned object exposes a method that closes over it, giving real privacy."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `once(fn)`: the wrapped function runs `fn` only on the first call and returns that same result afterwards. Print the three results of calling it with 5, 10, 20 (fn doubles its input), then the number of times `fn` ran.",
+     "starter": "function once(fn) {\n  // TODO\n}\nlet runs = 0;\nconst double = once((n) => { runs++; return n * 2; });\nconsole.log(double(5), double(10), double(20));\nconsole.log(runs);\n",
+     "solution": "function once(fn) {\n  let called = false, result;\n  return (...args) => {\n    if (!called) {\n      called = true;\n      result = fn(...args);\n    }\n    return result;\n  };\n}\nlet runs = 0;\nconst double = once((n) => { runs++; return n * 2; });\nconsole.log(double(5), double(10), double(20));\nconsole.log(runs);\n",
+     "expected_output": "10 10 10\n1"
+    }
+   ]
+  },
+  {
+   "id": "js-this-binding",
+   "track_id": "javascript",
+   "unit_id": "js-u2",
+   "title": "How `this` Works",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The four binding rules (and arrows)",
+     "body": "`this` is decided by **how a function is called**, not where it is defined. In priority order:\n\n1. `new Fn()` - `this` is the fresh object.\n2. `fn.call/apply/bind(obj)` - explicit `this`.\n3. `obj.method()` - `this` is `obj` (implicit).\n4. Plain `fn()` - `undefined` in strict mode/modules/classes, the global object otherwise.\n\n**Arrow functions** have no `this` of their own; they use the `this` of the enclosing scope and it can never be rebound. Extracting a method (`const g = obj.method`) loses the implicit binding.",
+     "code": "class Counter {\n  n = 0;\n  inc() { this.n++; return this.n; }\n}\nconst c = new Counter();\nconst inc = c.inc;\ntry { inc(); } catch (e) { console.log(e.name); } // TypeError"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "class P {\n  name = \"A\";\n  hi() { return this.name; }\n}\nconst g = new P().hi;\ntry { console.log(g()); } catch (e) { console.log(e.name); }",
+     "options": [
+      "undefined",
+      "TypeError",
+      "\"A\"",
+      "null"
+     ],
+     "answer": 1,
+     "explanation": "Class bodies are always strict, so a detached method is called with `this === undefined` and reading `.name` throws `TypeError`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is logged?",
+     "code": "const obj = {\n  v: 1,\n  regular() { return [0].map(() => this.v)[0]; }\n};\nconsole.log(obj.regular());",
+     "options": [
+      "1",
+      "undefined",
+      "NaN",
+      "TypeError"
+     ],
+     "answer": 0,
+     "explanation": "The arrow function inside `map` inherits `this` from `regular()`, which was called as `obj.regular()`, so `this.v` is 1."
+    },
+    {
+     "type": "mcq",
+     "question": "What is logged?",
+     "code": "function f() { return this.x; }\nconst b = f.bind({ x: 1 });\nconsole.log(b.call({ x: 2 }));",
+     "options": [
+      "1",
+      "2",
+      "undefined",
+      "TypeError"
+     ],
+     "answer": 0,
+     "explanation": "A bound function permanently fixes `this`; `.call` cannot override it."
+    },
+    {
+     "type": "mcq",
+     "question": "Why does `setTimeout(obj.method, 0)` often lose `this`?",
+     "options": [
+      "Timers run in a separate thread",
+      "The method reference is passed without its receiver, so it is invoked as a plain function",
+      "Methods cannot be asynchronous",
+      "setTimeout binds `this` to window on purpose for security"
+     ],
+     "answer": 1,
+     "explanation": "Passing `obj.method` passes only the function. The timer later calls it with no receiver. Fix with an arrow wrapper or `.bind(obj)`."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "The `list` method breaks because the callback is a normal function. Fix it so it prints `Dev:Ann,Dev:Bo`.",
+     "starter": "class Team {\n  constructor(name, members) { this.name = name; this.members = members; }\n  list() {\n    return this.members.map(function (m) {\n      return `${this.name}:${m}`;\n    });\n  }\n}\nconsole.log(new Team(\"Dev\", [\"Ann\", \"Bo\"]).list().join(\",\"));\n",
+     "solution": "class Team {\n  constructor(name, members) { this.name = name; this.members = members; }\n  list() {\n    return this.members.map((m) => `${this.name}:${m}`);\n  }\n}\nconsole.log(new Team(\"Dev\", [\"Ann\", \"Bo\"]).list().join(\",\"));\n",
+     "expected_output": "Dev:Ann,Dev:Bo",
+     "hint": "Use an arrow function so `this` comes from `list`."
+    }
+   ]
+  },
+  {
+   "id": "js-call-apply-bind",
+   "track_id": "javascript",
+   "unit_id": "js-u2",
+   "title": "call, apply & bind",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Borrowing and fixing `this`",
+     "body": "`fn.call(ctx, a, b)` and `fn.apply(ctx, [a, b])` invoke immediately with an explicit `this`; `fn.bind(ctx, a)` returns a **new function** with `this` (and optionally leading arguments) fixed - partial application.\n\nClassic uses: borrowing array methods for array-likes, passing method references as callbacks, and `Math.max.apply(null, arr)` (today: `Math.max(...arr)`).",
+     "code": "function intro(greeting, punct) {\n  return `${greeting}, I am ${this.name}${punct}`;\n}\nconst ana = { name: \"Ana\" };\nconsole.log(intro.call(ana, \"Hi\", \"!\"));\nconsole.log(intro.apply(ana, [\"Hello\", \".\"]));\nconst bound = intro.bind(ana, \"Hey\");\nconsole.log(bound(\"?\"));"
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "function add(a, b) { return a + b; }\nconsole.log(add.bind(null, 10)(5));",
+     "options": [
+      "15",
+      "\"105\"",
+      "NaN",
+      "10"
+     ],
+     "answer": 0,
+     "explanation": "`bind(null, 10)` fixes `a = 10`; calling with 5 supplies `b`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "const arrayLike = { 0: 'a', 1: 'b', length: 2 };\nconsole.log(Array.prototype.slice.call(arrayLike));",
+     "options": [
+      "[ 'a', 'b' ]",
+      "[]",
+      "{ 0: 'a', 1: 'b' }",
+      "TypeError"
+     ],
+     "answer": 0,
+     "explanation": "`slice` only needs `length` and indexed access, so it works on array-likes via `call` and returns a real array."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `Math.max.apply(null, [1, 5, 3])` return?",
+     "options": [
+      "5",
+      "NaN",
+      "[1, 5, 3]",
+      "TypeError"
+     ],
+     "answer": 0,
+     "explanation": "`apply` spreads the array as arguments, equal to `Math.max(1, 5, 3)`, which is 5."
+    },
+    {
+     "type": "fill",
+     "prompt": "Call `fn` once with `this` set to `ctx` and arguments listed individually.",
+     "code": "fn.____(ctx, 1, 2);",
+     "answer": [
+      "call"
+     ],
+     "explanation": "`call` takes arguments individually, `apply` takes an array."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Print three lines using `intro` with `call`, `apply` and `bind` against `ana`, in that order, producing `Hi, I am Ana!`, `Hello, I am Ana.` and `Hey, I am Ana?`.",
+     "starter": "function intro(greeting, punct) {\n  return `${greeting}, I am ${this.name}${punct}`;\n}\nconst ana = { name: \"Ana\" };\n// TODO use call, apply, bind\n",
+     "solution": "function intro(greeting, punct) {\n  return `${greeting}, I am ${this.name}${punct}`;\n}\nconst ana = { name: \"Ana\" };\nconsole.log(intro.call(ana, \"Hi\", \"!\"));\nconsole.log(intro.apply(ana, [\"Hello\", \".\"]));\nconst bound = intro.bind(ana, \"Hey\");\nconsole.log(bound(\"?\"));\n",
+     "expected_output": "Hi, I am Ana!\nHello, I am Ana.\nHey, I am Ana?"
+    }
+   ]
+  },
+  {
+   "id": "js-array-methods",
+   "track_id": "javascript",
+   "unit_id": "js-u3",
+   "title": "Array Methods & Gotchas",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "map, filter, reduce, sort",
+     "body": "`map` transforms, `filter` selects, `reduce` folds into any shape, `find`/`some`/`every` short-circuit. None of these (except `sort`, `reverse`, `splice`, `push`...) mutate the original array.\n\nGotchas interviewers love: `sort()` with no comparator sorts **as strings** and mutates in place; `reduce` on an empty array without an initial value throws; `forEach` ignores `return` and does not wait for async callbacks; an arrow function with a block body needs an explicit `return`. Newer non-mutating variants: `toSorted`, `toReversed`, `with`.",
+     "code": "console.log([10, 9, 1].sort());              // [ 1, 10, 9 ]\nconsole.log([10, 9, 1].sort((a, b) => a - b)); // [ 1, 9, 10 ]\nconst total = [1, 2, 3].reduce((acc, n) => acc + n, 0);\nconsole.log(total); // 6"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "console.log([10, 9, 1].sort());",
+     "options": [
+      "[ 1, 9, 10 ]",
+      "[ 1, 10, 9 ]",
+      "[ 10, 9, 1 ]",
+      "[ 9, 10, 1 ]"
+     ],
+     "answer": 1,
+     "explanation": "The default comparator converts elements to strings and compares UTF-16 code units: `\"1\" < \"10\" < \"9\"`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "console.log([1, 2, 3].map(x => { x * 2 }));",
+     "options": [
+      "[ 2, 4, 6 ]",
+      "[ undefined, undefined, undefined ]",
+      "[]",
+      "SyntaxError"
+     ],
+     "answer": 1,
+     "explanation": "The braces make a block body with no `return`, so every call returns `undefined`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "const a = [3, 1, 2];\nconst b = a.sort();\nconsole.log(a === b);",
+     "options": [
+      "true",
+      "false",
+      "TypeError",
+      "undefined"
+     ],
+     "answer": 0,
+     "explanation": "`sort` sorts in place and returns the *same* array reference."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens?",
+     "code": "console.log([].reduce((a, b) => a + b));",
+     "options": [
+      "Returns undefined",
+      "Returns 0",
+      "Throws TypeError",
+      "Returns NaN"
+     ],
+     "answer": 2,
+     "explanation": "`reduce` of an empty array with no initial value throws `TypeError: Reduce of empty array with no initial value`. Always pass an initial value."
+    },
+    {
+     "type": "fill",
+     "prompt": "Fill in the initial accumulator so the reducer builds an object.",
+     "code": "const byId = users.reduce((acc, u) => ({ ...acc, [u.id]: u }), ____);",
+     "answer": [
+      "{}"
+     ],
+     "explanation": "The accumulator starts as an empty object `{}`."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Given `orders`, use `reduce` to compute total spend per customer and print `JSON.stringify` of the result. Then print the words sorted by length, ties alphabetically, joined by a space.",
+     "starter": "const orders = [\n  { customer: \"ann\", amount: 20 },\n  { customer: \"bob\", amount: 5 },\n  { customer: \"ann\", amount: 15 },\n];\n// TODO totals per customer\nconst words = [\"pear\", \"fig\", \"apple\", \"kiwi\", \"date\"];\n// TODO sort by length then alphabetically (do not mutate `words`)\n",
+     "solution": "const orders = [\n  { customer: \"ann\", amount: 20 },\n  { customer: \"bob\", amount: 5 },\n  { customer: \"ann\", amount: 15 },\n];\nconst totals = orders.reduce((acc, o) => {\n  acc[o.customer] = (acc[o.customer] || 0) + o.amount;\n  return acc;\n}, {});\nconsole.log(JSON.stringify(totals));\nconst words = [\"pear\", \"fig\", \"apple\", \"kiwi\", \"date\"];\nconst sorted = [...words].sort((a, b) => a.length - b.length || a.localeCompare(b));\nconsole.log(sorted.join(\" \"));\n",
+     "expected_output": "{\"ann\":35,\"bob\":5}\nfig date kiwi pear apple"
+    }
+   ]
+  },
+  {
+   "id": "js-destructuring-spread",
+   "track_id": "javascript",
+   "unit_id": "js-u3",
+   "title": "Destructuring, Spread & Rest",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Unpacking and copying",
+     "body": "**Destructuring** pulls values out of arrays/objects by pattern, with renaming (`{a: x}`), defaults (`{a = 1}`; only for `undefined`), nesting and rest (`...others`). **Spread** `...` expands iterables/objects in calls, array literals and object literals.\n\nSpread copies are **shallow**: nested objects are still shared. Later keys win in `{...a, ...b}`.",
+     "code": "const { name, age = 30, ...rest } = { name: \"Ada\", city: \"London\", job: \"dev\" };\nconsole.log(name, age, rest); // Ada 30 { city: 'London', job: 'dev' }\nlet a = 1, b = 2;\n[a, b] = [b, a];\nconsole.log(a, b); // 2 1"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `rest`?",
+     "code": "const { a, ...rest } = { a: 1, b: 2, c: 3 };\nconsole.log(rest);",
+     "options": [
+      "{ b: 2, c: 3 }",
+      "[ 2, 3 ]",
+      "{ a: 1 }",
+      "undefined"
+     ],
+     "answer": 0,
+     "explanation": "The object rest pattern collects the remaining own enumerable properties into a new object."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "const x = { n: { v: 1 } };\nconst y = { ...x };\ny.n.v = 2;\nconsole.log(x.n.v);",
+     "options": [
+      "1",
+      "2",
+      "undefined",
+      "TypeError"
+     ],
+     "answer": 1,
+     "explanation": "The spread copy is shallow, so `y.n` and `x.n` are the same object."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "const { a = 5 } = { a: null };\nconsole.log(a);",
+     "options": [
+      "5",
+      "null",
+      "undefined",
+      "0"
+     ],
+     "answer": 1,
+     "explanation": "Defaults only kick in for `undefined`, not `null`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the result?",
+     "code": "console.log({ a: 1, b: 2, ...{ b: 3 } });",
+     "options": [
+      "{ a: 1, b: 3 }",
+      "{ a: 1, b: 2 }",
+      "{ b: 3, a: 1 }",
+      "{ a: 1, b: [2, 3] }"
+     ],
+     "answer": 0,
+     "explanation": "Later spreads override earlier ones; key order stays at first insertion, so the result is `{ a: 1, b: 3 }`."
+    },
+    {
+     "type": "fill",
+     "prompt": "Collect the remaining array items.",
+     "code": "const [first, ____rest] = [1, 2, 3, 4];",
+     "answer": [
+      "..."
+     ],
+     "explanation": "The rest element must be last and uses `...`."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Write `summarize({ name, tags = [], ...meta })` returning `name:<name> tags:<count> meta:<comma-separated sorted meta keys>`. Print the result for two inputs.",
+     "starter": "function summarize(user) {\n  // TODO destructure in the parameter list\n}\nconsole.log(summarize({ name: \"Ann\", tags: [\"a\", \"b\"], city: \"X\", age: 3 }));\nconsole.log(summarize({ name: \"Bo\" }));\n",
+     "solution": "function summarize({ name, tags = [], ...meta }) {\n  return `name:${name} tags:${tags.length} meta:${Object.keys(meta).sort().join(\",\")}`;\n}\nconsole.log(summarize({ name: \"Ann\", tags: [\"a\", \"b\"], city: \"X\", age: 3 }));\nconsole.log(summarize({ name: \"Bo\" }));\n",
+     "expected_output": "name:Ann tags:2 meta:age,city\nname:Bo tags:0 meta:"
+    }
+   ]
+  },
+  {
+   "id": "js-immutability",
+   "track_id": "javascript",
+   "unit_id": "js-u3",
+   "title": "Objects & Immutability",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Copying, freezing and updating without mutation",
+     "body": "Immutable updates (used by React/Redux) create new objects along the changed path and reuse everything else. Tools: spread, `Object.assign({}, ...)`, `structuredClone` (deep), and `Object.freeze` (shallow, prevents changes at runtime; silently ignored in sloppy mode, throws in strict mode).\n\nProperty order: integer-like keys ascend first, then string keys in insertion order. `Object.entries` / `Object.fromEntries` convert to and from key/value pairs.",
+     "code": "const state = { user: { name: \"Ann\", age: 3 }, items: [1, 2] };\nconst next = { ...state, user: { ...state.user, age: 4 } };\nconsole.log(state.user.age, next.user.age); // 3 4\nconsole.log(state.items === next.items);    // true (shared)"
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "const o = Object.freeze({ a: { b: 1 } });\no.a.b = 2;\nconsole.log(o.a.b);",
+     "options": [
+      "1",
+      "2",
+      "TypeError",
+      "undefined"
+     ],
+     "answer": 1,
+     "explanation": "`Object.freeze` is shallow. The nested object `a` is not frozen, so `o.a.b = 2` works."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `Object.keys` return?",
+     "code": "console.log(Object.keys({ b: 1, 2: 1, a: 1, 1: 1 }));",
+     "options": [
+      "[\"b\", \"2\", \"a\", \"1\"]",
+      "[\"1\", \"2\", \"b\", \"a\"]",
+      "[\"a\", \"b\", \"1\", \"2\"]",
+      "[\"1\", \"2\", \"a\", \"b\"]"
+     ],
+     "answer": 1,
+     "explanation": "Integer-like keys come first in ascending order, then the other string keys in insertion order (`b`, then `a`)."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "const state = { items: [1] };\nconst next = { ...state };\nconsole.log(state.items === next.items, state === next);",
+     "options": [
+      "true false",
+      "false false",
+      "true true",
+      "false true"
+     ],
+     "answer": 0,
+     "explanation": "Spread creates a new top-level object but shares nested references. The first comparison is about the nested `items` array, which is shared (true); the second compares the two top-level objects, which differ (false)."
+    },
+    {
+     "type": "mcq",
+     "question": "Which copies functions and class instances faithfully?",
+     "options": [
+      "`structuredClone`",
+      "`JSON.parse(JSON.stringify(x))`",
+      "Neither one",
+      "Both"
+     ],
+     "answer": 2,
+     "explanation": "`structuredClone` throws on functions and drops prototypes; JSON drops functions and `undefined` and stringifies dates. Custom recursion is needed for those."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Write `setUserAge(state, id, age)` that returns a new state with that user's age changed, without mutating the original. Print whether the original is unchanged, the new age, and whether untouched users are shared by reference.",
+     "starter": "const state = { users: [{ id: 1, age: 20 }, { id: 2, age: 30 }] };\nfunction setUserAge(state, id, age) {\n  // TODO return a new state\n}\nconst next = setUserAge(state, 1, 21);\nconsole.log(state.users[0].age === 20);\nconsole.log(next.users[0].age);\nconsole.log(state.users[1] === next.users[1]);\n",
+     "solution": "const state = { users: [{ id: 1, age: 20 }, { id: 2, age: 30 }] };\nfunction setUserAge(state, id, age) {\n  return {\n    ...state,\n    users: state.users.map((u) => (u.id === id ? { ...u, age } : u)),\n  };\n}\nconst next = setUserAge(state, 1, 21);\nconsole.log(state.users[0].age === 20);\nconsole.log(next.users[0].age);\nconsole.log(state.users[1] === next.users[1]);\n",
+     "expected_output": "true\n21\ntrue"
+    }
+   ]
+  },
+  {
+   "id": "js-map-set-weak",
+   "track_id": "javascript",
+   "unit_id": "js-u3",
+   "title": "Map, Set & WeakMap",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Modern collections",
+     "body": "`Map` allows any key type (including objects), keeps insertion order and has O(1) average operations and a `size`. `Set` stores unique values using SameValueZero equality (so `NaN` equals `NaN`, `1` and `\"1\"` differ). Prefer them over plain objects for dynamic keys.\n\n`WeakMap` / `WeakSet` hold keys **weakly** (keys must be objects): if nothing else references the key, it can be garbage-collected together with its value. They are not iterable and have no `size`, which makes them ideal for private data and per-object caches without leaks.",
+     "code": "const m = new Map([[\"a\", 1]]);\nm.set({}, 2);\nconsole.log(m.get({}));   // undefined (different object)\nconsole.log(new Set([1, 1, \"1\", NaN, NaN]).size); // 3"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the size?",
+     "code": "console.log(new Set([1, 1, \"1\", NaN, NaN]).size);",
+     "options": [
+      "5",
+      "4",
+      "3",
+      "2"
+     ],
+     "answer": 2,
+     "explanation": "Unique values: `1`, `\"1\"`, and `NaN` (Set treats NaN as equal to itself). Size is 3."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "const m = new Map();\nm.set({}, 2);\nconsole.log(m.get({}));",
+     "options": [
+      "2",
+      "undefined",
+      "null",
+      "TypeError"
+     ],
+     "answer": 1,
+     "explanation": "Map compares object keys by reference. The literal `{}` in `get` is a different object from the one used in `set`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the main reason to prefer `WeakMap` for caching data per DOM node or object?",
+     "options": [
+      "It is faster than Map",
+      "Entries disappear once the key object is otherwise unreachable, avoiding leaks",
+      "It preserves insertion order",
+      "It allows string keys"
+     ],
+     "answer": 1,
+     "explanation": "A WeakMap does not keep keys alive, so metadata associated with an object disappears with it."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "console.log([...new Set(\"hello\")]);",
+     "options": [
+      "[ 'h', 'e', 'l', 'l', 'o' ]",
+      "[ 'h', 'e', 'l', 'o' ]",
+      "[ 'o', 'l', 'e', 'h' ]",
+      "{ h, e, l, o }"
+     ],
+     "answer": 1,
+     "explanation": "A Set removes duplicates and keeps first-insertion order; spreading gives an array."
+    },
+    {
+     "type": "fill",
+     "prompt": "Create a collection of unique values from an array.",
+     "code": "const unique = [...new ____(arr)];",
+     "answer": [
+      "Set"
+     ],
+     "explanation": "Passing an iterable to `new Set` dedupes it."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Count word frequency with a `Map` and print the words with their counts sorted by count descending then word ascending, formatted `word:count` and joined with spaces.",
+     "starter": "const words = \"the cat and the hat and the bat\".split(\" \");\n// TODO use a Map to count\n",
+     "solution": "const words = \"the cat and the hat and the bat\".split(\" \");\nconst counts = new Map();\nfor (const w of words) counts.set(w, (counts.get(w) ?? 0) + 1);\nconst out = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));\nconsole.log(out.map(([w, c]) => `${w}:${c}`).join(\" \"));\n",
+     "expected_output": "the:3 and:2 bat:1 cat:1 hat:1"
+    }
+   ]
+  },
+  {
+   "id": "js-prototypes",
+   "track_id": "javascript",
+   "unit_id": "js-u4",
+   "title": "Prototypes & the Chain",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Prototype-based inheritance",
+     "body": "Every object has an internal `[[Prototype]]` link (accessible via `Object.getPrototypeOf(obj)` or `obj.__proto__`). Property lookup walks the chain until `null`. Functions used with `new` have a `.prototype` object; instances link to it.\n\nWrites go on the object itself (shadowing); deleting the own property exposes the inherited one again. `hasOwnProperty` / `Object.hasOwn` check own props; `in` checks the whole chain. `Object.create(proto)` makes an object with a chosen prototype, and `class` is syntax sugar over this model.",
+     "code": "function Person(name) { this.name = name; }\nPerson.prototype.hi = function () { return \"hi \" + this.name; };\nconst p = new Person(\"Ann\");\nconsole.log(p.hi());                           // hi Ann\nconsole.log(Object.getPrototypeOf(p) === Person.prototype); // true\nconsole.log(p.hasOwnProperty(\"hi\"));           // false"
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "const parent = { x: 1 };\nconst child = Object.create(parent);\nchild.x = 2;\ndelete child.x;\nconsole.log(child.x);",
+     "options": [
+      "1",
+      "2",
+      "undefined",
+      "null"
+     ],
+     "answer": 0,
+     "explanation": "`child.x = 2` creates an own property that shadows the parent's. `delete child.x` removes it, so lookup falls back to the prototype value 1."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "const base = { x: 1 };\nconst o = Object.create(base);\nconsole.log(\"x\" in o, Object.hasOwn(o, \"x\"));",
+     "options": [
+      "true false",
+      "true true",
+      "false true",
+      "false false"
+     ],
+     "answer": 0,
+     "explanation": "`\"x\" in obj` includes inherited properties; `hasOwn` checks own ones only."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "class A {}\nconsole.log(typeof A);",
+     "options": [
+      "\"function\"",
+      "\"object\"",
+      "\"undefined\"",
+      "\"class\""
+     ],
+     "answer": 0,
+     "explanation": "Classes are functions; `typeof` of a class constructor is `\"function\"`."
+    },
+    {
+     "type": "mcq",
+     "question": "After this code, what does `b.greet()` print?",
+     "code": "function Base() {}\nconst b = new Base();\nBase.prototype.greet = () => \"hello\";\nconsole.log(b.greet());",
+     "options": [
+      "\"hello\"",
+      "TypeError: b.greet is not a function",
+      "undefined",
+      "\"hi\""
+     ],
+     "answer": 0,
+     "explanation": "Prototype methods are shared live. Adding to `Base.prototype` after creating the instance still makes it visible."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `myNew(Ctor, ...args)` behaving like `new`: create an object with the constructor's prototype, run the constructor with it as `this`, and return the constructor's result if it is an object, otherwise the new object. Print three checks.",
+     "starter": "function myNew(Ctor, ...args) {\n  // TODO\n}\nfunction User(name) { this.name = name; }\nUser.prototype.hello = function () { return \"hi \" + this.name; };\nconst u = myNew(User, \"Ann\");\nconsole.log(u.hello());\nconsole.log(u instanceof User);\nfunction Weird() { return { custom: true }; }\nconsole.log(myNew(Weird).custom);\n",
+     "solution": "function myNew(Ctor, ...args) {\n  const obj = Object.create(Ctor.prototype);\n  const result = Ctor.apply(obj, args);\n  const isObj = result !== null && (typeof result === \"object\" || typeof result === \"function\");\n  return isObj ? result : obj;\n}\nfunction User(name) { this.name = name; }\nUser.prototype.hello = function () { return \"hi \" + this.name; };\nconst u = myNew(User, \"Ann\");\nconsole.log(u.hello());\nconsole.log(u instanceof User);\nfunction Weird() { return { custom: true }; }\nconsole.log(myNew(Weird).custom);\n",
+     "expected_output": "hi Ann\ntrue\ntrue"
+    }
+   ]
+  },
+  {
+   "id": "js-classes",
+   "track_id": "javascript",
+   "unit_id": "js-u4",
+   "title": "Classes, Private Fields & super",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "ES6 classes in depth",
+     "body": "Classes are sugar over prototypes but with extra rules: they are not callable without `new`, bodies are strict, methods are non-enumerable, and they have a temporal dead zone. Features: `static` members, getters/setters, true private members with `#name`, public class fields (initialised per instance, **after** `super()` returns in derived classes), and `extends`/`super`.\n\nDerived constructors must call `super()` before touching `this`. Private fields are enforced by the language (accessing `obj.#x` outside the class is a SyntaxError). Class field arrow functions bind `this` per instance but cost one function per instance.",
+     "code": "class Account {\n  #balance = 0;\n  static count = 0;\n  constructor() { Account.count++; }\n  deposit(n) { this.#balance += n; return this; }\n  get balance() { return this.#balance; }\n}\nconst a = new Account().deposit(10).deposit(5);\nconsole.log(a.balance, Account.count); // 15 1"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output (in order)?",
+     "code": "class A {\n  constructor() { console.log(\"A\"); this.init(); }\n  init() { console.log(\"A.init\"); }\n}\nclass B extends A {\n  x = 1;\n  init() { console.log(\"B.init\", this.x); }\n}\nnew B();",
+     "options": [
+      "A / B.init 1",
+      "A / B.init undefined",
+      "B.init 1 / A",
+      "A.init / A"
+     ],
+     "answer": 1,
+     "explanation": "The base constructor runs first and calls the overridden `init`. The derived class field `x = 1` is only initialised after `super()` returns, so `this.x` is still `undefined`."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens?",
+     "code": "class P {}\nP();",
+     "options": [
+      "Returns an object",
+      "Returns undefined",
+      "Throws TypeError (class constructor cannot be invoked without 'new')",
+      "Works like a function"
+     ],
+     "answer": 2,
+     "explanation": "Class constructors refuse to be called without `new`."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens when running this?",
+     "code": "class A {\n  #x = 1;\n}\nconsole.log(new A().#x);",
+     "options": [
+      "Prints 1",
+      "Prints undefined",
+      "SyntaxError at parse time",
+      "TypeError at runtime only"
+     ],
+     "answer": 2,
+     "explanation": "Referencing an undeclared private name is an early SyntaxError, long before execution; private fields are not just a naming convention."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is true about `static` methods?",
+     "options": [
+      "They are available on instances",
+      "They are called on the class itself and `this` inside refers to the class",
+      "They cannot use `this`",
+      "They are private"
+     ],
+     "answer": 1,
+     "explanation": "Static members live on the constructor; call them as `ClassName.method()`."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement a `Stack` class with a private `#items` array and methods `push`, `pop`, `peek`, a `size` getter, and `toString()` returning items joined by `,`. Run the shown operations.",
+     "starter": "class Stack {\n  // TODO\n}\nconst s = new Stack();\ns.push(1); s.push(2); s.push(3);\nconsole.log(s.pop());\nconsole.log(s.peek());\nconsole.log(s.size);\nconsole.log(String(s));\n",
+     "solution": "class Stack {\n  #items = [];\n  push(x) { this.#items.push(x); return this; }\n  pop() { return this.#items.pop(); }\n  peek() { return this.#items[this.#items.length - 1]; }\n  get size() { return this.#items.length; }\n  toString() { return this.#items.join(\",\"); }\n}\nconst s = new Stack();\ns.push(1); s.push(2); s.push(3);\nconsole.log(s.pop());\nconsole.log(s.peek());\nconsole.log(s.size);\nconsole.log(String(s));\n",
+     "expected_output": "3\n2\n2\n1,2"
+    }
+   ]
+  },
+  {
+   "id": "js-modules",
+   "track_id": "javascript",
+   "unit_id": "js-u4",
+   "title": "Modules: ESM vs CommonJS",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "How modules load",
+     "body": "**CommonJS** (`require`, `module.exports`): synchronous, evaluated on first `require` then **cached**, exports are copies of values at the time. **ES modules** (`import`/`export`): static structure (analysable, tree-shakeable), asynchronous loading, exports are **live bindings** (importers see later changes), strict mode by default, top-level `await`, and `import()` for dynamic loading.\n\nPitfalls: reassigning `exports = ...` breaks CJS exports (use `module.exports`); circular imports can see partially initialised exports; ESM default vs named exports interop in Node.",
+     "code": "// counter.mjs\nexport let count = 0;\nexport function inc() { count++; }\n\n// main.mjs\nimport { count, inc } from \"./counter.mjs\";\ninc();\nconsole.log(count); // 1 - live binding\n\nconst mod = await import(\"./other.mjs\"); // dynamic import"
+    },
+    {
+     "type": "mcq",
+     "question": "In CommonJS, how many times does the body of `./db.js` execute if it is `require`d from three different files?",
+     "options": [
+      "Three times",
+      "Once; later requires return the cached `module.exports`",
+      "Zero; it is lazy",
+      "Once per file path depth"
+     ],
+     "answer": 1,
+     "explanation": "Node caches modules by resolved filename, which is why a module can act as a singleton."
+    },
+    {
+     "type": "mcq",
+     "question": "In an ES module, `import { count } from './c.mjs'` and `c.mjs` later runs `count++`. What does the importer see?",
+     "options": [
+      "The original value forever",
+      "The updated value (live binding)",
+      "A TypeError on read",
+      "undefined"
+     ],
+     "answer": 1,
+     "explanation": "ESM exports are live bindings, unlike CJS where you get the value copied when `require` ran. Importers cannot assign to the import, though."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `import('./x.js')` return?",
+     "options": [
+      "The module object synchronously",
+      "A Promise of the module namespace",
+      "A callback",
+      "undefined"
+     ],
+     "answer": 1,
+     "explanation": "Dynamic import returns a promise, enabling code splitting and conditional loading."
+    },
+    {
+     "type": "mcq",
+     "question": "Which export style makes tree-shaking easiest?",
+     "options": [
+      "`module.exports = { a, b }`",
+      "Named ESM exports",
+      "`exports = a`",
+      "Assigning to `global`"
+     ],
+     "answer": 1,
+     "explanation": "Named ESM exports are statically analysable, so bundlers can drop unused ones."
+    },
+    {
+     "type": "fill",
+     "prompt": "Mark a class as the default export.",
+     "code": "export ____ class App {}",
+     "answer": [
+      "default"
+     ],
+     "explanation": "A module can have one default export, imported with any local name."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Node snippets cannot import extra files here, so simulate a module system: implement `define(name, factory)` and `require(name)` where each factory runs lazily once (cached) and receives `require`. Print the run log and results.",
+     "starter": "const registry = {}, cache = {};\nfunction define(name, factory) {\n  // TODO\n}\nfunction req(name) {\n  // TODO cache results; run factory only on first use\n}\nconst log = [];\ndefine(\"a\", () => { log.push(\"a loaded\"); return 1; });\ndefine(\"b\", (r) => { log.push(\"b loaded\"); return r(\"a\") + 1; });\nconsole.log(req(\"b\"), req(\"b\"), req(\"a\"));\nconsole.log(log.join(\",\"));\n",
+     "solution": "const registry = {}, cache = {};\nfunction define(name, factory) {\n  registry[name] = factory;\n}\nfunction req(name) {\n  if (!(name in cache)) {\n    cache[name] = registry[name](req);\n  }\n  return cache[name];\n}\nconst log = [];\ndefine(\"a\", () => { log.push(\"a loaded\"); return 1; });\ndefine(\"b\", (r) => { log.push(\"b loaded\"); return r(\"a\") + 1; });\nconsole.log(req(\"b\"), req(\"b\"), req(\"a\"));\nconsole.log(log.join(\",\"));\n",
+     "expected_output": "2 2 1\nb loaded,a loaded"
+    }
+   ]
+  },
+  {
+   "id": "js-errors",
+   "track_id": "javascript",
+   "unit_id": "js-u4",
+   "title": "Error Handling",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "try/catch/finally, custom errors, causes",
+     "body": "Throw `Error` objects (or subclasses), not strings: they carry `name`, `message` and a `stack`. Subclass `Error` for domain errors and test with `instanceof`. ES2022 adds `new Error(msg, { cause })` to chain errors.\n\n`finally` always runs, and a `return` or `throw` inside `finally` **overrides** earlier ones. `try/catch` catches only synchronous errors thrown inside its block (or awaited promises inside an `async` function); errors in `setTimeout` callbacks or un-awaited promises escape it.",
+     "code": "class ValidationError extends Error {\n  constructor(message, field) {\n    super(message);\n    this.name = \"ValidationError\";\n    this.field = field;\n  }\n}\ntry {\n  throw new ValidationError(\"bad email\", \"email\");\n} catch (e) {\n  console.log(e instanceof ValidationError, e.field); // true email\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed (in order)?",
+     "code": "function f() {\n  try { return \"try\"; }\n  finally { console.log(\"finally\"); }\n}\nconsole.log(f());",
+     "options": [
+      "finally, try",
+      "try, finally",
+      "try",
+      "finally"
+     ],
+     "answer": 0,
+     "explanation": "`finally` runs before the function actually returns, so `finally` is logged first and then the returned `\"try\"` is logged."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this return?",
+     "code": "function f() {\n  try { return \"try\"; }\n  finally { return \"finally\"; }\n}\nconsole.log(f());",
+     "options": [
+      "\"try\"",
+      "\"finally\"",
+      "undefined",
+      "Throws"
+     ],
+     "answer": 1,
+     "explanation": "A `return` in `finally` overrides the earlier return value (and would even swallow a thrown error)."
+    },
+    {
+     "type": "mcq",
+     "question": "Is the error caught by the `catch` block?",
+     "code": "try {\n  setTimeout(() => { throw new Error(\"boom\"); }, 0);\n} catch (e) {\n  console.log(\"caught\");\n}",
+     "options": [
+      "Yes, always",
+      "No; it is thrown later from the timer callback and crashes/unhandled",
+      "Yes, because setTimeout is sync with 0ms",
+      "Only in strict mode"
+     ],
+     "answer": 1,
+     "explanation": "By the time the callback runs, the `try` block has long finished. Handle errors inside the callback or use promises with `await`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `e instanceof ValidationError` give when the thrown value is `new Error(\"x\")`?",
+     "options": [
+      "true",
+      "false",
+      "TypeError",
+      "undefined"
+     ],
+     "answer": 1,
+     "explanation": "A plain `Error` is not an instance of the subclass; the check goes the other way (subclass instances are `instanceof Error`)."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Create a `ValidationError` subclass with a `field` property. Write `validate(user)` that throws it for an empty name or an age below 18. Catch the errors, wrap one with `cause`, and print `name:field:message` lines plus the cause message.",
+     "starter": "class ValidationError extends Error {\n  // TODO\n}\nfunction validate(user) {\n  // TODO\n}\nfor (const u of [{ name: \"\", age: 20 }, { name: \"Al\", age: 10 }, { name: \"Al\", age: 30 }]) {\n  try {\n    validate(u);\n    console.log(\"ok\");\n  } catch (e) {\n    console.log(`${e.name}:${e.field}:${e.message}`);\n  }\n}\ntry {\n  try { validate({ name: \"\", age: 1 }); }\n  catch (e) { throw new Error(\"signup failed\", { cause: e }); }\n} catch (e) {\n  console.log(e.message, \"<-\", e.cause.message);\n}\n",
+     "solution": "class ValidationError extends Error {\n  constructor(message, field) {\n    super(message);\n    this.name = \"ValidationError\";\n    this.field = field;\n  }\n}\nfunction validate(user) {\n  if (!user.name) throw new ValidationError(\"name required\", \"name\");\n  if (user.age < 18) throw new ValidationError(\"must be adult\", \"age\");\n}\nfor (const u of [{ name: \"\", age: 20 }, { name: \"Al\", age: 10 }, { name: \"Al\", age: 30 }]) {\n  try {\n    validate(u);\n    console.log(\"ok\");\n  } catch (e) {\n    console.log(`${e.name}:${e.field}:${e.message}`);\n  }\n}\ntry {\n  try { validate({ name: \"\", age: 1 }); }\n  catch (e) { throw new Error(\"signup failed\", { cause: e }); }\n} catch (e) {\n  console.log(e.message, \"<-\", e.cause.message);\n}\n",
+     "expected_output": "ValidationError:name:name required\nValidationError:age:must be adult\nok\nsignup failed <- name required"
+    }
+   ]
+  },
+  {
+   "id": "js-event-loop",
+   "track_id": "javascript",
+   "unit_id": "js-u5",
+   "title": "The Event Loop",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Call stack, microtasks, macrotasks",
+     "body": "JavaScript runs one piece of code at a time on the **call stack**. When the stack empties, the event loop drains the **microtask queue** completely (promise reactions, `queueMicrotask`, `await` continuations) and only then takes the next **macrotask** (`setTimeout`, `setInterval`, I/O, UI events). Microtasks queued by microtasks run in the same drain, before any timer.\n\nNode adds `process.nextTick`, which runs even before promise microtasks. A long synchronous task blocks everything, including timers and rendering.",
+     "code": "console.log(\"1 sync\");\nsetTimeout(() => console.log(\"4 macrotask\"), 0);\nPromise.resolve().then(() => console.log(\"3 microtask\"));\nconsole.log(\"2 sync\");"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order?",
+     "code": "console.log(1);\nsetTimeout(() => console.log(2), 0);\nPromise.resolve().then(() => console.log(3));\nconsole.log(4);",
+     "options": [
+      "1 4 3 2",
+      "1 2 3 4",
+      "1 3 2 4",
+      "1 4 2 3"
+     ],
+     "answer": 0,
+     "explanation": "Synchronous logs `1` and `4` first, then the microtask `3`, then the timer callback `2`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order in Node.js?",
+     "code": "Promise.resolve().then(() => console.log(\"p\"));\nprocess.nextTick(() => console.log(\"t\"));\nconsole.log(\"s\");",
+     "options": [
+      "s p t",
+      "s t p",
+      "t p s",
+      "p t s"
+     ],
+     "answer": 1,
+     "explanation": "After the sync code (`s`), Node drains the `nextTick` queue (`t`) before promise microtasks (`p`)."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order?",
+     "code": "setTimeout(() => console.log(\"T\"), 0);\nPromise.resolve()\n  .then(() => {\n    console.log(\"A\");\n    Promise.resolve().then(() => console.log(\"B\"));\n  })\n  .then(() => console.log(\"C\"));",
+     "options": [
+      "A B C T",
+      "A C B T",
+      "T A B C",
+      "A T B C"
+     ],
+     "answer": 0,
+     "explanation": "Microtasks run to exhaustion before the timer. First `then` logs A and queues B; its returned promise then queues C. B runs before C, and T runs last."
+    },
+    {
+     "type": "mcq",
+     "question": "Why does a `while (Date.now() < end) {}` loop of 2 seconds freeze timers?",
+     "options": [
+      "Timers run on another thread and are cancelled",
+      "The loop never yields the call stack, so no queued task can run",
+      "setTimeout is deprecated",
+      "Date.now blocks the I/O"
+     ],
+     "answer": 1,
+     "explanation": "JS is single-threaded: a synchronous loop holds the stack, so timers and event handlers wait until it finishes."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Make the output `start`, `end`, `micro`, `macro` by scheduling the missing callbacks (use `queueMicrotask` for micro, `setTimeout` for macro) before `end` is logged.",
+     "starter": "console.log(\"start\");\n// TODO schedule macro (setTimeout) and micro (queueMicrotask)\nconsole.log(\"end\");\n",
+     "solution": "console.log(\"start\");\nsetTimeout(() => console.log(\"macro\"), 0);\nqueueMicrotask(() => console.log(\"micro\"));\nconsole.log(\"end\");\n",
+     "expected_output": "start\nend\nmicro\nmacro"
+    }
+   ]
+  },
+  {
+   "id": "js-promises",
+   "track_id": "javascript",
+   "unit_id": "js-u5",
+   "title": "Promises",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "States and chaining",
+     "body": "A promise is `pending`, then `fulfilled` or `rejected` (settled once, immutable afterwards). `.then(onOk, onErr)` returns a **new** promise: returning a value fulfils it, throwing rejects it, returning a promise adopts that promise's state. `.catch(fn)` is `then(undefined, fn)` and `.finally(fn)` runs either way without changing the value.\n\nThe executor passed to `new Promise` runs **synchronously**; only the `.then` callbacks are async (microtasks). Reactions on an already settled promise still run asynchronously.",
+     "code": "Promise.resolve(1)\n  .then((x) => x + 1)\n  .then((x) => { throw new Error(\"boom \" + x); })\n  .catch((e) => e.message)\n  .finally(() => console.log(\"cleanup\"))\n  .then(console.log); // cleanup, then \"boom 2\""
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order?",
+     "code": "console.log(\"a\");\nnew Promise((r) => { console.log(\"b\"); r(); }).then(() => console.log(\"c\"));\nconsole.log(\"d\");",
+     "options": [
+      "a b c d",
+      "a b d c",
+      "a d b c",
+      "a d c b"
+     ],
+     "answer": 1,
+     "explanation": "The executor runs synchronously (`b`), then `d` is logged; the `.then` callback `c` runs afterwards as a microtask."
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "Promise.resolve(1)\n  .then((x) => x + 1)\n  .then(() => { throw new Error(\"x\"); })\n  .catch(() => 10)\n  .then((x) => console.log(x));",
+     "options": [
+      "10",
+      "undefined",
+      "Error is thrown",
+      "1"
+     ],
+     "answer": 0,
+     "explanation": "The throw rejects the chain, `catch` recovers by returning `10`, and the next `then` receives it."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this log?",
+     "code": "Promise.reject(1).catch((e) => e).then(console.log);",
+     "options": [
+      "1",
+      "undefined",
+      "Error",
+      "Nothing"
+     ],
+     "answer": 0,
+     "explanation": "`catch` returns `e` (1), which becomes the fulfilled value for the following `then`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the final value of `p`?",
+     "code": "const p = new Promise((resolve, reject) => {\n  resolve(1);\n  resolve(2);\n  reject(new Error(\"x\"));\n});",
+     "options": [
+      "fulfilled with 1",
+      "fulfilled with 2",
+      "rejected with 2",
+      "pending forever"
+     ],
+     "answer": 0,
+     "explanation": "A promise settles only once; the second `resolve` and the `reject` are ignored."
+    },
+    {
+     "type": "fill",
+     "prompt": "Run cleanup whether the promise fulfils or rejects.",
+     "code": "fetchData().then(show).catch(handle).____(hideSpinner);",
+     "answer": [
+      "finally"
+     ],
+     "explanation": "`finally` is for cleanup and does not receive the value."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Write `promisify(fn)` that turns a Node-style callback function `fn(...args, cb(err, value))` into one that returns a promise. Await two calls, one succeeding and one failing, and print the results.",
+     "starter": "function promisify(fn) {\n  // TODO\n}\nfunction divide(a, b, cb) {\n  setTimeout(() => (b === 0 ? cb(new Error(\"div by zero\")) : cb(null, a / b)), 0);\n}\nconst pDivide = promisify(divide);\npDivide(10, 2).then((v) => console.log(\"ok\", v));\npDivide(1, 0).catch((e) => console.log(\"fail\", e.message));\n",
+     "solution": "function promisify(fn) {\n  return (...args) =>\n    new Promise((resolve, reject) => {\n      fn(...args, (err, value) => (err ? reject(err) : resolve(value)));\n    });\n}\nfunction divide(a, b, cb) {\n  setTimeout(() => (b === 0 ? cb(new Error(\"div by zero\")) : cb(null, a / b)), 0);\n}\nconst pDivide = promisify(divide);\npDivide(10, 2).then((v) => console.log(\"ok\", v));\npDivide(1, 0).catch((e) => console.log(\"fail\", e.message));\n",
+     "expected_output": "ok 5\nfail div by zero"
+    }
+   ]
+  },
+  {
+   "id": "js-async-await",
+   "track_id": "javascript",
+   "unit_id": "js-u5",
+   "title": "async/await Deep Dive",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Sugar over promises, with sharp edges",
+     "body": "An `async` function always returns a promise. `await x` pauses *that function* (not the thread) and resumes in a microtask. Code before the first `await` runs synchronously.\n\nCommon pitfalls: `await` in a loop runs sequentially (use `Promise.all` for independent work); `array.forEach(async ...)` fires callbacks but nothing waits for them (use `for...of` or `Promise.all(arr.map(...))`); `return promise` inside `try` is **not** caught unless you `return await promise`; forgetting to `await` leaves unhandled rejections.",
+     "code": "async function main() {\n  const [a, b] = await Promise.all([taskA(), taskB()]); // parallel\n  for (const id of ids) {\n    await save(id); // sequential on purpose\n  }\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order?",
+     "code": "async function f() {\n  console.log(1);\n  await null;\n  console.log(2);\n}\nf();\nconsole.log(3);",
+     "options": [
+      "1 2 3",
+      "1 3 2",
+      "3 1 2",
+      "2 1 3"
+     ],
+     "answer": 1,
+     "explanation": "`1` is logged synchronously. `await` yields, so `3` is logged next, then the continuation prints `2`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order?",
+     "code": "[1, 2].forEach(async (n) => {\n  await null;\n  console.log(n);\n});\nconsole.log(\"done\");",
+     "options": [
+      "done 1 2",
+      "1 2 done",
+      "1 done 2",
+      "done 2 1"
+     ],
+     "answer": 0,
+     "explanation": "`forEach` does not await the async callbacks, so `done` prints first and the continuations run later in order."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `a()` end up doing?",
+     "code": "async function a() {\n  try {\n    return Promise.reject(new Error(\"x\"));\n  } catch {\n    return \"caught\";\n  }\n}",
+     "options": [
+      "Resolves with \"caught\"",
+      "Rejects (the catch block is skipped)",
+      "Resolves with undefined",
+      "Throws synchronously"
+     ],
+     "answer": 1,
+     "explanation": "Returning the rejected promise without `await` hands it to the caller, so the `try/catch` never sees it. Use `return await` to catch it locally."
+    },
+    {
+     "type": "mcq",
+     "question": "Two independent 100 ms calls: which is closest to total time?",
+     "options": [
+      "`await a(); await b();` ~200 ms",
+      "`await Promise.all([a(), b()])` ~200 ms",
+      "`await a(); await b();` ~100 ms",
+      "Both ~50 ms"
+     ],
+     "answer": 0,
+     "explanation": "Sequential awaits add up (~200 ms); `Promise.all` overlaps them (~100 ms)."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `runParallel(tasks)` (using `Promise.all`) and `runSeries(tasks)` (using a `for...of` loop). Each task logs `done <name>` when finished. Print the results arrays after each. Tasks take 30, 10, 20 ms.",
+     "starter": "const delay = (ms, v) => new Promise((r) => setTimeout(() => { console.log(\"done \" + v); r(v); }, ms));\nconst tasks = () => [() => delay(30, \"a\"), () => delay(10, \"b\"), () => delay(20, \"c\")];\nasync function runParallel(ts) {\n  // TODO\n}\nasync function runSeries(ts) {\n  // TODO\n}\n(async () => {\n  console.log((await runParallel(tasks())).join(\",\"));\n  console.log((await runSeries(tasks())).join(\",\"));\n})();\n",
+     "solution": "const delay = (ms, v) => new Promise((r) => setTimeout(() => { console.log(\"done \" + v); r(v); }, ms));\nconst tasks = () => [() => delay(30, \"a\"), () => delay(10, \"b\"), () => delay(20, \"c\")];\nasync function runParallel(ts) {\n  return Promise.all(ts.map((t) => t()));\n}\nasync function runSeries(ts) {\n  const out = [];\n  for (const t of ts) out.push(await t());\n  return out;\n}\n(async () => {\n  console.log((await runParallel(tasks())).join(\",\"));\n  console.log((await runSeries(tasks())).join(\",\"));\n})();\n",
+     "expected_output": "done b\ndone c\ndone a\na,b,c\ndone a\ndone b\ndone c\na,b,c"
+    }
+   ]
+  },
+  {
+   "id": "js-promise-combinators",
+   "track_id": "javascript",
+   "unit_id": "js-u5",
+   "title": "all, allSettled, race & any",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Combining promises",
+     "body": "- `Promise.all(ps)` - fulfils with all results in input order; **rejects immediately** on the first rejection (others keep running).\n- `Promise.allSettled(ps)` - never rejects; yields `{status, value | reason}` objects.\n- `Promise.race(ps)` - settles like the first promise to settle (fulfil or reject). Used for timeouts.\n- `Promise.any(ps)` - first *fulfilment*; if all reject, rejects with `AggregateError`.\n\nNon-promise values are treated as already resolved. Promise.all([]) resolves immediately with `[]`, while `Promise.any([])` rejects.",
+     "code": "const results = await Promise.allSettled([Promise.resolve(1), Promise.reject(new Error(\"x\"))]);\nconsole.log(results.map((r) => r.status)); // [ 'fulfilled', 'rejected' ]"
+    },
+    {
+     "type": "mcq",
+     "question": "What is logged?",
+     "code": "Promise.all([Promise.resolve(1), Promise.reject(new Error(\"no\")), 3])\n  .then(console.log)\n  .catch((e) => console.log(\"Error:\", e.message));",
+     "options": [
+      "[1, 2]",
+      "Error: no",
+      "[1, undefined]",
+      "Nothing"
+     ],
+     "answer": 1,
+     "explanation": "`Promise.all` rejects as soon as one input rejects, so `catch` receives that error."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `Promise.race([slow, fast])` do if `fast` rejects first?",
+     "options": [
+      "Waits for `slow`",
+      "Rejects with fast's reason",
+      "Ignores the rejection",
+      "Resolves with undefined"
+     ],
+     "answer": 1,
+     "explanation": "`race` settles with the first settled promise, whether fulfilled or rejected."
+    },
+    {
+     "type": "mcq",
+     "question": "What do you get when every promise given to `Promise.any` rejects?",
+     "options": [
+      "The first rejection reason",
+      "An `AggregateError` with an `errors` array",
+      "undefined",
+      "An empty array"
+     ],
+     "answer": 1,
+     "explanation": "`Promise.any` rejects with `AggregateError` collecting all reasons."
+    },
+    {
+     "type": "mcq",
+     "question": "Which is best to report per-item success/failure for a batch of 100 uploads?",
+     "options": [
+      "`Promise.all`",
+      "`Promise.race`",
+      "`Promise.allSettled`",
+      "`Promise.any`"
+     ],
+     "answer": 2,
+     "explanation": "`allSettled` waits for everything and tells you which items failed, without short-circuiting."
+    },
+    {
+     "type": "fill",
+     "prompt": "Resolve with the first fulfilled promise, ignoring rejections.",
+     "code": "const fastest = await Promise.____([mirrorA(), mirrorB()]);",
+     "answer": [
+      "any"
+     ],
+     "explanation": "`Promise.any` returns the first fulfilled value."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `withTimeout(promise, ms)` using `Promise.race`, clearing the timer afterwards. Test with a fast and a slow task; print `ok fast` and `Error: timeout`.",
+     "starter": "function withTimeout(promise, ms) {\n  // TODO\n}\nconst task = (ms, v) => new Promise((r) => setTimeout(() => r(v), ms));\nwithTimeout(task(10, \"fast\"), 100).then((v) => console.log(\"ok\", v));\nwithTimeout(task(300, \"slow\"), 50).catch((e) => console.log(`${e.name}: ${e.message}`));\n",
+     "solution": "function withTimeout(promise, ms) {\n  let timer;\n  const timeout = new Promise((_, reject) => {\n    timer = setTimeout(() => reject(new Error(\"timeout\")), ms);\n  });\n  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));\n}\nconst task = (ms, v) => new Promise((r) => setTimeout(() => r(v), ms));\nwithTimeout(task(10, \"fast\"), 100).then((v) => console.log(\"ok\", v));\nwithTimeout(task(300, \"slow\"), 50).catch((e) => console.log(`${e.name}: ${e.message}`));\n",
+     "expected_output": "ok fast\nError: timeout"
+    }
+   ]
+  },
+  {
+   "id": "js-iterators",
+   "track_id": "javascript",
+   "unit_id": "js-u6",
+   "title": "Iterators & Iterables",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "The iteration protocols",
+     "body": "An **iterable** has a `[Symbol.iterator]()` method returning an **iterator**: an object with `next()` that returns `{ value, done }`. `for...of`, spread, destructuring, `Array.from`, `Map`/`Set` constructors all consume iterables. Arrays, strings, Maps, Sets, NodeLists and generators are iterable; plain objects are not.\n\n`for...in` iterates enumerable *keys* (including inherited), as strings: use `for...of` for values. Strings iterate by code point, so emoji count as one element.",
+     "code": "const range = {\n  from: 1, to: 3,\n  [Symbol.iterator]() {\n    let n = this.from, to = this.to;\n    return { next: () => (n <= to ? { value: n++, done: false } : { value: undefined, done: true }) };\n  },\n};\nconsole.log([...range]); // [ 1, 2, 3 ]"
+    },
+    {
+     "type": "mcq",
+     "question": "What is printed?",
+     "code": "const out = [];\nfor (const k in [\"a\", \"b\"]) out.push(k);\nconsole.log(out);",
+     "options": [
+      "[ '0', '1' ]",
+      "[ 'a', 'b' ]",
+      "[ 0, 1 ]",
+      "[ 'a', 'b', 'length' ]"
+     ],
+     "answer": 0,
+     "explanation": "`for...in` yields keys (indices as strings); `for...of` yields values."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the length?",
+     "code": "console.log([...\"a😀b\"].length);",
+     "options": [
+      "4",
+      "3",
+      "5",
+      "2"
+     ],
+     "answer": 1,
+     "explanation": "String iteration is by code point, so the emoji counts once: `a`, the emoji and `b` give 3 elements (while the string's own `.length` is 4, because the emoji takes two UTF-16 units)."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `Array.from(new Map([[1, 'a']]))` return?",
+     "options": [
+      "[ 1, 'a' ]",
+      "[ [ 1, 'a' ] ]",
+      "{ 1: 'a' }",
+      "[ 'a' ]"
+     ],
+     "answer": 1,
+     "explanation": "A Map iterates `[key, value]` pairs."
+    },
+    {
+     "type": "mcq",
+     "question": "Which of these is NOT iterable?",
+     "options": [
+      "`new Set([1])`",
+      "`\"abc\"`",
+      "`{ a: 1 }`",
+      "`function* g() {}()`"
+     ],
+     "answer": 2,
+     "explanation": "Plain objects lack `Symbol.iterator`. Use `Object.entries(obj)` to iterate them."
+    },
+    {
+     "type": "fill",
+     "prompt": "Name the well-known symbol that makes an object iterable.",
+     "code": "class Bag {\n  [Symbol.____]() { /* return an iterator */ }\n}",
+     "answer": [
+      "iterator"
+     ],
+     "explanation": "`Symbol.iterator` is the hook used by `for...of` and spread."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Make a `Range` class iterable (inclusive start/end, optional step), then print the spread of `new Range(1, 10, 3)` and the sum of `new Range(1, 5)`.",
+     "starter": "class Range {\n  constructor(start, end, step = 1) {\n    this.start = start; this.end = end; this.step = step;\n  }\n  // TODO [Symbol.iterator]\n}\nconsole.log([...new Range(1, 10, 3)].join(\",\"));\nlet sum = 0;\nfor (const n of new Range(1, 5)) sum += n;\nconsole.log(sum);\n",
+     "solution": "class Range {\n  constructor(start, end, step = 1) {\n    this.start = start; this.end = end; this.step = step;\n  }\n  [Symbol.iterator]() {\n    let cur = this.start;\n    const { end, step } = this;\n    return {\n      next: () => {\n        if (cur > end) return { value: undefined, done: true };\n        const value = cur;\n        cur += step;\n        return { value, done: false };\n      },\n    };\n  }\n}\nconsole.log([...new Range(1, 10, 3)].join(\",\"));\nlet sum = 0;\nfor (const n of new Range(1, 5)) sum += n;\nconsole.log(sum);\n",
+     "expected_output": "1,4,7,10\n15"
+    }
+   ]
+  },
+  {
+   "id": "js-generators",
+   "track_id": "javascript",
+   "unit_id": "js-u6",
+   "title": "Generators",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Pausable functions",
+     "body": "A `function*` returns a generator object. Calling `next(v)` runs until the next `yield`; the yielded value comes out as `{ value, done: false }`, and `v` becomes the **result of the paused `yield` expression**. `return` ends it with `done: true`. Nothing runs until the first `next()`.\n\n`yield* other` delegates to another iterable. Generators give lazy sequences (infinite streams), custom iterators with little code, and (historically) async flow control like `co`, which `async/await` replaced.",
+     "code": "function* fib() {\n  let [a, b] = [0, 1];\n  while (true) {\n    yield a;\n    [a, b] = [b, a + b];\n  }\n}\nconst it = fib();\nconsole.log(it.next().value, it.next().value, it.next().value); // 0 1 1"
+    },
+    {
+     "type": "mcq",
+     "question": "What are the lines printed?",
+     "code": "function* g() {\n  const x = yield 1;\n  console.log(x);\n  const y = yield x * 2;\n  return x + y;\n}\nconst it = g();\nconsole.log(it.next(\"a\").value);\nconsole.log(it.next(5).value);\nconsole.log(it.next(3));",
+     "options": [
+      "1, 5, 10, { value: 8, done: true }",
+      "1, 5, 10, 8",
+      "'a', 5, 10, 8",
+      "1, 'a', 10, { value: 8, done: true }"
+     ],
+     "answer": 0,
+     "explanation": "The first `next('a')` argument is discarded (it only starts the generator and yields 1). The second call sets `x = 5`, logs 5, and yields 10. The third sets `y = 3` and returns `x + y = 8`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "function* inner() { yield 1; yield 2; }\nfunction* outer() { yield* inner(); yield 3; }\nconsole.log([...outer()]);",
+     "options": [
+      "[ 1, 2, 3 ]",
+      "[ 1, 2 ]",
+      "[ [ 1, 2 ], 3 ]",
+      "[ 1, 3 ]"
+     ],
+     "answer": 0,
+     "explanation": "`yield*` delegates to the inner iterable, flattening its values into the outer sequence."
+    },
+    {
+     "type": "mcq",
+     "question": "When does the body of a generator start executing?",
+     "options": [
+      "On creation",
+      "On the first `next()` call",
+      "When `return` is called",
+      "At the end of the tick"
+     ],
+     "answer": 1,
+     "explanation": "Generators are lazy: calling the function only creates the generator object."
+    },
+    {
+     "type": "mcq",
+     "question": "What does spreading an already exhausted generator give?",
+     "code": "const g = (function* () { yield 1; })();\n[...g];\nconsole.log([...g]);",
+     "options": [
+      "The values again",
+      "An empty array",
+      "TypeError",
+      "undefined"
+     ],
+     "answer": 1,
+     "explanation": "Generator objects are single-use iterators; once done they produce nothing."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Write an infinite generator `fib()` and a generic `take(n, iterable)` generator. Print the first 10 Fibonacci numbers joined by spaces, and the first 3 even ones from a `naturals()` generator filtered lazily.",
+     "starter": "function* fib() {\n  // TODO\n}\nfunction* take(n, iterable) {\n  // TODO\n}\nfunction* naturals() { let n = 1; while (true) yield n++; }\nfunction* filter(pred, iterable) { for (const x of iterable) if (pred(x)) yield x; }\nconsole.log([...take(10, fib())].join(\" \"));\nconsole.log([...take(3, filter((x) => x % 2 === 0, naturals()))].join(\" \"));\n",
+     "solution": "function* fib() {\n  let [a, b] = [0, 1];\n  while (true) {\n    yield a;\n    [a, b] = [b, a + b];\n  }\n}\nfunction* take(n, iterable) {\n  if (n <= 0) return;\n  let i = 0;\n  for (const x of iterable) {\n    yield x;\n    if (++i >= n) return;\n  }\n}\nfunction* naturals() { let n = 1; while (true) yield n++; }\nfunction* filter(pred, iterable) { for (const x of iterable) if (pred(x)) yield x; }\nconsole.log([...take(10, fib())].join(\" \"));\nconsole.log([...take(3, filter((x) => x % 2 === 0, naturals()))].join(\" \"));\n",
+     "expected_output": "0 1 1 2 3 5 8 13 21 34\n2 4 6"
+    }
+   ]
+  },
+  {
+   "id": "js-json",
+   "track_id": "javascript",
+   "unit_id": "js-u6",
+   "title": "JSON Behaviour",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "What JSON.stringify actually does",
+     "body": "`JSON.stringify` drops `undefined`, functions and symbols from objects, turns them into `null` inside arrays, converts `NaN`/`Infinity` to `null`, calls `toJSON()` if present (that is how `Date` becomes an ISO string), ignores non-enumerable and symbol keys, throws on circular references and BigInt. Optional `replacer` (function or key whitelist) and `space` arguments control output.\n\n`JSON.parse` is strict: double quotes only, no trailing commas, no comments; an optional `reviver(key, value)` can revive dates. `JSON.parse(JSON.stringify(x))` is a lossy deep clone.",
+     "code": "console.log(JSON.stringify({ a: undefined, b: () => 1, c: NaN, d: new Date(0) }));\n// {\"c\":null,\"d\":\"1970-01-01T00:00:00.000Z\"}\nconsole.log(JSON.stringify([undefined, () => 1])); // [null,null]"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "console.log(JSON.stringify({ a: undefined, b: () => 1, c: NaN }));",
+     "options": [
+      "{\"c\":null}",
+      "{\"a\":undefined,\"c\":NaN}",
+      "{}",
+      "{\"b\":null,\"c\":null}"
+     ],
+     "answer": 0,
+     "explanation": "`undefined` and function values are omitted from objects; `NaN` becomes `null`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "console.log(JSON.stringify([undefined]));",
+     "options": [
+      "[undefined]",
+      "[null]",
+      "[]",
+      "undefined"
+     ],
+     "answer": 1,
+     "explanation": "In arrays, unsupported values become `null` to preserve positions."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens?",
+     "code": "JSON.parse(\"{'a': 1}\");",
+     "options": [
+      "Returns { a: 1 }",
+      "Throws SyntaxError (single quotes are invalid JSON)",
+      "Returns null",
+      "Returns the string"
+     ],
+     "answer": 1,
+     "explanation": "JSON requires double-quoted keys and strings."
+    },
+    {
+     "type": "mcq",
+     "question": "After a JSON round trip, `typeof copy.when` is...",
+     "code": "const copy = JSON.parse(JSON.stringify({ when: new Date() }));",
+     "options": [
+      "\"object\"",
+      "\"string\"",
+      "\"number\"",
+      "\"undefined\""
+     ],
+     "answer": 1,
+     "explanation": "`Date.prototype.toJSON` produces an ISO string and JSON.parse does not turn it back into a Date unless you use a reviver."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Use a `replacer` to mask the `password` field with `\"***\"` and a `reviver` to turn keys ending in `At` back into `Date` objects. Print the stringified object and then the type of `createdAt` and its year.",
+     "starter": "const user = { name: \"Ann\", password: \"secret\", createdAt: new Date(\"2024-05-01T00:00:00Z\") };\nconst json = JSON.stringify(user, /* TODO replacer */);\nconsole.log(json);\nconst back = JSON.parse(json, /* TODO reviver */);\nconsole.log(back.createdAt instanceof Date, back.createdAt.getUTCFullYear());\n",
+     "solution": "const user = { name: \"Ann\", password: \"secret\", createdAt: new Date(\"2024-05-01T00:00:00Z\") };\nconst json = JSON.stringify(user, (k, v) => (k === \"password\" ? \"***\" : v));\nconsole.log(json);\nconst back = JSON.parse(json, (k, v) => (k.endsWith(\"At\") && typeof v === \"string\" ? new Date(v) : v));\nconsole.log(back.createdAt instanceof Date, back.createdAt.getUTCFullYear());\n",
+     "expected_output": "{\"name\":\"Ann\",\"password\":\"***\",\"createdAt\":\"2024-05-01T00:00:00.000Z\"}\ntrue 2024"
+    }
+   ]
+  },
+  {
+   "id": "js-regex",
+   "track_id": "javascript",
+   "unit_id": "js-u6",
+   "title": "Regular Expressions",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Regex essentials for JS interviews",
+     "body": "Literal `/pattern/flags`. Flags: `g` global, `i` ignore case, `m` multiline, `s` dotAll, `u` unicode, `y` sticky. Quantifiers are **greedy** by default (`.*`); add `?` for lazy (`.*?`). Groups `( )`, non-capturing `(?: )`, named `(?<year>\\d{4})`, lookahead `(?=...)`/`(?!...)`, lookbehind `(?<=...)`.\n\nAPI: `str.match`, `str.matchAll` (needs `g`), `str.replace(re | str, fnOrStr)` (a string pattern replaces only the first occurrence; use `replaceAll`), `re.test`, `re.exec`. A **global/sticky regex is stateful** via `lastIndex`, a classic `test()` bug.",
+     "code": "const m = \"2024-05-01\".match(/(?<y>\\d{4})-(?<m>\\d{2})-(?<d>\\d{2})/);\nconsole.log(m.groups.y, m.groups.m); // 2024 05\nconsole.log(\"a-b-c\".replace(\"-\", \"+\"));    // a+b-c\nconsole.log(\"a-b-c\".replaceAll(\"-\", \"+\")); // a+b+c"
+    },
+    {
+     "type": "mcq",
+     "question": "What does the greedy match return?",
+     "code": "console.log(\"aXbXb\".match(/a.*b/)[0]);",
+     "options": [
+      "\"aXb\"",
+      "\"aXbXb\"",
+      "\"ab\"",
+      "null"
+     ],
+     "answer": 1,
+     "explanation": "`.*` grabs as much as possible and backtracks only as needed, so it matches up to the last `b`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does the lazy version return?",
+     "code": "console.log(\"aXbXb\".match(/a.*?b/)[0]);",
+     "options": [
+      "\"aXb\"",
+      "\"aXbXb\"",
+      "\"a\"",
+      "null"
+     ],
+     "answer": 0,
+     "explanation": "`.*?` matches as little as possible, so it stops at the first `b`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is logged?",
+     "code": "const r = /a/g;\nconsole.log(r.test(\"a\"), r.test(\"a\"));",
+     "options": [
+      "true true",
+      "true false",
+      "false false",
+      "false true"
+     ],
+     "answer": 1,
+     "explanation": "A global regex remembers `lastIndex`. The first `test` finds the match and moves `lastIndex` to 1; the second starts from index 1 and fails (then resets)."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this log?",
+     "code": "console.log(\"a-a-a\".replace(\"a\", \"b\"));",
+     "options": [
+      "\"b-a-a\"",
+      "\"b-b-b\"",
+      "\"a-a-a\"",
+      "\"b\""
+     ],
+     "answer": 0,
+     "explanation": "A string pattern replaces only the first match. Use `replaceAll` or a `/g` regex for all occurrences."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Parse the string with `matchAll` and named groups into an object and print it as JSON: keys and values come from `key=value` pairs separated by semicolons. Then print whether `isHex` accepts `#1a2B3c` and rejects `#12345`.",
+     "starter": "const input = \"host=example.com; port=8080; debug=true\";\nconst config = {};\n// TODO fill config using matchAll with named groups\nconsole.log(JSON.stringify(config));\nconst isHex = (s) => /* TODO */ false;\nconsole.log(isHex(\"#1a2B3c\"), isHex(\"#12345\"));\n",
+     "solution": "const input = \"host=example.com; port=8080; debug=true\";\nconst config = {};\nfor (const m of input.matchAll(/(?<key>\\w+)=(?<value>[^;\\s]+)/g)) {\n  config[m.groups.key] = m.groups.value;\n}\nconsole.log(JSON.stringify(config));\nconst isHex = (s) => /^#[0-9a-f]{6}$/i.test(s);\nconsole.log(isHex(\"#1a2B3c\"), isHex(\"#12345\"));\n",
+     "expected_output": "{\"host\":\"example.com\",\"port\":\"8080\",\"debug\":\"true\"}\ntrue false"
+    }
+   ]
+  },
+  {
+   "id": "js-debounce-throttle",
+   "track_id": "javascript",
+   "unit_id": "js-u7",
+   "title": "Debounce & Throttle",
+   "minutes": 10,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Rate-limiting function calls",
+     "body": "**Debounce** delays execution until calls have stopped for `wait` ms (search-as-you-type, resize end). **Throttle** guarantees at most one execution per `wait` ms (scroll, mousemove, analytics). Senior-level implementations preserve `this` and arguments, support `cancel()`, and decide between leading-edge, trailing-edge or both.\n\nThe classic bug: creating the `timer` variable *inside* the returned function, so every call has its own timer and nothing is ever cancelled. The timer state must live in the enclosing closure.",
+     "code": "function debounce(fn, wait) {\n  let timer;\n  return function (...args) {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn.apply(this, args), wait);\n  };\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "What is wrong with this debounce?",
+     "code": "function debounce(fn, wait) {\n  return function (...args) {\n    let timer;\n    clearTimeout(timer);\n    timer = setTimeout(() => fn(...args), wait);\n  };\n}",
+     "options": [
+      "It uses setTimeout",
+      "`timer` is declared inside the returned function, so each call has a separate timer and clearTimeout does nothing useful",
+      "It should use setInterval",
+      "Arrow functions cannot call apply"
+     ],
+     "answer": 1,
+     "explanation": "Each invocation creates a new local `timer`, so earlier timeouts are never cleared and every call eventually fires. State must be shared via the closure of `debounce`."
+    },
+    {
+     "type": "mcq",
+     "question": "A search box fires an API request per keystroke. Which fits best?",
+     "options": [
+      "Throttle at 1000 ms",
+      "Debounce at ~250 ms",
+      "No rate limiting",
+      "setInterval polling"
+     ],
+     "answer": 1,
+     "explanation": "You want the request after typing pauses, with the latest value: debounce. (Combine with request cancellation to avoid stale responses.)"
+    },
+    {
+     "type": "mcq",
+     "question": "A debounced function (wait 100 ms) is called at t=0, 50, 120 ms. When does it run?",
+     "options": [
+      "At 0, 50 and 120",
+      "Once at 220 ms",
+      "Once at 100 ms",
+      "Twice: at 150 and 220"
+     ],
+     "answer": 1,
+     "explanation": "Each call resets the timer. The last call is at 120 ms, so the single execution happens at 220 ms."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `debounce(fn, wait)` with `this` and argument forwarding and a `cancel()` method. The shown test calls it three times quickly, so only the last value (3) is recorded; after cancelling, the later call is dropped.",
+     "starter": "function debounce(fn, wait) {\n  // TODO\n}\nconst calls = [];\nconst d = debounce((x) => calls.push(x), 50);\nd(1); d(2); d(3);\nsetTimeout(() => {\n  console.log(calls.join(\",\"));\n  d(4);\n  d.cancel();\n}, 120);\nsetTimeout(() => console.log(calls.join(\",\")), 250);\n",
+     "solution": "function debounce(fn, wait) {\n  let timer = null;\n  function debounced(...args) {\n    clearTimeout(timer);\n    timer = setTimeout(() => {\n      timer = null;\n      fn.apply(this, args);\n    }, wait);\n  }\n  debounced.cancel = () => {\n    clearTimeout(timer);\n    timer = null;\n  };\n  return debounced;\n}\nconst calls = [];\nconst d = debounce((x) => calls.push(x), 50);\nd(1); d(2); d(3);\nsetTimeout(() => {\n  console.log(calls.join(\",\"));\n  d(4);\n  d.cancel();\n}, 120);\nsetTimeout(() => console.log(calls.join(\",\")), 250);\n",
+     "expected_output": "3\n3"
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `throttle(fn, wait)` that runs immediately on the leading edge and schedules one trailing call with the latest arguments if calls were dropped. Calling 1, 2, 3 synchronously should record `1` immediately and `1,3` after the window.",
+     "starter": "function throttle(fn, wait) {\n  // TODO leading + trailing\n}\nconst calls = [];\nconst t = throttle((x) => calls.push(x), 100);\nt(1); t(2); t(3);\nconsole.log(calls.join(\",\"));\nsetTimeout(() => console.log(calls.join(\",\")), 300);\n",
+     "solution": "function throttle(fn, wait) {\n  let last = -Infinity, timer = null, lastArgs, lastThis;\n  function run() {\n    last = Date.now();\n    timer = null;\n    fn.apply(lastThis, lastArgs);\n  }\n  return function (...args) {\n    lastArgs = args;\n    lastThis = this;\n    const remaining = wait - (Date.now() - last);\n    if (remaining <= 0) {\n      if (timer) { clearTimeout(timer); timer = null; }\n      run();\n    } else if (!timer) {\n      timer = setTimeout(run, remaining);\n    }\n  };\n}\nconst calls = [];\nconst t = throttle((x) => calls.push(x), 100);\nt(1); t(2); t(3);\nconsole.log(calls.join(\",\"));\nsetTimeout(() => console.log(calls.join(\",\")), 300);\n",
+     "expected_output": "1\n1,3"
+    }
+   ]
+  },
+  {
+   "id": "js-currying-memo",
+   "track_id": "javascript",
+   "unit_id": "js-u7",
+   "title": "Currying, Composition & Memoization",
+   "minutes": 10,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Functional building blocks",
+     "body": "**Currying** turns `f(a, b, c)` into `f(a)(b)(c)`; a flexible `curry` uses `fn.length` (number of parameters before the first default/rest) to know when enough arguments have arrived. **Composition** builds pipelines: `compose(f, g)(x) === f(g(x))`, `pipe` goes left to right.\n\n**Memoization** caches results by arguments. Real-world concerns: key generation (`args.join()` collides for `1` and `\"1\"`; `JSON.stringify` fails for functions/cycles), caching `undefined` results (use `Map.has`), unbounded growth (use an LRU or WeakMap for object keys), purity, and that a recursive function must call the *memoized* version to benefit.",
+     "code": "const compose = (...fns) => (x) => fns.reduceRight((acc, f) => f(acc), x);\nconst pipe = (...fns) => (x) => fns.reduce((acc, f) => f(acc), x);\nconst inc = (n) => n + 1, dbl = (n) => n * 2;\nconsole.log(compose(inc, dbl)(5)); // 11  (inc(dbl(5)))\nconsole.log(pipe(inc, dbl)(5));    // 12  (dbl(inc(5)))"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `((a, b = 2, c) => 0).length`?",
+     "code": "console.log(((a, b = 2, c) => 0).length);",
+     "options": [
+      "3",
+      "2",
+      "1",
+      "0"
+     ],
+     "answer": 2,
+     "explanation": "`length` counts parameters before the first one with a default value or rest element, so only `a` counts. This breaks naive `curry` implementations."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the result?",
+     "code": "const compose = (...fns) => (x) => fns.reduceRight((acc, f) => f(acc), x);\nconst inc = (n) => n + 1, dbl = (n) => n * 2;\nconsole.log(compose(inc, dbl)(5));",
+     "options": [
+      "11",
+      "12",
+      "10",
+      "NaN"
+     ],
+     "answer": 0,
+     "explanation": "`compose(inc, dbl)(5)` applies right to left: `dbl(5) = 10`, then `inc` gives 11."
+    },
+    {
+     "type": "mcq",
+     "question": "Why can a memoize key built with `args.join(\",\")` be wrong?",
+     "options": [
+      "join is slow",
+      "`f(1, \"1\")`, `f(\"1\", 1)` and `f(\"1,1\")`-style inputs can collide, and objects stringify to `[object Object]`",
+      "It cannot handle numbers",
+      "Arrays cannot be joined"
+     ],
+     "answer": 1,
+     "explanation": "Different argument lists can produce the same string key, returning wrong cached results."
+    },
+    {
+     "type": "mcq",
+     "question": "Why does this memoized Fibonacci still take exponential time?",
+     "code": "function fibRaw(n) { return n < 2 ? n : fibRaw(n - 1) + fibRaw(n - 2); }\nconst fib = memoize(fibRaw);\nfib(40);",
+     "options": [
+      "Map is slow",
+      "The recursive calls reference the original `fib`, not the memoized wrapper",
+      "memoize cannot cache numbers",
+      "Recursion is not allowed"
+     ],
+     "answer": 1,
+     "explanation": "The inner calls go to the unwrapped function so nothing is cached. The recursive reference must point at the memoized binding."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement a `curry(fn)` that allows partial application with any grouping: `add(1)(2)(3)`, `add(1, 2)(3)` and `add(1)(2, 3)` must all give 6.",
+     "starter": "function curry(fn) {\n  // TODO\n}\nconst add3 = curry((a, b, c) => a + b + c);\nconsole.log(add3(1)(2)(3), add3(1, 2)(3), add3(1)(2, 3), add3(1, 2, 3));\n",
+     "solution": "function curry(fn) {\n  return function curried(...args) {\n    if (args.length >= fn.length) return fn.apply(this, args);\n    return (...more) => curried.apply(this, [...args, ...more]);\n  };\n}\nconst add3 = curry((a, b, c) => a + b + c);\nconsole.log(add3(1)(2)(3), add3(1, 2)(3), add3(1)(2, 3), add3(1, 2, 3));\n",
+     "expected_output": "6 6 6 6"
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `memoize(fn, keyFn)` using a `Map`, defaulting to `JSON.stringify(args)` for the key, and make it cache `undefined` results too. Memoize a recursive fibonacci (the recursion must use the memoized version) and print `fib(40)` and how many times the raw function ran.",
+     "starter": "function memoize(fn, keyFn = (...args) => JSON.stringify(args)) {\n  // TODO\n}\nlet calls = 0;\nconst fib = memoize((n) => {\n  calls++;\n  return n < 2 ? n : fib(n - 1) + fib(n - 2);\n});\nconsole.log(fib(40));\nconsole.log(calls);\n",
+     "solution": "function memoize(fn, keyFn = (...args) => JSON.stringify(args)) {\n  const cache = new Map();\n  return function (...args) {\n    const key = keyFn(...args);\n    if (cache.has(key)) return cache.get(key);\n    const value = fn.apply(this, args);\n    cache.set(key, value);\n    return value;\n  };\n}\nlet calls = 0;\nconst fib = memoize((n) => {\n  calls++;\n  return n < 2 ? n : fib(n - 1) + fib(n - 2);\n});\nconsole.log(fib(40));\nconsole.log(calls);\n",
+     "expected_output": "102334155\n41"
+    }
+   ]
+  },
+  {
+   "id": "js-deep-clone",
+   "track_id": "javascript",
+   "unit_id": "js-u7",
+   "title": "Deep Clone",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Why cloning is harder than it looks",
+     "body": "Options: `structuredClone` (built in; handles Date, Map, Set, RegExp, typed arrays, cycles; throws on functions and DOM nodes; drops prototypes and getters), `JSON.parse(JSON.stringify(x))` (lossy: drops `undefined`/functions, dates become strings, loses Map/Set, throws on cycles), spread/`Object.assign` (shallow).\n\nA hand-rolled `deepClone` must handle: primitives and `null`, arrays, `Date`/`RegExp`/`Map`/`Set`, **circular references** (track visited objects in a `WeakMap` *before* recursing), symbol keys, and preserving the prototype. Interviews often ask for it plus the trade-offs.",
+     "code": "const original = { when: new Date(0), tags: new Set([1]), fn() {} };\nconst viaJson = JSON.parse(JSON.stringify({ when: original.when, u: undefined }));\nconsole.log(typeof viaJson.when); // \"string\"\ntry { structuredClone(original); } catch (e) { console.log(e.name); } // DataCloneError"
+    },
+    {
+     "type": "mcq",
+     "question": "What is `typeof copy.d` after a JSON round trip of `{ d: new Date(0) }`?",
+     "options": [
+      "\"object\"",
+      "\"string\"",
+      "\"number\"",
+      "\"undefined\""
+     ],
+     "answer": 1,
+     "explanation": "Dates serialise to ISO strings and stay strings after `JSON.parse`."
+    },
+    {
+     "type": "mcq",
+     "question": "What happens?",
+     "code": "structuredClone({ f() {} });",
+     "options": [
+      "Returns a copy without `f`",
+      "Throws DataCloneError",
+      "Returns a copy with the function",
+      "Returns null"
+     ],
+     "answer": 1,
+     "explanation": "`structuredClone` cannot clone functions and throws a `DataCloneError`."
+    },
+    {
+     "type": "mcq",
+     "question": "Why must a recursive clone register the new object in a WeakMap *before* cloning children?",
+     "options": [
+      "For speed",
+      "So circular references find the in-progress copy instead of recursing forever",
+      "To clone prototypes",
+      "Because Maps are required for arrays"
+     ],
+     "answer": 1,
+     "explanation": "`a.self = a` would otherwise recurse infinitely; the visited map returns the partially built clone."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "const a = { n: { x: 1 } };\nconst b = { ...a };\nconsole.log(a === b);",
+     "options": [
+      "true",
+      "false",
+      "TypeError",
+      "undefined"
+     ],
+     "answer": 1,
+     "explanation": "Spread copies one level: the nested object keeps the same reference but the copy itself is a new object, so comparing the top-level objects gives `false`."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `deepClone(value)` supporting primitives, arrays, plain objects (keep the prototype), `Date`, `RegExp`, `Map`, `Set` and circular references. Print the checks.",
+     "starter": "function deepClone(value, seen = new WeakMap()) {\n  // TODO\n}\nconst o = { a: 1, d: new Date(0), m: new Map([[\"k\", { x: 1 }]]), s: new Set([1]), arr: [1, [2]] };\no.self = o;\nconst c = deepClone(o);\nconsole.log([\n  c !== o,\n  c.self === c,\n  c.d !== o.d && c.d.getTime() === 0,\n  c.m.get(\"k\") !== o.m.get(\"k\") && c.m.get(\"k\").x === 1,\n  c.arr[1] !== o.arr[1],\n  c.s.has(1) && c.s !== o.s,\n].join(\",\"));\n",
+     "solution": "function deepClone(value, seen = new WeakMap()) {\n  if (value === null || typeof value !== \"object\") return value;\n  if (seen.has(value)) return seen.get(value);\n  if (value instanceof Date) return new Date(value.getTime());\n  if (value instanceof RegExp) return new RegExp(value.source, value.flags);\n  if (value instanceof Map) {\n    const m = new Map();\n    seen.set(value, m);\n    value.forEach((v, k) => m.set(deepClone(k, seen), deepClone(v, seen)));\n    return m;\n  }\n  if (value instanceof Set) {\n    const s = new Set();\n    seen.set(value, s);\n    value.forEach((v) => s.add(deepClone(v, seen)));\n    return s;\n  }\n  const out = Array.isArray(value) ? [] : Object.create(Object.getPrototypeOf(value));\n  seen.set(value, out);\n  for (const key of [...Object.keys(value), ...Object.getOwnPropertySymbols(value)]) {\n    out[key] = deepClone(value[key], seen);\n  }\n  return out;\n}\nconst o = { a: 1, d: new Date(0), m: new Map([[\"k\", { x: 1 }]]), s: new Set([1]), arr: [1, [2]] };\no.self = o;\nconst c = deepClone(o);\nconsole.log([\n  c !== o,\n  c.self === c,\n  c.d !== o.d && c.d.getTime() === 0,\n  c.m.get(\"k\") !== o.m.get(\"k\") && c.m.get(\"k\").x === 1,\n  c.arr[1] !== o.arr[1],\n  c.s.has(1) && c.s !== o.s,\n].join(\",\"));\n",
+     "expected_output": "true,true,true,true,true,true"
+    }
+   ]
+  },
+  {
+   "id": "js-polyfills",
+   "track_id": "javascript",
+   "unit_id": "js-u7",
+   "title": "Polyfills: bind & Promise.all",
+   "minutes": 11,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Re-implementing built-ins",
+     "body": "Polyfill questions test whether you know the real semantics, not just the happy path.\n\n`Function.prototype.bind`: returns a new function; fixes `this` and leading args; when called with `new`, the bound `this` is **ignored** and the new instance must still inherit from the original's prototype (`new.target` tells you).\n\n`Promise.all`: accepts any iterable; wraps non-promises with `Promise.resolve`; preserves **input order**, not completion order; resolves `[]` immediately for empty input; rejects with the first rejection.",
+     "code": "Function.prototype.myBind = function (ctx, ...preset) {\n  const fn = this;\n  function bound(...args) {\n    return fn.apply(new.target ? this : ctx, [...preset, ...args]);\n  }\n  if (fn.prototype) bound.prototype = Object.create(fn.prototype);\n  return bound;\n};"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `Promise.all([])` do?",
+     "options": [
+      "Never settles",
+      "Rejects with TypeError",
+      "Resolves to an empty array",
+      "Resolves to undefined"
+     ],
+     "answer": 2,
+     "explanation": "With nothing to wait for, it resolves immediately with `[]`; a naive polyfill that only resolves inside `then` callbacks would hang."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the order of the results array in `Promise.all([slow, fast])`?",
+     "options": [
+      "Completion order: [fast, slow]",
+      "Input order: [slow, fast]",
+      "Random",
+      "Sorted"
+     ],
+     "answer": 1,
+     "explanation": "Results are indexed by position in the input, regardless of when each promise resolves."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "code": "function F() { this.v = 2; }\nconst B = F.bind({ x: 1 });\nconst inst = new B();\nconsole.log(inst.x, inst.v);",
+     "options": [
+      "1 and 2",
+      "2 and 2",
+      "undefined and 2",
+      "TypeError"
+     ],
+     "answer": 2,
+     "explanation": "Calling a bound function with `new` ignores the bound `this`: the instance is a fresh object, so `inst.x` is `undefined` while `inst.v` is 2."
+    },
+    {
+     "type": "mcq",
+     "question": "Why does a bind polyfill that always uses `fn.apply(ctx, ...)` break `new`?",
+     "options": [
+      "new cannot be used with functions",
+      "The constructed instance would be ignored and the properties set on `ctx`",
+      "apply is slow",
+      "It works fine"
+     ],
+     "answer": 1,
+     "explanation": "With `new`, `this` should be the new instance; applying to the captured `ctx` mutates the wrong object and the result isn't an instance of the original."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `Function.prototype.myBind` that supports partial arguments and `new`. Test: bound greeting, then constructing through a bound function must ignore the bound `this` and keep `instanceof`.",
+     "starter": "Function.prototype.myBind = function (ctx, ...preset) {\n  // TODO\n};\nfunction greet(greeting, punct) { return `${greeting} ${this.n}${punct}`; }\nconsole.log(greet.myBind({ n: \"Ann\" }, \"Hi\")(\"!\"));\nfunction Pt(x, y) { this.x = x; this.y = y; }\nconst B = Pt.myBind({ ignored: true }, 1);\nconst p = new B(2);\nconsole.log(p.x, p.y, p instanceof Pt, p.ignored);\n",
+     "solution": "Function.prototype.myBind = function (ctx, ...preset) {\n  const fn = this;\n  function bound(...args) {\n    return fn.apply(new.target ? this : ctx, [...preset, ...args]);\n  }\n  if (fn.prototype) bound.prototype = Object.create(fn.prototype);\n  return bound;\n};\nfunction greet(greeting, punct) { return `${greeting} ${this.n}${punct}`; }\nconsole.log(greet.myBind({ n: \"Ann\" }, \"Hi\")(\"!\"));\nfunction Pt(x, y) { this.x = x; this.y = y; }\nconst B = Pt.myBind({ ignored: true }, 1);\nconst p = new B(2);\nconsole.log(p.x, p.y, p instanceof Pt, p.ignored);\n",
+     "expected_output": "Hi Ann!\n1 2 true undefined"
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `promiseAll(iterable)`: handles non-promise values, keeps input order, resolves `[]` for empty input and rejects with the first rejection. Print the three scenarios.",
+     "starter": "function promiseAll(items) {\n  // TODO\n}\nconst delay = (ms, v) => new Promise((r) => setTimeout(() => r(v), ms));\n(async () => {\n  console.log((await promiseAll([delay(20, \"a\"), \"b\", delay(5, \"c\")])).join(\",\"));\n  console.log((await promiseAll([])).length);\n  try {\n    await promiseAll([delay(20, \"a\"), Promise.reject(new Error(\"x\"))]);\n  } catch (e) {\n    console.log(\"rejected\", e.message);\n  }\n})();\n",
+     "solution": "function promiseAll(items) {\n  return new Promise((resolve, reject) => {\n    const arr = [...items];\n    const results = new Array(arr.length);\n    let remaining = arr.length;\n    if (remaining === 0) return resolve(results);\n    arr.forEach((item, i) => {\n      Promise.resolve(item).then((value) => {\n        results[i] = value;\n        if (--remaining === 0) resolve(results);\n      }, reject);\n    });\n  });\n}\nconst delay = (ms, v) => new Promise((r) => setTimeout(() => r(v), ms));\n(async () => {\n  console.log((await promiseAll([delay(20, \"a\"), \"b\", delay(5, \"c\")])).join(\",\"));\n  console.log((await promiseAll([])).length);\n  try {\n    await promiseAll([delay(20, \"a\"), Promise.reject(new Error(\"x\"))]);\n  } catch (e) {\n    console.log(\"rejected\", e.message);\n  }\n})();\n",
+     "expected_output": "a,b,c\n0\nrejected x"
+    }
+   ]
+  },
+  {
+   "id": "js-memory-leaks",
+   "track_id": "javascript",
+   "unit_id": "js-u8",
+   "title": "Memory & Garbage Collection",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Reachability and typical leaks",
+     "body": "V8 uses tracing garbage collection: anything **reachable** from roots (globals, the stack, live closures) stays; everything else is collected. A \"leak\" is memory that is still reachable but no longer needed.\n\nUsual suspects: accidental globals; timers/intervals never cleared; event listeners never removed (especially on long-lived targets); closures that capture big objects; detached DOM nodes still referenced from JS; unbounded caches/`Map`s keyed by objects (use `WeakMap` or an LRU); growing arrays of logs/subscriptions. Tools: Chrome heap snapshots, `--inspect`, `process.memoryUsage()`. `WeakRef` and `FinalizationRegistry` exist but should not drive logic.",
+     "code": "const cache = new Map();\nfunction getMeta(obj) {\n  if (!cache.has(obj)) cache.set(obj, compute(obj)); // leaks: obj kept alive forever\n  return cache.get(obj);\n}\nconst safe = new WeakMap(); // entries vanish when obj is unreachable"
+    },
+    {
+     "type": "mcq",
+     "question": "Which pattern most likely leaks in a long-running Node service?",
+     "options": [
+      "Short-lived local variables",
+      "`emitter.on('x', handler)` added on every request and never removed",
+      "Using `const`",
+      "Calling `JSON.parse`"
+     ],
+     "answer": 1,
+     "explanation": "Each request adds another listener to a long-lived emitter, retaining handlers and everything they close over (and Node warns about MaxListeners)."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the key difference between `Map` and `WeakMap` for caching metadata about objects?",
+     "options": [
+      "WeakMap is iterable",
+      "WeakMap does not prevent its key objects from being garbage-collected",
+      "Map only supports strings",
+      "WeakMap is slower for lookups"
+     ],
+     "answer": 1,
+     "explanation": "Entries in a WeakMap don't keep keys alive, so metadata disappears with the object."
+    },
+    {
+     "type": "mcq",
+     "question": "What keeps the huge array alive?",
+     "code": "function setup() {\n  const data = new Array(1e6).fill(0);\n  return function handler() { return data.length; };\n}\nconst handler = setup();",
+     "options": [
+      "Nothing; it is collected after `setup` returns",
+      "The returned closure, because it references `data`",
+      "The global scope",
+      "The garbage collector's cache"
+     ],
+     "answer": 1,
+     "explanation": "The closure retains the scope it references, including `data`, for as long as `handler` is reachable. If it only needs `data.length`, capture that instead."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `setInterval(fn, 1000)` without `clearInterval` do after the component that created it is gone?",
+     "options": [
+      "Stops automatically",
+      "Keeps running and keeps `fn`'s closure alive",
+      "Throws",
+      "Runs once more"
+     ],
+     "answer": 1,
+     "explanation": "Timers are GC roots; you must clear them on teardown (and in Node also to let the process exit)."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement an `LRUCache(capacity)` using a `Map` (insertion order = recency): `get` refreshes the key, `set` evicts the least recently used entry when full. Run the sequence and print the results.",
+     "starter": "class LRUCache {\n  // TODO\n}\nconst c = new LRUCache(2);\nc.set(\"a\", 1);\nc.set(\"b\", 2);\nc.get(\"a\");\nc.set(\"c\", 3);\nconsole.log(c.get(\"b\"), c.get(\"a\"), c.get(\"c\"));\nconsole.log([...c.map.keys()].join(\",\"));\n",
+     "solution": "class LRUCache {\n  constructor(capacity) {\n    this.capacity = capacity;\n    this.map = new Map();\n  }\n  get(key) {\n    if (!this.map.has(key)) return undefined;\n    const value = this.map.get(key);\n    this.map.delete(key);\n    this.map.set(key, value);\n    return value;\n  }\n  set(key, value) {\n    if (this.map.has(key)) this.map.delete(key);\n    else if (this.map.size >= this.capacity) this.map.delete(this.map.keys().next().value);\n    this.map.set(key, value);\n  }\n}\nconst c = new LRUCache(2);\nc.set(\"a\", 1);\nc.set(\"b\", 2);\nc.get(\"a\");\nc.set(\"c\", 3);\nconsole.log(c.get(\"b\"), c.get(\"a\"), c.get(\"c\"));\nconsole.log([...c.map.keys()].join(\",\"));\n",
+     "expected_output": "undefined 1 3\na,c"
+    }
+   ]
+  },
+  {
+   "id": "js-performance",
+   "track_id": "javascript",
+   "unit_id": "js-u8",
+   "title": "Performance Pitfalls",
+   "minutes": 9,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Where JS code actually gets slow",
+     "body": "Think in complexity first: `includes`/`indexOf` inside a loop is O(n^2) (use a `Set`/`Map`); `reduce` with `{...acc}` or `[...acc, x]` copies every iteration (O(n^2)); `array.shift()` in a loop is O(n) each; building strings with `+=` is fine in modern engines.\n\nOn the event loop: a long synchronous task blocks input, timers and rendering, so split heavy work into chunks that yield (`setTimeout`/`scheduler.yield`/`requestIdleCallback`), move it to a Worker, or stream it. In the browser avoid **layout thrashing** (interleaving DOM reads and writes), batch updates, virtualise long lists, and measure with the Performance panel before optimising.",
+     "code": "// O(n^2)\nconst slow = arr.filter((x, i) => arr.indexOf(x) === i);\n// O(n)\nconst fast = [...new Set(arr)];\n// O(n^2) copying\nconst bad = items.reduce((acc, x) => ({ ...acc, [x.id]: x }), {});\n// O(n)\nconst good = Object.fromEntries(items.map((x) => [x.id, x]));"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the time complexity of this snippet for n items?",
+     "code": "items.reduce((acc, x) => ({ ...acc, [x.id]: x }), {});",
+     "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(n^2)",
+      "O(1)"
+     ],
+     "answer": 2,
+     "explanation": "The object is re-spread on every iteration, copying up to n keys each time, which is O(n^2) overall."
+    },
+    {
+     "type": "mcq",
+     "question": "Which change makes the duplicate check linear?",
+     "options": [
+      "Replace `for` with `forEach`",
+      "Keep seen values in a `Set` instead of calling `includes` on an array",
+      "Use `var`",
+      "Sort first every iteration"
+     ],
+     "answer": 1,
+     "explanation": "`Set.has` is O(1) on average, replacing an O(n) `includes` scan inside the loop."
+    },
+    {
+     "type": "mcq",
+     "question": "A 1-second synchronous loop runs in a click handler. What is the user-visible effect?",
+     "options": [
+      "Nothing; JS is multithreaded",
+      "UI is frozen: no painting, no other events, no timers until it ends",
+      "Only timers pause",
+      "Only network requests pause"
+     ],
+     "answer": 1,
+     "explanation": "The main thread is single-threaded; long tasks block rendering and input. Chunk the work or use a Web Worker."
+    },
+    {
+     "type": "mcq",
+     "question": "Which pattern causes layout thrashing?",
+     "options": [
+      "Reading `el.offsetHeight` and writing `el.style.height` in alternating order for many elements",
+      "Batching all reads, then all writes",
+      "Using `transform` for animation",
+      "Using `requestAnimationFrame`"
+     ],
+     "answer": 0,
+     "explanation": "Each read after a write forces a synchronous layout. Batch reads first, then writes."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `processInChunks(items, size, fn)` that processes `size` items at a time and yields to the event loop between chunks with a macrotask so a pending timer can run. The log should be `chunk1,tick,chunk2`.",
+     "starter": "const log = [];\nsetTimeout(() => log.push(\"tick\"), 0);\nasync function processInChunks(items, size, fn) {\n  // TODO: process a chunk, push `chunk<N>` to log, then yield with setTimeout\n}\nprocessInChunks([1, 2, 3, 4, 5, 6], 3, () => {}).then(() => console.log(log.join(\",\")));\n",
+     "solution": "const log = [];\nsetTimeout(() => log.push(\"tick\"), 0);\nasync function processInChunks(items, size, fn) {\n  for (let i = 0; i < items.length; i += size) {\n    items.slice(i, i + size).forEach(fn);\n    log.push(\"chunk\" + (i / size + 1));\n    await new Promise((resolve) => setTimeout(resolve, 0));\n  }\n}\nprocessInChunks([1, 2, 3, 4, 5, 6], 3, () => {}).then(() => console.log(log.join(\",\")));\n",
+     "expected_output": "chunk1,tick,chunk2"
+    }
+   ]
+  },
+  {
+   "id": "js-design-patterns",
+   "track_id": "javascript",
+   "unit_id": "js-u8",
+   "title": "Design Patterns in JavaScript",
+   "minutes": 10,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Patterns you will be asked about",
+     "body": "- **Module / singleton**: ES module scope is private and evaluated once, so an exported instance is a singleton.\n- **Observer / pub-sub**: subjects notify subscribers (`EventEmitter`, DOM events, RxJS). Always return an *unsubscribe* function to avoid leaks.\n- **Factory**: functions that create configured objects without `new` at call sites.\n- **Strategy**: pass behaviour (functions) instead of branching on type.\n- **Middleware / chain of responsibility**: Express/Koa-style `next()` pipelines.\n- **Proxy**: `new Proxy(target, handlers)` for validation, logging, reactivity (Vue 3).\n- **Decorator / higher-order function**: wrap a function to add behaviour (logging, retry, memoize).\n\nPrefer composition and plain functions over class hierarchies.",
+     "code": "const logged = (fn) => (...args) => {\n  console.log(\"calling\", fn.name, args);\n  return fn(...args);\n};\nconst user = new Proxy({}, {\n  set(t, k, v) { if (k === \"age\" && v < 0) throw new RangeError(\"age\"); t[k] = v; return true; },\n});"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output?",
+     "code": "const make = () => { let n = 0; return () => ++n; };\nconst a = make(), b = make();\na();\nconsole.log(a(), b());",
+     "options": [
+      "2 1",
+      "1 2",
+      "2 2",
+      "1 1"
+     ],
+     "answer": 0,
+     "explanation": "Each `make()` call creates its own private closure. `a` is called twice (1, then 2) and `b` once (1), so the log line prints `2 1`."
+    },
+    {
+     "type": "mcq",
+     "question": "Which problem does returning an unsubscribe function from `on()` mainly solve?",
+     "options": [
+      "Speed",
+      "Listener leaks and easy teardown",
+      "Type safety",
+      "Ordering of events"
+     ],
+     "answer": 1,
+     "explanation": "Callers can remove exactly the listener they added without needing to keep a reference to the original handler."
+    },
+    {
+     "type": "mcq",
+     "question": "Which pattern does Express `app.use((req, res, next) => ...)` illustrate?",
+     "options": [
+      "Singleton",
+      "Middleware / chain of responsibility",
+      "Factory",
+      "Flyweight"
+     ],
+     "answer": 1,
+     "explanation": "Each handler either responds or calls `next()` to pass control down the chain."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this Proxy log when `p.a` is read?",
+     "code": "const p = new Proxy({ a: 1 }, {\n  get(t, k, r) { console.log(\"get\", k); return Reflect.get(t, k, r); }\n});\np.a;",
+     "options": [
+      "Nothing",
+      "\"get a\" and returns undefined",
+      "\"get a\" and returns 1",
+      "TypeError"
+     ],
+     "answer": 2,
+     "explanation": "The `get` trap observes reads; returning `Reflect.get(...)` keeps default behaviour, so the value `1` is returned."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement a minimal `Emitter` with `on(event, fn)` (returns an unsubscribe function), `once(event, fn)`, `off(event, fn)` and `emit(event, ...args)`. Emitting must be safe if a handler unsubscribes during the emit.",
+     "starter": "class Emitter {\n  // TODO\n}\nconst e = new Emitter();\nconst out = [];\nconst h = (x) => out.push(\"h\" + x);\nconst off = e.on(\"a\", h);\ne.once(\"a\", (x) => out.push(\"once\" + x));\ne.emit(\"a\", 1);\ne.emit(\"a\", 2);\noff();\ne.emit(\"a\", 3);\nconsole.log(out.join(\",\"));\n",
+     "solution": "class Emitter {\n  #handlers = new Map();\n  on(event, fn) {\n    if (!this.#handlers.has(event)) this.#handlers.set(event, new Set());\n    this.#handlers.get(event).add(fn);\n    return () => this.off(event, fn);\n  }\n  once(event, fn) {\n    const wrapper = (...args) => {\n      this.off(event, wrapper);\n      fn(...args);\n    };\n    return this.on(event, wrapper);\n  }\n  off(event, fn) {\n    this.#handlers.get(event)?.delete(fn);\n  }\n  emit(event, ...args) {\n    for (const fn of [...(this.#handlers.get(event) ?? [])]) fn(...args);\n  }\n}\nconst e = new Emitter();\nconst out = [];\nconst h = (x) => out.push(\"h\" + x);\nconst off = e.on(\"a\", h);\ne.once(\"a\", (x) => out.push(\"once\" + x));\ne.emit(\"a\", 1);\ne.emit(\"a\", 2);\noff();\ne.emit(\"a\", 3);\nconsole.log(out.join(\",\"));\n",
+     "expected_output": "h1,once1,h2"
+    }
+   ]
+  },
+  {
+   "id": "js-async-concurrency",
+   "track_id": "javascript",
+   "unit_id": "js-u8",
+   "title": "Concurrency Control & Retries",
+   "minutes": 11,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Production async patterns",
+     "body": "Real systems rarely call `Promise.all` on 10,000 tasks. Senior screens ask for:\n\n- **Concurrency pool**: run at most N tasks at once; start the next when one finishes. A set of N workers that pull from a shared index is the simplest correct design.\n- **Retry with backoff** (and jitter): retry transient failures with exponentially growing delays; only retry idempotent or safe operations.\n- **Timeouts and cancellation**: `AbortController` / `AbortSignal` cancels `fetch` and your own work; `Promise.race` alone does not cancel the loser.\n- **Race conditions (\"latest wins\")**: ignore stale responses with a request counter or by aborting the previous request.\n- **Error propagation**: decide between fail-fast (`Promise.all`) and collect-all (`allSettled`).",
+     "code": "let latest = 0;\nasync function search(q) {\n  const id = ++latest;\n  const data = await fetchResults(q);\n  if (id !== latest) return; // a newer search started: drop this stale result\n  render(data);\n}"
+    },
+    {
+     "type": "mcq",
+     "question": "Why can `Promise.race([fetch(url), timeout(5000)])` still waste resources?",
+     "options": [
+      "race always rejects",
+      "The losing fetch keeps running; only `AbortController` actually cancels it",
+      "timeout is not a promise",
+      "fetch cannot be raced"
+     ],
+     "answer": 1,
+     "explanation": "`race` only ignores the loser's result. Cancellation needs an abort signal wired into the underlying work."
+    },
+    {
+     "type": "mcq",
+     "question": "What problem does the `latest` counter solve in `search`?",
+     "options": [
+      "Memory usage",
+      "Stale responses overwriting newer ones when requests resolve out of order",
+      "CORS errors",
+      "Duplicate keystrokes"
+     ],
+     "answer": 1,
+     "explanation": "Network responses can arrive in a different order than they were sent."
+    },
+    {
+     "type": "mcq",
+     "question": "Which retry strategy is most appropriate for a flaky HTTP dependency under load?",
+     "options": [
+      "Retry immediately 100 times",
+      "Exponential backoff with jitter and a retry cap",
+      "Never retry",
+      "Retry once per second forever"
+     ],
+     "answer": 1,
+     "explanation": "Backoff reduces pressure on the failing service; jitter avoids synchronised retry storms."
+    },
+    {
+     "type": "mcq",
+     "question": "Which statement about unhandled rejections in modern Node is correct?",
+     "options": [
+      "They are ignored silently",
+      "By default (Node 15+) they crash the process",
+      "They only print warnings forever",
+      "They are caught by the nearest try/catch"
+     ],
+     "answer": 1,
+     "explanation": "Since Node 15 the default `--unhandled-rejections=throw` mode raises an uncaught exception, so every promise needs a rejection path."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `pool(limit, tasks)` that runs at most `limit` async tasks at once and returns results in input order together with the maximum concurrency actually reached. Use a worker-loop design.",
+     "starter": "async function pool(limit, tasks) {\n  // TODO return { results, max }\n}\nconst delay = (ms, v) => new Promise((r) => setTimeout(() => r(v), ms));\nconst tasks = [30, 10, 20, 10, 5].map((ms, i) => () => delay(ms, i * 2));\npool(3, tasks).then(({ results, max }) => {\n  console.log(results.join(\",\"));\n  console.log(max);\n});\n",
+     "solution": "async function pool(limit, tasks) {\n  const results = new Array(tasks.length);\n  let next = 0, active = 0, max = 0;\n  async function worker() {\n    while (next < tasks.length) {\n      const i = next++;\n      active++;\n      max = Math.max(max, active);\n      try {\n        results[i] = await tasks[i]();\n      } finally {\n        active--;\n      }\n    }\n  }\n  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker));\n  return { results, max };\n}\nconst delay = (ms, v) => new Promise((r) => setTimeout(() => r(v), ms));\nconst tasks = [30, 10, 20, 10, 5].map((ms, i) => () => delay(ms, i * 2));\npool(3, tasks).then(({ results, max }) => {\n  console.log(results.join(\",\"));\n  console.log(max);\n});\n",
+     "expected_output": "0,2,4,6,8\n3"
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Implement `retry(fn, { retries, delay })` with exponential backoff (`delay * 2 ** attempt`). `fn` receives the attempt number. It should resolve with the first success and reject with the last error after exhausting retries. Print the outcomes.",
+     "starter": "async function retry(fn, { retries = 3, delay = 5 } = {}) {\n  // TODO\n}\nlet calls = 0;\nconst flaky = async () => {\n  calls++;\n  if (calls < 3) throw new Error(\"fail \" + calls);\n  return \"ok after \" + calls;\n};\n(async () => {\n  console.log(await retry(flaky, { retries: 3, delay: 1 }));\n  try {\n    await retry(async () => { throw new Error(\"always\"); }, { retries: 2, delay: 1 });\n  } catch (e) {\n    console.log(\"gave up:\", e.message);\n  }\n})();\n",
+     "solution": "async function retry(fn, { retries = 3, delay = 5 } = {}) {\n  let lastError;\n  for (let attempt = 0; attempt <= retries; attempt++) {\n    try {\n      return await fn(attempt);\n    } catch (err) {\n      lastError = err;\n      if (attempt < retries) {\n        await new Promise((r) => setTimeout(r, delay * 2 ** attempt));\n      }\n    }\n  }\n  throw lastError;\n}\nlet calls = 0;\nconst flaky = async () => {\n  calls++;\n  if (calls < 3) throw new Error(\"fail \" + calls);\n  return \"ok after \" + calls;\n};\n(async () => {\n  console.log(await retry(flaky, { retries: 3, delay: 1 }));\n  try {\n    await retry(async () => { throw new Error(\"always\"); }, { retries: 2, delay: 1 });\n  } catch (e) {\n    console.log(\"gave up:\", e.message);\n  }\n})();\n",
+     "expected_output": "ok after 3\ngave up: always"
+    }
+   ]
+  },
+  {
+   "id": "js-event-loop-puzzles",
+   "track_id": "javascript",
+   "unit_id": "js-u8",
+   "title": "Event Loop Puzzles (Hard)",
+   "minutes": 12,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Ordering rules to memorise",
+     "body": "1. Synchronous code runs to completion first.\n2. `process.nextTick` queue (Node), then the **promise microtask queue**, are drained completely, including microtasks queued by microtasks.\n3. Then one macrotask runs (timers, I/O), followed by another microtask drain. In Node >= 11 microtasks run between individual timer callbacks.\n4. `await v` costs one microtask tick for a native promise (or any value); the code after it is queued when the awaited promise resolves.\n5. A `then` callback that **returns a promise** costs about two extra ticks, because the outer promise must adopt the inner one through a thenable job.\n6. An `async` function runs synchronously until its first `await`.",
+     "code": "async function a1() {\n  console.log(\"a1 start\");\n  await a2();\n  console.log(\"a1 end\");\n}\nasync function a2() { console.log(\"a2\"); }\nconsole.log(\"script start\");\nsetTimeout(() => console.log(\"timeout\"), 0);\na1();\nnew Promise((r) => { console.log(\"p1\"); r(); }).then(() => console.log(\"p2\"));\nconsole.log(\"script end\");\n// script start, a1 start, a2, p1, script end, a1 end, p2, timeout"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order?",
+     "code": "Promise.resolve().then(() => { console.log(0); return Promise.resolve(4); }).then((r) => console.log(r));\nPromise.resolve().then(() => console.log(1))\n  .then(() => console.log(2))\n  .then(() => console.log(3))\n  .then(() => console.log(5))\n  .then(() => console.log(6));",
+     "options": [
+      "0 1 2 3 4 5 6",
+      "0 1 4 2 3 5 6",
+      "0 4 1 2 3 5 6",
+      "1 0 2 3 4 5 6"
+     ],
+     "answer": 0,
+     "explanation": "Returning a promise from the first `then` delays resolution of its derived promise by two extra microtask ticks, so `4` is logged after `3` but before `5`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order?",
+     "code": "setTimeout(() => { console.log(\"t1\"); Promise.resolve().then(() => console.log(\"m1\")); }, 0);\nsetTimeout(() => { console.log(\"t2\"); Promise.resolve().then(() => console.log(\"m2\")); }, 0);",
+     "options": [
+      "t1 t2 m1 m2",
+      "t1 m1 t2 m2",
+      "m1 m2 t1 t2",
+      "t1 m1 m2 t2"
+     ],
+     "answer": 1,
+     "explanation": "In modern Node (and browsers) the microtask queue is drained after *each* timer callback, so `m1` runs before `t2`."
+    },
+    {
+     "type": "mcq",
+     "question": "What is the output order?",
+     "code": "console.log(1);\nasync function f() {\n  console.log(3);\n  await null;\n  console.log(2);\n}\nf();\nconsole.log(4);",
+     "options": [
+      "1 2 3 4",
+      "1 3 2 4",
+      "1 3 4 2",
+      "3 1 4 2"
+     ],
+     "answer": 2,
+     "explanation": "An async function runs synchronously until its first `await`: so `1`, then `f()` logs `3`, then `await` yields and the main script logs `4`. The continuation `2` runs afterwards as a microtask."
+    },
+    {
+     "type": "mcq",
+     "question": "What prints and in what order?",
+     "code": "Promise.resolve().then(() => console.log(\"micro\"));\nprocess.nextTick(() => console.log(\"tick\"));\nconsole.log(\"end\");",
+     "options": [
+      "end, tick, micro",
+      "end, micro, tick",
+      "micro, tick, end",
+      "tick, end, micro"
+     ],
+     "answer": 0,
+     "explanation": "In Node, `process.nextTick` callbacks run before promise microtasks once the current operation completes."
+    },
+    {
+     "type": "code",
+     "language": "javascript",
+     "prompt": "Produce exactly `sync`, `nextTick`, `microtask`, `timeout` by scheduling the missing pieces: `process.nextTick` for `nextTick`, `Promise.resolve().then` for `microtask`, and `setTimeout` for `timeout`. Schedule them in the *reverse* of their expected order.",
+     "starter": "// TODO schedule timeout, then microtask, then nextTick (in that order)\nconsole.log(\"sync\");\n",
+     "solution": "setTimeout(() => console.log(\"timeout\"), 0);\nPromise.resolve().then(() => console.log(\"microtask\"));\nprocess.nextTick(() => console.log(\"nextTick\"));\nconsole.log(\"sync\");\n",
+     "expected_output": "sync\nnextTick\nmicrotask\ntimeout"
+    }
+   ]
+  }
+ ]
+}
