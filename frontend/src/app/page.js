@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
-  ArrowRight, BookOpen, Bot, Building2, ClipboardCheck, Code, Gauge, Globe, Laptop, Mic, ShieldCheck, Smartphone,
-  Sparkles, Target, Trophy,
+  ArrowRight, BookOpen, Bot, Building2, ClipboardCheck, Code, Gauge, Globe, Laptop, Mic, ShieldCheck, Smartphone, Target, Trophy,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
@@ -34,12 +33,10 @@ const COMPANIES = ["Toptal", "Turing", "Lemon.io", "A.Team", "Braintrust", "Remo
 
 function HeroVisual() {
   return (
-    <div className="relative mx-auto w-full max-w-md animate-float">
-      <div className="absolute -inset-10 rounded-full bg-brand/25 blur-3xl" />
+    <div className="relative mx-auto w-full max-w-md">
       <div className="card glow relative overflow-hidden p-5">
         <div className="flex items-center gap-3">
-          <div className="relative flex size-12 items-center justify-center rounded-full bg-gradient-to-br
-            from-brand to-brand-2 text-lg font-bold">A
+          <div className="relative flex size-12 items-center justify-center rounded-full bg-brand text-lg font-bold">A
             <span className="absolute -right-0.5 -bottom-0.5 size-3.5 rounded-full border-2 border-surface bg-ok" />
           </div>
           <div>
@@ -58,7 +55,7 @@ function HeroVisual() {
           ))}
         </div>
         <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-          {[["Readiness", "78"], ["DSA solved", "42"], ["Streak", "12🔥"]].map(([k, v]) => (
+          {[["Readiness", "78"], ["DSA solved", "42"], ["Day streak", "12"]].map(([k, v]) => (
             <div key={k} className="rounded-xl bg-surface-2 py-2.5">
               <p className="text-lg font-bold">{v}</p>
               <p className="text-[10px] text-muted">{k}</p>
@@ -80,7 +77,7 @@ export default function Landing() {
   return (
     <div className="relative overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[700px]"
-        style={{ background: "radial-gradient(ellipse at top, rgba(124,92,255,0.22), transparent 60%)" }} />
+        style={{ background: "radial-gradient(ellipse at top, rgba(124,92,255,0.10), transparent 60%)" }} />
 
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <Logo />
@@ -101,7 +98,7 @@ export default function Landing() {
         <div className="animate-fade-up">
           <span className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/10 px-3
             py-1 text-xs font-medium text-[#b4a3ff]">
-            <Sparkles className="size-3.5" /> AI-powered vetting preparation
+            For developers targeting remote roles
           </span>
           <h1 className="mt-6 text-5xl leading-[1.05] font-bold tracking-tight sm:text-6xl">
             Get vetted.<br /><span className="gradient-text">Get hired.</span>
@@ -112,7 +109,7 @@ export default function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/register" className="inline-flex h-12 items-center gap-2 rounded-xl bg-brand px-6
-              font-medium text-white shadow-[0_10px_40px_-10px] shadow-brand hover:bg-brand/90">
+              font-medium text-white hover:bg-brand/90">
               Start preparing free <ArrowRight className="size-4" />
             </Link>
             <a href="#pipeline" className="inline-flex h-12 items-center rounded-xl border border-line bg-surface
@@ -151,7 +148,7 @@ export default function Landing() {
               <p className="mt-1 text-sm text-muted">{train}</p>
             </div>
           ))}
-          <div className="card flex flex-col justify-center bg-gradient-to-br from-brand/20 to-brand-2/10 p-5">
+          <div className="card flex flex-col justify-center border-brand/40 bg-brand/10 p-5">
             <Gauge className="size-6 text-white" />
             <p className="mt-3 font-semibold">Readiness Score</p>
             <p className="mt-1 text-sm text-muted">Know exactly when to apply.</p>
@@ -209,7 +206,7 @@ export default function Landing() {
           <Laptop className="size-5" /><Smartphone className="size-5" /><ClipboardCheck className="size-5" />
         </div>
         <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-          Your remote career starts in the <span className="gradient-text">haven</span>.
+          Start preparing for your next screening.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-muted">Works on phone, tablet and desktop. Install it like an app.</p>
         <Link href="/register" className="mt-8 inline-flex h-12 items-center gap-2 rounded-xl bg-brand px-8

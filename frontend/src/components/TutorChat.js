@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot, Send, Sparkles, X } from "lucide-react";
+import { Bot, Send, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { Markdown, Spinner, cx } from "./ui";
 
@@ -31,7 +31,7 @@ export function TutorPanel({ context, onClose, className, title = "Haven AI Tuto
       const { reply } = await api("/api/ai/tutor", { body: { message, history, context } });
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
     } catch (err) {
-      setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${err.message}` }]);
+      setMessages((m) => [...m, { role: "assistant", content: `Something went wrong: ${err.message}` }]);
     } finally {
       setBusy(false);
     }
@@ -40,12 +40,12 @@ export function TutorPanel({ context, onClose, className, title = "Haven AI Tuto
   return (
     <div className={cx("flex h-full flex-col bg-surface", className)}>
       <div className="flex items-center gap-2 border-b border-line px-4 py-3">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand to-brand-2">
-          <Bot className="size-4 text-white" />
+        <div className="flex size-8 items-center justify-center rounded-lg bg-brand/15">
+          <Bot className="size-4 text-brand" />
         </div>
         <div className="flex-1">
           <p className="text-sm font-semibold">{title}</p>
-          <p className="flex items-center gap-1 text-[11px] text-muted"><Sparkles className="size-3" /> Powered by AI</p>
+          <p className="text-[11px] text-muted">Explains, never just answers</p>
         </div>
         {onClose && (
           <button onClick={onClose} className="rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-text"

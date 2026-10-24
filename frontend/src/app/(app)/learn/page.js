@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Lock } from "lucide-react";
 import { useApi } from "@/lib/useApi";
+import TechLogo from "@/components/TechLogo";
 import { Badge, Card, ErrorState, LEVEL_TONE, PageHeader, PageLoader, Progress } from "@/components/ui";
 
 export default function LearnPage() {
@@ -20,8 +21,7 @@ export default function LearnPage() {
           const body = (
             <>
               <div className="flex items-start justify-between">
-                <span className="flex size-14 items-center justify-center rounded-2xl text-3xl"
-                  style={{ background: `${p.color}22` }}>{p.icon}</span>
+                <TechLogo slug={p.icon} label={p.title} size={56} />
                 {p.available ? (
                   pct === 100 ? <Badge tone="ok">Completed</Badge> : pct > 0 ? <Badge tone="brand">In progress</Badge> : null
                 ) : (

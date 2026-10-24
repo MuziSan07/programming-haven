@@ -3,8 +3,8 @@
   {
    "id": "javascript",
    "title": "JavaScript",
-   "icon": "⚡",
-   "color": "#eab308",
+   "icon": "javascript",
+   "color": "#f7df1e",
    "available": true,
    "order": 100,
    "description": "From coercion and closures to the event loop, polyfills and concurrency control - everything frontend and Node.js interviews at top companies probe.",

@@ -4,14 +4,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import {
-  Building, Check, ChevronLeft, ChevronRight, CircleCheck, CircleX, Clock, FolderGit2, ListChecks, Send, Sparkles,
-  Star, Zap,
+  Building, Check, ChevronLeft, ChevronRight, CircleCheck, CircleX, Clock, FolderGit2, ListChecks, Send, Star, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/useApi";
 import CodeEditor from "@/components/CodeEditor";
 import { Badge, Button, Card, ErrorState, PageLoader, Progress, Ring, RichText, cx, scoreColor } from "@/components/ui";
+import { TechChip } from "@/components/TechLogo";
 
 const LEVEL_TONE = { Basic: "ok", Intermediate: "cyan", Advanced: "warn", Expert: "bad" };
 const VERDICT_TONE = { "Hire-level": "ok", Close: "warn", "Not yet": "bad" };
@@ -157,7 +157,7 @@ export default function ProjectPage() {
               <div>
                 <p className="mb-2 text-sm font-semibold">Suggested tech</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {p.tech.map((t) => <span key={t} className="rounded-md bg-surface-2 px-2.5 py-1 text-xs">{t}</span>)}
+                  {p.tech.map((t) => <TechChip key={t} name={t} className="px-2.5 py-1 text-xs" />)}
                 </div>
               </div>
             )}
@@ -183,7 +183,7 @@ export default function ProjectPage() {
           </Card>
 
           <Card className="p-5">
-            <h2 className="flex items-center gap-2 font-semibold"><Sparkles className="size-4 text-brand" /> Submit for review</h2>
+            <h2 className="flex items-center gap-2 font-semibold"><Send className="size-4 text-brand" /> Submit for review</h2>
             <p className="mt-1 text-xs text-muted">Paste your key files (or the whole thing). The AI reviews them strictly against the rubric.</p>
             <form onSubmit={submit} className="mt-4 space-y-3">
               <div>

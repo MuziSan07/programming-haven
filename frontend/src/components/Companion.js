@@ -126,12 +126,12 @@ export function CompanionPanel({ companion, persona }) {
   return (
     <div className="fixed right-4 bottom-20 z-40 flex w-[min(360px,calc(100vw-2rem))] animate-pop flex-col overflow-hidden
       rounded-2xl border border-brand/30 bg-surface shadow-2xl lg:bottom-6">
-      <div className="flex items-center gap-3 border-b border-line bg-gradient-to-r from-brand/15 to-transparent px-3 py-2">
+      <div className="flex items-center gap-3 border-b border-line bg-surface-2 px-3 py-2">
         <Avatar persona={persona} size={48} level={speaker.level}
           state={speaker.speaking ? "speaking" : busy ? "thinking" : "idle"} />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">{name}</p>
-          <p className="truncate text-[11px] text-muted">{busy ? "typing…" : "Your interview coach is watching 👀"}</p>
+          <p className="truncate text-[11px] text-muted">{busy ? "typing…" : "Watching your code"}</p>
         </div>
         <button onClick={() => { setVoiceOn(!voiceOn); speaker.stop(); }} className="rounded-lg p-1.5 text-muted hover:text-text"
           title={voiceOn ? "Mute voice" : "Speak replies"}>

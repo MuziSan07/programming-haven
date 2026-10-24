@@ -69,7 +69,7 @@ export default function MirrorPage() {
       setMessages((m) => [...m, { role: "assistant", content: r.reply }]);
       if (voiceOn) speaker.speak(r.reply);
     } catch (err) {
-      setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${err.message}` }]);
+      setMessages((m) => [...m, { role: "assistant", content: `Something went wrong: ${err.message}` }]);
     } finally {
       setBusy(false);
     }

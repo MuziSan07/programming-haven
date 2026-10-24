@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CircleCheck, Clock, Code, Gift, Rocket, Trophy, Users } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { Badge, Card, ErrorState, PageHeader, PageLoader } from "@/components/ui";
+import { TechChip } from "@/components/TechLogo";
 import { countdown, shortCountdown, useNow } from "./time";
 
 const PHASES = [
@@ -32,7 +33,7 @@ function HackathonCard({ h, now }) {
       {(h.tracks.length > 0 || h.tech.length > 0) && (
         <div className="mt-4 flex flex-wrap gap-1.5">
           {h.tracks.map((t) => <span key={`t-${t}`} className="rounded-md bg-brand/15 px-2 py-0.5 text-[11px] text-[#b4a3ff]">{t}</span>)}
-          {h.tech.slice(0, 5).map((t) => <span key={`x-${t}`} className="rounded-md bg-surface-2 px-2 py-0.5 text-[11px] text-muted">{t}</span>)}
+          {h.tech.slice(0, 5).map((t) => <TechChip key={`x-${t}`} name={t} />)}
         </div>
       )}
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-4 text-xs text-muted">

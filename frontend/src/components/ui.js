@@ -11,7 +11,7 @@ export function cx(...classes) {
 
 const BUTTON_VARIANTS = {
   primary:
-    "bg-brand text-white hover:bg-brand/90 shadow-[0_8px_30px_-10px] shadow-brand/60 disabled:shadow-none",
+    "bg-brand text-white hover:bg-brand/90",
   secondary: "bg-surface-2 text-text border border-line hover:bg-surface-3",
   ghost: "text-muted hover:text-text hover:bg-surface-2",
   success: "bg-ok text-white hover:bg-ok/90",

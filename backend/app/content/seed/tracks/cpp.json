@@ -3,8 +3,8 @@
   {
    "id": "cpp",
    "title": "C++",
-   "icon": "⚙️",
-   "color": "#a855f7",
+   "icon": "cpp",
+   "color": "#00599c",
    "available": true,
    "order": 400,
    "description": "Modern C++ for interviews: ownership, move semantics, templates, concurrency and undefined behaviour.",

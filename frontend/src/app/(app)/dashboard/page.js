@@ -96,13 +96,12 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-6xl animate-fade-up">
       <div className="mb-8">
         <p className="text-sm text-muted">{greeting()},</p>
-        <h1 className="text-3xl font-bold tracking-tight">{user.name.split(" ")[0]} 👋</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{user.name.split(" ")[0]}</h1>
         <p className="mt-1 text-sm text-muted">Training for <span className="text-text">{user.target_role}</span> roles</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="relative overflow-hidden p-6 lg:col-span-2">
-          <div className="pointer-events-none absolute -top-20 -right-20 size-64 rounded-full bg-brand/15 blur-3xl" />
           <div className="relative flex flex-col items-center gap-8 sm:flex-row">
             <Ring value={readiness.score} size={170} sublabel="Readiness" />
             <div className="w-full flex-1">

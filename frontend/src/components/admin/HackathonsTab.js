@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronLeft, ExternalLink, Link as LinkIcon, Pencil, Plus, Sparkles, Trash, Trophy, Users } from "lucide-react";
+import { ChevronDown, ChevronLeft, ExternalLink, Gavel, Link as LinkIcon, Pencil, Plus, Trash, Trophy, Users } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { Badge, Button, Card, ErrorState, PageLoader, cx, scoreColor } from "@/components/ui";
@@ -268,7 +268,7 @@ function Participants({ id, onBack }) {
           <p className="text-xs text-muted">{data.enrollments.length} enrolled · {data.submissions.length} submitted</p>
         </div>
         <Button variant="secondary" onClick={() => act("judge")} loading={busy === "judge"} disabled={!data.submissions.length}>
-          <Sparkles className="size-4" /> Run AI judging
+          <Gavel className="size-4" /> Run AI judging
         </Button>
         {h.results_published ? (
           <Button variant="ghost" onClick={() => act("unpublish")} loading={busy === "unpublish"}>Unpublish results</Button>

@@ -106,7 +106,7 @@ export default function ModerationTab() {
         ))}
       </div>
       {loading ? <PageLoader /> : error ? <ErrorState error={error} onRetry={reload} /> : data.items.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted">Nothing here. The community is behaving. ✨</Card>
+        <Card className="p-8 text-center text-sm text-muted">Nothing in this queue.</Card>
       ) : (
         <div className="space-y-3">{data.items.map((i) => <QueueItem key={`${i.type}-${i.id}`} item={i} onDone={reload} />)}</div>
       )}

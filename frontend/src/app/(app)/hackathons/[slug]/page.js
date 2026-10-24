@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/useApi";
 import { Badge, Button, Card, ErrorState, Markdown, PageLoader, Progress, cx, scoreColor } from "@/components/ui";
+import { TechChip } from "@/components/TechLogo";
 import { countdown, localDate, useNow } from "../time";
 
 const PHASE_TONE = { live: "ok", upcoming: "cyan", ended: "neutral" };
@@ -335,7 +336,7 @@ export default function HackathonPage() {
                 <>
                   <h2 className={cx("font-semibold", h.tracks.length > 0 && "mt-4")}>Suggested tech</h2>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {h.tech.map((t) => <span key={t} className="rounded-md bg-surface-2 px-2 py-0.5 text-xs text-muted">{t}</span>)}
+                    {h.tech.map((t) => <TechChip key={t} name={t} className="text-xs" />)}
                   </div>
                 </>
               )}

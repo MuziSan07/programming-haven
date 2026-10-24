@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import {
-  BookOpen, Briefcase, ClipboardCheck, Code, Flame, LayoutDashboard, LogOut, Map, MessageSquare, MessagesSquare, Mic,
-  ScanFace, Settings, ShieldCheck, Sparkles, Trophy, Zap,
+  BookOpen, Briefcase, ClipboardCheck, Code, Flame, LayoutDashboard, LogOut, Map, MessageSquare, MessagesSquare, Mic, ScanFace, Settings, ShieldCheck, Trophy, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -65,7 +64,7 @@ function AiStatus() {
     <div className={cx("hidden items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium md:flex",
       status.enabled ? "bg-ok/10 text-ok" : "bg-warn/10 text-warn")}
       title={status.enabled ? `Model: ${status.model}` : "Add GROQ_API_KEY to enable live AI"}>
-      <Sparkles className="size-3.5" />
+      <span className={cx("size-1.5 rounded-full", status.enabled ? "bg-ok" : "bg-warn")} />
       {status.enabled ? "AI live" : "AI offline demo"}
     </div>
   );

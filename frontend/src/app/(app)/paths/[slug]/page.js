@@ -21,8 +21,6 @@ export default function CompanyPathPage() {
       </Link>
 
       <Card className="relative overflow-hidden p-6 sm:p-8">
-        <div className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full blur-3xl"
-          style={{ background: `${p.accent}33` }} />
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
           <div className="flex-1">
             <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: p.accent }}>Prepare for</p>

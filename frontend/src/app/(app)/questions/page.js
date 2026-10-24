@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowRight, Building, ChevronLeft, Circle, CircleCheck, CircleDot, CircleQuestionMark, Lightbulb, Send, Sparkles,
-  Zap,
+  ArrowRight, BookOpen, Building, ChevronLeft, Circle, CircleCheck, CircleDot, CircleQuestionMark, Lightbulb, Send, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -177,7 +176,7 @@ function Practice({ question, onAnswered, onNext, onBack }) {
           )}
           {result.model_answer && (
             <div className="rounded-xl border border-brand/30 bg-brand/5 p-4">
-              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-brand"><Sparkles className="size-3.5" /> Model answer</p>
+              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-brand"><BookOpen className="size-3.5" /> Model answer</p>
               <Markdown>{result.model_answer}</Markdown>
             </div>
           )}

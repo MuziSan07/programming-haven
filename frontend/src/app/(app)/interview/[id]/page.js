@@ -341,7 +341,7 @@ function Room({ initial, onFinished }) {
       ) : (
         <div className="grid min-h-0 flex-1 lg:grid-cols-[1fr_380px]">
           <div className="relative flex flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8"
-            style={{ background: "radial-gradient(ellipse at center, rgba(124,92,255,0.12), transparent 65%)" }}>
+            style={{ background: "radial-gradient(ellipse at center, rgba(124,92,255,0.06), transparent 65%)" }}>
             <Avatar persona={persona} level={speaker.level} state={avatarState} size={250} />
             <div className="text-center">
               <p className="text-lg font-semibold">{name}</p>

@@ -3,8 +3,8 @@
   {
    "id": "java",
    "title": "Java",
-   "icon": "☕",
-   "color": "#f97316",
+   "icon": "java",
+   "color": "#f89820",
    "available": true,
    "order": 300,
    "description": "From language gotchas to JVM internals and concurrency: interview-grade Java.",

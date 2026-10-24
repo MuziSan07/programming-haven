@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ArrowRight, Building, Clock, Hammer } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { Badge, Card, ErrorState, PageHeader, PageLoader, cx, scoreColor } from "@/components/ui";
+import { TechChip } from "@/components/TechLogo";
 
 const LEVEL_TONE = { Basic: "ok", Intermediate: "cyan", Advanced: "warn", Expert: "bad" };
 
@@ -60,9 +61,7 @@ export default function ProjectsPage() {
               <h2 className="mt-4 font-semibold">{p.title}</h2>
               <p className="mt-1 line-clamp-3 flex-1 text-sm text-muted">{p.summary}</p>
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {(p.tech || []).slice(0, 5).map((t) => (
-                  <span key={t} className="rounded-md bg-surface-2 px-2 py-0.5 text-[11px] text-muted">{t}</span>
-                ))}
+                {(p.tech || []).slice(0, 5).map((t) => <TechChip key={t} name={t} />)}
               </div>
               <div className="mt-5 flex items-center justify-between border-t border-line pt-4 text-xs text-muted">
                 <span className="flex items-center gap-1"><Clock className="size-3.5" />~{p.hours}h</span>

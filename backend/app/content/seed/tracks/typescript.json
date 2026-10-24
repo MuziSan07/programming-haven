@@ -3,8 +3,8 @@
   {
    "id": "typescript",
    "title": "TypeScript",
-   "icon": "🔷",
-   "color": "#2563eb",
+   "icon": "typescript",
+   "color": "#3178c6",
    "available": true,
    "order": 200,
    "description": "Master the type system: from inference and narrowing to conditional types, variance and senior-level type puzzles.",

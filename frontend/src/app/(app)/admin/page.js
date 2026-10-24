@@ -20,7 +20,7 @@ const KINDS = [
 
 // Starting points for "New item", matching backend/app/content/seed/SCHEMA.md
 const TEMPLATES = {
-  track: { id: "new-track", title: "New Track", icon: "📘", color: "#7c5cff", available: true,
+  track: { id: "new-track", title: "New Track", icon: "python", color: "#7c5cff", available: true,
     description: "One sentence.", units: [{ id: "new-u1", title: "Foundations", description: "Short", level: "Basic" }] },
   lesson: { id: "new-lesson", track_id: "python", unit_id: "py-u1", title: "New lesson", minutes: 5, steps: [
     { type: "concept", title: "Heading", body: "Explanation with `inline code`.", code: "print('hello')" },

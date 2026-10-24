@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Check, ChevronLeft, Lock, Star } from "lucide-react";
 import { useApi } from "@/lib/useApi";
-import { ErrorState, PageLoader, cx } from "@/components/ui";
+import TechLogo from "@/components/TechLogo";
+import { Badge, ErrorState, LEVEL_TONE, PageLoader, cx } from "@/components/ui";
 
 // Zig-zag offsets for the Duolingo-style path
 const OFFSETS = [0, 56, 84, 56, 0, -56, -84, -56];
@@ -24,8 +25,7 @@ export default function PathPage() {
         <ChevronLeft className="size-4" /> All paths
       </Link>
       <div className="mb-10 flex items-center gap-4">
-        <span className="flex size-16 items-center justify-center rounded-2xl text-4xl"
-          style={{ background: `${path.color}22` }}>{path.icon}</span>
+        <TechLogo slug={path.icon} label={path.title} size={64} />
         <div>
           <h1 className="text-3xl font-bold">{path.title}</h1>
           <p className="text-sm text-muted">{path.description}</p>
@@ -34,10 +34,13 @@ export default function PathPage() {
 
       {path.units.map((unit, u) => (
         <section key={unit.id} className="mb-12">
-          <div className="rounded-2xl p-5 text-white" style={{ background: `linear-gradient(110deg, ${path.color}, #7c5cff)` }}>
-            <p className="text-xs font-semibold tracking-widest uppercase opacity-80">Unit {u + 1} · {unit.level}</p>
-            <h2 className="text-xl font-bold">{unit.title}</h2>
-            <p className="text-sm opacity-90">{unit.description}</p>
+          <div className="rounded-2xl border border-line border-l-4 bg-surface p-5" style={{ borderLeftColor: path.color }}>
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-semibold tracking-widest text-muted uppercase">Unit {u + 1}</p>
+              <Badge tone={LEVEL_TONE[unit.level]}>{unit.level}</Badge>
+            </div>
+            <h2 className="mt-1 text-xl font-bold">{unit.title}</h2>
+            <p className="text-sm text-muted">{unit.description}</p>
           </div>
           <div className="mt-8 flex flex-col items-center gap-6">
             {unit.lessons.map((lesson) => {

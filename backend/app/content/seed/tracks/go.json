@@ -3,8 +3,8 @@
   {
    "id": "go",
    "title": "Go",
-   "icon": "🐹",
-   "color": "#06b6d4",
+   "icon": "go",
+   "color": "#00add8",
    "available": true,
    "order": 500,
    "description": "Learn Go from syntax and slices to goroutines, channels, generics and the gotchas interviewers love.",

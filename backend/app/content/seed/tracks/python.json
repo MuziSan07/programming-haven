@@ -1,20 +1,80 @@
 {
  "tracks": [
   {
-   "id": "python", "title": "Python", "icon": "🐍", "color": "#3b82f6", "available": true, "order": 0,
+   "id": "python",
+   "title": "Python",
+   "icon": "python",
+   "color": "#3776ab",
+   "available": true,
+   "order": 0,
    "description": "From first variable to CPython internals: everything Python interviews test, Basic to Expert.",
    "units": [
-    {"id": "py-u1", "title": "Foundations", "description": "Syntax, variables, types, strings, numbers", "level": "Basic"},
-    {"id": "py-u2", "title": "Control Flow", "description": "Conditions, loops, truthiness, match", "level": "Basic"},
-    {"id": "py-u3", "title": "Core Data Structures", "description": "Lists, tuples, dicts, sets, slicing", "level": "Basic"},
-    {"id": "py-u4", "title": "Functions & Scope", "description": "Arguments, closures, LEGB, recursion", "level": "Intermediate"},
-    {"id": "py-u5", "title": "Object-Oriented Python", "description": "Classes, inheritance, dunder methods, properties", "level": "Intermediate"},
-    {"id": "py-u6", "title": "Errors, Files & Modules", "description": "Exceptions, context managers, packages, I/O", "level": "Intermediate"},
-    {"id": "py-u7", "title": "Pythonic Power Tools", "description": "Comprehensions, iterators, generators, decorators, itertools", "level": "Advanced"},
-    {"id": "py-u8", "title": "Types, Dataclasses & Testing", "description": "Type hints, dataclasses, protocols, pytest", "level": "Advanced"},
-    {"id": "py-u9", "title": "Concurrency & Async", "description": "GIL, threads, processes, asyncio", "level": "Advanced"},
-    {"id": "py-u10", "title": "Python Internals", "description": "Memory model, descriptors, metaclasses, MRO", "level": "Expert"},
-    {"id": "py-u11", "title": "Performance & Interview Mastery", "description": "Profiling, complexity of built-ins, tricky interview questions", "level": "Expert"}
+    {
+     "id": "py-u1",
+     "title": "Foundations",
+     "description": "Syntax, variables, types, strings, numbers",
+     "level": "Basic"
+    },
+    {
+     "id": "py-u2",
+     "title": "Control Flow",
+     "description": "Conditions, loops, truthiness, match",
+     "level": "Basic"
+    },
+    {
+     "id": "py-u3",
+     "title": "Core Data Structures",
+     "description": "Lists, tuples, dicts, sets, slicing",
+     "level": "Basic"
+    },
+    {
+     "id": "py-u4",
+     "title": "Functions & Scope",
+     "description": "Arguments, closures, LEGB, recursion",
+     "level": "Intermediate"
+    },
+    {
+     "id": "py-u5",
+     "title": "Object-Oriented Python",
+     "description": "Classes, inheritance, dunder methods, properties",
+     "level": "Intermediate"
+    },
+    {
+     "id": "py-u6",
+     "title": "Errors, Files & Modules",
+     "description": "Exceptions, context managers, packages, I/O",
+     "level": "Intermediate"
+    },
+    {
+     "id": "py-u7",
+     "title": "Pythonic Power Tools",
+     "description": "Comprehensions, iterators, generators, decorators, itertools",
+     "level": "Advanced"
+    },
+    {
+     "id": "py-u8",
+     "title": "Types, Dataclasses & Testing",
+     "description": "Type hints, dataclasses, protocols, pytest",
+     "level": "Advanced"
+    },
+    {
+     "id": "py-u9",
+     "title": "Concurrency & Async",
+     "description": "GIL, threads, processes, asyncio",
+     "level": "Advanced"
+    },
+    {
+     "id": "py-u10",
+     "title": "Python Internals",
+     "description": "Memory model, descriptors, metaclasses, MRO",
+     "level": "Expert"
+    },
+    {
+     "id": "py-u11",
+     "title": "Performance & Interview Mastery",
+     "description": "Profiling, complexity of built-ins, tricky interview questions",
+     "level": "Expert"
+    }
    ]
   }
  ]

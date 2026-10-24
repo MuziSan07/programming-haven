@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  Bot, ChevronLeft, CircleCheck, Clock, History, Lightbulb, Play, RotateCcw, Send, Sparkles, Trophy, Zap,
+  Bot, ChevronLeft, CircleCheck, ClipboardCheck, Clock, History, Lightbulb, MessageSquare, Play, RotateCcw, Send, Trophy, Zap,
 } from "lucide-react";
 import { formatDuration, useActiveTime } from "@/lib/useActiveTime";
 import { usePersona } from "@/lib/usePersona";
@@ -83,7 +83,7 @@ function CoachTab({ problem, language, code }) {
       </div>
 
       <div className="rounded-2xl border border-line p-4">
-        <p className="flex items-center gap-2 text-sm font-semibold"><Sparkles className="size-4 text-brand-2" /> AI code review</p>
+        <p className="flex items-center gap-2 text-sm font-semibold"><ClipboardCheck className="size-4 text-brand-2" /> AI code review</p>
         <p className="mt-1 text-xs text-muted">Get graded like a Toptal or Turing reviewer would grade you.</p>
         <Button size="sm" className="mt-3" onClick={getReview} loading={busy === "review"}>Review my code</Button>
         {review && (
@@ -206,7 +206,7 @@ function Workspace({ problem, setProblem }) {
   const TABS = [
     { id: "description", label: "Problem", icon: null },
     { id: "coach", label: "AI Coach", icon: Bot },
-    { id: "chat", label: "Ask AI", icon: Sparkles },
+    { id: "chat", label: "Ask AI", icon: MessageSquare },
     { id: "submissions", label: "Submissions", icon: History },
   ];
 

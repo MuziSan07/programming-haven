@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, RotateCcw, Sparkles, Star, TrendingUp, Trophy } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, FileText, RotateCcw, Star, TrendingUp, Trophy } from "lucide-react";
 import { Badge, Button, Card, Progress, Ring, cx, scoreColor } from "./ui";
 
 const VERDICT_TONE = { "Strong pass": "ok", "Likely to pass": "ok", Borderline: "warn", "Needs work": "bad" };
@@ -34,7 +34,7 @@ export default function InterviewReport({ session }) {
           {f.ai === false && <p className="mt-3 text-xs text-warn">Estimated offline. Connect AI for full grading.</p>}
         </Card>
         <Card className="p-6 lg:col-span-2">
-          <h2 className="flex items-center gap-2 font-semibold"><Sparkles className="size-4 text-brand" /> Panel summary</h2>
+          <h2 className="flex items-center gap-2 font-semibold"><FileText className="size-4 text-brand" /> Panel summary</h2>
           <p className="mt-2 text-sm leading-relaxed text-text/90">{f.summary}</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {Object.entries(f.scores || {}).map(([k, v]) => (
@@ -54,13 +54,13 @@ export default function InterviewReport({ session }) {
         <Card className="p-6">
           <h2 className="flex items-center gap-2 font-semibold text-ok"><Star className="size-4" /> Strengths</h2>
           <ul className="mt-3 space-y-2 text-sm">
-            {f.strengths?.map((s) => <li key={s} className="flex gap-2"><span className="text-ok">✓</span>{s}</li>)}
+            {f.strengths?.map((s) => <li key={s} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-ok" />{s}</li>)}
           </ul>
         </Card>
         <Card className="p-6">
           <h2 className="flex items-center gap-2 font-semibold text-warn"><TrendingUp className="size-4" /> How to improve</h2>
           <ul className="mt-3 space-y-2 text-sm">
-            {f.improvements?.map((s) => <li key={s} className="flex gap-2"><span className="text-warn">→</span>{s}</li>)}
+            {f.improvements?.map((s) => <li key={s} className="flex gap-2"><ArrowRight className="mt-0.5 size-4 shrink-0 text-warn" />{s}</li>)}
           </ul>
         </Card>
       </div>

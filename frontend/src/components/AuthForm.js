@@ -44,7 +44,7 @@ export default function AuthForm({ mode }) {
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
       <div className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(ellipse at top, rgba(124,92,255,0.18), transparent 55%)" }} />
+        style={{ background: "radial-gradient(ellipse at top, rgba(124,92,255,0.08), transparent 55%)" }} />
       <div className="relative w-full max-w-md animate-pop">
         <div className="mb-8 flex justify-center">
           <Logo />

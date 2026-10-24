@@ -22,8 +22,8 @@ export function AuthorLine({ author, at, children }) {
   if (!author) return <span className="text-xs text-faint">[deleted]</span>;
   return (
     <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
-      <span className="flex size-6 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-2 text-[10px]
-        font-bold text-white">{author.name[0]}</span>
+      <span className="flex size-6 items-center justify-center rounded-full bg-surface-3 text-[10px]
+        font-semibold text-text">{author.name[0]}</span>
       <span className="font-medium text-text">{author.name}</span>
       <span className="rounded bg-surface-3 px-1.5 text-[10px]">Lv {author.level}</span>
       {at && <span className="text-faint">· {at}</span>}
