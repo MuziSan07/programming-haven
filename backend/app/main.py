@@ -7,7 +7,8 @@ from .config import get_settings
 from .content import store
 from .database import SessionLocal
 from .migrate import upgrade
-from .routers import activity, admin, ai, auth, dashboard, dsa, interviews, learn, paths, projects, questions, tests
+from .routers import (activity, admin, ai, auth, community, dashboard, dsa, hackathons, interviews, learn, paths,
+                      projects, questions, tests)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
@@ -30,7 +31,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (auth, dashboard, learn, dsa, tests, interviews, paths, ai, questions, projects, activity, admin):
+for module in (auth, dashboard, learn, dsa, tests, interviews, paths, ai, questions, projects, activity, admin,
+               community, hackathons):
     app.include_router(module.router)
 
 

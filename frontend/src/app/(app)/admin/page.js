@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import {
-  BookOpen, Brain, CircleCheck, Database, Download, Eye, EyeOff, LayoutDashboard, Plus, RotateCcw, Save, Search,
-  Shield, ShieldCheck, Trash, TriangleAlert, Upload, Users, X,
+  BookOpen, Brain, CircleCheck, Database, Download, Eye, EyeOff, Gavel, LayoutDashboard, Plus, RotateCcw, Save, Search, Shield, ShieldCheck, Trash, TriangleAlert, Trophy, Upload, Users, X,
 } from "lucide-react";
 import { API_URL, getToken } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/useApi";
 import CodeEditor from "@/components/CodeEditor";
+import HackathonsTab from "@/components/admin/HackathonsTab";
+import ModerationTab from "@/components/admin/ModerationTab";
 import { Badge, Button, Card, ErrorState, PageHeader, PageLoader, Spinner, cx } from "@/components/ui";
 
 const KINDS = [
@@ -545,6 +546,8 @@ function UsersTab() {
 const TABS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "content", label: "Content", icon: Database },
+  { id: "moderation", label: "Moderation", icon: Gavel },
+  { id: "hackathons", label: "Hackathons", icon: Trophy },
   { id: "knowledge", label: "Interviewer knowledge", icon: Brain },
   { id: "users", label: "Users", icon: Users },
 ];
@@ -567,7 +570,7 @@ export default function AdminPage() {
   return (
     <div className="mx-auto max-w-7xl animate-fade-up">
       <PageHeader eyebrow="Admin" title="Content & platform console"
-        description="Add lessons, questions, problems, mock tests, projects and interviewer knowledge without touching code. Everything is validated, and code is executed, before it goes live." />
+        description="Manage content, moderate the community, run hackathons and train the interviewer without touching code." />
       <div className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setTab(id)}
@@ -579,6 +582,8 @@ export default function AdminPage() {
       </div>
       {tab === "overview" && <Overview />}
       {tab === "content" && <ContentTab />}
+      {tab === "moderation" && <ModerationTab />}
+      {tab === "hackathons" && <HackathonsTab />}
       {tab === "knowledge" && <KnowledgeTab />}
       {tab === "users" && <UsersTab />}
     </div>

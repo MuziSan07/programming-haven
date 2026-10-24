@@ -15,6 +15,9 @@ place, and tells them when they're ready to apply.
 | **Take-Home Projects** | 40 realistic take-homes across 13 niches with rubrics; submissions are reviewed by AI criterion by criterion |
 | **AI Interviews** | Animated interviewer personas (Aria / Alex): technical, **1:1 live coding with camera + screen share**, HR, English and system design, by voice, with a scored hiring-panel report. The interviewer can see you through the camera |
 | **Test Your Interviewer** | Camera check: ask the interviewer about your outfit, lighting, background and framing before the real interview |
+| **Community** | Tech-only Q&A and discussion: questions, problems, debates and achievements, with likes, unlimited-depth threaded replies, accepted solutions and member reports |
+| **AI moderation** | Every post, comment and hackathon submission is screened: genuine technical content is published, off-topic/spam/abuse is rejected with a reason, unclear or reported items go to the admin moderation queue |
+| **Hackathons** | Created from the admin panel (free or with prizes, tracks, judging rubric); members enroll, submit during the live window and get AI-assisted judging, leaderboards and XP |
 | **Focus time tracking** | Active time per lesson/problem/interview; the clock pauses when you switch tabs |
 | **Admin console** | Edit every lesson, problem, test, question, project, persona and the interviewer knowledge base in the browser, with validation that runs the code |
 | **Company Prep Paths** | Stage-by-stage paths mirroring how Toptal, Turing, Lemon.io, A.Team, Braintrust and remote US/UK/EU companies screen |

@@ -9,8 +9,8 @@ from ..content import store
 from ..content.validate import Report, run_job, validate_structure
 from ..database import get_db
 from ..deps import get_current_user
-from ..models import (ContentItem, InterviewSession, ProjectSubmission, QuestionAttempt, Submission, TestAttempt,
-                      User)
+from ..models import (Comment, ContentItem, Hackathon, InterviewSession, Post, ProjectSubmission, QuestionAttempt,
+                      Submission, TestAttempt, User)
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -73,6 +73,11 @@ def stats(admin: User = Depends(require_admin), db: Session = Depends(get_db)):
         "interviews": db.scalar(select(func.count()).select_from(InterviewSession)),
         "questions_answered": db.scalar(select(func.count()).select_from(QuestionAttempt)),
         "projects_submitted": db.scalar(select(func.count()).select_from(ProjectSubmission)),
+        "posts": db.scalar(select(func.count()).select_from(Post)),
+        "comments": db.scalar(select(func.count()).select_from(Comment)),
+        "pending_moderation": db.scalar(select(func.count()).select_from(Post).where(Post.status == "pending"))
+        + db.scalar(select(func.count()).select_from(Comment).where(Comment.status == "pending")),
+        "hackathons": db.scalar(select(func.count()).select_from(Hackathon)),
         "recent_users": [{"id": u.id, "name": u.name, "email": u.email, "created_at": u.created_at.isoformat()}
                          for u in recent],
     }

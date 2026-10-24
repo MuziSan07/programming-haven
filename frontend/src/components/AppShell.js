@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import {
-  BookOpen, Briefcase, ClipboardCheck, Code, Flame, LayoutDashboard, LogOut, Map, MessageSquare, Mic, ScanFace, Settings,
-  ShieldCheck, Sparkles, Zap,
+  BookOpen, Briefcase, ClipboardCheck, Code, Flame, LayoutDashboard, LogOut, Map, MessageSquare, MessagesSquare, Mic,
+  ScanFace, Settings, ShieldCheck, Sparkles, Trophy, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -21,6 +21,8 @@ export const NAV = [
   { href: "/projects", label: "Take-Home Projects", short: "Projects", icon: Briefcase },
   { href: "/interview", label: "AI Interviews", short: "Interview", icon: Mic, mobile: true },
   { href: "/mirror", label: "Test Your Interviewer", short: "Mirror", icon: ScanFace },
+  { href: "/community", label: "Community", short: "Community", icon: MessagesSquare },
+  { href: "/hackathons", label: "Hackathons", short: "Hackathons", icon: Trophy },
   { href: "/paths", label: "Company Paths", short: "Paths", icon: Map },
   { href: "/settings", label: "Settings", short: "Settings", icon: Settings },
   { href: "/admin", label: "Admin", short: "Admin", icon: ShieldCheck, admin: true },
