@@ -47,7 +47,7 @@ export default function SettingsPage() {
               <button key={p.id} onClick={() => save({ persona_id: p.id })} disabled={saving}
                 className={cx("flex items-center gap-4 rounded-2xl border-2 p-4 text-left transition",
                   selected ? "border-brand bg-brand/10" : "border-line hover:border-faint")}>
-                <Avatar persona={p} size={96} state={selected ? "speaking" : "idle"} level={selected ? 0.3 : 0} />
+                <Avatar persona={p} size={120} state="idle" />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 font-semibold">{p.name} {selected && <Check className="size-4 text-brand" />}</p>
                   <p className="text-xs text-muted">{p.title}</p>

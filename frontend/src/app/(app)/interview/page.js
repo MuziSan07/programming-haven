@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { ArrowRight, Brain, Camera, Clock, Globe, Laptop, MessageSquare, Mic, MonitorUp, Target } from "lucide-react";
+import { ArrowRight, Brain, Camera, Clock, Globe, Laptop, MessageSquare, Mic, MonitorUp, ShieldAlert, Target } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/useApi";
@@ -23,6 +23,8 @@ export default function InterviewSetupPage() {
   const { persona, personas } = usePersona();
   const kinds = useApi("/api/interviews/kinds");
   const history = useApi("/api/interviews");
+  const banInfo = useApi("/api/interviews/ban");
+  const ban = banInfo.data?.ban;
   const [kind, setKind] = useState(params.get("kind") || "technical");
   const [role, setRole] = useState(user?.target_role || ROLES[0]);
   const [level, setLevel] = useState("Mid-level");
@@ -59,6 +61,20 @@ export default function InterviewSetupPage() {
     <div className="mx-auto max-w-6xl animate-fade-up">
       <PageHeader eyebrow="AI Interviews" title={`Interview with ${name}`}
         description="A voice-first AI interviewer that sees you, adapts to your answers and keeps a real hiring bar, then grades you like a panel at a top remote network." />
+
+      {ban && (
+        <div className="mb-6 flex gap-3 rounded-2xl border border-bad/40 bg-bad/10 p-4 text-sm">
+          <ShieldAlert className="mt-0.5 size-5 shrink-0 text-bad" />
+          <div>
+            <p className="font-semibold text-bad">AI interviews are locked</p>
+            <p className="mt-1 text-text/80">{ban.reason}.</p>
+            <p className="mt-1 text-text/80">
+              {ban.permanent ? "This is a permanent lock after repeated violations. Contact support to restore access."
+                : <>You can start a new interview after <span className="font-medium">{new Date(ban.ends_at).toLocaleString()}</span>. Each further violation locks you out for longer: 24 hours, 3 days, 1 week, 1 month, then permanently.</>}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">
@@ -122,7 +138,7 @@ export default function InterviewSetupPage() {
             <li className="flex gap-2"><Brain className="size-4 shrink-0 text-brand-2" /> Adaptive follow-up questions</li>
             <li className="flex gap-2"><Target className="size-4 shrink-0 text-brand-2" /> Scored report with model answers</li>
           </ul>
-          <Button size="lg" className="mt-6 w-full" onClick={start} loading={starting}>
+          <Button size="lg" className="mt-6 w-full" onClick={start} loading={starting} disabled={Boolean(ban)}>
             Start interview <ArrowRight className="size-4" />
           </Button>
           {error && <p className="mt-3 text-sm text-bad">{error}</p>}

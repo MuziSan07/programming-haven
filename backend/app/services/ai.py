@@ -80,7 +80,7 @@ def chat_json(
     """Return (parsed JSON object, used_ai). The prompt must ask for JSON."""
     try:
         text = _chat_raw(messages, json_mode=True, temperature=temperature, max_tokens=max_tokens, fast=fast)
-        return _parse_json(text), True
+        return parse_json(text), True
     except (AIUnavailable, ValueError) as exc:
         log.info("Using JSON fallback: %s", exc)
         return fallback(), False
@@ -120,7 +120,7 @@ def vision_chat(messages: list[dict], fallback: Callable[[], str], *, temperatur
     return fallback(), False
 
 
-def _parse_json(text: str) -> dict:
+def parse_json(text: str) -> dict:
     try:
         return json.loads(text)
     except json.JSONDecodeError:

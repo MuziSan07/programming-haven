@@ -1,0 +1,2884 @@
+{
+ "questions": [
+  {
+   "id": "qa-py-001",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this program print?",
+   "code": "print(type(3 / 2).__name__, 3 // 2, -7 // 2)",
+   "options": [
+    "float 1 -4",
+    "float 1 -3",
+    "int 1 -3",
+    "float 1.0 -3.5"
+   ],
+   "answer": 0,
+   "explanation": "`/` always returns a float in Python 3, so `3 / 2` is a `float`. `//` is floor division: `3 // 2` is `1`, and `-7 // 2` rounds toward negative infinity, giving `-4` (not `-3`, which truncation toward zero would give). The `int` and `1.0` options mix up `/` and `//`.",
+   "tags": [
+    "operators",
+    "numbers"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-py-002",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "s = \"hello\"\nprint(s[1:4], s[::-1])",
+   "options": [
+    "ello olleh",
+    "ell olleh",
+    "hel olleh",
+    "ell hello"
+   ],
+   "answer": 1,
+   "explanation": "Slices are half-open: `s[1:4]` takes indices 1, 2 and 3 (`e`, `l`, `l`), excluding index 4. `s[::-1]` walks the whole string with step -1, which reverses it.",
+   "tags": [
+    "strings",
+    "slicing"
+   ],
+   "companies": [
+    "Turing",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-py-003",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "a = [1, 2, 3]\nb = a\nc = a[:]\nb.append(4)\nc.append(5)\nprint(a, c)",
+   "options": [
+    "[1, 2, 3] [1, 2, 3, 5]",
+    "[1, 2, 3, 4] [1, 2, 3, 4, 5]",
+    "[1, 2, 3, 4] [1, 2, 3, 5]",
+    "[1, 2, 3, 4, 5] [1, 2, 3, 4, 5]"
+   ],
+   "answer": 2,
+   "explanation": "`b = a` only creates a second name for the same list, so `b.append(4)` is visible through `a`. `c = a[:]` is a shallow copy made before that append, so it is an independent list that started as `[1, 2, 3]`; `c.append(5)` affects only `c`. The final state is `a == [1, 2, 3, 4]` and `c == [1, 2, 3, 5]`.",
+   "tags": [
+    "lists",
+    "references"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-py-004",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "print(0 or \"\" or None, 1 and 2, [] or \"x\")",
+   "options": [
+    "0 2 x",
+    "None 1 []",
+    "False 2 x",
+    "None 2 x"
+   ],
+   "answer": 3,
+   "explanation": "`or` returns the first truthy operand, or the last operand if none is truthy; `and` returns the first falsy operand, or the last one if all are truthy. `0 or \"\" or None` has no truthy value so it yields the last operand, `None`. `1 and 2` yields `2`. `[] or \"x\"` skips the falsy empty list and yields `\"x\"`. Neither operator coerces its result to `bool`.",
+   "tags": [
+    "truthiness",
+    "operators"
+   ],
+   "companies": [
+    "Bloomberg",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-py-005",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "print(0.1 + 0.2 == 0.3, round(2.5), round(3.5))",
+   "options": [
+    "False 2 4",
+    "True 3 4",
+    "False 3 4",
+    "False 2 3"
+   ],
+   "answer": 0,
+   "explanation": "`0.1 + 0.2` is `0.30000000000000004` in binary floating point, so the comparison is `False`. `round` uses banker's rounding (round-half-to-even) for exact halves: `round(2.5)` is `2` and `round(3.5)` is `4`. Use `math.isclose` for float comparisons and the `decimal` module when exact decimal arithmetic matters.",
+   "tags": [
+    "numbers",
+    "floats"
+   ],
+   "companies": [
+    "Amazon",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-py-006",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "for i in range(3):\n    pass\nprint(i)",
+   "options": [
+    "3",
+    "2",
+    "None",
+    "NameError"
+   ],
+   "answer": 1,
+   "explanation": "Python `for` loops do not create a new scope. The loop variable stays bound after the loop ends, holding the last value it was assigned, which is `2` for `range(3)`. (If the iterable were empty the name would never be bound and you would get a `NameError`.)",
+   "tags": [
+    "scope",
+    "loops"
+   ],
+   "companies": [
+    "Turing",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qa-py-007",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "print(\"a\" \"b\" * 2)",
+   "options": [
+    "abb",
+    "ab2",
+    "abab",
+    "ab ab"
+   ],
+   "answer": 2,
+   "explanation": "Adjacent string literals are concatenated by the compiler before any operator runs, so `\"a\" \"b\"` becomes the single literal `\"ab\"`, and then `* 2` repeats it. The result is `abab`, not `a` followed by `bb`.",
+   "tags": [
+    "strings",
+    "gotchas"
+   ],
+   "companies": [
+    "Google",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-py-008",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What happens when this code runs?",
+   "code": "squares = [n * n for n in range(4)]\nprint(n)",
+   "options": [
+    "It prints 3",
+    "It prints 9",
+    "It prints None",
+    "NameError on the print line"
+   ],
+   "answer": 3,
+   "explanation": "In Python 3 a list comprehension has its own scope, so the loop variable `n` does not leak out. After the comprehension finishes, `n` is not defined in the enclosing scope and `print(n)` raises `NameError`. (In Python 2 it did leak, which is why this is a classic question.)",
+   "tags": [
+    "comprehensions",
+    "scope"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-py-009",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "open",
+   "question": "What is the difference between `is` and `==` in Python? When would you use each?",
+   "model_answer": "`==` compares values by calling `__eq__`; `is` compares identity, meaning whether two names point to the very same object in memory (`id(a) == id(b)`). Two equal lists built separately are `==` but not `is`. Use `==` for almost everything. Use `is` for singletons, mainly `x is None`, and for sentinel objects, because `None` cannot be fooled by a custom `__eq__`. Never rely on `is` for numbers or strings: CPython caches small ints and some interned strings, so `a is b` can look right in a test and fail in production. A class can also define `__eq__` to return surprising things (NumPy arrays return arrays), which is another reason `is None` is the idiom.",
+   "explanation": "Interviewers want to hear 'identity vs equality', the `is None` convention, and the small-int caching trap. A candidate who says 'is is faster' or uses `is` for string comparison is signalling shaky fundamentals.",
+   "tags": [
+    "fundamentals",
+    "identity"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-py-010",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "open",
+   "question": "Explain `*args` and `**kwargs`. Show how you would use them in a function definition and in a call.",
+   "model_answer": "In a definition, `*args` collects extra positional arguments into a tuple and `**kwargs` collects extra keyword arguments into a dict. In a call, `*` unpacks an iterable into positional arguments and `**` unpacks a mapping into keyword arguments. Example: `def log(level, *parts, sep=' ', **meta): ...` called as `log('info', *['a','b'], sep='-', **{'user': 7})`. Typical uses: thin wrappers and decorators that forward arguments unchanged (`return fn(*args, **kwargs)`), and APIs with optional extension points. Parameters after `*args` are keyword-only. Downsides: they hide the real signature from readers and tools, so prefer explicit parameters where possible and use `functools.wraps` in decorators.",
+   "explanation": "Look for: tuple vs dict, the unpacking direction in calls, keyword-only parameters after `*`, and the decorator-forwarding use case. Strong candidates also mention the readability cost of overusing them.",
+   "tags": [
+    "functions",
+    "fundamentals"
+   ],
+   "companies": [
+    "Turing",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-py-011",
+   "topic": "Python",
+   "level": "Basic",
+   "type": "open",
+   "question": "What is the difference between mutable and immutable types in Python? Give examples and explain one bug this distinction can cause.",
+   "model_answer": "Immutable objects (`int`, `float`, `str`, `tuple`, `frozenset`, `bytes`) cannot change after creation; operations return new objects. Mutable objects (`list`, `dict`, `set`, most user-defined classes) can be modified in place. Consequences: only hashable (in practice immutable) objects can be dict keys or set members; passing a mutable object to a function lets the callee change the caller's data. Classic bugs: a mutable default argument like `def f(x, acc=[])` which is shared across calls, aliasing (`b = a` then mutating `b`), and `[[0]*3]*3` creating three references to one row. Fixes: use `None` as a default and create the object inside, copy defensively (`list(a)`, `copy.deepcopy`), and use tuples or frozen dataclasses for values that should not change. A tuple holding a list is only shallowly immutable.",
+   "explanation": "A good answer connects immutability to hashing and to the default-argument/aliasing bugs. Bonus for noting that a tuple containing a list is not hashable and is only shallowly immutable.",
+   "tags": [
+    "fundamentals",
+    "mutability"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-py-012",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "fs = [lambda: i for i in range(3)]\nprint([f() for f in fs])",
+   "options": [
+    "[2, 2, 2]",
+    "[0, 1, 2]",
+    "[3, 3, 3]",
+    "[0, 0, 0]"
+   ],
+   "answer": 0,
+   "explanation": "Closures capture variables, not values. All three lambdas refer to the same comprehension variable `i`, and by the time they are called the loop has finished with `i == 2`. The fix is to bind the value at definition time with a default argument, `lambda i=i: i`, or `functools.partial`.",
+   "tags": [
+    "closures",
+    "gotchas"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-py-013",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "g = (x * x for x in range(3))\nprint(list(g), list(g))",
+   "options": [
+    "[0, 1, 4] [0, 1, 4]",
+    "[0, 1, 4] []",
+    "[] []",
+    "[0, 1, 4] None"
+   ],
+   "answer": 1,
+   "explanation": "A generator expression is a one-shot iterator. The first `list(g)` consumes it and gets `[0, 1, 4]`; afterwards it is exhausted, and the second `list(g)` returns an empty list instead of raising. If you need to traverse the data twice, build a list or recreate the generator.",
+   "tags": [
+    "generators",
+    "iterators"
+   ],
+   "companies": [
+    "Amazon",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-py-014",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "def f():\n    try:\n        return 1\n    finally:\n        return 2\n\nprint(f())",
+   "options": [
+    "1",
+    "None",
+    "2",
+    "It raises an exception"
+   ],
+   "answer": 2,
+   "explanation": "A `return` inside `finally` overrides the earlier return value (and would also swallow any in-flight exception). The `try` block computes `1`, then `finally` runs and returns `2`, so the call returns `2`. Returning from `finally` is almost always a bug for exactly this reason; linters flag it.",
+   "tags": [
+    "exceptions",
+    "gotchas"
+   ],
+   "companies": [
+    "Google",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qa-py-015",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "t = ([1],)\ntry:\n    t[0] += [2]\nexcept TypeError:\n    print(t)",
+   "options": [
+    "([1],)",
+    "Nothing: the TypeError is not caught",
+    "[1, 2]",
+    "([1, 2],)"
+   ],
+   "answer": 3,
+   "explanation": "`t[0] += [2]` expands to `tmp = t[0]; tmp = tmp.__iadd__([2]); t[0] = tmp`. The in-place add mutates the list successfully, then the assignment back into the tuple fails with `TypeError`. The `except` branch prints the tuple, and the list inside it has already changed: `([1, 2],)`. This shows why tuples are only shallowly immutable. The error is caught, so output is produced; the other options ignore either the mutation or the tuple wrapper.",
+   "tags": [
+    "tuples",
+    "gotchas"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-py-016",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "class A:\n    n = 0\n\na = A()\na.n += 1\nprint(A.n, a.n)",
+   "options": [
+    "0 1",
+    "1 1",
+    "0 0",
+    "1 0"
+   ],
+   "answer": 0,
+   "explanation": "`a.n += 1` reads `a.n` (found on the class, value 0), computes 1, and then assigns it, which creates a new instance attribute `n` on `a` that shadows the class attribute. The class attribute `A.n` is untouched, so `A.n` is `0` and `a.n` is `1`. Had `n` been a mutable list mutated in place, the change would have been shared.",
+   "tags": [
+    "classes",
+    "attributes"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-py-017",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "print(sorted([\"bb\", \"a\", \"cc\", \"d\"], key=len))",
+   "options": [
+    "['a', 'd', 'cc', 'bb']",
+    "['a', 'd', 'bb', 'cc']",
+    "['bb', 'cc', 'a', 'd']",
+    "['d', 'a', 'cc', 'bb']"
+   ],
+   "answer": 1,
+   "explanation": "`sorted` is guaranteed stable: items whose keys compare equal keep their original relative order. Keys are lengths 2, 1, 2, 1, so the length-1 strings come first in original order (`a`, `d`) followed by the length-2 strings in original order (`bb`, `cc`).",
+   "tags": [
+    "sorting",
+    "stability"
+   ],
+   "companies": [
+    "Bloomberg",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-py-018",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You decorate a function `fib` with `functools.lru_cache`. Which call fails?",
+   "options": [
+    "fib(3)",
+    "fib((1, 2))",
+    "fib([1, 2])",
+    "fib('abc')"
+   ],
+   "answer": 2,
+   "explanation": "`lru_cache` stores results in a dict keyed by the call arguments, so every argument must be hashable. A `list` is not hashable, so `fib([1, 2])` raises `TypeError: unhashable type: 'list'`. Ints, tuples of hashables and strings are fine. Convert lists to tuples before calling, or cache on a derived key.",
+   "tags": [
+    "caching",
+    "functools"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-py-019",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "In a custom context manager, what happens if `__exit__` returns a truthy value after the `with` body raised an exception?",
+   "options": [
+    "The exception is re-raised after __exit__ finishes",
+    "The exception is converted into a RuntimeError",
+    "Python raises an error because __exit__ must return None",
+    "The exception is suppressed and execution continues after the with block"
+   ],
+   "answer": 3,
+   "explanation": "When `__exit__(exc_type, exc, tb)` returns a truthy value, Python treats the exception as handled and suppresses it; execution continues after the `with` statement. Returning `None` or `False` lets it propagate. This is how `contextlib.suppress` works. Because it silently hides errors, only return `True` when you deliberately mean to swallow a specific exception type.",
+   "tags": [
+    "context-managers",
+    "exceptions"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-py-020",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Explain iterators and generators. How does the iterator protocol work, and why would you use a generator over building a list?",
+   "model_answer": "An iterable has `__iter__` returning an iterator; an iterator has `__next__` which returns the next value or raises `StopIteration`, and `__iter__` returning itself. A `for` loop calls `iter()` once and `next()` repeatedly. A generator function (any function containing `yield`) returns a generator object, which is an iterator whose local state is suspended at each `yield` and resumed on the next `next()`. Benefits: lazy evaluation and O(1) memory for large or infinite streams (reading a huge file line by line, paginated API results), pipelines composed with generator expressions, and simpler code than writing a class with `__next__`. Costs: single pass, no `len()` or indexing, and errors surface late. Mention `yield from` for delegating to sub-generators and `itertools` for composition.",
+   "explanation": "Candidates should state the two methods, `StopIteration`, and the memory/laziness trade-off, ideally with a concrete example. Weak answers only say 'generators use yield' without explaining suspended state.",
+   "tags": [
+    "generators",
+    "iterators"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-py-021",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "What are context managers? Write one with `contextlib.contextmanager` that times a block, and explain how exceptions inside the block are handled.",
+   "model_answer": "A context manager defines setup and guaranteed teardown around a block via `__enter__` and `__exit__`, used with `with`. Typical uses: files, locks, DB transactions, temporary state. With `contextlib.contextmanager`: `@contextmanager`, `def timer(label): start = time.perf_counter(); try: yield; finally: print(label, time.perf_counter() - start)`. Code before `yield` is `__enter__`, the yielded value is bound by `as`, and code after is `__exit__`. If the body raises, the exception is thrown into the generator at the `yield`; wrapping in `try/finally` ensures cleanup runs and lets the exception propagate. Catching it and not re-raising suppresses it. Prefer `finally` so timing is recorded even on failure.",
+   "explanation": "Check that the candidate puts `yield` inside `try/finally`; forgetting this is the most common bug. Extra credit for mentioning `ExitStack` and async context managers.",
+   "tags": [
+    "context-managers",
+    "contextlib"
+   ],
+   "companies": [
+    "Microsoft",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-py-022",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you write good tests in Python with `pytest`? Cover fixtures, parametrization and mocking, and say what you would not mock.",
+   "model_answer": "Use plain functions with `assert`; pytest rewrites assertions to show helpful diffs. Fixtures provide setup/teardown and dependency injection by argument name, with scopes (`function`, `module`, `session`) and `yield` for cleanup; put shared ones in `conftest.py`. `@pytest.mark.parametrize` runs one test body over many input/expected pairs, which is the best way to cover edge cases (empty, None, boundaries, unicode). For mocking use `unittest.mock.patch` or `monkeypatch` at the place where the code under test looks the name up (patch where it is used, not where it is defined). Mock slow or non-deterministic things: network, clock, randomness, third-party APIs. Do not mock the code you are testing or pure logic; be careful mocking your own database layer, because mocks that mirror the implementation let tests pass while behaviour is broken. Prefer fakes or a real test DB for integration tests, and keep tests independent and deterministic.",
+   "explanation": "Interviewers listen for 'patch where it is used', independence between tests, and a view on mock overuse. Mentioning coverage as a signal rather than a goal is a plus.",
+   "tags": [
+    "testing",
+    "pytest"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qa-py-023",
+   "topic": "Python",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Describe good exception-handling practice in Python. When do you define custom exceptions, and what does `raise ... from ...` do?",
+   "model_answer": "Catch the narrowest exception you can actually handle; never use a bare `except:` (it catches `KeyboardInterrupt` and `SystemExit`) and avoid `except Exception: pass`, which hides bugs. Keep `try` blocks small, use `else` for code that should run only on success and `finally` or context managers for cleanup. Define a custom exception hierarchy (a base `MyLibError(Exception)` with specific subclasses) at API boundaries so callers can catch your errors without catching unrelated ones, and so you can translate low-level errors into domain errors. `raise NewError(...) from exc` sets `__cause__`, producing a traceback that explicitly says the new error was caused by the original; `from None` suppresses the chained context. Re-raise with bare `raise` to preserve the traceback. Log with `logger.exception` once at the boundary rather than at every level.",
+   "explanation": "Good answers mention not swallowing errors, exception chaining, and translating errors at layer boundaries. Red flag: using exceptions for ordinary control flow everywhere or catching `Exception` as a habit.",
+   "tags": [
+    "exceptions",
+    "design"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qa-py-024",
+   "topic": "Python",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "class A:\n    def hello(self): print('A', end=' ')\nclass B(A):\n    def hello(self): print('B', end=' '); super().hello()\nclass C(A):\n    def hello(self): print('C', end=' '); super().hello()\nclass D(B, C):\n    def hello(self): print('D', end=' '); super().hello()\n\nD().hello()",
+   "options": [
+    "D B C A",
+    "D B A C",
+    "D C B A",
+    "D A B C"
+   ],
+   "answer": 0,
+   "explanation": "Python uses C3 linearisation, giving `D.__mro__ == (D, B, C, A, object)`. Each `super().hello()` call proceeds to the next class in the MRO of the instance's type, not to the parent of the class in the source. So B's `super()` calls C (not A) when the object is a `D`, and the whole chain visits each class exactly once: D, B, C, A. This cooperative design is why every class in the chain must call `super()`.",
+   "tags": [
+    "mro",
+    "inheritance"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-py-025",
+   "topic": "Python",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What happens when this code runs?",
+   "code": "class P:\n    def __init__(self, x):\n        self.x = x\n    def __eq__(self, other):\n        return self.x == other.x\n\nprint({P(1)})",
+   "options": [
+    "It prints {<P object>}",
+    "TypeError: unhashable type: 'P'",
+    "It prints a set containing one P and the program continues",
+    "The set is created and Python compares objects by identity"
+   ],
+   "answer": 1,
+   "explanation": "Defining `__eq__` in a class body without defining `__hash__` makes Python set `__hash__ = None`, so instances become unhashable. Building a set (or using the object as a dict key) raises `TypeError: unhashable type: 'P'`. Equal objects must hash equally, so define a consistent `__hash__` (usually over the same immutable fields) or use `@dataclass(frozen=True)`.",
+   "tags": [
+    "data-model",
+    "hashing"
+   ],
+   "companies": [
+    "Google",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-py-026",
+   "topic": "Python",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "import asyncio\n\nasync def job(n, delay):\n    await asyncio.sleep(delay)\n    return n\n\nasync def main():\n    print(await asyncio.gather(job(10, 0.3), job(4, 0.1), job(0, 0.2), job(8, 0.0)))\n\nasyncio.run(main())",
+   "options": [
+    "[8, 4, 0, 10]",
+    "[4, 0, 10, 8]",
+    "[10, 4, 0, 8]",
+    "[10, 4, 8, 0]"
+   ],
+   "answer": 2,
+   "explanation": "`asyncio.gather` returns results in the order the awaitables were passed in, regardless of completion order. Here the tasks finish in the order 8, 4, 0, 10, but the returned list is positional: `[10, 4, 0, 8]`. Completion order would only be observable with `as_completed` or by printing inside the tasks. `gather` also runs the coroutines concurrently, so total time is about the longest sleep, not the sum.",
+   "tags": [
+    "asyncio",
+    "concurrency"
+   ],
+   "companies": [
+    "Uber",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-py-027",
+   "topic": "Python",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "def g():\n    got = yield 1\n    got = yield got - 3\n    return 'done'\n\ng_ = g()\na = next(g_)\nb = g_.send(5)\ntry:\n    next(g_)\nexcept StopIteration as e:\n    print(a, b, e.value)",
+   "options": [
+    "1 5 done",
+    "1 2 None",
+    "1 2 StopIteration",
+    "1 2 done"
+   ],
+   "answer": 3,
+   "explanation": "`gen.send(x)` resumes the generator and makes the paused `yield` expression evaluate to `x`. `next(g_)` runs to the first `yield` and returns 1. `g_.send(5)` makes `got = 5`, and the next yield produces `got - 3 = 2`. The final `next(g_)` resumes with `got = None`, runs off to `return 'done'`, and raises `StopIteration` whose `.value` is the return value `'done'`. So `e.value` is `done`, not `None`.",
+   "tags": [
+    "generators",
+    "coroutines"
+   ],
+   "companies": [
+    "Google",
+    "Dropbox"
+   ]
+  },
+  {
+   "id": "qa-py-028",
+   "topic": "Python",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "import copy\na = [1]\nl = [a, a]\nd = copy.deepcopy(l)\nprint(d[0] is d[1], d[0] is a)",
+   "options": [
+    "True False",
+    "True True",
+    "False False",
+    "False True"
+   ],
+   "answer": 0,
+   "explanation": "`deepcopy` keeps a memo of objects it has already copied, so aliasing inside the structure is preserved: both elements of `d` refer to the same new inner list (`d[0] is d[1]` is `True`), and that list is a different object from the original `a` (`d[0] is a` is `False`). A naive recursive copy would produce two separate lists. The same memo is what lets `deepcopy` handle cyclic structures.",
+   "tags": [
+    "copying",
+    "references"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-py-029",
+   "topic": "Python",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How do descriptors work, and how does `@property` relate to them? Where would you write your own descriptor?",
+   "model_answer": "A descriptor is an object with `__get__`, and optionally `__set__` / `__delete__`, stored as a class attribute. When you access `obj.attr`, `type(obj).__getattribute__` looks up `attr` on the class; if the object found defines `__get__` it is called with `(descriptor, obj, type)`. A data descriptor (defines `__set__` or `__delete__`) takes priority over the instance `__dict__`; a non-data descriptor (only `__get__`) loses to it. Functions are non-data descriptors, which is how methods become bound. `property` is a built-in data descriptor wrapping getter/setter/deleter functions. `__set_name__` lets a descriptor learn the attribute name it was assigned to. Write your own for reusable validation or lazy computation shared by many attributes or classes: a `Positive` field validator, an ORM column, or a `cached_property`-style attribute, rather than repeating property boilerplate.",
+   "explanation": "Strong answers explain lookup precedence (data descriptor > instance dict > non-data descriptor), why methods are descriptors, and give a practical reason for a custom one. Weak answers just say 'property is a getter'.",
+   "tags": [
+    "descriptors",
+    "data-model"
+   ],
+   "companies": [
+    "Google",
+    "Dropbox",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-py-030",
+   "topic": "Python",
+   "level": "Advanced",
+   "type": "open",
+   "question": "You want your class to behave like a collection that supports `len()`, `in`, iteration, indexing and sorting-friendly comparison. Which dunder methods do you implement, and what shortcuts exist?",
+   "model_answer": "For a read-only sequence: `__len__`, `__getitem__` (accepting ints and slices), and optionally `__contains__` and `__iter__`; if `__iter__` is missing Python falls back to the old sequence protocol, calling `__getitem__` from 0 until `IndexError`, and `__contains__` falls back to iteration. For a mutable sequence add `__setitem__`, `__delitem__`, and `insert`. Instead of writing everything, subclass `collections.abc.Sequence` or `MutableSequence`, implement the abstract methods and get `index`, `count`, `__contains__`, `__reversed__` and more for free. For ordering, implement `__eq__` and `__lt__` and decorate with `functools.total_ordering`, or use `@dataclass(order=True)`. Also add `__repr__` for debugging, and make sure `__eq__` and `__hash__` are consistent. Return `NotImplemented`, not `False`, for unsupported operand types so Python can try the reflected operation.",
+   "explanation": "Check for ABC usage, the fallback protocols, and `NotImplemented`. Candidates who inherit from `list` directly should be asked why composition or ABCs are often safer (built-in methods can bypass overridden ones).",
+   "tags": [
+    "data-model",
+    "dunder"
+   ],
+   "companies": [
+    "Microsoft",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-py-031",
+   "topic": "Python",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How do type hints work in Python, and what do `Protocol`, `TypedDict` and generics add? What are the limits of static typing here?",
+   "model_answer": "Annotations are metadata ignored by the interpreter at runtime; tools like mypy or pyright check them statically, giving gradual typing: you can annotate incrementally, and `Any` opts out. `Protocol` provides structural typing (duck typing checked statically): any class with the right methods satisfies it without inheriting. `TypedDict` describes dict shapes with per-key types; `dataclass` and `pydantic` model objects. Generics (`list[int]`, `TypeVar`, `Generic[T]`, PEP 695 `class Box[T]`) express relationships between inputs and outputs. `X | None` forces explicit None handling. Limits: nothing is enforced at runtime unless you use a validator like pydantic, dynamic features (monkey-patching, `**kwargs`, metaclasses) are hard to type, third-party libraries may lack stubs, and over-annotation can cost readability. In CI, run the type checker in strict mode on new code and ratchet legacy code gradually.",
+   "explanation": "Interviewers want the 'not enforced at runtime' point, structural vs nominal typing, and a pragmatic adoption strategy.",
+   "tags": [
+    "typing",
+    "mypy"
+   ],
+   "companies": [
+    "Dropbox",
+    "Stripe",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qa-py-032",
+   "topic": "Python",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "class Meta(type):\n    def __new__(mcs, name, bases, ns):\n        print('meta', end=' ')\n        return super().__new__(mcs, name, bases, ns)\n\nclass C(metaclass=Meta):\n    print('class-body', end=' ')\n    def __init__(self):\n        print('instance', end=' ')\n\nC()",
+   "options": [
+    "meta class-body instance",
+    "class-body meta instance",
+    "class-body instance meta",
+    "meta instance class-body"
+   ],
+   "answer": 1,
+   "explanation": "The class body is ordinary code that executes first to build the namespace dict, so `class-body` prints first. Only then does Python call the metaclass (`Meta.__new__`) with that namespace to create the class object, printing `meta`. Finally `C()` runs `__init__`, printing `instance`. A metaclass `__prepare__` could run before the body, but this one does not define it.",
+   "tags": [
+    "metaclasses"
+   ],
+   "companies": [
+    "Google",
+    "Dropbox"
+   ]
+  },
+  {
+   "id": "qa-py-033",
+   "topic": "Python",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "def g():\n    try:\n        yield 1\n        yield 2\n    finally:\n        print('closing', end=' ')\n\ngen = g()\nprint(next(gen), end=' ')\ngen.close()",
+   "options": [
+    "closing 1",
+    "1",
+    "1 closing",
+    "closing"
+   ],
+   "answer": 2,
+   "explanation": "`next(gen)` runs the generator to the first `yield` and returns 1, which is printed first. Calling `close()` on a suspended generator raises `GeneratorExit` at the `yield`; the `finally` block runs and prints `closing`. The second `yield 2` is never reached. The same cleanup also happens when a suspended generator is garbage collected, which is why resource handling in generators should use `try/finally` or `with`.",
+   "tags": [
+    "generators",
+    "cleanup"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-py-034",
+   "topic": "Python",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "class Field:\n    def __set_name__(self, owner, name):\n        self.name = name\n    def __get__(self, obj, objtype=None):\n        return self.name\n\nclass M:\n    a = Field()\n    b = Field()\n\nm = M()\nprint(m.a, m.b)",
+   "options": [
+    "a a",
+    "b b",
+    "AttributeError",
+    "a b"
+   ],
+   "answer": 3,
+   "explanation": "`__set_name__` is called on each descriptor when the class is created, with the attribute name it was bound to. The two `Field()` instances are distinct objects, so each learns its own name (`a` and `b`) and its `__get__` returns it. This hook replaced the need to pass the name twice (`a = Field('a')`) in ORMs and validation libraries. A single shared descriptor instance assigned to two names would get only the last name.",
+   "tags": [
+    "descriptors"
+   ],
+   "companies": [
+    "Dropbox",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qa-py-035",
+   "topic": "Python",
+   "level": "Expert",
+   "type": "open",
+   "question": "Explain Python's import system. How are modules found and cached, why do circular imports fail, and how would you resolve one?",
+   "model_answer": "`import x` first checks `sys.modules`; a hit returns the cached module object, so each module body runs once per process. On a miss, the finders on `sys.meta_path` search (the path-based finder walks `sys.path`), a loader executes the file, and the module is inserted into `sys.modules` BEFORE its body finishes, which is what allows partially initialised modules to exist. A circular import (A imports B at top level, B imports A) fails when B does `from A import name` and the name has not been defined yet because A is still executing its imports; `import A` style often works until an attribute is accessed too early. Fixes in order of preference: restructure by extracting shared code into a third module or reversing the dependency direction; import inside the function that needs it (deferred import); use `import module` and access attributes lazily; use `typing.TYPE_CHECKING` for annotation-only imports. Also mention packages and `__init__.py`, relative vs absolute imports, `importlib.reload` limitations and namespace packages.",
+   "explanation": "Expert answers know `sys.modules` insertion happens before execution and can describe at least two refactoring remedies; the best argue that a circular import is a design smell indicating wrong layering.",
+   "tags": [
+    "imports",
+    "modules"
+   ],
+   "companies": [
+    "Dropbox",
+    "Google",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-js-001",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "console.log(typeof null, typeof undefined, typeof NaN);",
+   "options": [
+    "object undefined number",
+    "null undefined NaN",
+    "object undefined NaN",
+    "null undefined number"
+   ],
+   "answer": 0,
+   "explanation": "`typeof null` is `\"object\"`, a long-standing quirk from the first JavaScript implementation that cannot be fixed without breaking the web. `typeof undefined` is `\"undefined\"`. `NaN` stands for 'not a number' but it is a value of the number type, so `typeof NaN` is `\"number\"`. Check for null explicitly with `x === null`.",
+   "tags": [
+    "types",
+    "gotchas"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-js-002",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "console.log(1 + \"2\", \"3\" - 1, \"5\" * \"2\", true + 1);",
+   "options": [
+    "12 -2 10 2",
+    "12 2 10 2",
+    "3 2 10 2",
+    "12 2 52 2"
+   ],
+   "answer": 1,
+   "explanation": "`+` with a string operand concatenates, so `1 + \"2\"` is `\"12\"`. The other arithmetic operators (`-`, `*`) convert strings to numbers, so `\"3\" - 1` is `2` and `\"5\" * \"2\"` is `10`. `true` becomes `1` in arithmetic, so `true + 1` is `2`. Implicit coercion is why most style guides require explicit conversion with `Number()` or `String()`.",
+   "tags": [
+    "coercion",
+    "operators"
+   ],
+   "companies": [
+    "Turing",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-js-003",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "console.log([10, 9, 1].sort().join(','));",
+   "options": [
+    "1,9,10",
+    "10,9,1",
+    "1,10,9",
+    "9,10,1"
+   ],
+   "answer": 2,
+   "explanation": "Without a comparator, `Array.prototype.sort` converts elements to strings and compares them by UTF-16 code units, so `\"10\"` sorts before `\"9\"` (because `\"1\" < \"9\"`). The result is `1,10,9`. Pass a numeric comparator, `(a, b) => a - b`, to sort numbers numerically. Note that `sort` also mutates the array in place.",
+   "tags": [
+    "arrays",
+    "sorting"
+   ],
+   "companies": [
+    "Amazon",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-js-004",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "console.log(a);\nvar a = 1;\nconsole.log(typeof f, typeof g);\nfunction f() {}\nvar g = function () {};",
+   "options": [
+    "ReferenceError, then function function",
+    "undefined, then function function",
+    "1, then function undefined",
+    "undefined, then function undefined"
+   ],
+   "answer": 3,
+   "explanation": "`var` declarations are hoisted and initialised to `undefined`, so the first `console.log(a)` prints `undefined` (the assignment `a = 1` happens later). Function declarations are hoisted completely with their body, so `typeof f` is `\"function\"`. `g` is a `var` holding a function expression: only the name is hoisted, its value is still `undefined` at that point, so `typeof g` is `\"undefined\"`.",
+   "tags": [
+    "hoisting",
+    "scope"
+   ],
+   "companies": [
+    "Google",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-js-005",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "console.log(0 == \"\", null == undefined, null == 0, NaN == NaN);",
+   "options": [
+    "true true false false",
+    "true true true false",
+    "false true false false",
+    "true false false false"
+   ],
+   "answer": 0,
+   "explanation": "Loose equality uses coercion rules: `0 == \"\"` is `true` (both become 0), `null == undefined` is `true` (a special rule), but `null == 0` is `false` because `null` only loosely equals `undefined`. `NaN == NaN` is `false`; use `Number.isNaN` or `Object.is` to detect it. This is why `===` is the default recommendation.",
+   "tags": [
+    "equality",
+    "coercion"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-js-006",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "console.log([1, 2, 3].map(x => x * 2).filter(x => x > 2).reduce((a, b) => a + b, 0));",
+   "options": [
+    "6",
+    "10",
+    "12",
+    "NaN"
+   ],
+   "answer": 1,
+   "explanation": "The chain: `map(x => x * 2)` gives `[2, 4, 6]`; `filter(x => x > 2)` keeps `[4, 6]`; `reduce((a, b) => a + b, 0)` sums them to `10`. None of these methods mutate the original array. Without the initial value `0`, `reduce` would use the first element as the accumulator, which would also give 10 here but would throw on an empty array.",
+   "tags": [
+    "arrays",
+    "functional"
+   ],
+   "companies": [
+    "Turing",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-js-007",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const { a, ...rest } = { a: 1, b: 2, c: 3 };\nconsole.log(a, JSON.stringify(rest));",
+   "options": [
+    "1 {\"a\":1,\"b\":2,\"c\":3}",
+    "undefined {\"b\":2,\"c\":3}",
+    "1 {\"b\":2,\"c\":3}",
+    "1 [2,3]"
+   ],
+   "answer": 2,
+   "explanation": "Object destructuring pulls `a` out by name, and the rest element `...rest` collects the remaining own enumerable properties into a new object, `{ b: 2, c: 3 }`. `a` itself is not included in `rest`, and `rest` is an object, not an array.",
+   "tags": [
+    "destructuring",
+    "es6"
+   ],
+   "companies": [
+    "Meta",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-js-008",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const arr = [1, 2, 3];\narr.push(4);\nconsole.log(arr.length);",
+   "options": [
+    "3",
+    "It throws a TypeError at push",
+    "undefined",
+    "4"
+   ],
+   "answer": 3,
+   "explanation": "`const` prevents re-binding the variable, not mutation of the object it refers to. `arr.push(4)` modifies the array in place, so the length becomes 4. `arr = []` would throw `TypeError: Assignment to constant variable`. Use `Object.freeze` (shallow) or immutable update patterns if the contents must not change.",
+   "tags": [
+    "const",
+    "mutability"
+   ],
+   "companies": [
+    "Turing",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-js-009",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "open",
+   "question": "Explain the differences between `var`, `let` and `const`, including scope, hoisting and the temporal dead zone.",
+   "model_answer": "`var` is function-scoped, hoisted and initialised to `undefined`, can be redeclared, and (at top level of a script) becomes a property of the global object. `let` and `const` are block-scoped; they are hoisted but not initialised until their declaration runs, so reading them earlier throws a `ReferenceError`: that window is the temporal dead zone. `const` also forbids re-assignment but not mutation of objects. Block scope fixes classic bugs such as closures in loops: with `let` each iteration gets a fresh binding. Practical rule: default to `const`, use `let` when re-assignment is needed, and avoid `var` in new code.",
+   "explanation": "Look for the TDZ explanation (not just 'let is not hoisted', which is a common wrong claim), block vs function scope, and the loop-closure example. Saying 'const makes things immutable' is a red flag.",
+   "tags": [
+    "scope",
+    "fundamentals"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-js-010",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "open",
+   "question": "What is a closure in JavaScript? Give a realistic use case and one pitfall.",
+   "model_answer": "A closure is a function bundled with the lexical environment in which it was created, so it keeps access to the outer function's variables even after the outer function has returned. Use cases: data privacy (`function counter() { let n = 0; return () => ++n; }` exposes no way to touch `n` directly), partial application and factories, memoisation caches, and event handlers or callbacks that need context. Pitfalls: closures capture variables, not snapshot values, so a `var` loop variable captured by callbacks is shared (use `let` or an IIFE); and closures can keep large objects alive, causing memory leaks when long-lived handlers reference big data.",
+   "explanation": "Interviewers want 'lexical scope + retained reference', a concrete example and awareness of the loop and memory pitfalls. Memorised definitions without an example are weak.",
+   "tags": [
+    "closures",
+    "fundamentals"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-js-011",
+   "topic": "JavaScript",
+   "level": "Basic",
+   "type": "open",
+   "question": "How do arrow functions differ from regular functions? When would you avoid an arrow function?",
+   "model_answer": "Arrow functions have a concise syntax and do not have their own `this`, `arguments`, `super` or `new.target`: they capture them lexically from the enclosing scope. They cannot be used as constructors (`new` throws) and have no `prototype`. That makes them ideal for callbacks inside methods (`this.items.map(i => this.format(i))`). Avoid them for object methods that need `this` to be the receiver (`const o = { n: 1, f: () => this.n }` does not work), for prototype methods, for constructors, for event handlers that rely on `this` being the element, and when you need `arguments` (use rest parameters instead). Also consider readability: implicit-return object literals need parentheses.",
+   "explanation": "A good answer states 'lexical this' precisely and gives at least one case where arrows are the wrong choice. Confusing arrow functions with merely 'shorter functions' shows shallow understanding.",
+   "tags": [
+    "functions",
+    "this"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-js-012",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const out = [];\nfor (var i = 0; i < 3; i++) setTimeout(() => out.push(i), 0);\nfor (let j = 0; j < 3; j++) setTimeout(() => out.push(j), 0);\nsetTimeout(() => console.log(out.join(' ')), 0);",
+   "options": [
+    "3 3 3 0 1 2",
+    "0 1 2 0 1 2",
+    "3 3 3 3 3 3",
+    "0 1 2 3 3 3"
+   ],
+   "answer": 0,
+   "explanation": "`var i` is a single function-scoped binding shared by all three callbacks; by the time the timers fire the loop has finished and `i` is `3`. With `let j`, each iteration creates a fresh binding, so the callbacks see 0, 1 and 2. Timers fire in registration order; the final timer prints the collected values.",
+   "tags": [
+    "closures",
+    "timers"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-js-013",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "console.log(\n  JSON.stringify(Array(3).map((_, i) => i)),\n  JSON.stringify(Array.from({ length: 3 }, (_, i) => i))\n);",
+   "options": [
+    "[0,1,2] [0,1,2]",
+    "[null,null,null] [0,1,2]",
+    "[] [0,1,2]",
+    "[undefined,undefined,undefined] [0,1,2]"
+   ],
+   "answer": 1,
+   "explanation": "`Array(3)` creates a sparse array with three empty slots (holes). `map` skips holes, so the callback never runs and the result is still three holes. `JSON.stringify` serialises holes as `null`. `Array.from({ length: 3 }, fn)` treats the array-like as having three real indexes and calls the mapper for each one, producing `[0, 1, 2]`.",
+   "tags": [
+    "arrays",
+    "gotchas"
+   ],
+   "companies": [
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-js-014",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "In a non-strict script, what does this print?",
+   "code": "const o = { n: 'o', get() { return this.n; } };\nconsole.log(o.get(), (0, o.get)());",
+   "options": [
+    "o o",
+    "undefined undefined",
+    "o undefined",
+    "TypeError"
+   ],
+   "answer": 2,
+   "explanation": "`o.get()` is called as a method, so `this` is `o` and it returns `\"o\"`. `(0, o.get)()` uses the comma operator to produce the bare function value, which is then called with no receiver. In sloppy mode `this` becomes the global object, which has no `n`, so the result is `undefined`. In strict mode `this` would be `undefined` and the second call would throw a `TypeError`. `this` is decided by how a function is called, not where it is defined.",
+   "tags": [
+    "this",
+    "call-site"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-js-015",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "async function a() { throw new Error('x'); }\nfunction t() {\n  try { a(); } catch (e) { return 'caught'; }\n  return 'not caught';\n}\nconsole.log(t());",
+   "options": [
+    "caught",
+    "It prints nothing",
+    "An Error is thrown synchronously",
+    "not caught"
+   ],
+   "answer": 3,
+   "explanation": "`a()` is an `async` function, so the thrown error never propagates synchronously: it turns into a rejected promise that `a()` returns. Because the call is not awaited, the `try/catch` sees no exception and `t()` returns `\"not caught\"`. The rejection is then unhandled (Node prints an error afterwards). Write `await a()` inside an `async` function, or attach `.catch`.",
+   "tags": [
+    "async",
+    "errors"
+   ],
+   "companies": [
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-js-016",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const o = { b: 1, 2: 'x', a: 2, 1: 'y' };\nconsole.log(Object.keys(o).join());",
+   "options": [
+    "1,2,b,a",
+    "b,2,a,1",
+    "2,1,b,a",
+    "b,a,1,2"
+   ],
+   "answer": 0,
+   "explanation": "For own properties, `Object.keys` (and `for...in`, `JSON.stringify`) list integer-like keys first in ascending numeric order, then string keys in insertion order. So the keys `2` and `1` come out as `1,2`, followed by `b` and `a` in the order they were created. Do not use plain objects when you need arbitrary keys in insertion order: use a `Map`.",
+   "tags": [
+    "objects",
+    "ordering"
+   ],
+   "companies": [
+    "Meta",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-js-017",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "console.log(JSON.stringify({\n  a: undefined, b: () => 1, c: NaN, d: new Date(0), e: [undefined]\n}));",
+   "options": [
+    "{\"a\":null,\"c\":null,\"d\":0,\"e\":[null]}",
+    "{\"c\":null,\"d\":\"1970-01-01T00:00:00.000Z\",\"e\":[null]}",
+    "{\"c\":null,\"d\":{},\"e\":[]}",
+    "{\"b\":null,\"c\":null,\"e\":[null]}"
+   ],
+   "answer": 1,
+   "explanation": "`JSON.stringify` omits object properties whose values are `undefined`, functions or symbols (so `a` and `b` vanish), but converts them to `null` inside arrays (`[undefined]` becomes `[null]`). `NaN` and `Infinity` become `null`. A `Date` has a `toJSON` method, so it is serialised as an ISO string. These lossy conversions are why round-tripping through JSON is a poor deep-clone strategy.",
+   "tags": [
+    "json",
+    "gotchas"
+   ],
+   "companies": [
+    "Amazon",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qa-js-018",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const s = '\\u{1F600}';\nconsole.log(s.length, [...s].length);",
+   "options": [
+    "2 2",
+    "1 1",
+    "2 1",
+    "1 2"
+   ],
+   "answer": 2,
+   "explanation": "JavaScript strings are UTF-16. The emoji is outside the Basic Multilingual Plane and is stored as a surrogate pair, so `.length` counts two code units. The string iterator (used by spread) walks by code point, so `[...'😀']` has one element. Use spread, `Array.from` or `Intl.Segmenter` (for grapheme clusters) when counting user-visible characters.",
+   "tags": [
+    "strings",
+    "unicode"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-js-019",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const a = { x: { y: 1 } };\nconst b = { ...a };\nb.x.y = 2;\nconsole.log(a.x.y);",
+   "options": [
+    "1",
+    "undefined",
+    "TypeError",
+    "2"
+   ],
+   "answer": 3,
+   "explanation": "Spread (`{...a}`) makes a shallow copy: the new object `b` gets its own top-level properties but `b.x` still points to the same inner object as `a.x`. Setting `b.x.y = 2` therefore changes what `a.x.y` sees. For a deep copy use `structuredClone(a)`, which handles nested objects, `Date`, `Map`, `Set` and cycles but not functions.",
+   "tags": [
+    "copying",
+    "references"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-js-020",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Explain the rules that determine the value of `this` in JavaScript. How do `call`, `apply`, `bind` and `new` fit in?",
+   "model_answer": "`this` is determined at call time, in this priority order: (1) `new Fn()` makes a fresh object as `this`; (2) explicit binding with `fn.call(obj, ...)`, `fn.apply(obj, [args])` or a function returned by `fn.bind(obj)` (a bound function cannot be re-bound); (3) method call `obj.fn()` sets `this` to `obj`; (4) a plain call uses the global object in sloppy mode or `undefined` in strict mode. Arrow functions ignore all of these and use the `this` of their enclosing scope. Classic bug: detaching a method (`const f = obj.method; f()` or passing it as a callback) loses the receiver; fix with `bind`, an arrow wrapper, or class-field arrow functions. In DOM event handlers (regular function) `this` is the element. In ES modules and classes, code is strict by default.",
+   "explanation": "Good answers give the precedence order and a lost-`this` example. Mixed-up statements like 'this refers to the function itself' are an immediate flag.",
+   "tags": [
+    "this",
+    "functions"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-js-021",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "What are the differences between CommonJS and ES modules? Mention loading behaviour, live bindings and interop pitfalls in Node.",
+   "model_answer": "CommonJS (`require`, `module.exports`) loads synchronously at runtime; `require` can be called conditionally and returns a copy of the exports value at that time (primitive exports are not updated). ES modules (`import`/`export`) are statically analysable, so bundlers can tree-shake; they load asynchronously, support top-level `await`, are always strict, and export live bindings: an importer sees updates to an exported `let`. In Node, ESM is enabled with `.mjs` or `\"type\": \"module\"`; `require` of an ES module was historically impossible (newer Node versions allow some cases), while ESM can import CJS (default import is `module.exports`, named imports may not work). ESM lacks `__dirname` and `require` (use `import.meta.url`). Circular dependencies behave differently: CJS yields a partially filled exports object, ESM binds before initialisation (TDZ errors). Dual packages need care with the `exports` map.",
+   "explanation": "Look for: sync vs async, static vs dynamic, live bindings, tree-shaking benefit, and at least one real interop pain point.",
+   "tags": [
+    "modules",
+    "node"
+   ],
+   "companies": [
+    "Microsoft",
+    "Netflix",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qa-js-022",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Explain event bubbling, capturing and event delegation. When is delegation the right choice?",
+   "model_answer": "A DOM event travels in three phases: capture (window down to the target), target, then bubble (back up). `addEventListener(type, fn, { capture: true })` listens in the capture phase; the default is bubbling. `event.stopPropagation()` halts further travel; `preventDefault()` cancels the browser default and is a different thing. Event delegation attaches one listener to a common ancestor and uses `event.target` (or `closest(selector)`) to identify which child was hit. It is right when there are many similar children or children added dynamically (lists, tables, menus): fewer listeners, no re-binding, less memory. Watch for events that do not bubble (`focus`, `blur`, `mouseenter`; use `focusin`/`focusout`), `event.target` being a nested child (use `closest`), and `stopPropagation` calls in other code breaking delegation. Passive listeners improve scroll performance for touch and wheel events.",
+   "explanation": "Strong candidates distinguish `target` from `currentTarget`, mention non-bubbling events, and avoid confusing `stopPropagation` with `preventDefault`.",
+   "tags": [
+    "dom",
+    "events"
+   ],
+   "companies": [
+    "Google",
+    "Adobe",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-js-023",
+   "topic": "JavaScript",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "`fetch` resolved successfully but the server returned a 500 and my `catch` block never ran. Why, and how do you handle HTTP errors, timeouts and cancellation correctly?",
+   "model_answer": "`fetch` only rejects on network-level failures (DNS, connection reset, CORS block) or when aborted; an HTTP 4xx/5xx status still resolves the promise with `response.ok === false`. So check `if (!response.ok) throw new Error(...)` (include status and, if useful, the parsed error body) before calling `response.json()`. Parsing can also throw on invalid JSON or a 204 with no body, so guard that. For timeouts and cancellation use `AbortController`: pass `signal` to `fetch`, call `controller.abort()` on unmount or after `setTimeout`, or use `AbortSignal.timeout(ms)`; handle the resulting `AbortError` separately from real failures. Retry only idempotent requests, with exponential backoff and jitter, and never retry 4xx blindly. Also ensure the response body is consumed or cancelled so connections are released.",
+   "explanation": "Look for `response.ok`, AbortController, and a careful retry policy. Not knowing that fetch resolves on 500 is a common gap even in experienced developers.",
+   "tags": [
+    "fetch",
+    "async",
+    "errors"
+   ],
+   "companies": [
+    "Meta",
+    "Stripe",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-js-024",
+   "topic": "JavaScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "var f = 1;\nfunction f() {}\nconsole.log(typeof f);",
+   "options": [
+    "number",
+    "function",
+    "undefined",
+    "SyntaxError"
+   ],
+   "answer": 0,
+   "explanation": "Declarations are processed before execution: the function declaration `f` is hoisted and initialised, and the `var f` declaration is merged with it (no new binding). Then the assignment `f = 1` executes in order and overwrites the function. By the time `typeof f` runs, `f` holds the number `1`. If the `var` assignment were removed, `typeof f` would be `\"function\"`.",
+   "tags": [
+    "hoisting",
+    "scope"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-js-025",
+   "topic": "JavaScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const it = {\n  from: 1, to: 3,\n  [Symbol.iterator]() {\n    let c = this.from; const t = this.to;\n    return { next: () => c <= t ? { value: c++, done: false } : { value: undefined, done: true } };\n  }\n};\nconsole.log([...it].join(), Math.max(...it));",
+   "options": [
+    "1,2,3 undefined",
+    "1,2,3 3",
+    "1,2,3 NaN",
+    "TypeError: it is not iterable"
+   ],
+   "answer": 1,
+   "explanation": "An object is iterable if it has a `[Symbol.iterator]()` method returning an iterator (`next()` returning `{ value, done }`). Spread `[...it]` and `Math.max(...it)` both consume that protocol. Each use calls `[Symbol.iterator]()` again, which creates a fresh iterator with its own counter, so the object can be iterated multiple times. The result is `1,2,3` for the join and `3` for the maximum.",
+   "tags": [
+    "iterators",
+    "es6"
+   ],
+   "companies": [
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-js-026",
+   "topic": "JavaScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const p = Promise.resolve(1);\nconsole.log(Promise.resolve(p) === p, new Promise(r => r(p)) === p);",
+   "options": [
+    "true true",
+    "false false",
+    "true false",
+    "false true"
+   ],
+   "answer": 2,
+   "explanation": "`Promise.resolve(x)` returns `x` itself when `x` is already a native promise created by the same constructor, so the first comparison is `true`. The `new Promise` executor, however, always creates a new promise object, which is merely resolved with (follows) `p`; it is never identical to `p`. This matters for code that relies on promise identity or caching.",
+   "tags": [
+    "promises"
+   ],
+   "companies": [
+    "Google",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-js-027",
+   "topic": "JavaScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "In a non-strict script, what does this print?",
+   "code": "const o = Object.freeze({ a: { b: 1 } });\no.a.b = 2;\no.c = 3;\nconsole.log(o.a.b, o.c);",
+   "options": [
+    "2 3",
+    "1 undefined",
+    "TypeError",
+    "2 undefined"
+   ],
+   "answer": 3,
+   "explanation": "`Object.freeze` is shallow. The outer object cannot gain, lose or change its own properties, but the nested object `o.a` is not frozen, so `o.a.b = 2` works. Adding `o.c = 3` is silently ignored in sloppy mode (in strict mode it throws a `TypeError`), so `o.c` is `undefined`. Deep freezing requires recursion.",
+   "tags": [
+    "objects",
+    "immutability"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-js-028",
+   "topic": "JavaScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const out = [];\nPromise.resolve().then(() => out.push('a')).then(() => out.push('c'));\nPromise.resolve().then(() => out.push('b')).then(() => out.push('d'));\n(async () => { await null; out.push('e'); })();\nsetTimeout(() => console.log(out.join('')), 0);",
+   "options": [
+    "abecd",
+    "abcde",
+    "aebcd",
+    "abdce"
+   ],
+   "answer": 0,
+   "explanation": "Microtasks run in FIFO order, in rounds. Both `.then` callbacks for `a` and `b` are queued first. The async function runs synchronously until `await null`, which queues its continuation third. Round one therefore runs `a`, `b`, then `e`. The callbacks `c` and `d` are only queued when `a` and `b` complete, so they run in round two. The timer fires after all microtasks drain: `abecd`.",
+   "tags": [
+    "event-loop",
+    "microtasks"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qa-js-029",
+   "topic": "JavaScript",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Implement a robust `deepClone` for plain data. What are the pitfalls, and when would you use `structuredClone` instead?",
+   "model_answer": "A hand-rolled version recurses over arrays and plain objects, using a `WeakMap` from original to clone to handle cycles and shared references: `function deepClone(v, seen = new WeakMap()) { if (v === null || typeof v !== 'object') return v; if (seen.has(v)) return seen.get(v); const out = Array.isArray(v) ? [] : Object.create(Object.getPrototypeOf(v)); seen.set(v, out); for (const k of Reflect.ownKeys(v)) out[k] = deepClone(v[k], seen); return out; }`. Special cases need explicit branches: `Date`, `RegExp`, `Map`, `Set`, typed arrays, and class instances with private fields or accessors. Pitfalls: `JSON.parse(JSON.stringify(x))` drops `undefined`, functions and symbols, turns `Date` into strings, `NaN` into `null` and throws on cycles or BigInt; shallow spread leaves nested references shared. `structuredClone` is built in (browsers, Node 17+), handles cycles, `Date`, `Map`, `Set`, `ArrayBuffer`, but throws on functions and DOM nodes and does not preserve prototypes (class instances become plain objects). Use it unless you need custom class semantics.",
+   "explanation": "Expect cycle handling via WeakMap, awareness of JSON limitations, and knowledge of `structuredClone` limits. Candidates who forget cycles or arrays are marked down.",
+   "tags": [
+    "objects",
+    "algorithms"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-js-030",
+   "topic": "JavaScript",
+   "level": "Advanced",
+   "type": "open",
+   "question": "What are generators and async iterators in JavaScript? Show a practical use of `for await...of` and explain how generators can model cooperative multitasking.",
+   "model_answer": "A generator (`function*`) returns an iterator whose execution pauses at each `yield` and resumes on `next(value)`, preserving local state; `yield` can also receive values and `return()`/`throw()` let the consumer terminate or inject errors. They allow lazy sequences, custom iteration, and pull-based pipelines. An async generator (`async function*`) yields promises and is consumed with `for await (const x of stream)`, awaiting each step: this is how Node streams, paginated APIs (`while (next) { const page = await fetch(next); yield* page.items; }`) and server-sent events are best consumed, with natural backpressure because the next item is only requested after the loop body finishes. Because a generator hands control back at every `yield`, a scheduler can run many generators round-robin; libraries like redux-saga used this to model long-running, cancellable workflows (cancel by calling `return()`), and async/await is effectively generators plus promises. Mention cleanup: `break` from `for await` calls `return()`, triggering `finally` blocks.",
+   "explanation": "Look for pull-based laziness, backpressure, cleanup on early exit, and a concrete pagination or stream example.",
+   "tags": [
+    "generators",
+    "async"
+   ],
+   "companies": [
+    "Netflix",
+    "Uber",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-js-031",
+   "topic": "JavaScript",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design an `EventEmitter` with `on`, `off`, `once` and `emit`. What edge cases and memory issues must you handle?",
+   "model_answer": "Store listeners in a `Map<string, Set<Function>>` (or arrays if duplicates and order matter). `on(evt, fn)` adds and returns an unsubscribe function; `off(evt, fn)` removes; `once` wraps `fn` in a wrapper that calls `off` before invoking, and keeps a reference to the original so `off(evt, fn)` can still remove it. `emit(evt, ...args)` must iterate over a snapshot (`[...listeners]`) so listeners added or removed during emit do not corrupt iteration, and should isolate errors (try/catch per listener, or let the first error propagate by design, documented). Edge cases: emitting with no listeners (and Node's special `error` event), `this` binding for handlers, async listeners (await or fire-and-forget), re-entrant emits. Memory: forgotten listeners keep closures and their captured objects alive, so provide `off`, `removeAllListeners`, a max-listener warning like Node's, or `AbortSignal`-based unsubscription; consider `WeakRef` only for advanced cases.",
+   "explanation": "Good answers snapshot listeners before iterating, handle `once` removal correctly, and talk about leaks from unremoved listeners.",
+   "tags": [
+    "design",
+    "patterns"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon",
+    "Adobe"
+   ]
+  },
+  {
+   "id": "qa-js-032",
+   "topic": "JavaScript",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "console.log([] == ![], [0] == false, [1, 2] == '1,2');",
+   "options": [
+    "true false true",
+    "true true true",
+    "false true true",
+    "true true false"
+   ],
+   "answer": 1,
+   "explanation": "`![]` is `false`, so `[] == false`; the array converts to the primitive `\"\"`, then to `0`, and `false` to `0`, so it is `true`. For `[0] == false`, `[0]` converts to `\"0\"` and then to `0`, equal to `0`, so `true`. For `[1, 2] == \"1,2\"`, the array's `toString` gives `\"1,2\"`, which matches. Each step is the Abstract Equality algorithm, which converts objects with `ToPrimitive` and then compares numbers. This is why none of these comparisons should appear in real code.",
+   "tags": [
+    "coercion",
+    "equality"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-js-033",
+   "topic": "JavaScript",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "class A {\n  x = this.constructor.name;\n  static s = this.name;\n}\nclass B extends A {}\nconsole.log(new B().x, B.s);",
+   "options": [
+    "A A",
+    "B B",
+    "B A",
+    "A B"
+   ],
+   "answer": 2,
+   "explanation": "Instance field initialisers run during construction of the class that declares them, with `this` set to the object being created. `new B()` runs `A`'s field initialisers with `this` being a `B` instance, so `this.constructor.name` is `\"B\"`. A static field initialiser runs once when `A` is defined, with `this` equal to `A`, so `s` is `\"A\"`. `B` inherits statics through its prototype chain (`B.__proto__ === A`), so `B.s` reads `A`'s value: `\"A\"`.",
+   "tags": [
+    "classes",
+    "inheritance"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-js-034",
+   "topic": "JavaScript",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const out = [];\nasync function a() { return Promise.resolve('x'); }\nasync function b() { return 'y'; }\na().then(v => out.push(v));\nb().then(v => out.push(v));\nPromise.resolve().then(() => out.push('1')).then(() => out.push('2')).then(() => out.push('3'));\nsetTimeout(() => console.log(out.join(' ')), 0);",
+   "options": [
+    "1 2 3 x y",
+    "y x 1 2 3",
+    "x y 1 2 3",
+    "y 1 2 x 3"
+   ],
+   "answer": 3,
+   "explanation": "`b()` returns a plain value, so its `.then` callback is queued immediately. `a()` returns a promise from an async function: the outer promise must adopt it, which costs extra microtask hops (a thenable-resolve job, then the adoption reaction, then the callback). Walking the queue: `y`, then `1` run in the first round; `2` runs next; the adoption completes and `x` is pushed; `3` is pushed last. Returning a promise from an `async` function (or resolving a promise with another promise) is slower by about two ticks than returning a plain value.",
+   "tags": [
+    "event-loop",
+    "promises"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qa-js-035",
+   "topic": "JavaScript",
+   "level": "Expert",
+   "type": "open",
+   "question": "How does a modern JavaScript engine like V8 make code fast, and what coding habits cause deoptimisation? Explain hidden classes, inline caches and how you would measure a hot path.",
+   "model_answer": "V8 parses to bytecode (Ignition) and JIT-compiles hot functions with optimising tiers (Sparkplug/Maglev/TurboFan) using type feedback collected at runtime. Objects get hidden classes (shapes/maps) that describe property layout; objects created with the same properties added in the same order share a shape. Property access sites use inline caches that remember the shape and offset, so monomorphic sites (one shape) are nearly as fast as struct access, polymorphic ones slower, and megamorphic ones fall back to slow dictionary lookups. Deopts happen when assumptions break: adding properties in different orders or conditionally, `delete`, changing a property type from number to string, holey or mixed-type arrays, calling a function with varying argument types, or `try`-heavy and `arguments`-abusing code in some tiers. Habits: initialise all properties in the constructor in a stable order, keep arrays dense and homogeneous, avoid `delete` (set to `undefined`/use `Map`), prefer typed arrays for numeric work. Measure instead of guessing: Chrome DevTools Performance and flame charts, `node --prof` / `--cpu-prof`, `--trace-deopt`, `performance.mark/measure`, and microbenchmarks with warm-up and realistic data; also check allocation and GC pressure with heap snapshots. Algorithmic fixes usually dominate engine-level tuning.",
+   "explanation": "Experts name shapes and inline caches, can give two concrete deopt triggers, and emphasise measurement over folklore. Warning sign: cargo-cult micro-optimisations without profiling.",
+   "tags": [
+    "performance",
+    "v8"
+   ],
+   "companies": [
+    "Google",
+    "Netflix",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-ts-001",
+   "topic": "TypeScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Under `strict` mode, which statement fails to compile?",
+   "code": "let a: any = \"hi\";\nlet u: unknown = \"hi\";\na.toUpperCase();\nu.toUpperCase();\n(u as string).toUpperCase();",
+   "options": [
+    "`u.toUpperCase();`",
+    "`a.toUpperCase();`",
+    "`(u as string).toUpperCase();`",
+    "All three compile"
+   ],
+   "answer": 0,
+   "explanation": "`any` switches off type checking for a value, so `a.toUpperCase()` compiles (and would fail at runtime if `a` were not a string). `unknown` is the type-safe counterpart: you may assign anything to it, but you must narrow it (with `typeof`, a type guard or an assertion) before using it. `u.toUpperCase()` is therefore an error: 'u is of type unknown'. The assertion in the last line compiles because it narrows explicitly, though assertions are only as safe as your knowledge.",
+   "tags": [
+    "any",
+    "unknown"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-ts-002",
+   "topic": "TypeScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which of these can be expressed with a `type` alias but NOT with an `interface`?",
+   "options": [
+    "An object shape with optional properties",
+    "A union such as `string | number`",
+    "A shape that a class can `implement`",
+    "An object type that extends another object type"
+   ],
+   "answer": 1,
+   "explanation": "Interfaces describe object shapes (including optional properties, methods, call signatures), can be implemented by classes and can `extend` other interfaces. Type aliases can name any type, which includes unions, tuples, primitives, mapped types and conditional types. An interface cannot be a union, so `type ID = string | number` has no interface equivalent.",
+   "tags": [
+    "types",
+    "interfaces"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-ts-003",
+   "topic": "TypeScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which lines produce a compile error?",
+   "code": "interface Point { x: number; y: number }\nconst a: Point = { x: 1, y: 2, z: 3 };\nconst tmp = { x: 1, y: 2, z: 3 };\nconst b: Point = tmp;\nfunction draw(p: Point) {}\ndraw({ x: 1, y: 2, z: 3 });\ndraw(tmp);",
+   "options": [
+    "Only line 2",
+    "Lines 4 and 7 (the variables with extra properties)",
+    "Lines 2 and 6 (fresh object literals with the extra property `z`)",
+    "Lines 2, 4, 6 and 7"
+   ],
+   "answer": 2,
+   "explanation": "Excess property checking applies only to fresh object literals assigned or passed directly to a typed target, which catches typos like `{ colour: 'red' }`. Line 2 and the literal in line 6 are fresh literals containing `z`, so they error. In lines 4 and 7 the extra property travels via a variable (`tmp`), which is no longer a fresh literal; TypeScript's structural typing only requires that `x` and `y` are present, so no error. The check is a lint-like feature, not a guarantee that no extra properties exist at runtime.",
+   "tags": [
+    "structural-typing",
+    "objects"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-ts-004",
+   "topic": "TypeScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What types does TypeScript infer for `a`, `b` and `c`?",
+   "code": "let a = \"x\";\nconst b = \"x\";\nlet c = [\"x\"];",
+   "options": [
+    "`a: \"x\"`, `b: \"x\"`, `c: \"x\"[]`",
+    "`a: string`, `b: string`, `c: string[]`",
+    "`a: string`, `b: \"x\"`, `c: [\"x\"]`",
+    "`a: string`, `b: \"x\"`, `c: string[]`"
+   ],
+   "answer": 3,
+   "explanation": "A `let` variable can be reassigned, so its literal type is widened to `string`. A `const` can never change, so it keeps the narrow literal type `\"x\"`. Array literals are inferred as arrays of the widened element type, `string[]`, not tuples; tuples need an annotation or `as const`.",
+   "tags": [
+    "inference",
+    "literals"
+   ],
+   "companies": [
+    "Turing",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-ts-005",
+   "topic": "TypeScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why does this fail to compile with `strictNullChecks` enabled, and what is the idiomatic fix?",
+   "code": "function len(s?: string): number {\n  return s.length;\n}",
+   "options": [
+    "`s` may be `undefined`; narrow it first, e.g. `return s?.length ?? 0;`",
+    "The return type must be `number | undefined`; just change the annotation",
+    "Optional parameters are not allowed to be read",
+    "`length` does not exist on string"
+   ],
+   "answer": 0,
+   "explanation": "An optional parameter has the type `string | undefined`. Accessing `.length` on a value that might be `undefined` would crash at runtime, so the compiler rejects it. Narrow with an `if`, optional chaining plus a fallback (`s?.length ?? 0`), or give the parameter a default (`s = ''`). Changing the return type only pushes the problem to callers and is not what the code intends.",
+   "tags": [
+    "null-safety",
+    "strict"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-ts-006",
+   "topic": "TypeScript",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What happens with this code?",
+   "code": "const nums: readonly number[] = [1, 2, 3];\nnums.push(4);\nconst first = nums[0];",
+   "options": [
+    "It compiles; `readonly` only stops re-assigning `nums`",
+    "`nums.push(4)` is a compile error; reading `nums[0]` is fine",
+    "Both `push` and the read are compile errors",
+    "It compiles but `push` throws at runtime"
+   ],
+   "answer": 1,
+   "explanation": "`readonly number[]` (also written `ReadonlyArray<number>`) removes the mutating methods from the type, so `push`, `pop`, `sort` and index assignment are compile errors, while reading is allowed. It is a compile-time guard only: the underlying array is still an ordinary mutable array at runtime, so nothing throws. This differs from `const`, which only prevents re-binding the variable.",
+   "tags": [
+    "readonly",
+    "arrays"
+   ],
+   "companies": [
+    "Turing",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-ts-007",
+   "topic": "TypeScript",
+   "level": "Basic",
+   "type": "open",
+   "question": "What does TypeScript add on top of JavaScript, and does it check types at runtime?",
+   "model_answer": "TypeScript is a superset of JavaScript with a static type system. The compiler (`tsc`) type-checks code, then erases the types and emits plain JavaScript; there is no runtime type information and no runtime checks. Benefits: catching mistakes (typos, wrong argument types, null access) at build time, much better editor tooling (autocomplete, safe refactors, go-to-definition), self-documenting APIs, and safer large-scale refactoring. Costs: build step, learning curve for advanced types, and the fact that types describe your beliefs, not guarantees: data from `fetch`, `JSON.parse`, or `localStorage` is typed as whatever you assert unless you validate it at the boundary (with type guards or a schema library such as zod). Type-only features are erased, while a few constructs (enums, namespaces, parameter properties) emit runtime code. Many teams also run `tsc --noEmit` in CI and let a fast transpiler build the output.",
+   "explanation": "Strong answers include 'types are erased' and the consequence for external data. Candidates who say TypeScript makes code run faster or checks types at runtime need follow-up.",
+   "tags": [
+    "fundamentals",
+    "tooling"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-ts-008",
+   "topic": "TypeScript",
+   "level": "Basic",
+   "type": "open",
+   "question": "When would you use an `interface` and when a `type` alias? Are there behavioural differences?",
+   "model_answer": "For plain object shapes they are largely interchangeable. Differences: interfaces can be extended with `extends` and also reopened via declaration merging (declaring `interface Window` twice merges them), which is useful for augmenting libraries and global types; type aliases cannot merge, but they can name unions, intersections, tuples, primitives, mapped and conditional types, which interfaces cannot. Error messages and performance are sometimes slightly better for interfaces (they are cached by name), and classes can `implement` either as long as the shape is an object type. A common convention: use `interface` for public object and class contracts that others may extend, and `type` for unions, utility-type compositions and anything non-object. Pick one convention per codebase and enforce it with lint rules.",
+   "explanation": "Interviewers look for declaration merging and 'type can do unions/mapped types'. A claim that one is strictly better is a yellow flag; a pragmatic convention is what they want.",
+   "tags": [
+    "interfaces",
+    "types"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-ts-009",
+   "topic": "TypeScript",
+   "level": "Basic",
+   "type": "open",
+   "question": "Compare TypeScript `enum`, a union of string literals, and a `const` object with `as const`. Which would you choose by default?",
+   "model_answer": "A regular `enum` is a runtime object: numeric enums get reverse mappings (`E[0] === 'A'`) and accept any number in older TS versions, string enums do not, and both produce extra emitted code; `const enum` is inlined but has pitfalls with `isolatedModules` and transpilers. A union like `type Status = 'idle' | 'loading' | 'done'` is erased completely, gives excellent autocomplete and exhaustiveness checks, and needs no import at runtime, but you cannot iterate its values. A `const` object with `as const` (`const Status = { Idle: 'idle', Done: 'done' } as const; type Status = typeof Status[keyof typeof Status]`) gives both a runtime object (iterate with `Object.values`) and a derived union type. Default to string-literal unions or the `as const` object pattern; use enums only when interoperating with existing code or when you want a nominal-ish, runtime-visible set. Avoid numeric enums for values that cross network boundaries.",
+   "explanation": "Good answers cover runtime emit, tree-shaking/bundler friendliness, and the `as const` pattern. Bonus for mentioning `isolatedModules` and `erasableSyntaxOnly` restrictions.",
+   "tags": [
+    "enums",
+    "types"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qa-ts-010",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Inside the `if (x)` block, what is the type of `x`?",
+   "code": "function f(x: string | number | null) {\n  if (typeof x === 'string') return 1;\n  if (x) {\n    // type of x here?\n  }\n}",
+   "options": [
+    "`number | null`",
+    "`string | number`",
+    "`number`",
+    "`0 | number`"
+   ],
+   "answer": 2,
+   "explanation": "After `typeof x === 'string'` returns early, `x` is `number | null`. The truthiness check `if (x)` then removes `null` (and `undefined`, `0`, `''` and `false` as far as types can express). TypeScript does not model 'non-zero numbers' as a type, so the remaining type is simply `number`.",
+   "tags": [
+    "narrowing"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-ts-011",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What happens with these two calls?",
+   "code": "function pick<T, K extends keyof T>(obj: T, key: K): T[K] {\n  return obj[key];\n}\nconst user = { id: 1, name: 'Ada' };\nconst a = pick(user, 'name');\nconst b = pick(user, 'email');",
+   "options": [
+    "`a` is `string | number`; both calls compile",
+    "`a` is `string`; both calls compile and `b` is `undefined`",
+    "Both calls are compile errors because `T` cannot be inferred",
+    "`a` is `string`; the `pick(user, \"email\")` call is a compile error"
+   ],
+   "answer": 3,
+   "explanation": "`K extends keyof T` constrains the key to the actual property names of the first argument. For `user`, `keyof T` is `'id' | 'name'`, so `'name'` is allowed and the return type `T['name']` is `string`. `'email'` is not a key, so the call fails to compile, which is the whole point of the constraint: typo-proof property access with precise result types.",
+   "tags": [
+    "generics",
+    "keyof"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-ts-012",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Given `interface User { id: number; name: string; email: string }`, which type best describes a patch payload where any subset of `name` and `email` may be sent but `id` can never be changed?",
+   "options": [
+    "`Partial<Omit<User, \"id\">>`",
+    "`Partial<User>`",
+    "`Pick<User, \"name\" | \"email\">`",
+    "`Required<Omit<User, \"id\">>`"
+   ],
+   "answer": 0,
+   "explanation": "`Omit<User, 'id'>` removes `id`, leaving `name` and `email`; `Partial<...>` makes each optional, so any subset is allowed. `Partial<User>` still permits `id`. `Pick<User, 'name' | 'email'>` and `Required<Omit<...>>` both force both properties to be present, so they do not allow partial updates.",
+   "tags": [
+    "utility-types"
+   ],
+   "companies": [
+    "Microsoft",
+    "Stripe",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-ts-013",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "const raw = JSON.parse('\"5\"') as number;\nconsole.log(typeof raw, raw + 1);",
+   "options": [
+    "number 6",
+    "string 51",
+    "string 6",
+    "number 51"
+   ],
+   "answer": 1,
+   "explanation": "Type assertions only change what the compiler believes; they emit no code and perform no conversion. `JSON.parse` returns `any`, and `as number` just tells TypeScript to treat it as a number. At runtime `raw` is still the string `\"5\"`, so `typeof raw` is `\"string\"` and `raw + 1` is string concatenation, `\"51\"`. This is why data from outside the program must be validated, not asserted.",
+   "tags": [
+    "assertions",
+    "runtime"
+   ],
+   "companies": [
+    "Amazon",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qa-ts-014",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is the type `Role` in the code below?",
+   "code": "const Role = { Admin: 'admin', User: 'user' } as const;\ntype Role = typeof Role[keyof typeof Role];",
+   "options": [
+    "`string`",
+    "`\"Admin\" | \"User\"`",
+    "`\"admin\" | \"user\"`",
+    "`{ readonly Admin: \"admin\"; readonly User: \"user\" }`"
+   ],
+   "answer": 2,
+   "explanation": "`as const` freezes the object's type to `{ readonly Admin: 'admin'; readonly User: 'user' }`. `typeof Role` is that object type; `keyof typeof Role` is `'Admin' | 'User'`; and indexing the object type with its keys, `typeof Role[keyof typeof Role]`, produces the union of the property value types: `'admin' | 'user'`. (A value and a type may share the name `Role`, because they live in different declaration spaces.)",
+   "tags": [
+    "const-assertions",
+    "keyof"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-ts-015",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What happens when `f(v)` is compiled?",
+   "code": "function f(x: string): string;\nfunction f(x: number): number;\nfunction f(x: string | number): string | number {\n  return x;\n}\ndeclare const v: string | number;\nf(v);",
+   "options": [
+    "It compiles and returns `string | number`",
+    "It compiles, TypeScript uses the implementation signature",
+    "Error: the overload list must end with a union signature",
+    "Error: no overload matches a `string | number` argument"
+   ],
+   "answer": 3,
+   "explanation": "The implementation signature (the one with the body) is not visible to callers; only the overload signatures are. Each overload accepts exactly `string` or exactly `number`, and TypeScript does not try to split a union argument across overloads, so `f(v)` fails with 'No overload matches this call'. The fix is to add a third overload `f(x: string | number): string | number`, or use a generic or conditional return type instead of overloads.",
+   "tags": [
+    "overloads",
+    "functions"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-ts-016",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "class A {\n  private x = 1;\n  #y = 2;\n}\nconst a = new A();\nconsole.log((a as any).x, (a as any).y);",
+   "options": [
+    "1 undefined",
+    "1 2",
+    "undefined undefined",
+    "It does not compile"
+   ],
+   "answer": 0,
+   "explanation": "TypeScript's `private` is a compile-time check only; the emitted JavaScript property `x` is an ordinary public property, so `(a as any).x` reads `1` (the `as any` cast bypasses the check). `#y` is a true ECMAScript private field with runtime enforcement: it is not stored as a normal property, so `(a as any).y` looks up an ordinary property named `y` and finds nothing: `undefined`. If you need real encapsulation use `#`, not `private`.",
+   "tags": [
+    "classes",
+    "private"
+   ],
+   "companies": [
+    "Microsoft",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-ts-017",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "TypeScript uses structural typing. What does that mean, what problems can it cause, and how do you get nominal-like behaviour when you need it?",
+   "model_answer": "Compatibility is decided by shape, not by declared name: any value with the required members is assignable, regardless of its class or interface. This enables duck-typed APIs and easy mocking, but it means `UserId` and `OrderId` aliases of `string` are interchangeable, and `{ x: 1, y: 2, z: 3 }` is a valid `Point`. To simulate nominal types use branding: `type UserId = string & { readonly __brand: 'UserId' }` with a constructor function (`const toUserId = (s: string) => s as UserId`) so that the compiler distinguishes IDs; unique symbols and private class members (a class with a `private` field is only compatible with itself and its subclasses) achieve similar effects. Brands are erased at runtime, so validate at the creation point. Also remember excess property checks only apply to fresh object literals.",
+   "explanation": "Look for 'shape not name', a concrete problem (mixing IDs), and the brand pattern including its runtime caveat.",
+   "tags": [
+    "structural-typing",
+    "branding"
+   ],
+   "companies": [
+    "Google",
+    "Stripe",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-ts-018",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "What are discriminated unions? Show how you would model a request state and make the compiler enforce that every case is handled.",
+   "model_answer": "A discriminated union is a union of object types that share a literal-typed property (the discriminant), e.g. `type State = { status: 'idle' } | { status: 'loading' } | { status: 'error'; error: Error } | { status: 'ok'; data: User[] }`. Checking the discriminant in an `if` or `switch` narrows to one member, so `state.data` is only accessible when `status === 'ok'`, which eliminates impossible states like `{ loading: true, data: [...], error: ... }` from several booleans. For exhaustiveness, add a `default` branch that assigns the value to `never`: `const _exhaustive: never = state;` (or call `assertNever(state)`). If someone adds a new member, the assignment fails to compile, pointing to every switch that needs updating. This pattern works for Redux actions, parsers, AST nodes and API results.",
+   "explanation": "Expect the `never` exhaustiveness trick and a clear explanation of why this beats optional fields and boolean flags.",
+   "tags": [
+    "unions",
+    "narrowing"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-ts-019",
+   "topic": "TypeScript",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Your service receives JSON from an external API. How do you get type safety at that boundary in TypeScript?",
+   "model_answer": "Type annotations are erased, so `const user = (await res.json()) as User` is a promise, not a check. Treat the parsed value as `unknown` and validate it. Options: write a type guard (`function isUser(x: unknown): x is User { ... }`) which is verbose and can drift from the type; or use a schema library (zod, valibot, io-ts, ArkType) where the schema is the single source of truth and the static type is derived with `z.infer`. Parse at the edge of the system (HTTP handlers, queue consumers, env vars, `localStorage`), convert to internal domain types, and let everything beyond trust the types. Decide how to treat failure: reject with a 4xx or log and drop. Also consider unknown extra fields (strip or reject), date strings to `Date`, and versioning. For internal calls with shared contracts, generate types from OpenAPI or use tRPC to avoid hand-written duplicates.",
+   "explanation": "The key point is 'unknown + runtime validation at the boundary; schema as single source of truth'. Weak candidates rely on `as` casts.",
+   "tags": [
+    "validation",
+    "zod",
+    "api"
+   ],
+   "companies": [
+    "Stripe",
+    "Toptal",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-ts-020",
+   "topic": "TypeScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What are `R1` and `R2`?",
+   "code": "type ToArray<T> = T extends unknown ? T[] : never;\ntype R1 = ToArray<string | number>;\ntype ToArray2<T> = [T] extends [unknown] ? T[] : never;\ntype R2 = ToArray2<string | number>;",
+   "options": [
+    "Both are `(string | number)[]`",
+    "`R1` is `string[] | number[]`, `R2` is `(string | number)[]`",
+    "Both are `string[] | number[]`",
+    "`R1` is `(string | number)[]`, `R2` is `string[] | number[]`"
+   ],
+   "answer": 1,
+   "explanation": "When the checked type in a conditional is a naked type parameter (`T extends ...`), the conditional is distributive: a union argument is split, the conditional is applied to each member, and the results are unioned, giving `string[] | number[]`. Wrapping both sides in a tuple, `[T] extends [unknown]`, prevents distribution, so the union is evaluated as a whole and yields `(string | number)[]`. This wrapping trick is the standard way to disable distribution.",
+   "tags": [
+    "conditional-types",
+    "distribution"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-ts-021",
+   "topic": "TypeScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What is the type `G`?",
+   "code": "type Getters<T> = {\n  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];\n};\ntype G = Getters<{ name: string; age: number }>;",
+   "options": [
+    "`{ name: () => string; age: () => number }`",
+    "`{ GetName: string; GetAge: number }`",
+    "`{ getName: () => string; getAge: () => number }`",
+    "`{ getname: () => string; getage: () => number }`"
+   ],
+   "answer": 2,
+   "explanation": "The `as` clause in a mapped type remaps keys. For each key `K` of `T` the template literal builds `get${Capitalize<K>}`, so `name` becomes `getName` and `age` becomes `getAge`. The value type is a function returning the original property type, `T[K]`. `string & K` narrows keys to string-like ones so `Capitalize` accepts them (symbols and numbers are excluded).",
+   "tags": [
+    "mapped-types",
+    "template-literals"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-ts-022",
+   "topic": "TypeScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What is `Result`?",
+   "code": "type Unpromise<T> = T extends Promise<infer U> ? Unpromise<U> : T;\ntype Result = Unpromise<Promise<Promise<number>>>;",
+   "options": [
+    "`Promise<number>`",
+    "`Promise<Promise<number>>`",
+    "`unknown`",
+    "`number`"
+   ],
+   "answer": 3,
+   "explanation": "`infer U` captures the type inside `Promise<...>`. The recursion applies `Unpromise` again to the captured type until the argument is no longer a promise, then returns it. So `Promise<Promise<number>>` unwraps twice to `number`. TypeScript's built-in `Awaited<T>` does the same, which mirrors how `await` flattens nested promises at runtime.",
+   "tags": [
+    "infer",
+    "recursion"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-ts-023",
+   "topic": "TypeScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "With `strictFunctionTypes` enabled, which of the two assignments compiles?",
+   "code": "class Animal { name = ''; }\nclass Dog extends Animal { bark() {} }\ndeclare let hd: (d: Dog) => void;\ndeclare let handlerAnimal: (a: Animal) => void;\nlet ha: (a: Animal) => void = hd;\nlet hdog: (d: Dog) => void = handlerAnimal;",
+   "options": [
+    "Only `hdog = handlerAnimal`",
+    "Only `ha = hd`",
+    "Both compile",
+    "Neither compiles"
+   ],
+   "answer": 0,
+   "explanation": "Function parameters are contravariant under `strictFunctionTypes`. A function that accepts any `Animal` can safely stand in for one that will only ever be called with a `Dog`, so `hdog = handlerAnimal` is fine. The reverse is unsafe: `ha = hd` would let callers pass a non-dog `Animal` to a function that expects `bark()`, so it is rejected. Note that method-shorthand declarations (`on(h: ...)`) and constructor/method parameters remain bivariant for compatibility reasons.",
+   "tags": [
+    "variance",
+    "functions"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-ts-024",
+   "topic": "TypeScript",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which statement about this code is correct?",
+   "code": "const cfg = { port: 8080, host: 'localhost' } satisfies Record<string, string | number>;\ncfg.port.toFixed();\nconst cfg2: Record<string, string | number> = { port: 8080 };\ncfg2.port.toFixed();",
+   "options": [
+    "Both lines 2 and 4 compile",
+    "Line 2 compiles; line 4 is a compile error",
+    "Both lines 2 and 4 are compile errors",
+    "Line 2 is an error; line 4 compiles"
+   ],
+   "answer": 1,
+   "explanation": "`satisfies` checks that an expression conforms to a type without widening it, so `cfg.port` keeps its precise type `number` and `.toFixed()` is allowed. A type annotation instead replaces the inferred type with `Record<string, string | number>`, so `cfg2.port` is `string | number` and `toFixed` does not exist on `string`: a compile error. Use `satisfies` when you want validation and keep the inferred literal types.",
+   "tags": [
+    "satisfies",
+    "inference"
+   ],
+   "companies": [
+    "Microsoft",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-ts-025",
+   "topic": "TypeScript",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design a type-safe event emitter in TypeScript: `emitter.on('login', (user) => ...)` should infer the payload type from the event name. Show the types.",
+   "model_answer": "Declare an event map as the single source of truth: `type Events = { login: { id: string }; logout: void; error: Error }`. Then make the class generic over it: `class Emitter<E extends Record<string, unknown>> { private handlers: { [K in keyof E]?: Array<(payload: E[K]) => void> } = {}; on<K extends keyof E>(event: K, fn: (payload: E[K]) => void): () => void { (this.handlers[event] ??= []).push(fn); return () => this.off(event, fn); } off<K extends keyof E>(event: K, fn: (payload: E[K]) => void) { ... } emit<K extends keyof E>(event: K, ...args: E[K] extends void ? [] : [payload: E[K]]) { ... } }`. The constraint `K extends keyof E` makes the event name a literal type, which then indexes `E[K]` for the handler parameter, so `on('login', u => u.id)` infers `u` and `on('typo', ...)` fails to compile. The conditional rest-parameter makes void events callable without an argument. Mention trade-offs: runtime still needs defensive copying of handler arrays during emit, and the map can be extended via interface merging for plugins.",
+   "explanation": "Look for generics over a map type, `K extends keyof E`, indexed access `E[K]`, and awareness that types are erased so runtime concerns (snapshotting handlers) still apply.",
+   "tags": [
+    "generics",
+    "design"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qa-ts-026",
+   "topic": "TypeScript",
+   "level": "Advanced",
+   "type": "open",
+   "question": "You inherit a 200k-line JavaScript codebase and are asked to migrate to TypeScript with no feature freeze. What is your plan and which compiler options matter?",
+   "model_answer": "Migrate incrementally: add `typescript` and a `tsconfig` with `allowJs`, `checkJs` off at first and `noEmit`, wire `tsc --noEmit` into CI, and get the build green. Rename files to `.ts`/`.tsx` gradually, starting with leaf modules and shared utilities so types flow outward, or from the data layer (API models) inward. Use `// @ts-check` plus JSDoc for files you cannot convert yet. Start permissive (`noImplicitAny` off, `strict: false`) then ratchet: enable `strictNullChecks`, `noImplicitAny`, `strictFunctionTypes`, and finally `strict`, using per-folder tsconfigs or a tool that tracks and blocks new violations. Add `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, and `noImplicitOverride` later for extra safety. Avoid mass `any`; prefer `unknown` and TODO-tagged `@ts-expect-error` so suppressions fail loudly when fixed. Install `@types/*`, generate API types from OpenAPI, validate external data at boundaries, add lint rules (`no-explicit-any`, `consistent-type-imports`), keep a metrics dashboard of `any` count and converted files, and make the new-code rule strict from day one.",
+   "explanation": "Good answers are incremental, CI-enforced and metrics-driven, with a ratchet strategy on strictness. Candidates proposing a big-bang rewrite or sprinkling `any` everywhere should be probed.",
+   "tags": [
+    "migration",
+    "tsconfig"
+   ],
+   "companies": [
+    "Toptal",
+    "Microsoft",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-ts-027",
+   "topic": "TypeScript",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What is the type `P`?",
+   "code": "type Split<S extends string> = S extends `${infer H}.${infer T}` ? [H, ...Split<T>] : [S];\ntype P = Split<'a.b.c'>;",
+   "options": [
+    "`string[]`",
+    "`[\"a.b.c\"]`",
+    "`[\"a\", \"b\", \"c\"]`",
+    "`[\"a\", \"b.c\"]`"
+   ],
+   "answer": 2,
+   "explanation": "The conditional type uses template-literal pattern matching with `infer`. For `'a.b.c'`, `H` matches the shortest prefix before the first dot (`'a'`) and `T` the rest (`'b.c'`), giving `['a', ...Split<'b.c'>]`, which recurses to `['a', 'b', 'c']`. When no dot remains the input does not match, and the branch returns `[S]`. Recursive template-literal types like this power typed path accessors (`get(obj, 'a.b.c')`).",
+   "tags": [
+    "template-literals",
+    "recursion"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-ts-028",
+   "topic": "TypeScript",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What is `IsNever<never>`?",
+   "code": "type IsNever<T> = T extends never ? true : false;\ntype X = IsNever<never>;",
+   "options": [
+    "`true`",
+    "`false`",
+    "`boolean`",
+    "`never`"
+   ],
+   "answer": 3,
+   "explanation": "A conditional type over a naked type parameter is distributive, and distributing over the empty union `never` yields no members to evaluate, so the result is `never` rather than either branch. To test for `never` correctly, wrap in a tuple to prevent distribution: `type IsNever<T> = [T] extends [never] ? true : false`. This is a classic trap when writing utility types and one reason `Exclude`/`Extract` behave as they do.",
+   "tags": [
+    "conditional-types",
+    "never"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qa-ts-029",
+   "topic": "TypeScript",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does the compiler report for this assignment?",
+   "code": "type A = { kind: 'a'; x: number } | { kind: 'b'; y: string };\nconst v: A = { kind: 'a', x: 1, y: 's' };",
+   "options": [
+    "Error: `y` does not exist in the `kind: \"a\"` member (excess property)",
+    "No error: the object matches the union as a whole",
+    "Error: `kind` cannot be inferred",
+    "No error, because a union accepts the properties of all members"
+   ],
+   "answer": 0,
+   "explanation": "For discriminated unions, TypeScript uses the discriminant property (`kind: 'a'`) to select the matching member of the union and then performs excess property checking against that member only. `y` belongs to the `'b'` member, so it is flagged as an unknown property for `kind: 'a'`. Without a discriminant, excess property checks on unions are looser, and `{ x: 1, y: 's' }` would be accepted as it is a subtype of at least one member.",
+   "tags": [
+    "unions",
+    "excess-properties"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-ts-030",
+   "topic": "TypeScript",
+   "level": "Expert",
+   "type": "open",
+   "question": "TypeScript's type system is intentionally unsound in places. List several, explain why they exist and how you would mitigate them in a production codebase.",
+   "model_answer": "Known unsound areas: `any` and unchecked assertions (`as`, non-null `!`); array covariance (`Dog[]` assignable to `Animal[]` so you can push a `Cat` through the alias); method parameter bivariance; index signatures and arrays returning `T` rather than `T | undefined` for out-of-range access (unless `noUncheckedIndexedAccess`); `Object.keys` returning `string[]` while objects may have extra keys (structural subtyping); mutation of narrowed values (narrowing is invalidated by function calls in practice but TypeScript is optimistic); type predicates that lie (`x is Foo` is trusted); `JSON.parse`/`fetch` returning `any`; declaration files that do not match runtime; and `readonly` being shallow and assignable to mutable types. These exist because TS's goal is to type existing JavaScript pragmatically, not to be a proof system. Mitigations: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`; lint rules banning `any`, `as` and `!` except with justification (`@typescript-eslint/no-unsafe-*`); validate external data at boundaries with schemas; prefer `readonly`/`ReadonlyArray` and immutable updates; keep type predicates tested; use `satisfies` instead of assertions; and test the behaviour, because types do not replace tests.",
+   "explanation": "Experts name at least four concrete unsound spots and tie each to a practical guard. They treat type safety as a tool and know where the guarantees end.",
+   "tags": [
+    "type-system",
+    "soundness"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qa-java-001",
+   "topic": "Java",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    public static void main(String[] args) {\n        String s = \"java\";\n        s.toUpperCase();\n        s.concat(\"!\");\n        StringBuilder sb = new StringBuilder(\"java\");\n        sb.append(\"!\");\n        System.out.println(s + \" \" + sb);\n    }\n}",
+   "options": [
+    "JAVA! java!",
+    "java java!",
+    "JAVA java!",
+    "java! java!"
+   ],
+   "answer": 1,
+   "explanation": "`String` objects are immutable. `s.toUpperCase()` and `s.concat(\"!\")` return new strings that are discarded because the result is never assigned, so `s` is still `java`. `StringBuilder` is mutable and `append` changes it in place, giving `java!`. Use `StringBuilder` for building strings in loops.",
+   "tags": [
+    "strings",
+    "immutability"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-java-002",
+   "topic": "Java",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    public static void main(String[] args) {\n        System.out.println(7 / 2 + \" \" + 7 % -3 + \" \" + (char) ('a' + 1) + \" \" + ('a' + 1));\n    }\n}",
+   "options": [
+    "3.5 -1 b 98",
+    "3 -1 b b",
+    "3 1 b 98",
+    "4 1 b 98"
+   ],
+   "answer": 2,
+   "explanation": "`7 / 2` is integer division, giving `3`. In Java the sign of `%` follows the dividend, so `7 % -3` is `1`. `'a' + 1` is arithmetic on `int` (the char is promoted), so it yields `98`; casting that value back with `(char)` gives `'b'`. The expression is evaluated left to right, and each `+ \" \"` turns the result into string concatenation, which is why the parts print separately.",
+   "tags": [
+    "operators",
+    "types"
+   ],
+   "companies": [
+    "Oracle",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-java-003",
+   "topic": "Java",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    public static void main(String[] args) {\n        int x = Integer.MAX_VALUE;\n        x++;\n        System.out.println(x + \" \" + Math.abs(Integer.MIN_VALUE) + \" \" + (Integer.MAX_VALUE + 1L));\n    }\n}",
+   "options": [
+    "2147483648 2147483648 2147483648",
+    "-2147483648 2147483648 2147483648",
+    "It throws ArithmeticException",
+    "-2147483648 -2147483648 2147483648"
+   ],
+   "answer": 3,
+   "explanation": "Java `int` arithmetic wraps around silently on overflow: `Integer.MAX_VALUE + 1` becomes `Integer.MIN_VALUE`. `Math.abs(Integer.MIN_VALUE)` also overflows because the positive counterpart does not fit in an `int`, so it returns the same negative value. Using the `long` literal `1L` promotes the addition to 64 bits and gives the mathematically expected result. Use `Math.addExact` and friends if you want an exception on overflow.",
+   "tags": [
+    "overflow",
+    "types"
+   ],
+   "companies": [
+    "Amazon",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-java-004",
+   "topic": "Java",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    public static void main(String[] args) {\n        int[] a = new int[3];\n        String[] s = new String[2];\n        boolean[] f = new boolean[1];\n        System.out.println(a[0] + \" \" + s[0] + \" \" + a.length + \" \" + f[0]);\n    }\n}",
+   "options": [
+    "0 null 3 false",
+    "0 0 3 true",
+    "null null 3 false",
+    "It throws NullPointerException at s[0]"
+   ],
+   "answer": 0,
+   "explanation": "Array elements get default values: numeric types are `0`, `boolean` is `false`, and object references are `null`. `new String[2]` creates an array of two `null` references; reading `s[0]` simply yields `null` (printing `null` in concatenation does not throw). A `NullPointerException` would occur only if you dereferenced it, e.g. `s[0].length()`. The `length` field of an array is `3` here.",
+   "tags": [
+    "arrays",
+    "defaults"
+   ],
+   "companies": [
+    "Oracle",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-java-005",
+   "topic": "Java",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    public static void main(String[] args) {\n        int n = 2;\n        switch (n) {\n            case 1: System.out.print(\"a\");\n            case 2: System.out.print(\"b\");\n            case 3: System.out.print(\"c\"); break;\n            default: System.out.print(\"d\");\n        }\n    }\n}",
+   "options": [
+    "b",
+    "bc",
+    "bcd",
+    "c"
+   ],
+   "answer": 1,
+   "explanation": "A `switch` statement with old-style `case ...:` labels falls through into the following cases until a `break` is reached. With `n = 2`, execution starts at `case 2`, prints `b`, falls into `case 3`, prints `c`, and then hits `break`. The `default` branch is never reached. Arrow-style `case 2 ->` labels (Java 14+) do not fall through.",
+   "tags": [
+    "control-flow",
+    "switch"
+   ],
+   "companies": [
+    "Oracle",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-java-006",
+   "topic": "Java",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does the compiler report for this code?",
+   "code": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        final List<String> names = new ArrayList<>();\n        names.add(\"Ada\");\n        names = new ArrayList<>();\n    }\n}",
+   "options": [
+    "`names.add(\"Ada\")` fails because a final list cannot be modified",
+    "Both the `add` call and the re-assignment fail",
+    "Only `names = new ArrayList<>()` fails (cannot assign a value to a final variable); `names.add` is fine",
+    "No error, the list is simply replaced"
+   ],
+   "answer": 2,
+   "explanation": "`final` on a variable means the reference cannot be re-assigned after initialisation, so `names = new ArrayList<>()` is rejected. It does not make the object immutable, so calling `names.add(\"Ada\")` is perfectly legal. For an unmodifiable collection use `List.of(...)` or `Collections.unmodifiableList`.",
+   "tags": [
+    "final",
+    "collections"
+   ],
+   "companies": [
+    "Oracle",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-java-007",
+   "topic": "Java",
+   "level": "Basic",
+   "type": "open",
+   "question": "Explain the difference between the JDK, JRE and JVM, and describe what happens between writing a `.java` file and running it.",
+   "model_answer": "The JVM (Java Virtual Machine) is the runtime that loads, verifies and executes bytecode, manages memory with the garbage collector, and JIT-compiles hot methods to native code. The JRE bundles the JVM with the standard class libraries needed to run programs; the JDK adds development tools (`javac`, `jar`, `jshell`, `javadoc`, profilers) on top. The flow: `javac` compiles source into platform-independent `.class` files containing bytecode; the JVM's class loaders load classes lazily, the bytecode verifier checks them, the interpreter starts running them, and the JIT compiler (C1/C2 tiers in HotSpot) compiles frequently used code. That is how 'write once, run anywhere' works: the same bytecode runs on any OS with a compatible JVM. Modern distributions ship only the JDK; `jlink` can build a minimal runtime image.",
+   "explanation": "Check that the candidate separates compile time from run time and mentions bytecode, class loading and the JIT. 'JVM compiles Java to machine code once' is imprecise.",
+   "tags": [
+    "jvm",
+    "fundamentals"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-java-008",
+   "topic": "Java",
+   "level": "Basic",
+   "type": "open",
+   "question": "Compare `String`, `StringBuilder` and `StringBuffer`. When do you use each, and what is the string pool?",
+   "model_answer": "`String` is immutable and thread-safe by virtue of immutability: every modification creates a new object. `StringBuilder` is a mutable, unsynchronised character buffer meant for building strings, the right default in single-threaded code and in loops (`s += x` in a loop is O(n^2) because each iteration copies). `StringBuffer` is the older synchronised variant; it is rarely needed because shared mutable string building across threads is unusual and better handled differently. The string pool is an area where the JVM stores unique literals and compile-time constants (and any string you `intern()`), so identical literals share one object and `==` on two literals is true; `new String(\"a\")` creates a separate heap object. Therefore always compare content with `equals`. Note that the compiler already turns simple concatenations into `StringBuilder` or `invokedynamic` calls, so one-off concatenation is fine.",
+   "explanation": "Look for: immutability reasoning, the loop-concatenation cost, `equals` vs `==`, and knowing that `StringBuffer` synchronisation is rarely worthwhile.",
+   "tags": [
+    "strings",
+    "fundamentals"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-java-009",
+   "topic": "Java",
+   "level": "Basic",
+   "type": "open",
+   "question": "What is the difference between an abstract class and an interface in modern Java? How do you choose?",
+   "model_answer": "An abstract class can have state (fields), constructors, and a mix of abstract and concrete methods of any visibility, but a class can extend only one. An interface defines a contract: since Java 8 it can contain `default` and `static` methods and (Java 9) `private` methods, but it cannot hold instance state, and a class can implement many interfaces. Choose an interface to model a capability or role that unrelated classes may share (`Comparable`, `Runnable`), and for APIs you expect others to implement or mock. Choose an abstract class when subclasses are closely related and share state or a template-method skeleton, or when you need constructors and protected helpers. Prefer composition over deep inheritance either way. Default methods allow evolving interfaces without breaking implementers, but diamond conflicts must be resolved explicitly. Sealed types (Java 17) can restrict who may extend or implement.",
+   "explanation": "Good answers mention single vs multiple inheritance, state, default methods and a decision rule. Avoid answers that still claim interfaces cannot have method bodies.",
+   "tags": [
+    "oop",
+    "interfaces"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-java-010",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    static class R implements AutoCloseable {\n        final String n;\n        R(String n) { this.n = n; System.out.print(\"open\" + n + \" \"); }\n        public void close() { System.out.print(\"close\" + n + \" \"); }\n    }\n    public static void main(String[] args) {\n        try (R a = new R(\"A\"); R b = new R(\"B\")) {\n            System.out.print(\"body \");\n        } finally {\n            System.out.print(\"finally\");\n        }\n    }\n}",
+   "options": [
+    "openA openB body closeA closeB finally",
+    "openA body closeA openB body closeB finally",
+    "openA openB body finally closeB closeA",
+    "openA openB body closeB closeA finally"
+   ],
+   "answer": 3,
+   "explanation": "Resources in a try-with-resources header are opened in declaration order and closed in reverse order, after the body and before any `catch` or `finally` block runs. So the sequence is open A, open B, body, close B, close A, and only then `finally`. This reverse-order guarantee lets later resources depend on earlier ones. If both the body and `close()` throw, the close exception is attached as a suppressed exception.",
+   "tags": [
+    "exceptions",
+    "resources"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-java-011",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "import java.util.stream.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        Stream<String> s = Stream.of(\"a\", \"b\");\n        s.forEach(System.out::print);\n        try {\n            s.count();\n        } catch (IllegalStateException e) {\n            System.out.println(\" \" + e.getMessage());\n        }\n    }\n}",
+   "options": [
+    "ab stream has already been operated upon or closed",
+    "ab ab",
+    "ab 0",
+    "ab (no exception, count prints 2)"
+   ],
+   "answer": 0,
+   "explanation": "A `Stream` is a single-use pipeline: once a terminal operation such as `forEach` has run, the stream is consumed. Calling another terminal operation on the same instance throws `IllegalStateException` with the message 'stream has already been operated upon or closed'. To traverse the data again, create a new stream from the source or keep a `Supplier<Stream<T>>`.",
+   "tags": [
+    "streams"
+   ],
+   "companies": [
+    "Oracle",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-java-012",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        List<Integer> l = new ArrayList<>(List.of(10, 20, 30, 1));\n        l.remove(1);\n        l.remove(Integer.valueOf(1));\n        System.out.println(l);\n    }\n}",
+   "options": [
+    "[10, 20, 30]",
+    "[10, 30]",
+    "[10, 30, 1]",
+    "[20, 30]"
+   ],
+   "answer": 1,
+   "explanation": "`List<Integer>` has two `remove` overloads: `remove(int index)` and `remove(Object o)`. `l.remove(1)` with an `int` argument picks the index version and removes `20`. `l.remove(Integer.valueOf(1))` passes an object, so it removes the first element equal to `1`, which is the last element. The result is `[10, 30]`. This overload trap is a frequent source of bugs with integer lists.",
+   "tags": [
+    "collections",
+    "overloading"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qa-java-013",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        List<Integer> l = Arrays.asList(1, 2, 3);\n        l.set(0, 9);\n        try {\n            l.add(4);\n        } catch (UnsupportedOperationException e) {\n            System.out.println(\"UOE \" + l);\n        }\n    }\n}",
+   "options": [
+    "UOE [1, 2, 3]",
+    "[9, 2, 3, 4]",
+    "UOE [9, 2, 3]",
+    "UOE [9, 2, 3, 4]"
+   ],
+   "answer": 2,
+   "explanation": "`Arrays.asList` returns a fixed-size list backed by the array. Writes through `set` are allowed (and write through to the array), but structural changes such as `add` or `remove` throw `UnsupportedOperationException`. The `set(0, 9)` already took effect before the exception. Wrap in `new ArrayList<>(Arrays.asList(...))` when you need a resizable list; `List.of` is fully immutable.",
+   "tags": [
+    "collections"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-java-014",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "import java.util.*;\n\npublic class Main {\n    static class P {\n        int x;\n        P(int x) { this.x = x; }\n        @Override public boolean equals(Object o) { return o instanceof P p && p.x == x; }\n        @Override public int hashCode() { return Integer.hashCode(x); }\n    }\n    public static void main(String[] args) {\n        Set<P> s = new HashSet<>();\n        P p = new P(1);\n        s.add(p);\n        p.x = 2;\n        System.out.println(s.contains(p) + \" \" + s.size());\n    }\n}",
+   "options": [
+    "true 1",
+    "false 0",
+    "true 0",
+    "false 1"
+   ],
+   "answer": 3,
+   "explanation": "The element is stored in the bucket computed from the hash at insertion time (hash of `x == 1`). After mutating `x` to 2, `contains(p)` computes a new hash and looks in a different bucket, so it does not find the object even though it is the same reference: `false`. The set still holds the object (size 1) but it is effectively lost. Never mutate fields that participate in `hashCode`/`equals` while an object is in a hash-based collection; use immutable keys.",
+   "tags": [
+    "hashing",
+    "collections"
+   ],
+   "companies": [
+    "Oracle",
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-java-015",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which statements fail to compile?",
+   "code": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        List<Integer> ints = new ArrayList<>();\n        List<Number> nums = ints;\n        List<? extends Number> ro = ints;\n        ro.add(1);\n        Number n = ro.get(0);\n    }\n}",
+   "options": [
+    "The assignment `nums = ints` and the call `ro.add(1)`",
+    "Only the assignment `nums = ints`",
+    "Only the call `ro.add(1)`",
+    "None; generics are checked only at runtime"
+   ],
+   "answer": 0,
+   "explanation": "Generics are invariant: `List<Integer>` is not a `List<Number>`, even though `Integer` is a `Number`, because otherwise you could add a `Double` through the `List<Number>` view. `List<? extends Number>` is a covariant read-only view: you can read elements as `Number`, but you cannot add anything (except `null`) because the compiler does not know the exact element type. Both the invariant assignment and `ro.add(1)` fail, while `ro.get(0)` is fine. Generic errors are caught at compile time; erasure only removes the type information afterwards.",
+   "tags": [
+    "generics",
+    "wildcards"
+   ],
+   "companies": [
+    "Oracle",
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-java-016",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    record P(int x, int y) {}\n    public static void main(String[] args) {\n        System.out.println(new P(1, 2) + \" \" + new P(1, 2).equals(new P(1, 2)) + \" \" + (new P(1, 2) == new P(1, 2)));\n    }\n}",
+   "options": [
+    "com.Main$P@1b6d3586 true false",
+    "P[x=1, y=2] true false",
+    "P[x=1, y=2] false false",
+    "P[x=1, y=2] true true"
+   ],
+   "answer": 1,
+   "explanation": "A `record` automatically generates a canonical constructor, accessors, `equals`/`hashCode` based on all components, and a `toString` in the form `P[x=1, y=2]`. Two records with equal components are `equals`, but `==` compares references, and `new` always creates a distinct object. Records are shallowly immutable data carriers: fields are final, but a component holding a mutable list can still be changed.",
+   "tags": [
+    "records",
+    "java16"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-java-017",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you choose between `ArrayList`, `LinkedList`, `ArrayDeque`, `HashMap`, `LinkedHashMap`, `TreeMap` and `ConcurrentHashMap`? Mention complexities.",
+   "model_answer": "`ArrayList`: O(1) random access and amortised O(1) append, O(n) insert/remove in the middle; the default list because of cache locality. `LinkedList`: O(1) insert/remove at a known node, but O(n) access and poor locality and memory overhead, so it is rarely faster in practice; use `ArrayDeque` for queues and stacks (O(1) at both ends, no per-node allocation). `HashMap`: average O(1) get/put, unordered, needs good `hashCode`; `LinkedHashMap` adds predictable insertion (or access) order, and with `removeEldestEntry` makes a simple LRU cache; `TreeMap`: O(log n), sorted by key with range queries (`floorKey`, `subMap`). `ConcurrentHashMap` for shared mutable maps: lock striping/CAS, atomic compound operations such as `merge` and `computeIfAbsent`, and no null keys or values. Also mention `EnumMap`, `PriorityQueue` (O(log n)), `CopyOnWriteArrayList` for read-mostly lists, and immutable `List.of`/`Map.of`.",
+   "explanation": "Interviewers want the 'why' behind `ArrayDeque` over `LinkedList`, the ordering variants, and the thread-safety story. A table of Big-O without choosing criteria is incomplete.",
+   "tags": [
+    "collections",
+    "complexity"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qa-java-018",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Explain Java's checked vs unchecked exceptions and how you design exception handling in a service. What would you avoid?",
+   "model_answer": "Checked exceptions extend `Exception` (not `RuntimeException`) and must be declared or caught; they represent recoverable conditions the caller is expected to handle (I/O, SQL). Unchecked exceptions extend `RuntimeException` or `Error` and represent programming errors or unrecoverable states (`NullPointerException`, `IllegalArgumentException`). In practice, many modern libraries and frameworks use unchecked exceptions to avoid signature pollution and lambdas that cannot throw checked exceptions. A good design: validate arguments early with `IllegalArgumentException`; wrap low-level exceptions into domain exceptions with the cause preserved (`new OrderException(\"...\", e)`); translate to HTTP status codes at the boundary with a single handler (e.g. `@ControllerAdvice`); log once, with stack trace, where the error is finally handled; use try-with-resources for cleanup. Avoid catching `Exception`/`Throwable` broadly, swallowing exceptions, using exceptions for normal control flow, returning `null` to signal errors, and logging and re-throwing at every layer.",
+   "explanation": "Look for cause chaining, one place to translate and log, and awareness of the checked-exception debate. Swallowing exceptions or `catch (Exception e) { e.printStackTrace(); }` are red flags.",
+   "tags": [
+    "exceptions",
+    "design"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qa-java-019",
+   "topic": "Java",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "What are functional interfaces and lambdas in Java? When do streams help, and when are they a bad idea?",
+   "model_answer": "A functional interface has exactly one abstract method (`Runnable`, `Comparator<T>`, `Function<T,R>`, `Predicate<T>`, `Supplier<T>`); a lambda or method reference is a concise implementation of it, and `@FunctionalInterface` documents and enforces the contract. Lambdas capture effectively final variables, so they cannot mutate local state, and they compile to `invokedynamic` rather than anonymous classes. Streams provide a declarative pipeline over a source: lazy intermediate operations (`filter`, `map`, `sorted`) and one terminal operation (`collect`, `reduce`, `forEach`). They shine for transformations, grouping (`Collectors.groupingBy`), and aggregations on moderately sized data. Avoid them when the logic needs checked exceptions, complex control flow or index access, when side effects in `map`/`peek` make behaviour confusing, or when it harms readability. Parallel streams use the common ForkJoinPool and help only with large CPU-bound, stateless, splittable workloads; they are dangerous for blocking I/O or shared state. Streams are single use.",
+   "explanation": "Good answers cover laziness, effectively final captures, and an honest view of parallel streams. Over-enthusiasm ('use streams everywhere') is a mild negative.",
+   "tags": [
+    "lambdas",
+    "streams",
+    "java8"
+   ],
+   "companies": [
+    "Oracle",
+    "Netflix",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qa-java-020",
+   "topic": "Java",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        List<Integer> l = new ArrayList<>(List.of(1, 2, 3, 4));\n        for (Integer x : l) {\n            if (x == 3) l.remove(x);\n        }\n        System.out.println(l);\n    }\n}",
+   "options": [
+    "[1, 2, 4] after a ConcurrentModificationException",
+    "ConcurrentModificationException and no output",
+    "[1, 2, 4]",
+    "[1, 2, 3, 4]"
+   ],
+   "answer": 2,
+   "explanation": "A for-each loop uses the list's iterator, whose `hasNext()` simply checks `cursor != size`. When `3` (index 2) is removed, `size` drops to 3 and the iterator's cursor is already 3, so `hasNext()` returns false and the loop ends before `next()` (which performs the modification check) is called again. No exception is thrown and the list is `[1, 2, 4]`. Removing any other element would throw `ConcurrentModificationException`. This is a famous accident, not a feature: use `Iterator.remove()` or `removeIf`.",
+   "tags": [
+    "collections",
+    "iterators"
+   ],
+   "companies": [
+    "Oracle",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-java-021",
+   "topic": "Java",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    static int f() {\n        int x = 1;\n        try { return x; } finally { x = 2; }\n    }\n    static int[] g() {\n        int[] a = {1};\n        try { return a; } finally { a[0] = 2; }\n    }\n    public static void main(String[] args) {\n        System.out.println(f() + \" \" + g()[0]);\n    }\n}",
+   "options": [
+    "2 2",
+    "1 1",
+    "2 1",
+    "1 2"
+   ],
+   "answer": 3,
+   "explanation": "The return value expression is evaluated, and its value is saved, before `finally` runs. In `f`, the saved value is the int `1`; changing the local `x` in `finally` does not affect it, so `f()` returns `1`. In `g`, the saved value is a reference to the array; `finally` mutates the same array through that reference, so the caller sees `a[0] == 2`. A `return` inside `finally` would override both.",
+   "tags": [
+    "exceptions",
+    "finally"
+   ],
+   "companies": [
+    "Oracle",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-java-022",
+   "topic": "Java",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    static String m(long x) { return \"long\"; }\n    static String m(Integer x) { return \"Integer\"; }\n    static String m(int... x) { return \"varargs\"; }\n    public static void main(String[] args) {\n        System.out.println(m(5) + \" \" + m(Integer.valueOf(5)));\n    }\n}",
+   "options": [
+    "long Integer",
+    "Integer Integer",
+    "long varargs",
+    "varargs Integer"
+   ],
+   "answer": 0,
+   "explanation": "Overload resolution works in phases: (1) strict invocation, allowing subtyping and primitive widening but no boxing; (2) loose invocation, allowing boxing/unboxing; (3) variable-arity. For `m(5)`, phase 1 finds `m(long)` by widening `int` to `long`, so it wins even though `m(Integer)` would need boxing. For `m(Integer.valueOf(5))`, phase 1 finds `m(Integer)` (identity); `m(long)` would require unboxing, which is not allowed in phase 1. Varargs is the last resort.",
+   "tags": [
+    "overloading",
+    "boxing"
+   ],
+   "companies": [
+    "Oracle",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-java-023",
+   "topic": "Java",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "import java.util.concurrent.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        ExecutorService ex = Executors.newSingleThreadExecutor();\n        Future<?> f = ex.submit(() -> { throw new IllegalStateException(\"boom\"); });\n        try {\n            f.get();\n        } catch (Exception e) {\n            System.out.println(e.getClass().getSimpleName() + \" \" + e.getCause().getMessage());\n        } finally {\n            ex.shutdown();\n        }\n    }\n}",
+   "options": [
+    "IllegalStateException boom",
+    "ExecutionException boom",
+    "It prints nothing; the exception is lost",
+    "RuntimeException null"
+   ],
+   "answer": 1,
+   "explanation": "An exception thrown inside a task submitted to an `ExecutorService` is captured in the `Future`, not propagated to the submitting thread. `Future.get()` rethrows it wrapped in an `ExecutionException`, with the original exception available as `getCause()`. So the caught exception's class is `ExecutionException` and its cause message is `boom`. Fire-and-forget `execute(Runnable)` behaves differently: the exception goes to the worker thread's uncaught-exception handler. Always call `get()` (or use `CompletableFuture` handlers) if you care about failures.",
+   "tags": [
+    "concurrency",
+    "executors"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-java-024",
+   "topic": "Java",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does the compiler do with this code?",
+   "code": "public class Main {\n    sealed interface Shape permits Circle, Square, Triangle {}\n    record Circle(double r) implements Shape {}\n    record Square(double s) implements Shape {}\n    record Triangle(double b, double h) implements Shape {}\n\n    static double area(Shape s) {\n        return switch (s) {\n            case Circle c -> Math.PI * c.r() * c.r();\n            case Square q -> q.s() * q.s();\n        };\n    }\n    public static void main(String[] args) {}\n}",
+   "options": [
+    "Compiles; `Triangle` falls through to a default of null",
+    "Compiles with a warning about a missing default",
+    "Rejects the switch expression: it does not cover all permitted subtypes",
+    "Rejects the `permits` clause because records cannot be sealed subtypes"
+   ],
+   "answer": 2,
+   "explanation": "A `sealed` interface lists all permitted direct subtypes, so the compiler knows the full set of cases. A `switch` expression over a sealed type must be exhaustive; without `default`, omitting `Triangle` is a compile error ('the switch expression does not cover all possible input values'). This is the benefit of sealed hierarchies: adding a subtype makes the compiler point to every switch that must be updated, instead of failing at runtime. Records may implement sealed interfaces (they are implicitly final).",
+   "tags": [
+    "sealed",
+    "pattern-matching",
+    "java21"
+   ],
+   "companies": [
+    "Oracle",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qa-java-025",
+   "topic": "Java",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How does `ConcurrentHashMap` achieve thread safety, and which operations are atomic? Show how you would implement a thread-safe word counter.",
+   "model_answer": "Since Java 8 it uses a table of bins with CAS to insert into empty bins and `synchronized` on the first node of a bin for updates in non-empty bins, so contention is limited to the bin; resizing is cooperative, with several threads helping to transfer entries; long collision chains convert to trees. Reads are lock-free (visibility through volatile reads of table slots and node values). Single operations are atomic, as are the compound methods `putIfAbsent`, `compute`, `computeIfAbsent`, `computeIfPresent` and `merge`; but sequences of separate calls (`if (!map.containsKey(k)) map.put(k, v)`) are not. A correct counter: `map.merge(word, 1, Integer::sum)` or `ConcurrentHashMap<String, LongAdder>` with `map.computeIfAbsent(word, k -> new LongAdder()).increment()`, which scales better under heavy contention. Caveats: `size()` is an estimate under concurrent updates, null keys and values are prohibited (to avoid ambiguity in `get`), iterators are weakly consistent and never throw `ConcurrentModificationException`, and the compute functions must be short and must not modify the map.",
+   "explanation": "Look for knowing that compound check-then-act is not atomic, use of `merge`/`LongAdder`, and the weakly consistent iterator semantics. Mentioning the old segment-based design as current is dated.",
+   "tags": [
+    "concurrency",
+    "collections"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qa-java-026",
+   "topic": "Java",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Explain type erasure and the PECS rule for wildcards. What can't you do with generics in Java because of erasure?",
+   "model_answer": "At compile time generic types are checked, then erased: `List<String>` becomes `List` and the compiler inserts casts; bounded type parameters erase to their bound. Consequences: you cannot use `new T()`, `new T[10]`, `instanceof List<String>`, or have overloads that differ only in type arguments; `List<String>` and `List<Integer>` have the same runtime class; static fields cannot use the class's type parameter; catching generic exceptions is not allowed; and primitives are not allowed as type arguments (boxing costs). Heap pollution can happen with raw types or unchecked casts, surfacing as `ClassCastException` far from the cause. Workarounds: pass a `Class<T>` token (or `Supplier<T>`), use `Array.newInstance`, or capture generic type information through a subclass (the `TypeToken` / `ParameterizedTypeReference` trick). PECS stands for Producer Extends, Consumer Super: if a collection produces values you read, declare `Collection<? extends T>`; if it consumes values you write, use `Collection<? super T>`. For example, `Collections.copy(List<? super T> dest, List<? extends T> src)`. A parameter that does both should use an exact type.",
+   "explanation": "Strong candidates explain why invariance exists, give PECS with a concrete signature, and list erasure limits. Weak answers recite 'generics are compile-time' without consequences.",
+   "tags": [
+    "generics",
+    "erasure"
+   ],
+   "companies": [
+    "Oracle",
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qa-java-027",
+   "topic": "Java",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    public static void main(String[] args) {\n        System.out.print(A.K + \" \");\n        System.out.print(A.v);\n    }\n}\n\nclass A {\n    static { System.out.print(\"A \"); }\n    static final int K = 5;\n    static int v = 6;\n}",
+   "options": [
+    "A 5 6",
+    "A 6 5",
+    "5 6 A",
+    "5 A 6"
+   ],
+   "answer": 3,
+   "explanation": "`A.K` is a compile-time constant (a `static final` primitive with a constant initialiser), so the compiler inlines the value 5 into `Main`, and reading it does not trigger initialisation of `A`: `5` is printed first without `A`'s static block running. `A.v` is a normal static field; accessing it for the first time initialises the class, which runs the static block (printing `A`) before the value `6` is read. The trace is therefore `5`, `A`, `6`. Class initialisation is lazy and triggered by specific uses (static method call, non-constant static field access, instance creation).",
+   "tags": [
+    "class-loading",
+    "initialization"
+   ],
+   "companies": [
+    "Oracle",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-java-028",
+   "topic": "Java",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    public static void main(String[] args) {\n        final String a = \"x\";\n        String b = \"x\";\n        String c = a + \"y\";\n        String d = b + \"y\";\n        System.out.println((c == \"xy\") + \" \" + (d == \"xy\"));\n    }\n}",
+   "options": [
+    "true false",
+    "true true",
+    "false false",
+    "false true"
+   ],
+   "answer": 0,
+   "explanation": "A `final String` initialised with a constant makes `a + \"y\"` a compile-time constant expression, which the compiler folds into the literal `\"xy\"` and which is interned in the pool, so `c == \"xy\"` is `true`. `b` is not final, so `b + \"y\"` is computed at runtime and creates a new `String` object (not from the pool), making `d == \"xy\"` `false`. Content comparison with `equals` would be `true` for both. This shows why `==` on strings is unreliable.",
+   "tags": [
+    "strings",
+    "string-pool"
+   ],
+   "companies": [
+    "Oracle",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-java-029",
+   "topic": "Java",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does this print?",
+   "code": "public class Main {\n    public static void main(String[] args) {\n        byte b = 10;\n        b += 300;\n        int i = 0;\n        i = i++ + ++i;\n        char c = 'a';\n        c += 1;\n        System.out.println(b + \" \" + i + \" \" + c);\n    }\n}",
+   "options": [
+    "310 2 b",
+    "54 2 b",
+    "54 3 b",
+    "54 2 98"
+   ],
+   "answer": 1,
+   "explanation": "Compound assignment operators include an implicit narrowing cast: `b += 300` means `b = (byte)(b + 300)`; `310` wraps modulo 256 to `54`, and the code compiles without an explicit cast, unlike `b = b + 300`. For `i = i++ + ++i` with `i = 0`: the left operand `i++` yields 0 and increments `i` to 1; `++i` then increments to 2 and yields 2; the sum is 2, which is assigned to `i`, overwriting the increments. And `c += 1` on a `char` also casts back, giving `'b'`, which prints as a character, not 98.",
+   "tags": [
+    "operators",
+    "narrowing"
+   ],
+   "companies": [
+    "Oracle",
+    "Google"
+   ]
+  },
+  {
+   "id": "qa-java-030",
+   "topic": "Java",
+   "level": "Expert",
+   "type": "open",
+   "question": "Explain how class loading works in the JVM: delegation, the standard loaders, and how classloader leaks occur in application servers. How would you diagnose one?",
+   "model_answer": "Class loading has three phases: loading (find and read bytes), linking (verification, preparation, resolution) and initialisation (static initialisers, lazily on first active use). A class is identified by its name plus its defining loader, so the same class loaded by two loaders gives two distinct, incompatible types (the cause of surprising `ClassCastException: X cannot be cast to X`). Loaders follow parent-first delegation: the application loader asks the platform loader, which asks the bootstrap loader (`java.base` etc.) before trying itself. This protects core classes from being replaced. Containers (Tomcat, OSGi, plugin systems) deliberately break this with per-application loaders, sometimes child-first, to isolate versions. A leak happens when something long-lived references a class, its loader or an instance from a redeployed web app: static fields in shared libraries, `ThreadLocal` values on pooled threads, JDBC drivers registered in `DriverManager`, shutdown hooks, started threads or timers, caches of `Class` objects. The whole loader, with all its classes and static data, then cannot be collected and Metaspace grows with each redeploy until `OutOfMemoryError: Metaspace`. Diagnose with `-XX:+HeapDumpOnOutOfMemoryError`, `jcmd GC.class_stats` / `jmap -clstats`, then in Eclipse MAT look for duplicate loaders and trace the path to GC roots; fix by cleaning up in context-destroy hooks (deregister drivers, stop threads, call `ThreadLocal.remove`) and avoiding shared static state across the loader boundary.",
+   "explanation": "Expert answers state 'class identity = name + loader', explain parent delegation and why containers break it, and have a concrete leak cause plus a MAT-based diagnosis workflow.",
+   "tags": [
+    "jvm",
+    "class-loading",
+    "memory"
+   ],
+   "companies": [
+    "Oracle",
+    "Netflix",
+    "Google"
+   ]
+  }
+ ]
+}

@@ -50,4 +50,4 @@ def summary(user: User = Depends(get_current_user), db: Session = Depends(get_db
 @router.get("/personas")
 def personas(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return [{k: p.get(k) for k in ("id", "name", "gender", "title", "personality", "voice", "browser_voice",
-                                   "appearance")} for p in q.personas(db)]
+                                   "appearance", "model_url", "body")} for p in q.personas(db)]

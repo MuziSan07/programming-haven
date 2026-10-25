@@ -8,7 +8,16 @@
    "voice": "autumn",
    "browser_voice": "female",
    "personality": "Warm, sharp and quick-witted. Uses playful real-life analogies, gentle teasing and mind games to make candidates think, but never gives away answers. Holds a high bar like a real hiring manager.",
-   "appearance": {"skin": "#f1c7a3", "hair": "#3b2416", "hair_style": "long", "outfit": "#7c5cff", "accent": "#22d3ee", "lips": "#c45a6a"}
+   "appearance": {
+    "skin": "#f1c7a3",
+    "hair": "#3b2416",
+    "hair_style": "long",
+    "outfit": "#7c5cff",
+    "accent": "#22d3ee",
+    "lips": "#c45a6a"
+   },
+   "model_url": "/avatars/aria.glb",
+   "body": "F"
   },
   {
    "id": "alex",
@@ -18,7 +27,16 @@
    "voice": "troy",
    "browser_voice": "male",
    "personality": "Calm, direct and encouraging. Uses everyday analogies and Socratic questions, pushes candidates to justify trade-offs, and keeps a realistic, demanding interview bar.",
-   "appearance": {"skin": "#d9a27f", "hair": "#1f1a24", "hair_style": "short", "outfit": "#2563eb", "accent": "#22d3ee", "lips": "#9b4a4a"}
+   "appearance": {
+    "skin": "#d9a27f",
+    "hair": "#1f1a24",
+    "hair_style": "short",
+    "outfit": "#2563eb",
+    "accent": "#22d3ee",
+    "lips": "#9b4a4a"
+   },
+   "body": "M",
+   "model_url": "/avatars/alex.glb"
   }
  ]
 }

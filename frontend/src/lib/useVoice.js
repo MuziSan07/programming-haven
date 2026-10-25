@@ -26,6 +26,8 @@ export function useSpeaker({ voice, gender } = {}) {
   const [speaking, setSpeaking] = useState(false);
   const [level, setLevel] = useState(0);
   const [muted, setMuted] = useState(false);
+  // What is being said right now, for avatar lip-sync: { id, text, duration (s) }
+  const [utterance, setUtterance] = useState(null);
   const neuralRef = useRef(true);
   const audioRef = useRef(null);
   const ctxRef = useRef(null);
@@ -36,6 +38,7 @@ export function useSpeaker({ voice, gender } = {}) {
     cancelAnimationFrame(rafRef.current);
     setSpeaking(false);
     setLevel(0);
+    setUtterance(null);
     resolveRef.current?.();
     resolveRef.current = null;
   }, []);
@@ -49,15 +52,20 @@ export function useSpeaker({ voice, gender } = {}) {
   const speakBrowser = useCallback((text) => {
     const synth = window.speechSynthesis;
     if (!synth) return finish();
-    const utterance = new SpeechSynthesisUtterance(text);
+    const speech = new SpeechSynthesisUtterance(text);
     const picked = pickVoice(gender);
-    if (picked) utterance.voice = picked;
-    utterance.rate = 1.02;
-    utterance.pitch = gender === "male" ? 0.95 : 1.05;
+    if (picked) speech.voice = picked;
+    speech.rate = 1.02;
+    speech.pitch = gender === "male" ? 0.95 : 1.05;
     let boost = 0;
-    utterance.onboundary = () => { boost = 1; };
-    utterance.onend = finish;
-    utterance.onerror = finish;
+    speech.onboundary = () => { boost = 1; };
+    speech.onstart = () => {
+      // ~2.6 words per second at rate 1 for typical English voices
+      const words = text.split(/\s+/).filter(Boolean).length;
+      setUtterance({ id: Date.now(), text, duration: words / (2.6 * speech.rate) + 0.3 });
+    };
+    speech.onend = finish;
+    speech.onerror = finish;
     const animate = (t) => {
       boost *= 0.9;
       setLevel(Math.min(1, 0.25 + 0.35 * Math.abs(Math.sin(t / 90)) + 0.4 * boost));
@@ -65,7 +73,7 @@ export function useSpeaker({ voice, gender } = {}) {
     };
     rafRef.current = requestAnimationFrame(animate);
     synth.cancel();
-    synth.speak(utterance);
+    synth.speak(speech);
   }, [finish, gender]);
 
   const speakNeural = useCallback(async (text) => {
@@ -89,6 +97,7 @@ export function useSpeaker({ voice, gender } = {}) {
       setLevel(Math.min(1, Math.sqrt(sum / data.length) * 4));
       rafRef.current = requestAnimationFrame(animate);
     };
+    audio.onplay = () => setUtterance({ id: Date.now(), text, duration: audio.duration || text.length / 15 });
     audio.onended = () => { URL.revokeObjectURL(url); finish(); };
     audio.onerror = finish;
     await audio.play();
@@ -126,7 +135,7 @@ export function useSpeaker({ voice, gender } = {}) {
     };
   }, []);
 
-  return { speak, stop, speaking, level, muted, setMuted };
+  return { speak, stop, speaking, level, muted, setMuted, utterance };
 }
 
 /** Microphone recorder with a live input level. `stop()` resolves to the recorded Blob. */

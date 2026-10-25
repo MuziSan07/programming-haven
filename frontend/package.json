@@ -7,10 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "node scripts/setup-proctoring.mjs"
+    "postinstall": "node scripts/setup-proctoring.mjs",
+    "demo": "next build && next start -p 3000"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.1.1",
+    "@met4citizen/talkinghead": "^1.8.1",
     "@monaco-editor/react": "^4.7.0",
     "lucide-react": "^1.61.0",
     "next": "16.4.3",
@@ -18,7 +20,8 @@
     "react-dom": "19.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "simple-icons": "^16.35.0"
+    "simple-icons": "^16.35.0",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

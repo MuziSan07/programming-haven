@@ -9,7 +9,7 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import Submission, User
 from ..routers.auth import user_out
-from ..services import ai, runner
+from ..services import ai, polyglot, runner
 from ..services.scoring import XP_PROBLEM, award, solved_slugs
 
 router = APIRouter(prefix="/api/dsa", tags=["dsa"])
@@ -42,8 +42,10 @@ def list_problems(user: User = Depends(get_current_user), db: Session = Depends(
 @router.get("/problems/{slug}")
 def get_problem(slug: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     data = public_problem(_problem(db, slug))
-    data["languages"] = [{"id": k, "label": runner.LANGUAGES[k]["label"]} for k in runner.HARNESS_LANGUAGES
-                         if runner.language_available(k)]
+    problem = _problem(db, slug)
+    langs = list(runner.HARNESS_LANGUAGES) + polyglot.supported_languages(problem)
+    data["languages"] = [{"id": k, "label": runner.LANGUAGES[k]["label"]} for k in langs if runner.language_available(k)]
+    data["starter"] = {**problem["starter"], **polyglot.starters(problem)}
     data["solved"] = slug in solved_slugs(db, user.id)
     last = db.scalars(select(Submission).where(Submission.user_id == user.id, Submission.problem_slug == slug)
                       .order_by(Submission.id.desc()).limit(10)).all()
@@ -55,7 +57,7 @@ def get_problem(slug: str, user: User = Depends(get_current_user), db: Session =
 
 class CodeIn(BaseModel):
     slug: str
-    language: str = Field(pattern="^(python|javascript)$")
+    language: str = Field(pattern="^(python|javascript|go|java|cpp)$")
     code: str = Field(min_length=1, max_length=50_000)
 
 

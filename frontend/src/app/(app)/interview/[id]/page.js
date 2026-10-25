@@ -3,7 +3,8 @@
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Keyboard, Mic, MonitorUp, MonitorX, PhoneOff, Send, Square, Video, VideoOff, Volume2, VolumeX,
+  Keyboard, Mic, MonitorUp, MonitorX, PhoneOff, Send, ShieldAlert, Square, TriangleAlert, Video, VideoOff, Volume2,
+  VolumeX,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -104,14 +105,73 @@ function Room({ initial, onFinished }) {
   const timer = useActiveTime("interview", String(initial.id));
   const spokenRef = useRef(-1);
   const transcriptEnd = useRef(null);
+  const [notice, setNotice] = useState(null); // integrity warning / termination from the server
+  const graceUntilRef = useRef(Infinity); // ignore focus changes caused by permission prompts
+
+  useEffect(() => {
+    graceUntilRef.current = Date.now() + 8000; // settling-in time after the room opens
+  }, []);
+
+  // Permission prompts (camera, mic, screen picker) steal focus: don't count that as leaving
+  const guard = useCallback((fn) => async (...args) => {
+    graceUntilRef.current = Date.now() + 20000;
+    try {
+      return await fn(...args);
+    } finally {
+      graceUntilRef.current = Date.now() + 1500;
+    }
+  }, []);
+  const startCameraGuarded = useCallback(() => guard(startCamera)(), [guard, startCamera]);
+  const startScreenGuarded = useCallback(() => guard(startScreen)(), [guard, startScreen]);
+
+  const reportIntegrity = useCallback(async (kind, detail) => {
+    try {
+      const r = await api(`/api/interviews/${session.id}/integrity`, { body: { kind, detail } });
+      setSession(r);
+      if (r.integrity) setNotice(r.integrity);
+    } catch {
+      // the next answer will still be checked server-side
+    }
+  }, [session.id]);
+
+  // Anti-cheating: leaving the interview window (e.g. to ask ChatGPT) or pasting answers
+  useEffect(() => {
+    if (session.done || session.terminated) return;
+    let awaySince = null;
+    const leave = () => {
+      if (Date.now() < graceUntilRef.current || awaySince !== null) return;
+      awaySince = Date.now();
+    };
+    const back = () => {
+      if (awaySince === null || document.visibilityState !== "visible") return;
+      const seconds = Math.round((Date.now() - awaySince) / 1000);
+      awaySince = null;
+      if (seconds >= 3 && Date.now() >= graceUntilRef.current) reportIntegrity("left_tab", `Away for ${seconds}s`);
+    };
+    const onVisibility = () => (document.visibilityState === "hidden" ? leave() : back());
+    const onPaste = (e) => {
+      e.preventDefault();
+      reportIntegrity("paste", "Tried to paste into an answer");
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("blur", leave);
+    window.addEventListener("focus", back);
+    document.addEventListener("paste", onPaste, true);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("blur", leave);
+      window.removeEventListener("focus", back);
+      document.removeEventListener("paste", onPaste, true);
+    };
+  }, [session.done, session.terminated, reportIntegrity]);
 
   const lastIndex = session.transcript.length - 1;
   const last = session.transcript[lastIndex];
 
   // Live rounds start with the camera on, like a real 1:1
   useEffect(() => {
-    if (live) startCamera();
-  }, [live, startCamera]);
+    if (live) startCameraGuarded();
+  }, [live, startCameraGuarded]);
 
   // Speak each new interviewer message once
   useEffect(() => {
@@ -135,7 +195,9 @@ function Room({ initial, onFinished }) {
     try {
       const body = { text: answer, images: frames() };
       if (live) Object.assign(body, { code, language });
-      setSession(await api(`/api/interviews/${session.id}/reply`, { body }));
+      const r = await api(`/api/interviews/${session.id}/reply`, { body });
+      setSession(r);
+      if (r.integrity) setNotice(r.integrity);
     } catch (err) {
       setError(err.message);
       setPhase("idle");
@@ -169,7 +231,7 @@ function Room({ initial, onFinished }) {
     } else {
       speaker.stop();
       try {
-        await recorder.start();
+        await guard(recorder.start)();
         setPhase("listening");
       } catch {
         setTyping(true);
@@ -265,8 +327,35 @@ function Room({ initial, onFinished }) {
     </div>
   );
 
+  const integrityModal = notice && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className={cx("w-full max-w-md animate-pop rounded-2xl border p-6",
+        notice.action === "terminated" ? "border-bad/50 bg-[#1f0d0f]" : "border-warn/50 bg-[#1f1708]")}>
+        <div className={cx("flex items-center gap-2 text-lg font-semibold", notice.action === "terminated" ? "text-bad" : "text-warn")}>
+          {notice.action === "terminated" ? <ShieldAlert className="size-5" /> : <TriangleAlert className="size-5" />}
+          {notice.action === "terminated" ? "Interview ended" : "Integrity warning"}
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-text/90">{notice.message}</p>
+        {notice.ban && (
+          <p className="mt-3 rounded-xl bg-black/30 px-3 py-2 text-sm">
+            {notice.ban.permanent ? "AI interviews are locked until you contact support."
+              : <>AI interviews are locked for <span className="font-semibold">{notice.ban.length}</span>. Repeat offenses lock you out for longer, up to permanently.</>}
+          </p>
+        )}
+        <div className="mt-5 flex justify-end">
+          {notice.action === "terminated" ? (
+            <Button variant="danger" onClick={() => { speaker.stop(); onFinished(session); }}>See report</Button>
+          ) : (
+            <Button onClick={() => setNotice(null)}>I understand</Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="-mx-4 -my-6 flex flex-col sm:-mx-6 lg:-mx-10 lg:-my-8 lg:h-[calc(100vh-4rem)]">
+      {integrityModal}
       <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-2.5">
         <span className="flex items-center gap-1.5 rounded-full bg-bad/15 px-2.5 py-0.5 text-xs font-semibold text-bad">
           <span className="size-1.5 animate-pulse rounded-full bg-bad" /> LIVE
@@ -279,13 +368,13 @@ function Room({ initial, onFinished }) {
           {speaker.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
         </Button>
         <Button size="sm" variant={cameraOn ? "secondary" : "ghost"}
-          onClick={cameraOn ? stopCamera : startCamera}
+          onClick={cameraOn ? stopCamera : startCameraGuarded}
           title={cameraOn ? `Turn camera off (${name} can see you)` : `Turn camera on so ${name} can see you`}>
           {cameraOn ? <Video className="size-4" /> : <VideoOff className="size-4" />}
         </Button>
         {live && (
           <Button size="sm" variant={screenOn ? "secondary" : "ghost"}
-            onClick={screenOn ? stopScreen : startScreen} title="Share your screen">
+            onClick={screenOn ? stopScreen : startScreenGuarded} title="Share your screen">
             {screenOn ? <MonitorUp className="size-4 text-ok" /> : <MonitorX className="size-4" />}
             <span className="hidden sm:inline">{screenOn ? "Sharing" : "Share screen"}</span>
           </Button>
@@ -316,7 +405,7 @@ function Room({ initial, onFinished }) {
           </div>
           <aside className="flex min-h-0 flex-col bg-surface">
             <div className="flex items-center gap-3 border-b border-line p-3">
-              <Avatar persona={persona} level={speaker.level} state={avatarState} size={96} />
+              <Avatar persona={persona} level={speaker.level} state={avatarState} size={130} utterance={speaker.utterance} />
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{name}</p>
                 <p className={cx("text-xs", phase === "listening" ? "text-ok" : "text-muted")}>{statusText}</p>
@@ -328,7 +417,7 @@ function Room({ initial, onFinished }) {
             </div>
             <video ref={screenVideo} muted playsInline className="hidden" />
             {!screenOn && (
-              <button onClick={startScreen} className="m-3 flex items-center gap-2 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2
+              <button onClick={startScreenGuarded} className="m-3 flex items-center gap-2 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2
                 text-left text-xs text-warn">
                 <MonitorUp className="size-4 shrink-0" /> {name} asked you to share your screen. Click to share.
               </button>
@@ -342,7 +431,7 @@ function Room({ initial, onFinished }) {
         <div className="grid min-h-0 flex-1 lg:grid-cols-[1fr_380px]">
           <div className="relative flex flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8"
             style={{ background: "radial-gradient(ellipse at center, rgba(124,92,255,0.06), transparent 65%)" }}>
-            <Avatar persona={persona} level={speaker.level} state={avatarState} size={250} />
+            <Avatar persona={persona} level={speaker.level} state={avatarState} size={280} utterance={speaker.utterance} />
             <div className="text-center">
               <p className="text-lg font-semibold">{name}</p>
               <p className={cx("mt-1 text-sm", phase === "listening" ? "text-ok" : "text-muted")}>{statusText}</p>

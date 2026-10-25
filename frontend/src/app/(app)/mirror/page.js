@@ -129,7 +129,7 @@ export default function MirrorPage() {
 
         <Card className="flex min-h-[520px] flex-col">
           <div className="flex items-center gap-4 border-b border-line p-4">
-            <Avatar persona={persona} size={88} level={speaker.level} state={avatarState} />
+            <Avatar persona={persona} size={140} level={speaker.level} state={avatarState} utterance={speaker.utterance} />
             <div className="flex-1">
               <p className="text-lg font-semibold">{name}</p>
               <p className="text-xs text-muted">{persona?.title}</p>

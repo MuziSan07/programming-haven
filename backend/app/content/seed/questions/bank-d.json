@@ -1,0 +1,2629 @@
+{
+ "questions": [
+  {
+   "id": "qd-react-001",
+   "topic": "React",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the practical purpose of `<React.Fragment>` (or `<>...</>`)?",
+   "options": [
+    "It lets a component return several sibling elements without adding an extra DOM node",
+    "It memoizes the children so they never re-render",
+    "It creates a separate DOM tree isolated from the page",
+    "It defers rendering of children until the browser is idle"
+   ],
+   "answer": 0,
+   "explanation": "A component must return a single root. A fragment groups siblings without producing a wrapper `div`, which keeps the DOM clean and avoids breaking layouts such as table rows or flex children.",
+   "tags": [
+    "jsx",
+    "fundamentals"
+   ],
+   "companies": [
+    "Meta",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-react-002",
+   "topic": "React",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A button is written as `<button onClick={save()}>Save</button>`. What is the bug?",
+   "options": [
+    "Handlers must be strings in JSX",
+    "`save()` runs during render and its return value is passed as the handler; it should be `onClick={save}` or `onClick={() => save()}`",
+    "`onClick` is not a valid prop on a `button`",
+    "Nothing; React defers the call until the click"
+   ],
+   "answer": 1,
+   "explanation": "Parentheses invoke the function immediately while rendering. React needs a function reference to call later. Wrapping in an arrow function is needed only when you must pass arguments.",
+   "tags": [
+    "events",
+    "jsx"
+   ],
+   "companies": [
+    "Meta",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-react-003",
+   "topic": "React",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "With `items = []`, what does `{items.length && <List items={items} />}` render?",
+   "options": [
+    "Nothing at all",
+    "An empty `List`",
+    "The text `0`",
+    "It throws an error"
+   ],
+   "answer": 2,
+   "explanation": "`0 && x` evaluates to `0`, and React renders the number 0 as text (unlike `false`, `null` or `undefined`). Use `items.length > 0 && ...` or a ternary.",
+   "tags": [
+    "conditional-rendering",
+    "gotchas"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-react-004",
+   "topic": "React",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does JSX like `<Card title=\"Hi\" />` compile to?",
+   "options": [
+    "A real DOM node created with `document.createElement`",
+    "A string of HTML that is injected with `innerHTML`",
+    "A class instance of `Card` created immediately",
+    "A call to a JSX factory (`jsx()` / `React.createElement`) that returns a plain object describing the element"
+   ],
+   "answer": 3,
+   "explanation": "JSX is syntax sugar. The compiled calls produce lightweight element objects; React later reconciles them against the previous tree and updates the real DOM as needed.",
+   "tags": [
+    "jsx",
+    "fundamentals"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-react-005",
+   "topic": "React",
+   "level": "Basic",
+   "type": "open",
+   "question": "What does 'lifting state up' mean in React, and when would you do it?",
+   "model_answer": "When two or more components need the same piece of changing data, move that state to their closest common ancestor and pass the value down as props, along with callbacks the children use to request changes. This keeps one source of truth and avoids copies drifting apart. For example, two filter widgets and a results list all depend on a `query` value, so the parent owns `query`. The trade-off is more prop passing; if the chain gets long, consider context or a store, but do not lift state higher than necessary because it widens re-renders.",
+   "explanation": "Interviewers want to hear 'single source of truth', 'closest common ancestor' and awareness that over-lifting causes needless re-renders and prop drilling.",
+   "tags": [
+    "state",
+    "architecture"
+   ],
+   "companies": [
+    "Meta",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-react-006",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Changing `ref.current` of a `useRef` value inside an event handler does what?",
+   "options": [
+    "Updates the value without scheduling a re-render",
+    "Triggers a re-render of the component",
+    "Resets the ref to its initial value on the next render",
+    "Throws because refs are read-only"
+   ],
+   "answer": 0,
+   "explanation": "Refs are mutable boxes whose identity is stable across renders. Writing to `.current` is not tracked by React, so it never re-renders. Use refs for DOM nodes, timers and other values the UI does not display directly.",
+   "tags": [
+    "hooks",
+    "useRef"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-react-007",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A component runs `useEffect(() => { const id = setInterval(() => setCount(count + 1), 1000); return () => clearInterval(id); }, [])`. The counter stops at 1. Why?",
+   "options": [
+    "`setInterval` cannot be used inside effects",
+    "The interval callback closes over the `count` from the first render, so it always sets 1; use `setCount(c => c + 1)`",
+    "The cleanup function clears the interval after one second",
+    "React batches updates so only the first is applied"
+   ],
+   "answer": 1,
+   "explanation": "With an empty dependency array the effect captures the initial `count` (0) forever (a stale closure). A functional update reads the latest state, so no dependency is needed.",
+   "tags": [
+    "hooks",
+    "closures",
+    "useEffect"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-react-008",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "In development with `<StrictMode>` (React 18), why does a mount-only `useEffect` appear to run twice?",
+   "options": [
+    "It is a bug in React 18 that only affects development",
+    "The component is rendered on both server and client",
+    "React deliberately mounts, unmounts and remounts components to expose effects that are not cleaned up properly",
+    "Effects always run twice when the dependency array is empty"
+   ],
+   "answer": 2,
+   "explanation": "Strict Mode simulates a remount to verify that setup and cleanup are symmetric. It does not happen in production builds. If double running breaks your code, the effect lacks proper cleanup.",
+   "tags": [
+    "strict-mode",
+    "useEffect"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-react-009",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "When does `useCallback(fn, deps)` actually improve performance?",
+   "options": [
+    "Always, because it makes the function itself run faster",
+    "When the function is used only inside the same component's JSX",
+    "It prevents the component from re-rendering when state changes",
+    "When the stable function identity is passed to a memoized child or used as a dependency, so downstream work is skipped"
+   ],
+   "answer": 3,
+   "explanation": "`useCallback` only preserves a reference. The benefit comes when something compares that reference (`React.memo`, another hook's deps). Otherwise it adds overhead for no gain.",
+   "tags": [
+    "hooks",
+    "performance"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-react-010",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "What are error boundaries in React and what do they not catch?",
+   "model_answer": "An error boundary is a class component (or a library wrapper such as `react-error-boundary`) implementing `getDerivedStateFromError` and/or `componentDidCatch`. It catches errors thrown while rendering, in lifecycle methods and in constructors of its descendants, and shows a fallback UI instead of unmounting the whole app. It does not catch errors in event handlers, asynchronous code like `setTimeout` or promises, server-side rendering, or errors in the boundary itself. For those you use try/catch or `.catch`. In practice I place boundaries around independent regions (a widget, a route) and report the error to a monitoring service.",
+   "explanation": "Look for the correct list of exclusions and a sensible placement strategy rather than one global boundary.",
+   "tags": [
+    "error-handling",
+    "architecture"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-react-011",
+   "topic": "React",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "What makes a good custom hook, and how would you test one?",
+   "model_answer": "A custom hook extracts reusable stateful logic (not UI), named `useX`, with a small, stable API, such as `useDebouncedValue(value, delay)` or `useLocalStorage(key)`. It composes built-in hooks, cleans up its own effects and does not hide unrelated concerns. Each call has isolated state, so sharing the hook does not share data. To test, render it with `renderHook` from React Testing Library, drive it with `act`, use fake timers for time-based behavior and assert on the returned values. For logic with network access I mock the fetch layer instead of the hook.",
+   "explanation": "Strong answers distinguish sharing logic from sharing state and mention cleanup plus realistic testing tools.",
+   "tags": [
+    "hooks",
+    "testing"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-react-012",
+   "topic": "React",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which statement about `useLayoutEffect` versus `useEffect` is correct?",
+   "options": [
+    "`useLayoutEffect` runs synchronously after DOM mutations and before the browser paints, so it suits measuring layout but can block painting",
+    "`useLayoutEffect` runs before the render function executes",
+    "`useEffect` always runs before the DOM is updated",
+    "`useLayoutEffect` is the recommended default because it is faster"
+   ],
+   "answer": 0,
+   "explanation": "`useEffect` is deferred until after paint, while `useLayoutEffect` blocks paint so you can read layout and synchronously re-render without flicker. Overusing it hurts responsiveness, and it warns during server rendering.",
+   "tags": [
+    "hooks",
+    "rendering"
+   ],
+   "companies": [
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "qd-react-013",
+   "topic": "React",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A list of rows with text inputs uses the array index as `key`. The user types in row 2, then another row is inserted at the top. What happens?",
+   "options": [
+    "Nothing, because React diffs by value rather than key",
+    "Inputs keep their typed text by position, so the text appears in the wrong logical row",
+    "All inputs are cleared since the keys changed",
+    "React throws a duplicate-key warning and stops rendering"
+   ],
+   "answer": 1,
+   "explanation": "State and DOM nodes are tied to the key. With index keys, inserting at the top shifts items but the key-to-instance mapping stays positional, so instance state is attached to the wrong data. Use stable ids.",
+   "tags": [
+    "keys",
+    "reconciliation"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-react-014",
+   "topic": "React",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Explain React Server Components and how they differ from client components and traditional SSR.",
+   "model_answer": "Server Components render only on the server (at request or build time) and send a serialized description of the UI to the client; their code and dependencies are never shipped in the JS bundle. They can read databases or files directly and be async. Client Components (marked `'use client'`) are bundled, hydrate and can use state, effects and browser APIs. Traditional SSR renders HTML on the server but still ships and hydrates every component's JS. With RSC you keep heavy libraries on the server, reduce bundle size and avoid client waterfalls, while interactive parts stay client-side. Props passed from server to client must be serializable, and you pass server components to client ones as children.",
+   "explanation": "Candidates should separate 'SSR (HTML for first paint)' from 'RSC (zero client JS for those components)' and mention serialization limits.",
+   "tags": [
+    "server-components",
+    "ssr"
+   ],
+   "companies": [
+    "Meta",
+    "Vercel"
+   ]
+  },
+  {
+   "id": "qd-react-015",
+   "topic": "React",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Context re-renders every consumer when its value changes. How do you structure context to avoid performance problems?",
+   "model_answer": "Split contexts by update frequency and concern (for example, separate state and dispatch, or theme versus user). Memoize the provider value with `useMemo` so a parent re-render does not create a new object each time. Keep rapidly changing data out of context or use a selector-based store (Zustand, Redux, `useSyncExternalStore`) so components subscribe to slices. Push providers down to the smallest subtree that needs them and wrap expensive consumers in `React.memo` with narrowed props. Measure with the React Profiler first, since most apps do not need these optimizations.",
+   "explanation": "Good answers combine splitting, memoized values and selector-based subscriptions, and are driven by measurement.",
+   "tags": [
+    "context",
+    "performance"
+   ],
+   "companies": [
+    "Meta",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "qd-react-016",
+   "topic": "React",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What problem does `useSyncExternalStore` solve that a naive `useEffect` plus `useState` subscription does not?",
+   "options": [
+    "It makes external stores deeply immutable",
+    "It batches every network request made by the store",
+    "It prevents tearing: during concurrent rendering all components read a consistent snapshot of an external store, and it works with SSR via a server snapshot",
+    "It removes the need for stores to notify subscribers"
+   ],
+   "answer": 2,
+   "explanation": "With concurrent rendering, a render can be interrupted, so different components might read different values of a mutable external store. `useSyncExternalStore` forces synchronous consistent reads and provides `getServerSnapshot` for hydration. State libraries use it internally.",
+   "tags": [
+    "concurrent",
+    "state-management"
+   ],
+   "companies": [
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "qd-react-017",
+   "topic": "React",
+   "level": "Expert",
+   "type": "open",
+   "question": "A server-rendered React page logs hydration mismatch warnings and sometimes flashes wrong content. How do you find and fix the causes?",
+   "model_answer": "Hydration expects the first client render to produce the same markup the server sent. Typical causes: using `Date.now()`, `Math.random()` or locale-dependent formatting during render; reading `window`, `localStorage` or viewport size to decide what to render; invalid HTML nesting (a `div` in a `p`) that the browser repairs; and browser extensions altering the DOM. Fixes: render deterministic output first and apply client-only values in `useEffect` (or a `useSyncExternalStore` with a server snapshot), pass timestamps and locale from the server, use `useId` for generated ids, validate the markup, and use `suppressHydrationWarning` only for unavoidable leaf text like timestamps. I reproduce it by diffing the server HTML with the client DOM and check the dev warning's component stack.",
+   "explanation": "Interviewers want a systematic cause list and the 'render same thing twice, then enhance' principle.",
+   "tags": [
+    "ssr",
+    "hydration"
+   ],
+   "companies": [
+    "Vercel",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-react-018",
+   "topic": "React",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design the data-fetching layer of a large React app that must stay responsive: caching, loading states, race conditions and optimistic updates.",
+   "model_answer": "Use a server-state library (React Query, SWR or Relay) rather than raw effects: queries are keyed, cached, deduplicated and refetched with stale-while-revalidate, which also solves out-of-order responses because only the latest key's result is applied. Combine with Suspense and error boundaries for declarative loading and failure states, and `startTransition` or `useDeferredValue` so navigation keeps the old UI interactive while new data loads. For mutations, apply optimistic updates to the cache, roll back on error from a saved snapshot, then invalidate affected keys. Prefetch on route intent (hover, router loaders), set staleTime per data type, and normalize only where entity sharing demands it. Keep client UI state separate (local state or a small store) from server state, and add abort signals for cancelled requests.",
+   "explanation": "Look for separation of server state vs UI state, race-condition handling, optimistic rollback and use of concurrent features.",
+   "tags": [
+    "data-fetching",
+    "architecture"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qd-node-001",
+   "topic": "Node.js",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In `package.json`, what is the difference between `dependencies` and `devDependencies`?",
+   "options": [
+    "`dependencies` install globally and `devDependencies` locally",
+    "`devDependencies` are optional and are never installed",
+    "`dependencies` are for the frontend and `devDependencies` for the backend",
+    "`dependencies` are needed at runtime in production; `devDependencies` are only for development tasks like testing, linting and building"
+   ],
+   "answer": 3,
+   "explanation": "Production installs (`npm install --omit=dev`) skip dev dependencies, so a package your server imports at runtime must be in `dependencies`.",
+   "tags": [
+    "npm",
+    "fundamentals"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-node-002",
+   "topic": "Node.js",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What type is `process.env.PORT` when the variable is set to `3000`?",
+   "options": [
+    "String",
+    "Number",
+    "Boolean",
+    "It depends on the shell"
+   ],
+   "answer": 0,
+   "explanation": "All environment variables are strings. Convert explicitly, for example `Number(process.env.PORT) || 3000`, and remember that `'false'` is a truthy string.",
+   "tags": [
+    "env",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-node-003",
+   "topic": "Node.js",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In Express, what happens if a middleware neither sends a response nor calls `next()`?",
+   "options": [
+    "Express automatically calls the next middleware",
+    "The request hangs until the client times out",
+    "Express responds with a 404",
+    "The server process crashes"
+   ],
+   "answer": 1,
+   "explanation": "Middleware must either end the cycle (`res.send`, `res.end`) or hand control onward with `next()`. Otherwise the connection stays open.",
+   "tags": [
+    "express",
+    "middleware"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-node-004",
+   "topic": "Node.js",
+   "level": "Basic",
+   "type": "open",
+   "question": "What is `package-lock.json` for, and should you commit it?",
+   "model_answer": "`package-lock.json` records the exact resolved version tree (and integrity hashes) of every dependency, including transitive ones. Committing it makes installs reproducible across developers and CI, speeds up installation and means a surprise upstream release cannot silently change what you ship. Use `npm ci` in CI to install strictly from the lock file. Libraries published to npm do not ship their lock file to consumers, but applications should always commit it.",
+   "explanation": "Candidates should mention reproducibility, `npm ci` and that semver ranges in package.json alone are not pinned.",
+   "tags": [
+    "npm",
+    "tooling"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-node-005",
+   "topic": "Node.js",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What happens when an `EventEmitter` emits an `'error'` event and no listener is registered for it?",
+   "options": [
+    "It is silently ignored like any other event",
+    "It is logged and the process continues",
+    "The error is thrown, and if uncaught the process crashes",
+    "The event is queued until a listener is added"
+   ],
+   "answer": 2,
+   "explanation": "`'error'` is special-cased. Without a listener, Node throws the error. Streams, sockets and servers are emitters, so always attach error handlers.",
+   "tags": [
+    "events",
+    "errors"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-node-006",
+   "topic": "Node.js",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "In a CommonJS module you write `exports = { add }` at the end. What does another file get from `require()`?",
+   "options": [
+    "The object with `add`",
+    "`undefined`",
+    "A thrown `TypeError`",
+    "An empty object, because reassigning `exports` breaks its link to `module.exports`"
+   ],
+   "answer": 3,
+   "explanation": "`exports` is just a local reference to `module.exports`. Reassigning it changes the local variable only; `require` returns `module.exports`. Use `module.exports = { add }` or `exports.add = add`.",
+   "tags": [
+    "modules",
+    "commonjs"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-node-007",
+   "topic": "Node.js",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You must fetch 5 independent resources and still want results for the successful ones if some fail. Which approach fits?",
+   "options": [
+    "`Promise.allSettled`, which waits for all and reports each outcome",
+    "`Promise.all`, which returns partial results on failure",
+    "`Promise.race`, which collects all fulfilled values",
+    "A `for` loop with `await` and no error handling"
+   ],
+   "answer": 0,
+   "explanation": "`Promise.all` rejects as soon as any promise rejects and discards the others' values. `allSettled` always resolves with `{status, value|reason}` entries, so you can use the successful ones.",
+   "tags": [
+    "promises",
+    "async"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-node-008",
+   "topic": "Node.js",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is `AsyncLocalStorage` (from `node:async_hooks`) commonly used for?",
+   "options": [
+    "Persisting data to disk between restarts",
+    "Carrying per-request context such as a request id through async calls without passing it as an argument",
+    "Sharing memory between worker threads",
+    "Caching DB results across requests"
+   ],
+   "answer": 1,
+   "explanation": "It keeps a store that follows the async execution chain, so loggers and DB layers can read the current request id or user. It is not shared between requests or threads.",
+   "tags": [
+    "async",
+    "observability"
+   ],
+   "companies": [
+    "Uber",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qd-node-009",
+   "topic": "Node.js",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you implement graceful shutdown for a Node HTTP service running in Kubernetes?",
+   "model_answer": "Handle `SIGTERM` (and `SIGINT`). On signal, mark the service not ready (fail the readiness probe) so the load balancer stops sending traffic, call `server.close()` to stop accepting new connections while in-flight requests finish, close keep-alive sockets (or use `closeIdleConnections()`), then close DB pools, queues and flush logs. Add a hard timeout slightly below `terminationGracePeriodSeconds` after which you `process.exit(1)`. Set a `preStop` sleep if endpoint propagation lags. Test by sending SIGTERM under load and verifying zero failed requests.",
+   "explanation": "Look for readiness flip, connection draining, resource cleanup and a forced-exit timeout.",
+   "tags": [
+    "reliability",
+    "kubernetes"
+   ],
+   "companies": [
+    "Uber",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-node-010",
+   "topic": "Node.js",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "List the measures you would apply to harden an Express API against common attacks.",
+   "model_answer": "Validate and sanitize all input with a schema library (zod/Joi) and reject unknown fields; use parameterized queries to prevent injection; set security headers with `helmet`; configure CORS to an explicit allow-list; rate-limit and slow down auth endpoints; hash passwords with argon2 or bcrypt; store tokens in httpOnly, secure, sameSite cookies and add CSRF protection when using cookies; limit body size; avoid leaking stack traces in production; keep dependencies audited (`npm audit`, lockfile) and run as non-root. Log security events and keep secrets in a secret manager, not in the repo.",
+   "explanation": "Good answers are layered (input, transport, auth, dependencies, ops) and name concrete tools.",
+   "tags": [
+    "security",
+    "express"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-node-011",
+   "topic": "Node.js",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "On Node 15 and later, what is the default behavior when a promise rejects and nothing handles it?",
+   "options": [
+    "A warning is printed and execution continues",
+    "The rejection is ignored silently",
+    "The process emits `unhandledRejection` and, with no handler, exits with a non-zero code",
+    "It is converted to a resolved `undefined`"
+   ],
+   "answer": 2,
+   "explanation": "Since Node 15 `--unhandled-rejections=throw` is the default, turning unhandled rejections into uncaught exceptions. Handle rejections, and treat a global handler as a last-resort logger before exiting.",
+   "tags": [
+    "promises",
+    "errors"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-node-012",
+   "topic": "Node.js",
+   "level": "Advanced",
+   "type": "open",
+   "question": "You must call an API for 10,000 ids. How do you do it in Node without overwhelming the API or your memory?",
+   "model_answer": "Do not fire all requests at once (`Promise.all` over 10,000 promises) and do not await them one at a time. Use a bounded-concurrency pool: a library like `p-limit`/`p-queue`, or a small worker loop where N workers pull from a shared iterator. Choose N from the API's rate limit and latency. Add retries with exponential backoff and jitter for 429/5xx, honor `Retry-After`, use `AbortSignal.timeout` per request, and process results as they arrive (write to a stream or DB in batches) instead of accumulating everything. Track failures separately so a rerun can resume. If the API supports batch endpoints, prefer them.",
+   "explanation": "Look for bounded concurrency, backoff with jitter, streaming results and resumability.",
+   "tags": [
+    "async",
+    "performance"
+   ],
+   "companies": [
+    "Uber",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qd-node-013",
+   "topic": "Node.js",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Your Node API's p99 latency spikes periodically while CPU shows one core at 100%. How do you diagnose an event-loop block?",
+   "model_answer": "Suspect synchronous work on the main thread. Measure event loop delay with `perf_hooks.monitorEventLoopDelay` or tools like clinic.js (`doctor`, `flame`) and collect a CPU profile (`node --cpu-prof` or Chrome DevTools attach) during a spike. Flame graphs reveal long synchronous frames: huge `JSON.parse/stringify`, sync crypto or `fs` calls, catastrophic regex backtracking, or large array sorts. Fix by streaming or chunking, moving CPU work to `worker_threads` or a separate service, using async APIs, yielding in loops with `setImmediate`, and validating regexes (or using RE2). Add an event-loop-lag metric and alert so regressions show up early.",
+   "explanation": "Strong answers measure first (profile, loop delay), then map findings to specific remedies.",
+   "tags": [
+    "performance",
+    "event-loop"
+   ],
+   "companies": [
+    "Netflix",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-node-014",
+   "topic": "Node.js",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "Which Node.js operations use the libuv thread pool (size controlled by `UV_THREADPOOL_SIZE`)?",
+   "options": [
+    "TCP and UDP socket I/O",
+    "`setTimeout` and `setInterval` callbacks",
+    "All `async` functions",
+    "File system calls, `dns.lookup`, `crypto.pbkdf2`/`scrypt`/`randomBytes` and zlib compression"
+   ],
+   "answer": 3,
+   "explanation": "Network sockets use OS-level async I/O (epoll/kqueue/IOCP) and timers use the loop's timer heap, neither of which need the pool. The default pool has 4 threads, so many concurrent `fs` or pbkdf2 calls queue behind each other.",
+   "tags": [
+    "libuv",
+    "performance"
+   ],
+   "companies": [
+    "Netflix",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-node-015",
+   "topic": "Node.js",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design a webhook ingestion service in Node that must not lose events or process one twice, even with provider retries and worker crashes.",
+   "model_answer": "Acknowledge fast: verify the signature (HMAC over the raw body, constant-time compare and timestamp tolerance), persist the raw event with its provider event id in a table with a unique constraint, then return 2xx immediately. A queue (SQS/Kafka/BullMQ) or a transactional outbox feeds workers, so the HTTP path stays quick. Idempotency: the unique event id (or an idempotency key per side effect) makes duplicates no-ops, and handlers are written to be safely repeatable because delivery is at-least-once. Workers ack only after the transaction commits, use visibility timeouts, retry with backoff and route poison messages to a dead-letter queue with alerting. Handle ordering by per-entity partitioning or versions, and provide a replay tool using the stored raw events. Exactly-once processing is effectively at-least-once plus idempotency.",
+   "explanation": "Key signals: signature verification on raw body, persist-then-ack, idempotency keys, DLQ and replay.",
+   "tags": [
+    "reliability",
+    "queues",
+    "webhooks"
+   ],
+   "companies": [
+    "Stripe",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "qd-cloud-001",
+   "topic": "Cloud & DevOps",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the relationship between a Docker image and a container?",
+   "options": [
+    "An image is a read-only template; a container is a running (or stopped) instance created from it",
+    "A container is a template and an image is its running instance",
+    "They are the same thing under two names",
+    "An image is a virtual machine and a container is a snapshot of it"
+   ],
+   "answer": 0,
+   "explanation": "Images are layered, immutable filesystems plus metadata. `docker run` adds a thin writable layer and a process on top, producing a container. Many containers can share one image.",
+   "tags": [
+    "docker",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-cloud-002",
+   "topic": "Cloud & DevOps",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In a Node.js Dockerfile, why is `COPY package*.json ./` followed by `RUN npm ci` placed before `COPY . .`?",
+   "options": [
+    "Because `npm ci` cannot read source files",
+    "So the dependency layer is cached and only rebuilt when the dependency files change, not on every source edit",
+    "To make the final image smaller by removing source code",
+    "Docker requires manifests to be copied first"
+   ],
+   "answer": 1,
+   "explanation": "Docker caches layers in order and invalidates all layers after a changed one. Putting rarely changing steps first keeps rebuilds fast.",
+   "tags": [
+    "docker",
+    "caching"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-cloud-003",
+   "topic": "Cloud & DevOps",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A team pushes application code and the provider handles the OS, runtime and scaling (as with Heroku or Google App Engine). Which service model is this?",
+   "options": [
+    "Infrastructure as a Service (IaaS)",
+    "Software as a Service (SaaS)",
+    "Platform as a Service (PaaS)",
+    "Bare-metal hosting"
+   ],
+   "answer": 2,
+   "explanation": "IaaS gives you virtual machines and networks to manage yourself, PaaS manages the runtime for your code, and SaaS delivers a finished application to end users.",
+   "tags": [
+    "cloud-models",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-cloud-004",
+   "topic": "Cloud & DevOps",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What problem does a Kubernetes `Service` solve?",
+   "options": [
+    "It stores persistent data for Pods",
+    "It schedules Pods onto nodes",
+    "It builds container images from source",
+    "It gives a set of Pods a stable virtual IP and DNS name and load-balances across them, even as Pods are replaced"
+   ],
+   "answer": 3,
+   "explanation": "Pod IPs change whenever Pods are recreated. A Service selects Pods by label and provides a stable endpoint for clients and other services.",
+   "tags": [
+    "kubernetes",
+    "networking"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-cloud-005",
+   "topic": "Cloud & DevOps",
+   "level": "Basic",
+   "type": "open",
+   "question": "Describe the typical stages of a CI/CD pipeline and what each protects against.",
+   "model_answer": "On every push: checkout and install dependencies with caching, then fast checks (lint, type check, unit tests) to catch obvious defects early. Next build an immutable artifact such as a container image tagged with the commit SHA, then run integration tests and security scans (dependency audit, image scan, secret detection). The artifact is deployed to staging for smoke and end-to-end tests, then promoted to production, manually approved (continuous delivery) or automatically (continuous deployment), with health checks and automatic rollback. Each stage fails fast and gives developers quick feedback; building once and promoting the same artifact ensures what was tested is what ships.",
+   "explanation": "Look for fail-fast ordering, build-once-promote-everywhere and a rollback story.",
+   "tags": [
+    "ci-cd",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-cloud-006",
+   "topic": "Cloud & DevOps",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A Kubernetes container with `resources.limits.memory: 256Mi` allocates 400Mi. What happens?",
+   "options": [
+    "The container is killed by the kernel OOM killer (status `OOMKilled`) and restarted per the restart policy",
+    "It is throttled to run slower but keeps running",
+    "The Pod is rescheduled to a node with more memory immediately",
+    "The limit is ignored if the node has free memory"
+   ],
+   "answer": 0,
+   "explanation": "CPU limits throttle, but memory is incompressible: exceeding the limit gets the process killed. Requests drive scheduling; limits are enforced at runtime.",
+   "tags": [
+    "kubernetes",
+    "resources"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-cloud-007",
+   "topic": "Cloud & DevOps",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is the main benefit of a Docker multi-stage build?",
+   "options": [
+    "It builds each stage in parallel on different machines",
+    "The final image contains only runtime artifacts, leaving compilers and build tools in earlier discarded stages",
+    "It encrypts the layers of the final image",
+    "It lets a container run several processes safely"
+   ],
+   "answer": 1,
+   "explanation": "A build stage can install toolchains and compile; the last stage copies only the output (for example a binary or `dist/`) onto a slim base. Images are smaller, faster to pull and expose less attack surface.",
+   "tags": [
+    "docker",
+    "images"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-cloud-008",
+   "topic": "Cloud & DevOps",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why is a stateless service easier to scale horizontally than a stateful one?",
+   "options": [
+    "Stateless services use less CPU per request",
+    "Stateless services never need a database",
+    "Any instance can serve any request, so you can add or remove instances behind a load balancer without moving session data",
+    "Load balancers only support stateless protocols"
+   ],
+   "answer": 2,
+   "explanation": "If user data lives in a shared store (database, cache, object storage) rather than instance memory, instances are interchangeable and disposable, which enables autoscaling and rolling replacement.",
+   "tags": [
+    "scalability",
+    "architecture"
+   ],
+   "companies": [
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qd-cloud-009",
+   "topic": "Cloud & DevOps",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Design a deployment pipeline for a containerized microservice that supports fast, safe rollbacks.",
+   "model_answer": "Build one immutable image per commit, tagged with the SHA, and push it to a registry. Deployment is declarative (Helm or Kustomize manifests in Git, ideally GitOps with Argo CD or Flux) so the desired version is a commit and rollback is a revert. Release with a rolling or canary strategy, gated by readiness probes and automated analysis of error rate and latency; the controller aborts and reverts automatically if SLO thresholds break. Database changes use backward-compatible expand/contract migrations so old and new versions can coexist. Feature flags decouple deploy from release so a bad feature is disabled without redeploying. Keep the previous ReplicaSet or release available and rehearse rollback regularly.",
+   "explanation": "Strong answers tie rollback to immutability, declarative state, automated health gates and compatible schema changes.",
+   "tags": [
+    "ci-cd",
+    "deployment"
+   ],
+   "companies": [
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qd-cloud-010",
+   "topic": "Cloud & DevOps",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Explain SLIs, SLOs, SLAs and error budgets, and how an error budget changes engineering decisions.",
+   "model_answer": "An SLI is a measured indicator of service health, such as the fraction of requests that succeed under 300 ms. An SLO is the target for that indicator over a window (99.9% over 30 days). An SLA is the contractual promise to customers, usually looser than the internal SLO, with penalties. The error budget is the allowed unreliability, `1 - SLO` (about 43 minutes per 30 days at 99.9%). While budget remains, teams can ship features and take risks; when it is burning too fast or is exhausted, the team slows launches and prioritizes reliability work. This turns the product-versus-stability argument into a data-driven policy, and burn-rate alerts replace noisy threshold alerts.",
+   "explanation": "Interviewers look for correct definitions and the policy angle: budgets as a shared decision tool.",
+   "tags": [
+    "sre",
+    "reliability"
+   ],
+   "companies": [
+    "Google",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qd-cloud-011",
+   "topic": "Cloud & DevOps",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A Horizontal Pod Autoscaler targets 70% CPU utilization but never scales, and `kubectl top` shows high CPU. What is the most likely cause?",
+   "options": [
+    "HPAs only work on StatefulSets",
+    "The cluster autoscaler must be disabled first",
+    "The Service type must be `LoadBalancer`",
+    "The Pods have no CPU `requests`, so utilization percentage cannot be computed"
+   ],
+   "answer": 3,
+   "explanation": "HPA utilization is current usage divided by the container's requested CPU. Without requests there is no denominator and the HPA reports unknown metrics. Also confirm metrics-server is installed.",
+   "tags": [
+    "kubernetes",
+    "autoscaling"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-cloud-012",
+   "topic": "Cloud & DevOps",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "You deploy with rolling updates and a release renames a database column. Which approach avoids errors while old and new versions run together?",
+   "options": [
+    "Use expand/contract: add the new column and write to both, migrate readers, then drop the old column in a later release",
+    "Rename the column in the same release and rely on fast rollout",
+    "Stop all traffic during the migration",
+    "Keep the old version running forever"
+   ],
+   "answer": 0,
+   "explanation": "During a rolling deploy both versions hit the same schema. Backward-compatible steps (expand, dual-write, backfill, switch reads, contract) let either version work at every moment and keep rollbacks safe.",
+   "tags": [
+    "migrations",
+    "deployment"
+   ],
+   "companies": [
+    "Amazon",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qd-cloud-013",
+   "topic": "Cloud & DevOps",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Your cloud bill grew 40% in a quarter. How do you find the cause and cut costs without hurting reliability?",
+   "model_answer": "First get visibility: enforce tagging by team and service, use Cost Explorer or a FinOps tool to break spend down by service, account and usage type, and compare with traffic growth to find unit-cost changes. Typical findings: oversized or idle instances, unattached volumes and old snapshots, NAT gateway and cross-AZ data transfer, logging and metrics ingestion volume, and over-provisioned databases. Actions: right-size using utilization data, autoscale and schedule non-production environments off-hours, use Savings Plans or reserved capacity for steady baseline and spot for fault-tolerant jobs, add storage lifecycle policies, reduce log verbosity or retention. Set budgets with alerts and make owners accountable for their cost per request. Validate each change against SLOs.",
+   "explanation": "Looks for measurement before action, knowledge of hidden cost drivers (data transfer, logs), and guardrails.",
+   "tags": [
+    "finops",
+    "cost"
+   ],
+   "companies": [
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qd-cloud-014",
+   "topic": "Cloud & DevOps",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What does a Kubernetes `PodDisruptionBudget` protect against?",
+   "options": [
+    "Pods crashing due to application bugs",
+    "Too many replicas of an app being voluntarily evicted at once, for example during a node drain or cluster upgrade",
+    "Nodes losing power unexpectedly",
+    "Excess CPU usage by noisy neighbours"
+   ],
+   "answer": 1,
+   "explanation": "A PDB sets `minAvailable` or `maxUnavailable` for voluntary disruptions. The eviction API refuses evictions that would violate it, so upgrades proceed gradually. It does not guard against involuntary failures such as hardware loss.",
+   "tags": [
+    "kubernetes",
+    "availability"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-cloud-015",
+   "topic": "Cloud & DevOps",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design an active-active multi-region architecture for a user-facing API. What are the hard parts and trade-offs?",
+   "model_answer": "Route users to the nearest healthy region with latency-based or geo DNS (or anycast) plus health checks. Stateless services deploy identically in each region. The hard part is data: choose per dataset between a globally consistent store (Spanner, CockroachDB, DynamoDB global tables with conflict rules) and region-owned data with asynchronous replication and per-user home regions. Eventually consistent replication needs conflict resolution (last-writer-wins, CRDTs or ownership), and cross-region latency makes synchronous writes expensive. Use idempotent writes and queues that replicate events. Plan failover: automated health-based traffic shift, capacity headroom so one region can absorb another's load, and regular game-day failover tests. Cost doubles and operational complexity rises, so confirm the RTO/RPO targets actually justify it versus active-passive.",
+   "explanation": "Look for a clear data-consistency strategy, capacity planning for failover and honest cost/complexity trade-offs.",
+   "tags": [
+    "multi-region",
+    "architecture",
+    "availability"
+   ],
+   "companies": [
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qd-git-001",
+   "topic": "Git",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which command creates a new branch and switches to it in a single step?",
+   "options": [
+    "`git branch feature-x --switch`",
+    "`git new feature-x`",
+    "`git switch -c feature-x`",
+    "`git checkout feature-x --create-only`"
+   ],
+   "answer": 2,
+   "explanation": "`git switch -c name` (or the older `git checkout -b name`) creates the branch at the current commit and moves HEAD onto it. Plain `git branch name` creates it without switching.",
+   "tags": [
+    "branching",
+    "basics"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-git-002",
+   "topic": "Git",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In Git, what does `HEAD` refer to?",
+   "options": [
+    "The first commit of the repository",
+    "The newest commit on the remote",
+    "The staging area",
+    "The commit (usually via the current branch) that your working tree is based on"
+   ],
+   "answer": 3,
+   "explanation": "HEAD normally points to a branch name, which points to a commit. In detached HEAD state it points directly at a commit.",
+   "tags": [
+    "basics",
+    "internals"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-git-003",
+   "topic": "Git",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "You staged `config.js` by mistake and want to unstage it but keep your edits. Which command does that?",
+   "options": [
+    "`git restore --staged config.js`",
+    "`git restore config.js`",
+    "`git reset --hard config.js`",
+    "`git rm config.js`"
+   ],
+   "answer": 0,
+   "explanation": "`git restore --staged` removes the file from the index only (older equivalent: `git reset HEAD file`). Plain `git restore file` discards the working-tree edits instead.",
+   "tags": [
+    "staging",
+    "basics"
+   ],
+   "companies": [
+    "Turing",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-git-004",
+   "topic": "Git",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does `git cherry-pick <sha>` do?",
+   "options": [
+    "Moves the original commit to the current branch without copying",
+    "Applies the changes of that commit onto the current branch as a new commit with a different hash",
+    "Merges the whole branch containing that commit",
+    "Deletes the commit from its original branch"
+   ],
+   "answer": 1,
+   "explanation": "Cherry-pick replays a commit's diff, creating a new commit with a new id. The original stays where it was, so the same change can later conflict or duplicate on merge.",
+   "tags": [
+    "cherry-pick",
+    "history"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-git-005",
+   "topic": "Git",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why is `git push --force-with-lease` preferred over `git push --force` after rebasing your own feature branch?",
+   "options": [
+    "It is faster because it skips compression",
+    "It also rewrites the teammates' local copies automatically",
+    "It refuses to overwrite the remote branch if someone else pushed commits you have not seen",
+    "It only pushes a single commit"
+   ],
+   "answer": 2,
+   "explanation": "`--force-with-lease` checks that the remote ref is still what you last fetched. A plain `--force` can silently destroy a colleague's newer work.",
+   "tags": [
+    "rebase",
+    "collaboration"
+   ],
+   "companies": [
+    "Atlassian",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-git-006",
+   "topic": "Git",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you resolve a merge conflict, and what practices reduce how often they happen?",
+   "model_answer": "Run `git status` to see conflicted files, open each one and understand both sides of the `<<<<<<<` markers (use `git log` or `git blame` to see intent), edit to the correct combined result, remove markers, run tests, `git add` the files and finish with `git commit` (or `git rebase --continue`). A merge tool or `git checkout --ours/--theirs` helps for whole-file decisions, and `git merge --abort` returns to the start. To reduce conflicts: keep branches short-lived, merge or rebase from main often, make small focused PRs, avoid mass reformatting mixed with logic, agree on formatters, and communicate when touching shared files.",
+   "explanation": "A good answer is calm and systematic: understand intent, verify with tests, and prevent via small frequent integration.",
+   "tags": [
+    "merge",
+    "collaboration"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-git-007",
+   "topic": "Git",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You are in detached HEAD state, make two commits, then run `git switch main`. What is the risk?",
+   "options": [
+    "Git automatically merges them into main",
+    "Git refuses to switch until you commit",
+    "The commits are deleted immediately and cannot be recovered",
+    "The commits are no longer referenced by any branch, so they can be lost unless you create a branch or find them via reflog"
+   ],
+   "answer": 3,
+   "explanation": "Commits made in detached HEAD are only reachable from HEAD. After switching away Git warns you; run `git branch rescue <sha>` (from the warning or `git reflog`) before garbage collection removes them.",
+   "tags": [
+    "detached-head",
+    "recovery"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-git-008",
+   "topic": "Git",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "What does `git rebase --onto main featureA featureB` do?",
+   "options": [
+    "Replays the commits that are in `featureB` but not in `featureA` onto `main`",
+    "Merges `featureA` and `featureB` into `main`",
+    "Renames `featureB` to `featureA`",
+    "Deletes `featureA` and rebases `main` onto `featureB`"
+   ],
+   "answer": 0,
+   "explanation": "The three-argument form is `--onto <newbase> <upstream> <branch>`. It takes the commits after `upstream` up to `branch` and replays them on `newbase`. It is the standard way to move a branch that was built on top of another feature branch.",
+   "tags": [
+    "rebase",
+    "advanced"
+   ],
+   "companies": [
+    "Atlassian",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-git-009",
+   "topic": "Git",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Compare merge commits, squash merges and rebase-and-merge for pull requests. Which would you standardize on for a team and why?",
+   "model_answer": "Merge commits preserve full branch history and exact commit hashes but make the graph noisy and can contain 'fix typo' commits. Squash merges produce one commit per PR, giving a clean linear main where each commit is a reviewable, revertable unit; the downside is losing granular history and making stacked branches awkward. Rebase-and-merge keeps individual commits linearly but rewrites hashes, and it works only if commits are individually clean and tested. For most product teams I standardize on squash merge with a strong PR title convention, since it makes `git bisect` and reverts simple; for teams that curate atomic commits (like kernel-style work) rebase-and-merge fits. Whatever the choice, enforce it in repo settings, protect main and require CI.",
+   "explanation": "The answer matters less than reasoning about bisectability, revert-ability, history fidelity and team discipline.",
+   "tags": [
+    "workflow",
+    "pull-requests"
+   ],
+   "companies": [
+    "Atlassian",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "qd-git-010",
+   "topic": "Git",
+   "level": "Expert",
+   "type": "open",
+   "question": "A repository has grown to 8 GB because binaries were committed over the years and clones take 20 minutes. How do you fix it and prevent a repeat?",
+   "model_answer": "Diagnose with `git count-objects -vH` and `git rev-list --objects --all` (or `git-sizer`) to find the largest blobs. Rewrite history to remove them using `git filter-repo` (not the slow legacy `filter-branch`), coordinate a freeze since all hashes change, force-push, and have everyone re-clone; pursue server-side cleanup and garbage collection. Move genuinely needed large assets to Git LFS or an artifact store and reference them by version. Mitigate clone cost for those who cannot wait using `--filter=blob:none` partial clones, shallow clones in CI and sparse checkout. Prevent regressions with a pre-receive hook or CI size check and `.gitignore` for build output. Communicate the plan, back up the original repo and archive old links, since open PRs and tags need migration.",
+   "explanation": "Expect knowledge of filter-repo, LFS, partial clone and the organizational cost of rewriting shared history.",
+   "tags": [
+    "repository-management",
+    "performance"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qd-qa-001",
+   "topic": "Testing & QA",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the difference between smoke testing and regression testing?",
+   "options": [
+    "Smoke tests check performance, regression tests check security",
+    "Smoke tests quickly check that the most critical functions work after a build; regression tests verify that existing behavior has not broken after a change",
+    "Smoke testing is done only by customers",
+    "They are the same, just different names"
+   ],
+   "answer": 1,
+   "explanation": "A smoke suite is a small, fast gate (does the app start, can users log in). Regression suites are broader and run to catch unintended side effects of changes.",
+   "tags": [
+    "fundamentals",
+    "test-types"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-qa-002",
+   "topic": "Testing & QA",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which best describes black-box testing?",
+   "options": [
+    "Testing every line of code using a debugger",
+    "Testing only the database layer",
+    "Testing behavior against requirements through inputs and outputs, without relying on knowledge of the internal code",
+    "Testing performed by the original developer only"
+   ],
+   "answer": 2,
+   "explanation": "Black-box techniques (equivalence partitioning, boundary analysis) derive tests from the specification. White-box techniques use knowledge of code structure, for example to reach all branches.",
+   "tags": [
+    "fundamentals",
+    "techniques"
+   ],
+   "companies": [
+    "Turing",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-qa-003",
+   "topic": "Testing & QA",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "An input field accepts ages from 18 to 65 inclusive. Which set of values best applies boundary value analysis?",
+   "options": [
+    "0, 30, 100, 200",
+    "18, 30, 50, 65",
+    "19, 20, 64, 65",
+    "17, 18, 65, 66"
+   ],
+   "answer": 3,
+   "explanation": "Defects cluster at the edges. Test just outside and exactly on each boundary: 17 (invalid), 18 (valid), 65 (valid), 66 (invalid), plus optionally a mid value.",
+   "tags": [
+    "test-design",
+    "boundary"
+   ],
+   "companies": [
+    "Toptal",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-qa-004",
+   "topic": "Testing & QA",
+   "level": "Basic",
+   "type": "open",
+   "question": "What information should a high-quality bug report contain?",
+   "model_answer": "A clear, specific title; environment details (app version, OS, browser, device, account type); numbered steps to reproduce; expected versus actual result; frequency (always or intermittent); and evidence such as screenshots, video, logs, console errors or HAR files. Add severity and the user impact, and link related tickets. Keep one issue per report and avoid speculation about the cause unless supported by evidence. The goal is that a developer who has never seen the issue can reproduce it in minutes without asking follow-up questions.",
+   "explanation": "Interviewers value reproducibility, evidence and impact over long prose.",
+   "tags": [
+    "bug-reporting",
+    "communication"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-qa-005",
+   "topic": "Testing & QA",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Tests pass when run individually but some fail when the whole suite runs in random order. What is the most likely root cause?",
+   "options": [
+    "Tests share state (database rows, globals, files) and depend on execution order",
+    "The assertion library has a bug",
+    "The test runner is running too fast",
+    "The tests are too short"
+   ],
+   "answer": 0,
+   "explanation": "Order-dependent failures indicate leaked state or hidden coupling. Fix by giving each test its own setup/teardown, isolated data or transactions rolled back after each test, and never relying on another test's side effects.",
+   "tags": [
+    "isolation",
+    "flaky-tests"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-qa-006",
+   "topic": "Testing & QA",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Given `if (a && b) { ... }`, how does branch coverage differ from line coverage?",
+   "options": [
+    "Branch coverage counts only functions",
+    "Line coverage can reach 100% with one test where the condition is true, while branch coverage also requires a test where it is false",
+    "They are always identical",
+    "Line coverage includes conditions, branch coverage counts comments"
+   ],
+   "answer": 1,
+   "explanation": "Branch coverage checks that each decision outcome was exercised. Neither metric proves assertions are meaningful; high coverage with weak assertions still misses bugs.",
+   "tags": [
+    "coverage",
+    "metrics"
+   ],
+   "companies": [
+    "Microsoft",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qd-qa-007",
+   "topic": "Testing & QA",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "In a browser end-to-end test, a button appears after an async request. Which approach is most reliable?",
+   "options": [
+    "Add a fixed `sleep(5000)` before clicking",
+    "Retry the whole test three times",
+    "Wait explicitly for the element or condition (for example, an auto-waiting locator or `waitFor`)",
+    "Click repeatedly in a loop until no error"
+   ],
+   "answer": 2,
+   "explanation": "Fixed sleeps are either too slow or too short and cause flakiness. Condition-based waits proceed as soon as the app is ready and fail clearly with a timeout.",
+   "tags": [
+    "e2e",
+    "flaky-tests"
+   ],
+   "companies": [
+    "Google",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "qd-qa-008",
+   "topic": "Testing & QA",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "You inherit a legacy codebase with almost no tests. How do you start introducing automated testing without stalling feature work?",
+   "model_answer": "Start with characterization tests that lock in current behavior at the highest-value entry points (key API endpoints and critical user journeys), since unit-testing tangled code is hard. Add tests whenever you fix a bug or touch an area (the boy-scout rule), and use seams (dependency injection, extracting functions) to make code testable gradually. Set up CI with a fast runner first, then add a coverage baseline that cannot decrease for changed lines rather than a global target. Prioritize risk: payments, auth and data integrity before cosmetic code. Share quick wins and track escaped defects to show value to the team and management.",
+   "explanation": "Look for pragmatism: characterization tests, incremental coverage on changed code and risk-based priorities.",
+   "tags": [
+    "legacy-code",
+    "strategy"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-qa-009",
+   "topic": "Testing & QA",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "During a load test you report 'average response time 180 ms' while some users complain of 8-second waits. What is the best way to report latency?",
+   "options": [
+    "Report only the average, since it is the most stable",
+    "Report only the minimum response time",
+    "Discard the slowest 10% as noise",
+    "Report percentiles (p50, p95, p99) and the max, because averages hide long-tail outliers"
+   ],
+   "answer": 3,
+   "explanation": "Latency distributions are skewed. Tail percentiles show what real users experience and often drive SLOs. Also watch for coordinated omission in test tools that pause when the system stalls.",
+   "tags": [
+    "performance",
+    "load-testing"
+   ],
+   "companies": [
+    "Netflix",
+    "Google"
+   ]
+  },
+  {
+   "id": "qd-qa-010",
+   "topic": "Testing & QA",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A function behaves differently depending on `Date.now()`. What is the best way to make its tests deterministic?",
+   "options": [
+    "Inject a clock (or use fake timers) so the test controls the current time",
+    "Run the tests only at midnight",
+    "Assert with a very wide time tolerance and hope",
+    "Skip testing time-dependent logic"
+   ],
+   "answer": 0,
+   "explanation": "Treat time like any other external dependency: pass it in or use a fake clock so you can test boundaries such as month ends, DST changes and expiry without waiting.",
+   "tags": [
+    "determinism",
+    "test-design"
+   ],
+   "companies": [
+    "Google",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qd-qa-011",
+   "topic": "Testing & QA",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Plan the performance testing for an e-commerce site expecting 10x traffic during a flash sale next month.",
+   "model_answer": "Define goals first: expected peak requests per second, concurrent users, and SLOs such as p95 under 500 ms with under 0.1% errors. Model realistic traffic from production analytics (browse-heavy mix with a checkout spike) using k6, Gatling or Locust, with production-like data volumes and environment sizing. Run baseline, load, stress (find the breaking point), spike and soak tests. Instrument everything (APM, DB metrics, queue depth) to find bottlenecks, typically database connections, hot rows for inventory, third-party payment limits and cache stampedes. Fix, retest and verify autoscaling and graceful degradation, such as a waiting room or disabled recommendations. Agree a rollback and runbook, do a final rehearsal and monitor live with alerts.",
+   "explanation": "Strong candidates start from goals and realistic workload models, then iterate with observability and plan degradation.",
+   "tags": [
+    "performance",
+    "planning"
+   ],
+   "companies": [
+    "Amazon",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "qd-qa-012",
+   "topic": "Testing & QA",
+   "level": "Expert",
+   "type": "open",
+   "question": "You are asked to define the quality strategy for an organization with 50 engineering teams. What principles, ownership model and metrics do you set?",
+   "model_answer": "Make quality a team-owned engineering responsibility, with a small central enablement group providing frameworks, tooling and coaching rather than gatekeeping. Standardize the pyramid: many fast unit tests, contract tests between services, a thin layer of end-to-end tests on critical journeys, and production checks (synthetic monitoring, feature flags, canaries). Require CI gates for tests, security scanning and accessibility, with flaky-test quarantine and a budget for pipeline time. Measure outcomes rather than activity: change failure rate, mean time to restore, escaped defects by severity, lead time, flake rate and customer-reported issues; avoid vanity metrics like raw coverage. Review incidents blamelessly and feed lessons into shared checklists. Roll out by supporting a few pilot teams first, then scale what works.",
+   "explanation": "Look for DORA-style outcome metrics, shift-left plus shift-right, and an enablement (not gatekeeper) org model.",
+   "tags": [
+    "strategy",
+    "leadership"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-ml-001",
+   "topic": "Machine Learning",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which task is an example of unsupervised learning?",
+   "options": [
+    "Grouping customers into segments by purchasing behavior without predefined labels",
+    "Predicting house prices from labelled sales",
+    "Classifying emails as spam or not spam using labelled examples",
+    "Forecasting next month's sales from past labelled values"
+   ],
+   "answer": 0,
+   "explanation": "Unsupervised learning finds structure in unlabelled data (clustering, dimensionality reduction). The other options all learn from known target values, which makes them supervised.",
+   "tags": [
+    "fundamentals",
+    "clustering"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-ml-002",
+   "topic": "Machine Learning",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the difference between a model parameter and a hyperparameter?",
+   "options": [
+    "Parameters are set by hand; hyperparameters are learned",
+    "Parameters are learned from data during training; hyperparameters are set beforehand and control the learning process",
+    "Both are learned by gradient descent",
+    "Hyperparameters exist only in neural networks"
+   ],
+   "answer": 1,
+   "explanation": "Weights and biases are parameters fitted by the optimizer. Learning rate, tree depth and regularization strength are hyperparameters chosen by you, usually tuned on a validation set.",
+   "tags": [
+    "fundamentals",
+    "tuning"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-ml-003",
+   "topic": "Machine Learning",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A `city` feature has values like Paris, Tokyo and Lima with no natural order. Why is one-hot encoding usually better than mapping them to 1, 2, 3 for a linear model?",
+   "options": [
+    "One-hot encoding always reduces the number of features",
+    "Linear models cannot process integers",
+    "Integer codes imply a false ordering and distances between cities that the model would treat as meaningful",
+    "Integer codes use more memory"
+   ],
+   "answer": 2,
+   "explanation": "For nominal categories, numeric codes inject arbitrary order. One-hot gives each category its own weight. Tree models are less sensitive, and high-cardinality features may need target or embedding encodings instead.",
+   "tags": [
+    "feature-engineering",
+    "encoding"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-ml-004",
+   "topic": "Machine Learning",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "During gradient descent training, the loss oscillates wildly or increases. What is the most likely issue?",
+   "options": [
+    "The learning rate is too low",
+    "The dataset is too small to compute gradients",
+    "The model has too few parameters",
+    "The learning rate is too high, so updates overshoot the minimum"
+   ],
+   "answer": 3,
+   "explanation": "Large steps jump across the valley of the loss surface and can diverge. Reduce the learning rate, use a schedule or an adaptive optimizer, and check feature scaling.",
+   "tags": [
+    "optimization",
+    "training"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-ml-005",
+   "topic": "Machine Learning",
+   "level": "Basic",
+   "type": "open",
+   "question": "Explain gradient descent to a non-expert, and say how stochastic and mini-batch variants differ.",
+   "model_answer": "Imagine standing on a foggy hill and wanting the lowest point: you feel the slope under your feet and take a step downhill, repeatedly. In training, the 'hill' is the loss, the slope is the gradient with respect to the model parameters, and the step size is the learning rate. Batch gradient descent computes the gradient over the whole dataset per step, which is accurate but slow. Stochastic gradient descent uses one example per step, which is fast and noisy; the noise can help escape poor minima. Mini-batch uses small groups (such as 32 to 512 examples), balancing efficient hardware use with reasonably stable gradients, and is the standard in deep learning.",
+   "explanation": "The intuition plus the trade-off between gradient accuracy, speed and noise is the target.",
+   "tags": [
+    "optimization",
+    "fundamentals"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-ml-006",
+   "topic": "Machine Learning",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why does a random forest usually generalize better than a single deep decision tree?",
+   "options": [
+    "Averaging many trees trained on bootstrapped samples and random feature subsets reduces variance",
+    "Each tree in the forest is shallower and therefore has higher bias",
+    "It trains on the test set as well",
+    "It removes the need for any hyperparameters"
+   ],
+   "answer": 0,
+   "explanation": "Single deep trees overfit. Bagging with decorrelated trees averages out their individual errors, cutting variance without raising bias much. Out-of-bag samples also give a free validation estimate.",
+   "tags": [
+    "ensembles",
+    "random-forest"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-ml-007",
+   "topic": "Machine Learning",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What happens to dropout during inference in a standard framework?",
+   "options": [
+    "Units are still dropped randomly with the same probability",
+    "Dropout is disabled and all units are used (activations are scaled consistently with training)",
+    "Only half of the network is used",
+    "Dropout is applied to the weights permanently"
+   ],
+   "answer": 1,
+   "explanation": "Dropout is a training-time regularizer. With inverted dropout the scaling is applied during training, so at test time the full network runs deterministically (`model.eval()` in PyTorch).",
+   "tags": [
+    "deep-learning",
+    "regularization"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-ml-008",
+   "topic": "Machine Learning",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You use SMOTE oversampling to balance classes and then run K-fold cross-validation on the oversampled dataset. What is wrong?",
+   "options": [
+    "SMOTE cannot be used with cross-validation in any form",
+    "Nothing; oversampling first is the standard approach",
+    "Synthetic samples derived from validation-fold neighbours leak into training, inflating scores; resampling must happen inside each training fold only",
+    "K-fold only works on balanced data"
+   ],
+   "answer": 2,
+   "explanation": "Oversampling before splitting puts near-copies of the same points in both train and validation folds, so the evaluation is optimistic. Use a pipeline that resamples only the training portion of each fold.",
+   "tags": [
+    "imbalanced-data",
+    "leakage"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-ml-009",
+   "topic": "Machine Learning",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does an ROC AUC of 0.85 mean for a binary classifier?",
+   "options": [
+    "85% of predictions are correct",
+    "The model has 85% precision at all thresholds",
+    "15% of positives are missed at every threshold",
+    "A randomly chosen positive example is ranked above a randomly chosen negative one with probability 0.85"
+   ],
+   "answer": 3,
+   "explanation": "AUC measures ranking quality across all thresholds and is independent of the chosen cutoff and class prior. It says nothing about calibration or the precision at a specific operating point.",
+   "tags": [
+    "metrics",
+    "classification"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-ml-010",
+   "topic": "Machine Learning",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Compare L1 and L2 regularization. When would you use each, and what is elastic net?",
+   "model_answer": "Both add a penalty on weight size to the loss. L2 (ridge) penalizes squared weights, shrinks them smoothly toward zero and handles correlated features by sharing weight; it rarely gives exact zeros. L1 (lasso) penalizes absolute values, which drives some coefficients exactly to zero, giving sparse models and built-in feature selection, but it is unstable with highly correlated features (it picks one arbitrarily). Elastic net combines both penalties, giving sparsity while remaining stable for correlated groups. Choose L1 when you suspect few features matter or need interpretability, L2 as a default for predictive stability, elastic net for many correlated predictors, and tune the strength by cross-validation after scaling features.",
+   "explanation": "Look for the geometry intuition (sparsity vs shrinkage), correlated-feature behavior and the need to scale features.",
+   "tags": [
+    "regularization",
+    "linear-models"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-ml-011",
+   "topic": "Machine Learning",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Why do Transformers use layer normalization instead of batch normalization?",
+   "options": [
+    "Layer norm normalizes across features per example, so it does not depend on batch size or sequence padding statistics and works at inference with batch size 1",
+    "Layer norm is cheaper in every case",
+    "Batch norm cannot be applied to matrices",
+    "Layer norm removes the need for residual connections"
+   ],
+   "answer": 0,
+   "explanation": "Batch norm relies on batch statistics, which are noisy for small batches and awkward for variable-length sequences. Layer norm computes mean and variance per token over the feature dimension, giving identical behavior in training and inference.",
+   "tags": [
+    "deep-learning",
+    "transformers"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-ml-012",
+   "topic": "Machine Learning",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A classifier outputs 0.8 for a group of cases, but only 55% of those cases are actually positive. Which property is lacking?",
+   "options": [
+    "Recall",
+    "Calibration: predicted probabilities do not match observed frequencies",
+    "Statistical power",
+    "Stationarity"
+   ],
+   "answer": 1,
+   "explanation": "A calibrated model's predicted probability reflects the true likelihood. A model can rank well (high AUC) while being miscalibrated. Fix with Platt scaling or isotonic regression on held-out data, and check reliability diagrams.",
+   "tags": [
+    "calibration",
+    "evaluation"
+   ],
+   "companies": [
+    "Google",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qd-ml-013",
+   "topic": "Machine Learning",
+   "level": "Advanced",
+   "type": "open",
+   "question": "For an LLM-powered product that must answer questions about a company's private documents, how do you choose between prompting, retrieval-augmented generation (RAG) and fine-tuning?",
+   "model_answer": "Start with prompting and a strong baseline because it is cheapest to iterate. For knowledge that is private, large or changing, use RAG: chunk and embed documents, retrieve relevant passages (often hybrid keyword plus vector search with reranking), and put them in the prompt with citations. This keeps data fresh, auditable and permission-aware. Fine-tuning is for changing behavior, format or style, or distilling to a smaller cheaper model; it is a poor way to inject facts that change. Often combine them: fine-tune for tone and structure and RAG for facts. Evaluate with a labelled question set measuring retrieval recall, answer faithfulness and refusal behavior, and add guardrails such as access control at retrieval time and prompt-injection defenses.",
+   "explanation": "Strong answers match each technique to the problem (knowledge vs behavior) and include evaluation and security.",
+   "tags": [
+    "llm",
+    "rag",
+    "architecture"
+   ],
+   "companies": [
+    "Microsoft",
+    "OpenAI"
+   ]
+  },
+  {
+   "id": "qd-ml-014",
+   "topic": "Machine Learning",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "Customer behavior changed after a pricing update, so the relationship between features and churn is different even though the feature distributions look the same. What is this called?",
+   "options": [
+    "Covariate shift",
+    "Class imbalance",
+    "Concept drift (the conditional distribution P(y|x) changed)",
+    "Data leakage"
+   ],
+   "answer": 2,
+   "explanation": "Covariate shift changes P(x) while P(y|x) stays fixed. Concept drift changes the mapping itself, so monitoring inputs alone will miss it. You need label-based monitoring, delayed performance metrics and scheduled or triggered retraining.",
+   "tags": [
+    "drift",
+    "monitoring"
+   ],
+   "companies": [
+    "Netflix",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-ml-015",
+   "topic": "Machine Learning",
+   "level": "Expert",
+   "type": "open",
+   "question": "Your recommender performs well offline but poorly online. How do you investigate training-serving skew, feedback loops and evaluation mismatch?",
+   "model_answer": "Start by checking for skew: log the exact features served at prediction time and compare their distributions and computation with the training pipeline; a feature store with a single definition for batch and online prevents drift in logic, time zones, null handling and freshness. Check leakage in offline evaluation (random split on time-ordered data, features computed with future information) and use time-based splits. Offline metrics like AUC may not align with online goals, so validate with interleaving or A/B tests and counterfactual estimators (inverse propensity scoring) because logged data is biased by the previous policy. Feedback loops cause popularity bias and shrinking exploration, so add exploration (epsilon or Thompson sampling) and measure diversity and long-term retention. Also examine latency-driven fallbacks, cold start, and cache staleness in production.",
+   "explanation": "Looks for training-serving skew, leakage, proper online evaluation and awareness of selection bias in logged data.",
+   "tags": [
+    "recommender",
+    "mlops"
+   ],
+   "companies": [
+    "Netflix",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-ds-001",
+   "topic": "Data Science",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does a large standard deviation tell you about a dataset?",
+   "options": [
+    "Values are all close to the mean",
+    "The mean equals the median",
+    "The dataset has no outliers",
+    "Values are widely spread around the mean"
+   ],
+   "answer": 3,
+   "explanation": "Standard deviation measures typical distance from the mean. It is in the same unit as the data, and it is sensitive to outliers.",
+   "tags": [
+    "statistics",
+    "fundamentals"
+   ],
+   "companies": [
+    "Turing",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-ds-002",
+   "topic": "Data Science",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In pandas, `orders.merge(customers, on=\"customer_id\", how=\"left\")` returns which rows?",
+   "options": [
+    "All rows from `orders`, with customer columns filled with NaN where no match exists",
+    "Only rows that appear in both tables",
+    "All rows from `customers` only",
+    "Only unmatched rows"
+   ],
+   "answer": 0,
+   "explanation": "A left join keeps every row of the left table. Unmatched right-side columns become NaN. An inner join would drop orders without matching customers.",
+   "tags": [
+    "pandas",
+    "joins"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-ds-003",
+   "topic": "Data Science",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which chart is most appropriate for examining the distribution of a single continuous variable such as order value?",
+   "options": [
+    "A pie chart",
+    "A histogram",
+    "A line chart over categories",
+    "A stacked bar chart"
+   ],
+   "answer": 1,
+   "explanation": "Histograms bin a continuous variable to show shape, skew, spread and outliers. Pie charts compare parts of a whole and line charts show order or time.",
+   "tags": [
+    "visualization",
+    "eda"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-ds-004",
+   "topic": "Data Science",
+   "level": "Basic",
+   "type": "open",
+   "question": "You receive a new CSV dataset. Walk through your first steps of exploratory data analysis.",
+   "model_answer": "First clarify the business question and what each column means, then load the data and check shape, types, and a sample of rows. Look at missing values per column, duplicates, and impossible values (negative ages, future dates). Summarize numeric columns (mean, median, quartiles, min and max) and plot histograms and boxplots; profile categorical columns by counts and cardinality. Examine relationships with the target through group statistics, scatter plots and a correlation matrix, and check time trends and seasonality if there is a date. Note data quality problems and assumptions, validate against known totals from the source system, and document findings and next cleaning steps before modeling.",
+   "explanation": "A systematic approach that starts with understanding and validation, not jumping straight to a model.",
+   "tags": [
+    "eda",
+    "fundamentals"
+   ],
+   "companies": [
+    "Turing",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-ds-005",
+   "topic": "Data Science",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "In hypothesis testing, what is a Type II error?",
+   "options": [
+    "Rejecting the null hypothesis when it is true",
+    "Choosing the wrong test statistic",
+    "Failing to reject the null hypothesis when it is actually false (a missed real effect)",
+    "Calculating the p-value incorrectly"
+   ],
+   "answer": 2,
+   "explanation": "Type I is a false positive (probability alpha). Type II is a false negative (probability beta); power equals `1 - beta`. Larger samples and larger effects increase power.",
+   "tags": [
+    "statistics",
+    "hypothesis-testing"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-ds-006",
+   "topic": "Data Science",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does the Central Limit Theorem say?",
+   "options": [
+    "Every dataset becomes normal if you collect enough rows",
+    "The sample mean always equals the population mean",
+    "Medians are always normally distributed",
+    "The distribution of sample means approaches a normal distribution as sample size grows, even if the population is not normal (given finite variance)"
+   ],
+   "answer": 3,
+   "explanation": "The CLT justifies using normal-based confidence intervals and tests for means with reasonably large samples. It concerns the sampling distribution of the mean, not the raw data, and convergence is slower for heavy-tailed distributions.",
+   "tags": [
+    "statistics",
+    "probability"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-ds-007",
+   "topic": "Data Science",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You test 20 independent metrics at alpha = 0.05 and one shows p = 0.03. If all 20 null hypotheses are true, what is the approximate probability of at least one false positive?",
+   "options": [
+    "About 64%",
+    "About 5%",
+    "About 20%",
+    "About 1%"
+   ],
+   "answer": 0,
+   "explanation": "`1 - 0.95^20` is roughly 0.64. This is the multiple comparisons problem; control it by pre-registering a primary metric or adjusting with Bonferroni or Benjamini-Hochberg.",
+   "tags": [
+    "statistics",
+    "ab-testing"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-ds-008",
+   "topic": "Data Science",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "You are building a churn prediction model for a subscription product. What features would you engineer and what pitfalls would you avoid?",
+   "model_answer": "Define churn precisely (for example no activity or cancellation within 30 days) and fix a prediction time. Engineer features computed only from data before that time: recency, frequency and monetary-style usage counts over several windows (7, 30, 90 days), trends such as week-over-week change, tenure, plan and price, support tickets, payment failures, feature adoption and engagement diversity. Encode categories sensibly and handle missing values consistently. Pitfalls: label leakage (using cancellation-related events recorded after the cutoff), random splits on time-ordered data instead of time-based splits, ignoring class imbalance, and building a model without an action plan. Evaluate with precision at top-K and uplift, not just AUC, and monitor for drift.",
+   "explanation": "The key signal is time-aware feature construction with no leakage and a link to the business action.",
+   "tags": [
+    "feature-engineering",
+    "churn"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-ds-009",
+   "topic": "Data Science",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "To detect an effect half as large with the same power and significance level in an A/B test, how does the required sample size per group change?",
+   "options": [
+    "It roughly doubles",
+    "It increases roughly four times",
+    "It stays the same",
+    "It halves"
+   ],
+   "answer": 1,
+   "explanation": "Sample size scales with `1 / effect^2` (for a fixed variance). Halving the minimum detectable effect therefore needs about four times as many users, which is why small lifts are costly to detect.",
+   "tags": [
+    "ab-testing",
+    "power"
+   ],
+   "companies": [
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "qd-ds-010",
+   "topic": "Data Science",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "An A/B test designed for a 50/50 split shows 52,000 users in control and 48,000 in treatment. What does this indicate?",
+   "options": [
+    "The treatment is performing worse, so users left",
+    "It is an expected random fluctuation",
+    "A likely sample ratio mismatch, pointing to an assignment or logging bug that makes results untrustworthy",
+    "The test has reached statistical significance"
+   ],
+   "answer": 2,
+   "explanation": "With 100,000 users a 50/50 split should be within a fraction of a percent, so a 4% gap is highly improbable by chance. Run a chi-square test, investigate bot filtering, redirects and exposure logging before trusting any metric.",
+   "tags": [
+    "ab-testing",
+    "data-quality"
+   ],
+   "companies": [
+    "Microsoft",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qd-ds-011",
+   "topic": "Data Science",
+   "level": "Advanced",
+   "type": "open",
+   "question": "A product team shipped a feature to all users and now asks whether it increased retention. No experiment was run. How would you estimate its causal effect?",
+   "model_answer": "Be upfront that observational estimates need assumptions. If the rollout was staggered by region or time, use difference-in-differences with parallel-trends checks or synthetic control built from similar untreated units. If adoption was optional, compare adopters and non-adopters only after adjusting for confounders via matching or propensity-score weighting, and be aware that engaged users self-select. If an arbitrary cutoff or an instrument exists (eligibility threshold, a random outage), regression discontinuity or instrumental variables can help. Run placebo tests on pre-period data and sensitivity analyses for unmeasured confounding, report uncertainty ranges rather than a single number, and recommend a holdout group for future launches.",
+   "explanation": "Interviewers want honest framing of assumptions, an appropriate method for the data situation, and validation checks.",
+   "tags": [
+    "causal-inference",
+    "analytics"
+   ],
+   "companies": [
+    "Meta",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-ds-012",
+   "topic": "Data Science",
+   "level": "Expert",
+   "type": "open",
+   "question": "Your A/B test on revenue per user is underpowered because the metric is extremely skewed and noisy. What options do you have to reach a decision faster without cheating?",
+   "model_answer": "Reduce variance: use CUPED, regressing out pre-experiment behavior of each user, which often cuts variance by 20 to 50%. Winsorize or cap extreme values with the cap decided in advance, or use a more sensitive proxy metric (conversion rate, add-to-cart) validated against revenue historically. Use stratified or paired designs and increase exposure to more traffic. Use sequential testing methods (always-valid p-values, group sequential boundaries) when peeking is required rather than repeated naive looks. Bootstrap confidence intervals for the ratio. Pre-register the primary metric and stopping rule, and report that a longer test or accepting a bigger minimum detectable effect is the honest alternative when these are not enough.",
+   "explanation": "Look for CUPED, pre-specified capping, sequential testing and discipline about not p-hacking.",
+   "tags": [
+    "ab-testing",
+    "variance-reduction"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qd-mob-001",
+   "topic": "Mobile Development",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In Flutter, when should a widget be a `StatefulWidget` instead of a `StatelessWidget`?",
+   "options": [
+    "When it contains more than one child widget",
+    "When it uses images",
+    "When it is placed inside a `Scaffold`",
+    "When the widget holds data that changes over its lifetime and the UI must rebuild in response"
+   ],
+   "answer": 3,
+   "explanation": "Stateless widgets describe UI purely from their constructor arguments. Stateful widgets own a `State` object, mutated with `setState`, that triggers a rebuild.",
+   "tags": [
+    "flutter",
+    "fundamentals"
+   ],
+   "companies": [
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-mob-002",
+   "topic": "Mobile Development",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why do Android and iOS layouts use density-independent units (dp/sp on Android, points on iOS)?",
+   "options": [
+    "So UI elements appear at a consistent physical size across screens with different pixel densities",
+    "To make apps run faster on older devices",
+    "To avoid using layout constraints",
+    "Because pixels are not supported by the OS"
+   ],
+   "answer": 0,
+   "explanation": "Devices have vastly different pixels per inch. Density-independent units are scaled by the system, and `sp` additionally respects the user's font size setting for accessibility.",
+   "tags": [
+    "ui",
+    "fundamentals"
+   ],
+   "companies": [
+    "Google",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qd-mob-003",
+   "topic": "Mobile Development",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the purpose of deep links (Android App Links / iOS Universal Links)?",
+   "options": [
+    "To encrypt traffic between the app and server",
+    "To open a specific screen in the app directly from a URL, falling back to the website if the app is not installed",
+    "To install updates silently",
+    "To let apps read each other's local storage"
+   ],
+   "answer": 1,
+   "explanation": "Verified links tie your domain to your app so tapping an https link opens the right content in-app. They power marketing campaigns, notifications and sharing and require a hosted association file on your domain.",
+   "tags": [
+    "navigation",
+    "deep-links"
+   ],
+   "companies": [
+    "Amazon",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-mob-004",
+   "topic": "Mobile Development",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which Android API is designed for deferrable background work that must eventually run even if the app is closed or the device restarts?",
+   "options": [
+    "A plain `Thread` started in `onCreate`",
+    "`AsyncTask`",
+    "WorkManager",
+    "A foreground `Activity` timer"
+   ],
+   "answer": 2,
+   "explanation": "WorkManager persists work requests and respects constraints such as network and charging, handling Doze and app restarts. Plain threads die with the process, and `AsyncTask` is deprecated.",
+   "tags": [
+    "android",
+    "background-work"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-mob-005",
+   "topic": "Mobile Development",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Several simultaneous API calls get HTTP 401 because the access token expired. What is the best way to handle refresh?",
+   "options": [
+    "Let every call refresh the token independently",
+    "Log the user out immediately",
+    "Increase the token lifetime to a year",
+    "Use a single in-flight refresh request that other calls wait for, then retry them with the new token"
+   ],
+   "answer": 3,
+   "explanation": "Concurrent refreshes can race and invalidate each other, especially with rotating refresh tokens. A shared promise or mutex in the HTTP interceptor refreshes once, then replays queued requests.",
+   "tags": [
+    "auth",
+    "networking"
+   ],
+   "companies": [
+    "Uber",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qd-mob-006",
+   "topic": "Mobile Development",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you handle app versioning, forced upgrades and API backward compatibility for a mobile app, given users update slowly?",
+   "model_answer": "Treat the API as a long-lived contract: version it or evolve it additively (new optional fields, never removing or repurposing existing ones) because old app versions remain in the wild for months. The app sends its version and platform in headers, and the backend can return a minimum supported version so the client shows a soft prompt or a blocking update screen for critical security or breaking changes. Use remote config and feature flags to disable broken features server-side without a store release, and staged rollouts (Play Console, phased release on iOS) to catch crashes early. Maintain a support matrix and analytics of version adoption to decide when to retire an API version, with a deprecation timeline.",
+   "explanation": "Look for additive API evolution, minimum-version checks, flags and staged rollout.",
+   "tags": [
+    "release",
+    "api-design"
+   ],
+   "companies": [
+    "Uber",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-mob-007",
+   "topic": "Mobile Development",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "At 60 fps, roughly how much time does the UI thread have to produce each frame?",
+   "options": [
+    "About 16 ms",
+    "About 160 ms",
+    "About 1 ms",
+    "About 100 ms"
+   ],
+   "answer": 0,
+   "explanation": "1000 ms divided by 60 is about 16.7 ms. Any main-thread work longer than that (parsing JSON, image decoding, heavy layout) causes dropped frames and visible jank.",
+   "tags": [
+    "performance",
+    "ui-thread"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-mob-008",
+   "topic": "Mobile Development",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "An Android app keeps state only in a `ViewModel`. After the user leaves the app for hours, the system kills the process and the user returns to a blank form. Why, and what is the fix?",
+   "options": [
+    "ViewModels are cleared on rotation, so use a static variable",
+    "ViewModels do not survive process death; persist small UI state with `SavedStateHandle` or `onSaveInstanceState`, and durable data in a database",
+    "The OS never kills processes, so this is a bug in the form",
+    "Use a larger heap with `largeHeap=true`"
+   ],
+   "answer": 1,
+   "explanation": "A ViewModel survives configuration changes like rotation but lives in the process memory. When the process is killed, the system only restores what you saved in the saved-state bundle. Test with 'Don't keep activities' and `adb shell am kill`.",
+   "tags": [
+    "android",
+    "state",
+    "lifecycle"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-mob-009",
+   "topic": "Mobile Development",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How would you monitor and reduce the crash rate of a production mobile app?",
+   "model_answer": "Integrate a crash reporter (Firebase Crashlytics or Sentry) with symbolication/dSYM and ProGuard/R8 mapping uploads so stack traces are readable, plus breadcrumbs, app version, device and OS tags. Track crash-free sessions and users per release, and alert when a new release regresses. Triage by impact and frequency, reproduce on the affected devices or OS versions, and fix top crash clusters first, often null handling, threading and out-of-memory problems. Use staged rollouts and kill-switch feature flags to limit blast radius, add ANR and startup monitoring, and add tests plus lint rules for recurring causes. Close the loop by checking that the fix actually dropped the crash signature in the next release.",
+   "explanation": "Signals: readable stack traces, per-release metrics, staged rollouts and fix verification.",
+   "tags": [
+    "crashes",
+    "observability"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-mob-010",
+   "topic": "Mobile Development",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design the client side of a chat app that remains usable on flaky networks: message sending, ordering, deduplication and sync.",
+   "model_answer": "Use a local database (SQLite/Room/Core Data) as the source of truth that the UI observes. Sending writes the message locally with a client-generated id and `pending` state, and an outbox worker sends it with retries and exponential backoff, marking `sent` when the server acknowledges. The server dedupes by client id, so retries are idempotent. For ordering, rely on server-assigned sequence numbers per conversation and show optimistic local messages in a provisional position until acknowledged. Keep a WebSocket for live events with heartbeats and auto-reconnect, and on reconnect fetch missed messages since the last sequence number, falling back to push notifications and background sync. Handle app death by persisting the outbox, add attachment uploads as resumable jobs, and surface per-message status (sending, failed with retry). Test with network link conditioners and chaos tools.",
+   "explanation": "Look for local-first design, idempotent sends with client ids, server sequence numbers and reconnect/catch-up logic.",
+   "tags": [
+    "offline",
+    "system-design",
+    "messaging"
+   ],
+   "companies": [
+    "Meta",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qd-hr-001",
+   "topic": "Behavioral & HR",
+   "level": "Basic",
+   "type": "open",
+   "question": "Why are you leaving your current job (or why did you leave your last one)?",
+   "model_answer": "Keep it forward-looking and professional. Situation: 'I have spent two years building internal tools and learned a lot, but the team has stopped investing in new products, so my growth has plateaued.' Task: I want to work on customer-facing systems at larger scale and deepen my backend skills. Action: I proactively asked for stretch work, took on an on-call rotation and a migration project, and confirmed with my manager that the path I want is not available in the near term. Result: I leave on good terms with documentation handed over, and this role matches what I am looking for because of its scale and engineering culture. I never criticize my former employer or colleagues.",
+   "explanation": "Interviewers screen for negativity, blame and mismatched motivation. A calm, specific, growth-oriented answer without badmouthing wins.",
+   "tags": [
+    "motivation",
+    "career"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-hr-002",
+   "topic": "Behavioral & HR",
+   "level": "Basic",
+   "type": "open",
+   "question": "Describe your ideal work environment and the kind of manager you work best with.",
+   "model_answer": "Be honest but flexible, and tie it to results. I do my best work in a team with clear goals, autonomy over how to reach them, and a culture of written communication and code review. I like a manager who sets context and priorities, gives frequent specific feedback and is available when I am blocked, but doesn't micromanage. Situation example: at my last company, weekly 1:1s with clear expectations helped me raise a delayed project's delivery rate; my action was to bring a short agenda and risks each week; the result was fewer surprises and an on-time release. I adapt to other styles too, for example by asking for more check-ins when a manager prefers hands-on involvement.",
+   "explanation": "Look for self-awareness plus adaptability. Avoid describing an environment so narrow that the company could not offer it.",
+   "tags": [
+    "culture-fit",
+    "management"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-hr-003",
+   "topic": "Behavioral & HR",
+   "level": "Basic",
+   "type": "open",
+   "question": "Tell me about the project you are most proud of.",
+   "model_answer": "Choose a project with measurable impact and your clear personal contribution. Situation: our checkout page had a 9-second load time and conversion was falling. Task: I owned the performance improvement as the lead frontend developer. Action: I profiled with Lighthouse and found oversized images, a blocking third-party script and an N+1 API call; I introduced lazy loading, moved the script to async, batched the request and added a performance budget in CI. I also documented the findings for the team. Result: load time dropped to 2.5 seconds, conversion rose 11%, and the budget prevented regressions afterwards. I am proud of it because it combined measurement, teamwork and lasting process change.",
+   "explanation": "Use specifics: numbers, your role versus the team's, and what you learned. Avoid vague 'we did great things'.",
+   "tags": [
+    "achievements",
+    "impact"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-hr-004",
+   "topic": "Behavioral & HR",
+   "level": "Basic",
+   "type": "open",
+   "question": "What motivates you at work?",
+   "model_answer": "Name genuine motivators and back them with an example. I am motivated by solving real user problems and by seeing the effect of my work in measurable outcomes. Situation: support tickets about a confusing export feature kept growing. Task: nobody owned it, but I wanted to fix the root cause. Action: I sat in on support calls for a morning, redesigned the flow with a designer and shipped a simplified version in two sprints. Result: related tickets fell by 60% and I received direct customer thanks. I am also motivated by learning from stronger engineers and by mentoring, so I look for teams that value both.",
+   "explanation": "Authenticity matters; answers should align with the role (for example impact, craft, learning) and avoid 'only money' or generic buzzwords.",
+   "tags": [
+    "motivation",
+    "values"
+   ],
+   "companies": [
+    "Google",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-hr-005",
+   "topic": "Behavioral & HR",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Tell me about a time you had to juggle several high-priority tasks at once. How did you decide what to do first?",
+   "model_answer": "Situation: in one week I had a production bug affecting a few customers, a feature demo for a prospective client and a code review blocking a teammate. Task: deliver all without dropping quality. Action: I listed the three items with impact and deadline, flagged the conflict to my manager and agreed the priorities: the production bug first because it was affecting revenue, the review next because it took 20 minutes and unblocked someone, then the demo preparation. I communicated expected times to each stakeholder and asked a colleague to help with demo data. Result: the bug was fixed in two hours, the teammate was unblocked the same day and the demo went well. Lesson: prioritize by impact and urgency, communicate early and delegate when possible.",
+   "explanation": "Look for an explicit prioritization framework, proactive communication to stakeholders and a concrete result.",
+   "tags": [
+    "prioritization",
+    "time-management"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-hr-006",
+   "topic": "Behavioral & HR",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Describe a time you went above and beyond what was asked.",
+   "model_answer": "Situation: a client asked me to add a CSV export button. Task: deliver exactly that by Friday. Action: while implementing it I noticed exports of large accounts timed out and users would assume the feature was broken. After finishing the requested scope, I spent extra time moving the export to a background job with an email link, added a progress message and wrote a short usage note, and I told my manager and the client why I did it. Result: the feature worked for the biggest customers, support tickets about exports never appeared, and the client requested the same pattern for other reports. I made sure the extra work didn't delay the agreed deliverable or hide scope changes.",
+   "explanation": "Going beyond must be useful and transparent. Beware answers that show scope creep or unsustainable overwork.",
+   "tags": [
+    "ownership",
+    "initiative"
+   ],
+   "companies": [
+    "Amazon",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-hr-007",
+   "topic": "Behavioral & HR",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Tell me about a time you had to learn a new technology quickly to deliver a project.",
+   "model_answer": "Situation: our team inherited a service written in Go, and I only knew Python and JavaScript. Task: fix a critical bug and add an endpoint within two weeks. Action: I spent the first two days on the official tour and reading the codebase's tests, paired with a Go-experienced colleague for an hour a day, and wrote small throwaway programs to try concurrency patterns. I asked for code review focused on idioms and kept notes of mistakes. Result: I fixed the bug in four days, shipped the endpoint on time, and later contributed a guide for new joiners. The approach I repeat is learn by reading tests, build something small, and use reviews as teaching.",
+   "explanation": "Strong answers show a repeatable learning method, humility in asking for help and delivered results.",
+   "tags": [
+    "learning",
+    "adaptability"
+   ],
+   "companies": [
+    "Google",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-hr-008",
+   "topic": "Behavioral & HR",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Tell me about a time you handled a difficult or demanding client or stakeholder.",
+   "model_answer": "Situation: a client stakeholder repeatedly sent urgent change requests directly to developers, derailing sprints. Task: protect the team's focus while keeping the client satisfied. Action: I scheduled a call to understand the business pressure behind the requests, then proposed a lightweight process: a shared backlog, a weekly prioritization session and an urgent lane with a clear definition. I summarized agreements in writing. Result: interruptions fell sharply, the client felt heard because urgent items were addressed within a day, and delivery of planned work improved. I learned that difficult stakeholders often just lack visibility and a trusted channel.",
+   "explanation": "Look for empathy, a root-cause approach, process fix and written follow-up rather than winning an argument.",
+   "tags": [
+    "stakeholders",
+    "communication"
+   ],
+   "companies": [
+    "Toptal",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qd-hr-009",
+   "topic": "Behavioral & HR",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Give an example of a time you improved a process or workflow on your team.",
+   "model_answer": "Situation: releases took half a day because deployment steps were manual and error-prone, causing two incidents in a quarter. Task: reduce risk and time without a dedicated budget. Action: I documented the existing steps, automated them with a CI pipeline including tests, smoke checks and a one-click rollback, ran it in parallel with the old process for two releases, and trained the team in a short session. Result: deployment time dropped from about four hours to twenty minutes, incidents from releases fell to zero over the next quarter, and the team started releasing smaller changes more often. I measured before and after to show the value.",
+   "explanation": "Interviewers want measurement of before and after, change management and adoption, not just the tooling.",
+   "tags": [
+    "process-improvement",
+    "initiative"
+   ],
+   "companies": [
+    "Atlassian",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-hr-010",
+   "topic": "Behavioral & HR",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Tell me about a time you had to say no or push back on a request or scope.",
+   "model_answer": "Situation: a product manager asked for a large reporting feature to be included in a sprint that was already full, due to a promise made to a customer. Task: avoid overcommitting while supporting the business goal. Action: I estimated the work, laid out the options (drop two planned items, cut the feature to a minimal report, or move the date) and showed the trade-offs with data on the risks of rushing, such as the need for testing. I proposed the minimal version for the customer's actual need, confirmed with the PM what the customer truly required, and recommended it. Result: we delivered a simple version on time, the full version the next sprint, and the customer was satisfied. Saying no worked because I offered alternatives and respected the underlying goal.",
+   "explanation": "Look for saying no with data and alternatives, not a flat refusal, and alignment to business goals.",
+   "tags": [
+    "boundaries",
+    "negotiation"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qd-hr-011",
+   "topic": "Behavioral & HR",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Tell me about a time you had to address an underperforming teammate or give difficult feedback.",
+   "model_answer": "Situation: a teammate's pull requests were repeatedly late and needed multiple rounds of rework, which slowed the team. Task: help him improve without damaging trust; I was a senior peer, not his manager. Action: I asked for a private conversation, described specific examples rather than generalities, and asked how he saw the situation. He felt unsure about our architecture patterns. We agreed on a short design review before coding and weekly pairing sessions, and I kept his manager informed in a supportive way. Result: within six weeks, rework dropped noticeably and he began reviewing others' code. The key was feedback that was timely, specific, kind and paired with practical help.",
+   "explanation": "Strong answers show empathy plus directness, focus on behavior not personality, and follow-up support.",
+   "tags": [
+    "feedback",
+    "leadership"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qd-hr-012",
+   "topic": "Behavioral & HR",
+   "level": "Expert",
+   "type": "open",
+   "question": "Tell me about a time you led a significant change, such as a risky migration, that faced resistance. What did you learn?",
+   "model_answer": "Situation: we ran a monolith on aging servers with frequent outages, and leadership and some engineers resisted a migration to managed cloud services because of risk and cost. Task: lead the migration while keeping revenue-critical uptime. Action: I wrote a proposal with the cost of outages versus the new cost, ran a small pilot with one low-risk service, and invited skeptics to define success criteria and failure triggers. We migrated incrementally behind a routing layer with rollback at each step, held weekly updates and ran a post-migration review. Result: we finished in five months, downtime dropped 80%, and infrastructure cost fell 15%. What I would do differently is involve the on-call engineers earlier, because their runbooks needed updates and caused an avoidable incident. I learned that change succeeds when concerns are treated as design inputs.",
+   "explanation": "At this level look for structured influence, risk reduction through increments, honest reflection and measurable outcomes.",
+   "tags": [
+    "leadership",
+    "change-management"
+   ],
+   "companies": [
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qd-remote-001",
+   "topic": "Remote Work & Communication",
+   "level": "Basic",
+   "type": "open",
+   "question": "Nobody supervises you directly when you work remotely. How do you stay accountable and visible?",
+   "model_answer": "I plan the week on Monday and the day each morning, write down commitments and share them in the team channel or standup thread. I break work into small tasks with visible progress in the tracker, post short end-of-day or end-of-week updates covering done, next and blocked, and raise risks as soon as I see them instead of waiting for a meeting. Being visible means making outcomes easy to find: linking PRs, writing clear tickets and documenting decisions. I also schedule focus blocks, keep a regular routine and check in with my manager in 1:1s about priorities. Accountability comes from clear commitments and reliable communication, not from being online all day.",
+   "explanation": "Interviewers want self-management systems and proactive communication rather than 'I am self-motivated'.",
+   "tags": [
+    "accountability",
+    "self-management"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-remote-002",
+   "topic": "Remote Work & Communication",
+   "level": "Basic",
+   "type": "open",
+   "question": "Which tools do you use for remote collaboration, and how do you decide which one fits which purpose?",
+   "model_answer": "I match the tool to the urgency and depth of the message. Chat (Slack or Teams) is for quick questions and non-urgent updates and I use threads to keep context. Issue trackers (Jira, Linear, GitHub Issues) hold the work and decisions about it. Longer reasoning goes into documents (Notion, Google Docs, RFC in the repo) so it can be reviewed asynchronously and found later. Video calls are for sensitive conversations, brainstorming and unblocking complex topics; I record or summarize them afterwards. For urgent production issues there is a defined paging path. I also agree on norms such as expected response times, so nobody feels they must monitor every channel all day.",
+   "explanation": "A good answer shows intent behind tool choices (sync vs async, searchable record) rather than listing apps.",
+   "tags": [
+    "tools",
+    "async"
+   ],
+   "companies": [
+    "Atlassian",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-remote-003",
+   "topic": "Remote Work & Communication",
+   "level": "Basic",
+   "type": "open",
+   "question": "How do you set boundaries and communicate availability when your home is also your office, and teammates are in other time zones?",
+   "model_answer": "I define working hours and share them in my calendar and chat status, including focus blocks and holidays. I use do-not-disturb outside those hours and avoid sending messages that imply an immediate reply expectation by writing 'no rush, reply when online'. For urgent matters I agree with the team on a clear escalation route, such as paging for production incidents only. I have a dedicated workspace and a shutdown routine at the end of the day to separate work and life, and I plan occasional overlap windows for meetings that need real-time conversation. Clear boundaries make me more reliable, because rest protects the quality of my work.",
+   "explanation": "Look for explicit communication of availability plus awareness of burnout, not 'I am always on'.",
+   "tags": [
+    "boundaries",
+    "time-zones"
+   ],
+   "companies": [
+    "Turing",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-remote-004",
+   "topic": "Remote Work & Communication",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you write a pull request description or design proposal that teammates in other time zones can review without a call?",
+   "model_answer": "I assume the reviewer has no context and cannot ask me a quick question for 12 hours. For a PR I state the problem and link the ticket, summarize the approach and alternatives I rejected, list what changed and how I tested it (with screenshots or logs), call out risky areas and what feedback I want, and keep the PR small. For a design proposal I follow a template: context, goals and non-goals, options with trade-offs, recommendation, open questions, rollout and rollback plan. I set a review deadline and name decision owners. Preempting likely questions means fewer round trips, which in distributed teams saves days.",
+   "explanation": "Signals: reader empathy, completeness, explicit asks and deadlines to minimize async round trips.",
+   "tags": [
+    "async",
+    "documentation"
+   ],
+   "companies": [
+    "GitLab",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "qd-remote-005",
+   "topic": "Remote Work & Communication",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "A teammate in another time zone has not responded to a blocking question for two days. What do you do?",
+   "model_answer": "First check that my request was clear, specific and actionable, because vague asks are easy to postpone. Then follow up politely in the same thread with the context and the deadline and say what I will do if I don't hear back. I look for alternatives to avoid being blocked: documentation, the code history, another person who knows the area, or a reasonable assumption I can document and move forward on. If it affects delivery, I tell my manager or the tech lead about the risk and ask for help prioritizing or finding a backup owner. Afterwards I suggest a working agreement, such as response expectations and an overlap hour, to prevent it from recurring. I do this without blame since they may be on leave or overloaded.",
+   "explanation": "Look for unblocking creativity, escalation judgment, and no-blame process improvement.",
+   "tags": [
+    "time-zones",
+    "blocking"
+   ],
+   "companies": [
+    "Toptal",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qd-remote-006",
+   "topic": "Remote Work & Communication",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "How do you make remote meetings (standups, planning, retros) effective and inclusive?",
+   "model_answer": "Start with whether a meeting is needed or can be an async update. For those that remain: circulate an agenda and pre-reads in advance, assign a facilitator and a note taker, set a time limit and end with decisions, owners and dates written in a shared doc. Use cameras optionally but keep everyone on equal footing, so if some people are in a room, everyone uses their own laptop or the room mic is excellent. Invite quieter people by name or collect input in a doc or chat beforehand, rotate meeting times that favor different time zones, and record the session or share notes for those who couldn't attend. Review meeting usefulness regularly and cancel those that don't earn their time.",
+   "explanation": "Strong answers cover agenda, decision capture, inclusivity across time zones and hybrid-room fairness.",
+   "tags": [
+    "meetings",
+    "inclusion"
+   ],
+   "companies": [
+    "GitLab",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "qd-remote-007",
+   "topic": "Remote Work & Communication",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "A discussion in Slack becomes tense because a message was read as rude. How do you handle it?",
+   "model_answer": "I first assume good intent, since tone is easily lost in text. I pause rather than replying while annoyed, then clarify the facts of the disagreement in a calm response and avoid sarcasm or emojis that may be misread. If it continues for more than a couple of messages, I move to a short video call or voice chat to talk it through, then summarize the outcome in writing in the original thread. If I was the one who came across harshly, I apologize briefly and rephrase. For recurring issues, I help the team set communication norms, such as how to give feedback, using 'I' statements and asking questions instead of making accusations.",
+   "explanation": "Looks for emotional control, switching medium, written follow-up, and focus on shared goals.",
+   "tags": [
+    "conflict",
+    "text-communication"
+   ],
+   "companies": [
+    "Meta",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-remote-008",
+   "topic": "Remote Work & Communication",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How do you mentor a junior developer who works remotely?",
+   "model_answer": "I begin with a 1:1 to learn their goals and learning style, and agree on a shared plan covering a first month: setup, a good first issue, and the code areas to explore. I schedule a regular weekly 1:1 and a short daily check-in channel for questions with a norm that nobody is judged for asking. Pairing over screen share on real tasks is the most valuable; I let them drive and talk through reasoning rather than dictate. I give code review feedback that explains the why, linking resources, and balance it with praise for specific wins. I increase task complexity gradually, encourage them to document what they learn, and ask for feedback on my mentoring. Progress is checked against goals they helped set.",
+   "explanation": "Look for structure, psychological safety, pairing and gradually increasing autonomy, adapted for remote.",
+   "tags": [
+    "mentoring",
+    "growth"
+   ],
+   "companies": [
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "qd-remote-009",
+   "topic": "Remote Work & Communication",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Two senior engineers on different continents disagree about a design, and the debate drags on in comments for a week. How do you help resolve it remotely?",
+   "model_answer": "I summarize the positions neutrally in a short document: the problem, requirements, the options each person advocates, their trade-offs and the criteria that matter (latency, cost, team skills, reversibility). This often reveals that the disagreement is about assumptions or priorities rather than technology. I propose a time-boxed synchronous call with both engineers to discuss the document, and invite the people who own the decision. If we can't agree, I suggest a small experiment or prototype with success metrics, or use a decision rule such as 'disagree and commit' with a named decision-maker and a review date. The result is recorded as an ADR so the reasoning is not lost, and I thank both for their rigor.",
+   "explanation": "Strong answers depersonalize, clarify criteria, escalate to sync only when useful, and record the decision.",
+   "tags": [
+    "conflict-resolution",
+    "design"
+   ],
+   "companies": [
+    "Amazon",
+    "GitLab"
+   ]
+  },
+  {
+   "id": "qd-remote-010",
+   "topic": "Remote Work & Communication",
+   "level": "Expert",
+   "type": "open",
+   "question": "You are leading a newly formed team spread over five time zones. How do you establish the norms, documentation and decision-making practices that make it effective?",
+   "model_answer": "Start by co-creating a team working agreement: core overlap hours, response-time expectations per channel, meeting-free focus time, and an on-call rota that shares unsociable hours fairly. Default to written, async communication with a documented handbook and decision records, so knowledge is not tied to someone's time zone. Define who decides what (single directly responsible individual per project), use RFCs with fixed comment windows, and rotate meeting times so no region always suffers. Invest in relationships: virtual coffee pairings, periodic in-person offsites if the budget allows, and recognition of work in public channels. Use clear goals (OKRs) and track outcomes rather than hours, check team health with regular retros and anonymous surveys, and adjust. Model the behaviors myself: write things down, respect others' hours and admit mistakes.",
+   "explanation": "Look for a systematic approach: agreements, async-by-default, decision ownership, fair burden-sharing and trust-building.",
+   "tags": [
+    "leadership",
+    "distributed-teams"
+   ],
+   "companies": [
+    "GitLab",
+    "Automattic"
+   ]
+  }
+ ]
+}

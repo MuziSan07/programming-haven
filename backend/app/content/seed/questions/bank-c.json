@@ -1,0 +1,2809 @@
+{
+ "questions": [
+  {
+   "id": "qc-dsa-001",
+   "topic": "Data Structures & Algorithms",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the time complexity of this code?",
+   "code": "for i in range(n):\n    for j in range(i, n):\n        work()",
+   "options": [
+    "O(n^2)",
+    "O(n)",
+    "O(n log n)",
+    "O(2^n)"
+   ],
+   "answer": 0,
+   "explanation": "The inner loop runs n-i times for each i, so the total is n + (n-1) + ... + 1 = n(n+1)/2 iterations, which is Theta(n^2). Constant factors such as the 1/2 are dropped.",
+   "tags": [
+    "complexity",
+    "loops"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-dsa-002",
+   "topic": "Data Structures & Algorithms",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A text editor needs to support undo of the most recent edits, newest first. Which structure fits best?",
+   "options": [
+    "A queue",
+    "A min-heap",
+    "A stack",
+    "A hash set"
+   ],
+   "answer": 2,
+   "explanation": "Undo needs last-in, first-out access: push every edit, pop to undo. A queue would undo the oldest edit first, and heaps and sets do not give the needed recency order.",
+   "tags": [
+    "stack",
+    "choosing-structures"
+   ],
+   "companies": [
+    "Microsoft",
+    "Adobe"
+   ]
+  },
+  {
+   "id": "qc-dsa-003",
+   "topic": "Data Structures & Algorithms",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which of these sorting algorithms is stable in its standard form?",
+   "options": [
+    "Merge sort",
+    "Heap sort",
+    "Quick sort (in-place partitioning)",
+    "Selection sort (swap-based)"
+   ],
+   "answer": 0,
+   "explanation": "A stable sort keeps equal keys in their original relative order. Merge sort is stable when ties are taken from the left half first. Heap sort, in-place quick sort and swap-based selection sort can all reorder equal elements.",
+   "tags": [
+    "sorting",
+    "stability"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-dsa-004",
+   "topic": "Data Structures & Algorithms",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Binary search on an array requires which two properties to work in O(log n)?",
+   "options": [
+    "The data has no duplicates and is stored in a linked list",
+    "The data is sorted and stored in a hash table",
+    "The data fits in the CPU cache and has fixed-size elements",
+    "The data is sorted and supports O(1) random access"
+   ],
+   "answer": 3,
+   "explanation": "Binary search jumps to the middle element, so it needs both an ordering to discard half of the range and constant-time indexing. On a linked list each jump costs O(n), destroying the logarithmic bound. Duplicates are fine.",
+   "tags": [
+    "binary-search",
+    "fundamentals"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-dsa-005",
+   "topic": "Data Structures & Algorithms",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What auxiliary space does this recursive function use for input n?",
+   "code": "def total(n):\n    if n == 0:\n        return 0\n    return n + total(n - 1)",
+   "options": [
+    "O(1), because it allocates no data structures",
+    "O(n), because of the call stack",
+    "O(log n)",
+    "O(n^2)"
+   ],
+   "answer": 1,
+   "explanation": "Each pending call holds a stack frame until the base case is reached, so the recursion depth, and therefore the space, is n frames. Not allocating arrays does not make recursion free of space cost.",
+   "tags": [
+    "space-complexity",
+    "recursion"
+   ],
+   "companies": [
+    "Amazon",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qc-dsa-006",
+   "topic": "Data Structures & Algorithms",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "You must remove duplicates from a list of n strings and the order does not matter. Which approach has the best expected running time?",
+   "options": [
+    "Sort and compare neighbours, because hash sets are always slower",
+    "Compare every pair: O(n^2) is required",
+    "Use a binary search tree: O(n) because insertion is constant time",
+    "Insert all items in a hash set: O(n) expected"
+   ],
+   "answer": 3,
+   "explanation": "Hash set insertion and membership are O(1) expected, so one pass gives O(n) expected total. Sorting works in O(n log n) but is slower; pairwise comparison is O(n^2); a BST insertion costs O(log n) at best.",
+   "tags": [
+    "hashing",
+    "dedupe"
+   ],
+   "companies": [
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-dsa-007",
+   "topic": "Data Structures & Algorithms",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does an in-order traversal of a binary search tree produce?",
+   "options": [
+    "Keys in level order",
+    "Keys in ascending sorted order",
+    "Keys in descending order only",
+    "Keys in insertion order"
+   ],
+   "answer": 1,
+   "explanation": "In-order visits the left subtree, the node, then the right subtree. The BST invariant puts smaller keys on the left and larger on the right, so the visit order is sorted ascending. Level order is a BFS, and insertion order is not preserved by a BST.",
+   "tags": [
+    "trees",
+    "bst"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-dsa-008",
+   "topic": "Data Structures & Algorithms",
+   "level": "Basic",
+   "type": "open",
+   "question": "Explain the difference between Big-O, Big-Omega and Big-Theta. Why do people often say Big-O when they mean Big-Theta?",
+   "model_answer": "Big-O gives an asymptotic upper bound: f(n) = O(g(n)) means f grows no faster than a constant multiple of g for large n. Big-Omega is the lower bound (f grows at least as fast as g). Big-Theta means both hold, so g is a tight bound. These describe growth of functions, not cases: you can say 'worst-case time is Theta(n log n)' or 'best case is O(n)'. In everyday speech Big-O is used for the tight bound because the interesting claim is usually how the algorithm scales, and a loose upper bound like O(n^5) for a linear algorithm is technically true but useless. When I quote a bound I say whether it is worst, average or amortized, and whether it is tight.",
+   "explanation": "Interviewers want to see that you separate the bound (O, Omega, Theta) from the case (best, average, worst). A common pitfall is saying O notation equals worst case. Bonus if you mention constant factors and that asymptotics ignore them.",
+   "tags": [
+    "complexity",
+    "notation"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-dsa-009",
+   "topic": "Data Structures & Algorithms",
+   "level": "Basic",
+   "type": "open",
+   "question": "Describe the sliding window technique. Give one problem where it applies and one where it does not.",
+   "model_answer": "A sliding window keeps a contiguous range [l, r] of an array or string and updates some running state (sum, counts, distinct set) as r advances and l advances. Because each pointer only moves forward, the total work is O(n) rather than O(n*k) from recomputing each window. Fixed-size windows are used for things like the maximum sum of k consecutive elements. Variable-size windows are used for the longest substring without repeated characters: expand r, and while the invariant is broken move l. It applies when the property is monotone, meaning that shrinking a valid window keeps it valid (or growing an invalid window keeps it invalid). It does not apply directly to 'subarray sum equals k' when the array has negative numbers, because adding an element can both increase and decrease the sum, so you cannot decide which pointer to move; use prefix sums with a hash map instead.",
+   "explanation": "The key insight is the monotonicity requirement. Candidates who only memorize templates fail on negative numbers. Mention the O(n) amortized argument.",
+   "tags": [
+    "sliding-window",
+    "arrays"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-dsa-010",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What does the recurrence T(n) = T(n/2) + 1 solve to?",
+   "options": [
+    "Theta(n)",
+    "Theta(n log n)",
+    "Theta(1)",
+    "Theta(log n)"
+   ],
+   "answer": 3,
+   "explanation": "Each step does constant work and halves the problem, so there are log2 n levels, each costing 1. This is the recurrence of binary search. By the Master theorem it is case 2 with a = 1, b = 2, f(n) = 1 = Theta(n^0).",
+   "tags": [
+    "recurrence",
+    "master-theorem"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-dsa-011",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A naive recursive function solves a problem of size n by making two recursive calls on size n-1 and doing constant extra work. What is its time complexity?",
+   "options": [
+    "Theta(n^2)",
+    "Theta(2^n)",
+    "Theta(n log n)",
+    "Theta(n)"
+   ],
+   "answer": 1,
+   "explanation": "T(n) = 2T(n-1) + c unrolls to a full binary tree of depth n, with about 2^n - 1 nodes. The Master theorem does not apply because the subproblem is n-1, not n/b. This is why naive Fibonacci is exponential and why memoization helps.",
+   "tags": [
+    "recurrence",
+    "recursion"
+   ],
+   "companies": [
+    "Microsoft",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-dsa-012",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You process a stream of n numbers and must report the k largest. Which approach is best when k is much smaller than n?",
+   "options": [
+    "Sort the whole stream: O(n log n) time and O(n) space is optimal",
+    "Keep a max-heap of all n items and pop k times, using O(1) space",
+    "Use a hash map from value to count",
+    "Keep a min-heap of size k: O(n log k) time, O(k) space"
+   ],
+   "answer": 3,
+   "explanation": "A size-k min-heap holds the k largest seen so far; a new number replaces the root only if it is larger. Each element costs O(log k), and memory is O(k), which also works for unbounded streams. Sorting needs everything in memory, and a heap of all n items uses O(n) space.",
+   "tags": [
+    "heap",
+    "top-k"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-dsa-013",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "For which graphs does a topological ordering of the vertices exist?",
+   "options": [
+    "Any directed graph",
+    "Directed acyclic graphs only",
+    "Any connected undirected graph",
+    "Directed graphs where every vertex has in-degree at most one"
+   ],
+   "answer": 1,
+   "explanation": "A topological order places every edge u->v with u before v. A directed cycle makes that impossible, and a DAG always has at least one valid order. Kahn's algorithm detects a cycle when it cannot process all vertices.",
+   "tags": [
+    "graphs",
+    "topological-sort"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-dsa-014",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You need an O(n log n) worst-case comparison sort that is also stable. Which should you choose?",
+   "options": [
+    "Quick sort with random pivot",
+    "Heap sort",
+    "Merge sort",
+    "Shell sort"
+   ],
+   "answer": 2,
+   "explanation": "Merge sort is stable and O(n log n) in all cases, at the cost of O(n) extra space. Randomized quick sort is O(n log n) only in expectation and not stable; heap sort is O(n log n) worst case but not stable; shell sort is not stable and its bounds are worse.",
+   "tags": [
+    "sorting",
+    "stability"
+   ],
+   "companies": [
+    "Bloomberg",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-dsa-015",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A hash table with chaining holds n keys in m buckets under uniform hashing. What does keeping n/m bounded by a constant guarantee?",
+   "options": [
+    "Expected O(1) time for lookup, insert and delete",
+    "Worst-case O(1) for every operation",
+    "No collisions at all",
+    "O(log n) lookups using sorted chains"
+   ],
+   "answer": 0,
+   "explanation": "The average chain length equals the load factor n/m, so expected lookup cost is 1 + n/m. That is O(1) expected, not worst-case; adversarial keys can still collide. Resizing when the load factor passes a threshold keeps it bounded, with amortized O(1) insert.",
+   "tags": [
+    "hashing",
+    "load-factor"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-dsa-016",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A graph has edge weights that are only 0 or 1. Which approach finds single-source shortest paths in O(V + E)?",
+   "options": [
+    "Plain BFS with a single FIFO queue",
+    "Bellman-Ford",
+    "0-1 BFS using a deque (push 0-edges at the front, 1-edges at the back)",
+    "Floyd-Warshall"
+   ],
+   "answer": 2,
+   "explanation": "A deque keeps the frontier ordered by distance: a 0-weight edge does not increase the distance so the neighbour goes to the front, a 1-weight edge goes to the back. Plain BFS counts edges, not weights, and the other two are slower (O(VE) and O(V^3)).",
+   "tags": [
+    "graphs",
+    "shortest-path"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-dsa-017",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Explain amortized analysis using a dynamic array that doubles its capacity. Why is append O(1) amortized even though some appends cost O(n)?",
+   "model_answer": "When the array is full, an append allocates twice the capacity and copies all n elements, which costs O(n). But this happens only after n/2 cheap appends since the last resize. Using the aggregate method: for n appends the copies cost 1 + 2 + 4 + ... + n/2 + n < 2n total, so the total over n appends is at most 3n and the average is O(1). In the accounting view, charge each append 3 units: 1 pays for the write and 2 are saved to pay for copying that element and one older element at the next resize. Amortized is a worst-case guarantee over a sequence of operations, unlike average-case, which assumes a distribution of inputs. A growth factor of any constant above 1 works; adding a fixed amount (grow by 10) gives O(n) per append amortized.",
+   "explanation": "Distinguish amortized from average-case, and show the geometric series. A good extra is mentioning real-time systems where a single O(n) resize spike matters, and the growth factors used by real runtimes.",
+   "tags": [
+    "amortized",
+    "arrays"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-dsa-018",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Design a data structure that supports insert, delete and getRandom (uniform among current elements) all in expected O(1).",
+   "model_answer": "Combine a dynamic array with a hash map. The array stores the values; the map stores value -> index in the array. Insert: if the value is absent, append to the array and record its index. Delete: look up the index i, move the last array element into slot i, update that element's index in the map, pop the array and remove the deleted value from the map. This keeps the array dense with no holes. getRandom: pick a uniformly random index in [0, size) and return that element. All three are O(1) expected (hash operations expected, array append amortized). Duplicates need a map from value to a set of indices. A hash set alone fails getRandom (cannot index uniformly) and an array alone fails delete (O(n) search).",
+   "explanation": "The trick is swap-with-last on delete. Pitfalls: forgetting to update the moved element's index, or mishandling the case where the deleted element is already the last slot.",
+   "tags": [
+    "hashing",
+    "design",
+    "arrays"
+   ],
+   "companies": [
+    "Meta",
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-dsa-019",
+   "topic": "Data Structures & Algorithms",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Requirements: (a) frequent lookup by exact key, (b) range queries and ordered iteration, (c) always fetch the minimum. Which structure would you pick for each, and what do you pay for it?",
+   "model_answer": "(a) A hash map: expected O(1) lookup, but no ordering and O(n) worst case under bad hashing, plus resize cost. (b) A balanced BST or skip list (or a B-tree on disk): O(log n) lookup and O(log n + k) for a range of k results with in-order traversal; you pay more per lookup and more pointer overhead than a hash map. For static data a sorted array with binary search is more compact and cache friendly. (c) A binary heap: O(1) peek of the minimum, O(log n) insert and extract, O(n) heapify; you pay by having no efficient arbitrary lookup, deletion or ordered traversal. If I need two of these at once I combine structures, for example a hash map plus a heap with lazy deletion, or an ordered map when both exact and range queries matter.",
+   "explanation": "Interviewers want trade-offs stated with complexities and reasons, not just names. Mention cache locality and that the right answer depends on the read/write ratio.",
+   "tags": [
+    "choosing-structures",
+    "trees",
+    "heap"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qc-dsa-020",
+   "topic": "Data Structures & Algorithms",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "The Floyd-Warshall algorithm computes all-pairs shortest paths in a graph with V vertices. What is its time complexity and a key capability?",
+   "options": [
+    "O(V^3); it handles negative edge weights as long as there is no negative cycle",
+    "O(V^2 log V); it requires non-negative weights",
+    "O(V E); it cannot detect negative cycles",
+    "O(V^3); it requires an undirected graph"
+   ],
+   "answer": 0,
+   "explanation": "Three nested loops over (k, i, j) with the relaxation d[i][j] = min(d[i][j], d[i][k] + d[k][j]) give O(V^3) time and O(V^2) space. Negative weights are fine; a negative cycle shows up as a negative value on the diagonal. It is best for dense graphs or small V.",
+   "tags": [
+    "graphs",
+    "dp",
+    "shortest-path"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-dsa-021",
+   "topic": "Data Structures & Algorithms",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A 0/1 knapsack DP over n items and capacity W runs in O(nW). Why is this called pseudo-polynomial?",
+   "options": [
+    "Because it only gives approximate answers",
+    "Because it is polynomial only when n is small",
+    "Its runtime depends on the numeric value of W, which is exponential in the number of bits needed to write W",
+    "Because it uses memoization instead of tabulation"
+   ],
+   "answer": 2,
+   "explanation": "Input size is measured in bits. W takes log W bits, so O(nW) is exponential in the input length when W is large. Knapsack is NP-hard, and the DP does not contradict that. The result is exact; approximation is a different topic.",
+   "tags": [
+    "dp",
+    "np-hardness"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-dsa-022",
+   "topic": "Data Structures & Algorithms",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "How does Bellman-Ford detect a negative-weight cycle reachable from the source?",
+   "options": [
+    "After V-1 rounds of relaxing every edge, if any edge can still be relaxed, a negative cycle exists",
+    "If any edge has a negative weight, a cycle exists",
+    "If the priority queue becomes empty before V iterations",
+    "It cannot; only Dijkstra with a visited set can"
+   ],
+   "answer": 0,
+   "explanation": "Without negative cycles, shortest paths use at most V-1 edges, so V-1 rounds settle all distances. If a V-th round still improves a distance, the path is using a cycle that decreases cost. A negative edge alone is not a cycle.",
+   "tags": [
+    "graphs",
+    "shortest-path"
+   ],
+   "companies": [
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-dsa-023",
+   "topic": "Data Structures & Algorithms",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "You must support many prefix queries (does any word start with this prefix?) over a dictionary of N words with total length L. Which statement is correct?",
+   "options": [
+    "A hash set answers prefix queries in O(1) because hashing handles prefixes",
+    "A trie needs O(N^2) space",
+    "A trie answers a prefix query in O(p) for prefix length p, independent of N, using O(L) nodes in the worst case",
+    "A trie answers prefix queries in O(log N) like a balanced tree"
+   ],
+   "answer": 2,
+   "explanation": "A trie follows one edge per character, so the cost depends on prefix length only. A hash set can test exact membership, not prefixes, unless every prefix is also stored. Trie space is at most the total number of characters, though per-node overhead can be large.",
+   "tags": [
+    "trie",
+    "strings"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-dsa-024",
+   "topic": "Data Structures & Algorithms",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Derive the dynamic programming solution for edit distance between two strings. State the recurrence, complexity, and how to reduce space.",
+   "model_answer": "Let dp[i][j] be the minimum edits to turn the first i characters of s into the first j characters of t. Base cases: dp[i][0] = i (delete all) and dp[0][j] = j (insert all). Transition: if s[i-1] == t[j-1], dp[i][j] = dp[i-1][j-1]; otherwise dp[i][j] = 1 + min(dp[i-1][j] (delete), dp[i][j-1] (insert), dp[i-1][j-1] (replace)). The answer is dp[m][n]. Time and space are O(mn). Each row depends only on the previous row, so keep two rows (or one row plus a saved diagonal) for O(min(m, n)) space. To recover the actual edit script, either store the full table and backtrack, or use Hirschberg's divide and conquer to get linear space with the path. Correctness comes from optimal substructure: the last operation on the prefixes reduces to a smaller prefix pair.",
+   "explanation": "Strong answers define the state precisely, justify each transition as a last operation, and discuss space optimization and reconstruction. Weak answers just recite a table.",
+   "tags": [
+    "dp",
+    "strings"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-dsa-025",
+   "topic": "Data Structures & Algorithms",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Compare a segment tree and a Fenwick tree (binary indexed tree). When would you pick each?",
+   "model_answer": "Both support point updates and prefix or range queries in O(log n) over an array. A Fenwick tree stores partial sums in a flat array indexed by lowbit arithmetic; it is tiny (n+1 ints), very fast, and easy to write, but it works naturally for invertible operations such as sums or XOR, where range = prefix(r) - prefix(l-1). A segment tree stores an aggregate for each node of a balanced tree, needs about 2n to 4n nodes, and supports any associative operation (min, max, gcd, matrix product) and, with lazy propagation, range updates and range queries together. I pick a Fenwick tree for cumulative frequency or sum counts, including offline inversion counting. I pick a segment tree for range min/max, range assignment or add, or when the operation has no inverse. For read-only data with no updates, prefix sums or a sparse table are better than either.",
+   "explanation": "Look for the invertibility distinction and lazy propagation. A bonus is noting sparse tables for static range-minimum queries.",
+   "tags": [
+    "trees",
+    "range-queries"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-dsa-026",
+   "topic": "Data Structures & Algorithms",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Explain how a Bloom filter works, what guarantees it gives, and where you would use one.",
+   "model_answer": "A Bloom filter is a bit array of m bits and k hash functions. To add an item, set the k bits at its hash positions. To query, check those k bits: if any is 0 the item is definitely absent; if all are 1 the item is probably present. So there are no false negatives but there can be false positives. With n items the false positive rate is about (1 - e^(-kn/m))^k, minimized near k = (m/n) ln 2. Items cannot be deleted in the plain version because clearing a bit may affect other items; a counting Bloom filter or cuckoo filter allows deletion. It uses far less memory than storing the keys, and queries are O(k). Typical uses: avoiding disk lookups for keys that do not exist in LSM-tree databases, checking a URL against a blocklist before a slower call, and deduplicating in crawlers. It is a poor fit when false positives are unacceptable.",
+   "explanation": "The one-sided error guarantee is the essence. Strong candidates give the sizing formula and name concrete systems.",
+   "tags": [
+    "probabilistic",
+    "hashing"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qc-dsa-027",
+   "topic": "Data Structures & Algorithms",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "What is the asymptotic solution of T(n) = 3T(n/2) + n?",
+   "options": [
+    "Theta(n log n)",
+    "Theta(n^2)",
+    "Theta(n)",
+    "Theta(n^(log2 3)), about n^1.585"
+   ],
+   "answer": 3,
+   "explanation": "Here a = 3, b = 2, so the critical exponent is log2 3 ~ 1.585. f(n) = n is polynomially smaller than n^1.585, so Master theorem case 1 applies and the leaves dominate: T(n) = Theta(n^(log2 3)). This is the recurrence of Karatsuba multiplication.",
+   "tags": [
+    "recurrence",
+    "master-theorem"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-dsa-028",
+   "topic": "Data Structures & Algorithms",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "Which argument shows that any comparison-based sorting algorithm needs Omega(n log n) comparisons in the worst case?",
+   "options": [
+    "Merge sort and quick sort both take n log n, so nothing faster exists",
+    "Each element must be compared with every other element at least once",
+    "A decision tree that must distinguish n! orderings has at least n! leaves, so its height is at least log2(n!) = Theta(n log n)",
+    "Sorting is equivalent to searching n times, each costing log n"
+   ],
+   "answer": 2,
+   "explanation": "Each comparison is a binary branch. To output the correct permutation for all n! inputs, the tree needs n! leaves, so the height is at least log2(n!), which is Theta(n log n) by Stirling's approximation. Counting sort and radix sort beat this only because they do not rely on comparisons.",
+   "tags": [
+    "sorting",
+    "lower-bounds"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-dsa-029",
+   "topic": "Data Structures & Algorithms",
+   "level": "Expert",
+   "type": "open",
+   "question": "When does a greedy algorithm give an optimal answer and when do you need DP? Use interval scheduling (maximize the number of non-overlapping intervals) and 0/1 knapsack to illustrate, and show how you would prove the greedy choice.",
+   "model_answer": "Greedy works when the problem has the greedy-choice property plus optimal substructure: some locally best choice can always be extended to a global optimum. For interval scheduling, picking the interval with the earliest finish time is optimal. Proof by exchange argument: take any optimal solution; its first interval finishes no earlier than our greedy choice g, so replace it with g; the rest still do not overlap because g ends no later. The result is still optimal and now contains g, then recurse on the remaining compatible intervals. Greedy by shortest length or earliest start fails with counterexamples. For 0/1 knapsack, greedy by value-to-weight ratio is not optimal: with capacity 50 and items (weight 10, value 60), (20, 100), (30, 120), ratio-greedy takes the first two for 160, while the best is the last two for 220. Items cannot be split, so the exchange argument breaks and DP over capacity is needed (the fractional variant is greedy-optimal). My approach is to try small counterexamples first, and if none appear, attempt an exchange or stay-ahead proof; if the choice cannot be argued independently of future decisions, I fall back to DP.",
+   "explanation": "This tests proof maturity. The strong answer states the exchange argument, shows a failing greedy with a concrete counterexample, and distinguishes fractional from 0/1 knapsack.",
+   "tags": [
+    "greedy",
+    "dp",
+    "proofs"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-dsa-030",
+   "topic": "Data Structures & Algorithms",
+   "level": "Expert",
+   "type": "open",
+   "question": "You must sort a 100 GB file of 64-byte records on a machine with 4 GB of RAM. How do you do it, and how do you analyze its cost?",
+   "model_answer": "Use external merge sort. Phase 1: read chunks that fit in memory (say 3 GB), sort each in memory with an O(n log n) sort, and write each as a sorted run to disk, giving about 34 runs. Phase 2: do a k-way merge of the runs using a min-heap holding the head record of each run, with input buffered per run (large sequential reads) and a buffered output. With 34 runs one merge pass suffices because the buffers (34 times a few MB) fit in RAM; if the number of runs exceeds what memory allows, do multiple passes with fan-in F, giving log_F(runs) passes. Cost is dominated by I/O: each pass reads and writes the whole dataset, so about 2 x 100 GB x number of passes of sequential transfer, which is far better than random seeks. Improvements: replacement selection to produce runs about twice the memory size, overlapping I/O and compute with double buffering, compressing runs, and, if the key is much smaller than the record, sorting (key, pointer) pairs. In a cluster the same idea becomes sample-based range partitioning followed by local sorts.",
+   "explanation": "Key points: sequential I/O, run generation plus k-way merge, number of passes as a function of memory and fan-in. Candidates who suggest relying on virtual memory or an in-memory quicksort on the whole file miss the point.",
+   "tags": [
+    "external-sort",
+    "io",
+    "scale"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-oop-001",
+   "topic": "OOP & Design Patterns",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the main goal of encapsulation?",
+   "options": [
+    "Hide internal state and expose a controlled interface so invariants cannot be broken from outside",
+    "Make every field public so tests can reach it",
+    "Allow a class to inherit from several parents",
+    "Make objects faster by avoiding method calls"
+   ],
+   "answer": 0,
+   "explanation": "Encapsulation bundles data with the operations that guard it. Because callers cannot touch fields directly, the class can enforce invariants and change its internals without breaking users. It is about protecting invariants, not about speed or multiple inheritance.",
+   "tags": [
+    "encapsulation",
+    "fundamentals"
+   ],
+   "companies": [
+    "Microsoft",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qc-oop-002",
+   "topic": "OOP & Design Patterns",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which pair of terms is correctly matched?",
+   "options": [
+    "Overloading: a subclass redefines a method; overriding: different parameter lists",
+    "Overloading: hiding a field; overriding: deleting a method",
+    "Overloading: same method name with different parameter lists; overriding: a subclass redefines an inherited method",
+    "Both mean the same thing in an inheritance hierarchy"
+   ],
+   "answer": 2,
+   "explanation": "Overloading is chosen from the argument types, usually at compile time in statically typed languages. Overriding gives a subclass its own implementation of an inherited method and is resolved at runtime through dynamic dispatch.",
+   "tags": [
+    "polymorphism",
+    "fundamentals"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-oop-003",
+   "topic": "OOP & Design Patterns",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which relationship does the sentence 'a Dog is an Animal' describe, and how is it usually modelled?",
+   "options": [
+    "Inheritance (is-a), modelled by a subclass or an interface implementation",
+    "Composition (has-a), modelled by a field",
+    "Association by a global variable",
+    "Dependency by a static import"
+   ],
+   "answer": 0,
+   "explanation": "An is-a relationship says the subtype can stand in wherever the supertype is expected. It is typically modelled with subclassing or by implementing a shared interface. Has-a relationships, such as a Car having an Engine, are modelled with fields.",
+   "tags": [
+    "inheritance",
+    "fundamentals"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qc-oop-004",
+   "topic": "OOP & Design Patterns",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A product page needs a UI element to update automatically whenever the stock count of an item changes, without the item class knowing about UI classes. Which pattern fits?",
+   "options": [
+    "Singleton",
+    "Builder",
+    "Prototype",
+    "Observer"
+   ],
+   "answer": 3,
+   "explanation": "Observer lets a subject notify any number of registered listeners without depending on their concrete types. The stock item publishes changes and the UI subscribes. Singleton controls instance count, Builder constructs complex objects and Prototype clones objects.",
+   "tags": [
+    "observer",
+    "patterns"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-oop-005",
+   "topic": "OOP & Design Patterns",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A constructor would need 12 parameters, most optional, and callers often confuse their order. Which pattern addresses this best?",
+   "options": [
+    "Adapter",
+    "Builder",
+    "Facade",
+    "Flyweight"
+   ],
+   "answer": 1,
+   "explanation": "Builder lets callers set only the options they need by name in readable steps and validates the object when `build()` is called. Adapter and Facade are structural patterns about interfaces, and Flyweight is about sharing memory.",
+   "tags": [
+    "builder",
+    "patterns"
+   ],
+   "companies": [
+    "Google",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qc-oop-006",
+   "topic": "OOP & Design Patterns",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In class-based languages, which statement about a static method is correct?",
+   "options": [
+    "It can only be called on an object and has access to `this`",
+    "It is always private",
+    "It is automatically overridden by subclasses via dynamic dispatch",
+    "It belongs to the class, is called without an instance, and cannot use instance fields directly"
+   ],
+   "answer": 3,
+   "explanation": "A static method has no receiver object, so there is no `this` or `self` for instance state. It is resolved by the class name at compile time, not by dynamic dispatch, so it can be hidden but not overridden polymorphically.",
+   "tags": [
+    "static",
+    "fundamentals"
+   ],
+   "companies": [
+    "Oracle",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qc-oop-007",
+   "topic": "OOP & Design Patterns",
+   "level": "Basic",
+   "type": "open",
+   "question": "What is the difference between an abstract class and an interface? How do you decide which one to use?",
+   "model_answer": "An interface defines a contract: a set of operations a type promises to support, with no state (modern languages allow default methods but not instance fields). An abstract class can hold state and partial implementation, but cannot be instantiated and, in most languages, a class can extend only one. I use an interface to describe a capability that unrelated classes can share (Comparable, Serializable, PaymentGateway) and to let callers depend on behaviour instead of a concrete type, which makes testing with fakes easy. I use an abstract class when subclasses share real code and state, or when I need a template method that fixes the algorithm skeleton and lets subclasses fill in steps. A good default is to start with an interface and offer an abstract base class that implements it for convenience. If I need to add behaviour later, default methods or the base class let me evolve without breaking implementers.",
+   "explanation": "A weak answer lists syntax differences only. Strong answers speak about design intent: contract versus shared implementation, single inheritance limits and evolution.",
+   "tags": [
+    "abstraction",
+    "interfaces"
+   ],
+   "companies": [
+    "Microsoft",
+    "Oracle",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-oop-008",
+   "topic": "OOP & Design Patterns",
+   "level": "Basic",
+   "type": "open",
+   "question": "Explain coupling and cohesion. Why do we want low coupling and high cohesion, and how can you tell when a class has the opposite?",
+   "model_answer": "Cohesion measures how strongly the responsibilities inside a module belong together; coupling measures how much a module depends on the details of others. High cohesion means a class has one clear reason to exist (an `InvoiceCalculator` that only calculates), so it is easy to name, test and reuse. Low coupling means a change in one class rarely forces changes in others, because they communicate through small, stable interfaces. Symptoms of low cohesion: vague names like `Manager` or `Utils`, many unrelated methods, fields used by only some methods. Symptoms of high coupling: shotgun surgery (one change touches many classes), long chains of calls into other objects' internals, and tests that need a lot of setup. I improve them by extracting classes, depending on interfaces, passing in dependencies, and following the Law of Demeter.",
+   "explanation": "Candidates should give concrete smells, not just definitions. Mentioning that both are trade-offs (too many tiny classes is its own cost) is a plus.",
+   "tags": [
+    "design-principles",
+    "coupling"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qc-oop-009",
+   "topic": "OOP & Design Patterns",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A legacy `LegacyPrinter` class exposes `printText(String)`, but your code expects a `Printer` interface with `print(Document)`. You cannot change `LegacyPrinter`. Which pattern solves it?",
+   "options": [
+    "Facade: expose a simpler API over many subsystems",
+    "Decorator: add new behaviour to the same interface",
+    "Adapter: wrap `LegacyPrinter` in a class that implements `Printer` and translates calls",
+    "Singleton: share one printer instance"
+   ],
+   "answer": 2,
+   "explanation": "Adapter converts one interface into another that clients expect, without modifying the adapted class. Facade simplifies a whole subsystem rather than translating a single incompatible interface, and Decorator keeps the interface the same while adding behaviour.",
+   "tags": [
+    "adapter",
+    "patterns"
+   ],
+   "companies": [
+    "Oracle",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-oop-010",
+   "topic": "OOP & Design Patterns",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A drawing app must support undo and redo of user actions. Which pattern is most appropriate for representing each action?",
+   "options": [
+    "Flyweight: share fine-grained objects",
+    "Interpreter: parse a grammar",
+    "Prototype: clone prototypes",
+    "Command: encapsulate each action as an object with `execute()` and `undo()`"
+   ],
+   "answer": 3,
+   "explanation": "Command objects reify actions, so they can be stored on undo and redo stacks, queued, logged or replayed. Each command knows how to reverse itself or restore a memento. The other patterns solve different problems.",
+   "tags": [
+    "command",
+    "undo"
+   ],
+   "companies": [
+    "Adobe",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-oop-011",
+   "topic": "OOP & Design Patterns",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which code smell does this indicate, and what is the usual remedy?",
+   "code": "String city = order.getCustomer().getAddress().getCity().getName();",
+   "options": [
+    "A Singleton violation; make `Order` static",
+    "A Law of Demeter violation (train wreck); add a method on `Order` such as `shippingCity()` that hides the navigation",
+    "An Open/Closed violation; make all fields public",
+    "A Liskov violation; split into two subclasses"
+   ],
+   "answer": 1,
+   "explanation": "Long chains reach through several objects, so the caller depends on the structure of `Order`, `Customer`, `Address` and `City`. Telling `Order` what you need (Tell, Don't Ask) keeps knowledge local; changes to the structure then affect only one class.",
+   "tags": [
+    "law-of-demeter",
+    "smells"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-oop-012",
+   "topic": "OOP & Design Patterns",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A base class defines the steps of a report generation algorithm (`load`, `transform`, `render`) in a fixed order and lets subclasses supply individual steps. Which pattern is this?",
+   "options": [
+    "Strategy",
+    "Chain of Responsibility",
+    "Mediator",
+    "Template Method"
+   ],
+   "answer": 3,
+   "explanation": "Template Method defines the algorithm skeleton in a base class method and defers some steps to subclasses via inheritance. Strategy achieves a similar goal using composition, by injecting an interchangeable algorithm object.",
+   "tags": [
+    "template-method",
+    "patterns"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-oop-013",
+   "topic": "OOP & Design Patterns",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A long-running app registers listeners on a long-lived event bus, but short-lived screens never unregister them, and memory keeps growing. What is this problem called and the fix?",
+   "options": [
+    "The diamond problem; use interfaces only",
+    "The lapsed listener problem; unregister on teardown or hold listeners by weak reference",
+    "The thundering herd; add a cache",
+    "The god-object problem; split the bus"
+   ],
+   "answer": 1,
+   "explanation": "The bus holds strong references to each listener, preventing garbage collection of the screens that registered them. Pair every subscribe with an unsubscribe in the lifecycle teardown, or use weak references or scoped subscriptions that die with their owner.",
+   "tags": [
+    "observer",
+    "memory-leaks"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-oop-014",
+   "topic": "OOP & Design Patterns",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What best distinguishes Strategy from State?",
+   "options": [
+    "Strategy uses inheritance and State uses composition",
+    "State is only for UI code",
+    "State transitions are driven by the object's own internal changes, while a Strategy is usually chosen by the client and rarely changes itself",
+    "They are identical in intent and structure"
+   ],
+   "answer": 2,
+   "explanation": "Both delegate to an interchangeable object, so the structures look alike. In State the current state object often decides the next state, so behaviour changes as the context evolves. In Strategy the caller selects an algorithm, and the strategies do not know about each other.",
+   "tags": [
+    "strategy",
+    "state",
+    "patterns"
+   ],
+   "companies": [
+    "Oracle",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-oop-015",
+   "topic": "OOP & Design Patterns",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "What are 'Tell, Don't Ask' and the Law of Demeter? Give a before and after example and a case where bending the rule is fine.",
+   "model_answer": "Tell, Don't Ask says to give objects commands rather than pulling out their data to make decisions elsewhere. The Law of Demeter says a method should talk only to its own fields, its parameters and objects it creates, not to the internals of its collaborators. Before: `if (account.getBalance() >= amount) { account.setBalance(account.getBalance() - amount); }` The caller owns the rule, and any caller can forget it or race another. After: `account.withdraw(amount)`, where `withdraw` enforces the rule, throws a domain exception if funds are insufficient and can be made thread-safe in one place. Likewise, `order.shippingCity()` beats `order.getCustomer().getAddress().getCity()`. Bending it is fine for plain data structures and fluent APIs (builders, streams, query DSLs), where chaining returns the same kind of object and does not expose internals; also for DTOs that really are just data.",
+   "explanation": "Interviewers want the invariants-and-ownership argument, not just 'fewer dots'. Mentioning that it also reduces concurrency bugs and eases testing is a plus.",
+   "tags": [
+    "encapsulation",
+    "law-of-demeter"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-oop-016",
+   "topic": "OOP & Design Patterns",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Your class has a 200-line method with a long `switch` on a `PaymentType` enum that appears in five other places too. Explain the refactoring you would apply and its benefits and costs.",
+   "model_answer": "Repeated switches on a type code are a classic smell: adding a new type means finding and editing every switch, which violates Open/Closed. I would first add characterization tests, then introduce a `PaymentMethod` interface with the behaviours that vary (`authorize`, `fee`, `refundWindow`), and create one implementation per type. The switch statements become polymorphic calls. Creation of the right object is centralized in a factory or registry, which is the only remaining switch. Benefits: each type's logic is in one place, new types are added without touching existing code, and each class is easy to test. Costs: more classes, indirection, and a risk of premature abstraction if there are only two stable types or if the operations vary more often than the types do (then a visitor or a data-driven table can be better). I do it incrementally, replacing one switch at a time and keeping tests green.",
+   "explanation": "Look for: tests first, the interface boundary, the factory as the single remaining conditional, and an honest note on when a switch is acceptable.",
+   "tags": [
+    "refactoring",
+    "polymorphism",
+    "open-closed"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qc-oop-017",
+   "topic": "OOP & Design Patterns",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Compare Factory Method, Builder and Prototype. Give a realistic use case for each.",
+   "model_answer": "Factory Method lets a class defer which concrete type to instantiate to a subclass or a function, so clients depend on an abstraction: for example `createParser(format)` returning a JSON, XML or CSV parser behind a `Parser` interface. Builder separates the construction of a complex object from its representation, with step-by-step configuration and validation at `build()`: for example an HTTP request with optional headers, timeouts and retries, or an immutable `Pizza`. Prototype creates new objects by copying a configured instance: useful when construction is expensive or the setup is complex, such as cloning a pre-configured game enemy or a document template. The traps differ: factories can proliferate subclasses, builders add boilerplate and mutable builders can be reused wrongly, and prototypes raise deep versus shallow copy questions and trouble with shared mutable state. I pick based on what varies: the type (factory), the number of options (builder), or the cost of starting from scratch (prototype).",
+   "explanation": "The answer should be organized by 'what varies'. Mention shallow versus deep copies for Prototype and immutability for Builder.",
+   "tags": [
+    "creational",
+    "patterns"
+   ],
+   "companies": [
+    "Oracle",
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-oop-018",
+   "topic": "OOP & Design Patterns",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A lazily initialised singleton in Java uses double-checked locking on a plain (non-volatile) field. What is the correct statement?",
+   "options": [
+    "It is always safe because of the synchronized block",
+    "It can publish a partially constructed object to other threads; the field must be `volatile` (or use the holder idiom or an enum)",
+    "It is unsafe only on single-core machines",
+    "It can never produce more than one instance, so no issue exists"
+   ],
+   "answer": 1,
+   "explanation": "Without `volatile`, the JVM or CPU may reorder the write of the reference before the constructor's writes complete. A second thread doing the unsynchronized first check might see a non-null reference to an incompletely constructed object. `volatile` forbids that reordering; the initialization-on-demand holder idiom is simpler and also thread-safe.",
+   "tags": [
+    "singleton",
+    "concurrency"
+   ],
+   "companies": [
+    "Google",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qc-oop-019",
+   "topic": "OOP & Design Patterns",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Which statement best captures why immutable value objects are valuable in a concurrent system?",
+   "options": [
+    "They are always faster than mutable objects",
+    "They avoid garbage collection",
+    "They allow inheritance of fields without getters",
+    "They can be shared freely between threads without locks because their state never changes after construction"
+   ],
+   "answer": 3,
+   "explanation": "If state cannot change, there are no data races on the object, no need for defensive locking, and it is safe as a map key. To keep this guarantee the class must be final or sealed, fields final, no mutator methods and defensive copies of any mutable inputs or outputs. Performance can be worse because updates allocate new objects.",
+   "tags": [
+    "immutability",
+    "concurrency"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-oop-020",
+   "topic": "OOP & Design Patterns",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "How do Chain of Responsibility and Decorator differ, given that both chain objects behind one interface?",
+   "options": [
+    "In a Chain, each handler may handle the request and stop it from propagating; a Decorator always delegates and adds behaviour around the call",
+    "Decorator allows stopping the chain, a Chain of Responsibility never does",
+    "They are the same pattern with different names",
+    "Chain of Responsibility changes the interface; Decorator keeps it"
+   ],
+   "answer": 0,
+   "explanation": "A servlet filter or middleware that can reject a request is a Chain of Responsibility: any link can answer and end the traversal. A Decorator wraps a component to add responsibilities (buffering, logging, compression) and still forwards to the wrapped object. Both keep the same interface.",
+   "tags": [
+    "chain-of-responsibility",
+    "decorator"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-oop-021",
+   "topic": "OOP & Design Patterns",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design the core of a text editor that supports unlimited undo/redo, including grouping typed characters into a single undo step. Which patterns do you use and what pitfalls do you watch for?",
+   "model_answer": "Model each user action as a Command with `apply(doc)` and `revert(doc)`, for example InsertText(position, text) and DeleteRange(range, deletedText), which stores what it removed so it can be restored. A history manager keeps an undo stack and a redo stack: executing a new command pushes to undo and clears redo; undo pops, reverts and pushes to redo. Typing a character creates an InsertText command, but consecutive inserts at adjacent positions within a short time window are coalesced via a `mergeWith` method into one command so undo removes a word, not a letter. For heavy, hard-to-invert operations (replace all with a regex) use a Memento: store a snapshot or persistent-data-structure version of the affected region. A piece table or rope makes edits and snapshots cheap. Pitfalls: unbounded history memory (cap it or compress), commands that capture references that later change, non-idempotent undo in collaborative editing (needs operation transform or CRDT), and keeping selection and cursor state as part of the undo step.",
+   "explanation": "Strong answers include command coalescing, redo-stack invalidation and memory bounds. Naming persistent data structures or CRDTs for collaboration shows depth.",
+   "tags": [
+    "command",
+    "memento",
+    "design"
+   ],
+   "companies": [
+    "Adobe",
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-oop-022",
+   "topic": "OOP & Design Patterns",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Contrast an anemic domain model with a rich domain model. How do aggregates help enforce invariants?",
+   "model_answer": "In an anemic model, entities are just data holders with getters and setters, and the rules live in service classes. Anyone can put an entity into an invalid state and rules scatter and duplicate. In a rich model, the entity owns behaviour and invariants: `order.addLine(product, qty)` checks the order is open and the limits are respected, and the state is only changed through such methods. An aggregate groups entities and value objects around a root (Order with its OrderLines). All external access goes through the root, which guarantees that invariants spanning the group (total below credit limit, no duplicate lines) are checked in one transaction. Other aggregates are referenced by id, not by object, which keeps transactions small and boundaries clear. Trade-offs: a rich model needs care with persistence mapping and is more effort for simple CRUD, where an anemic style is perfectly acceptable. Use rich models where the business rules are complex and change often.",
+   "explanation": "The reasoning is about who guards the invariants. Mention transaction boundaries and referencing other aggregates by id.",
+   "tags": [
+    "ddd",
+    "domain-modeling"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qc-oop-023",
+   "topic": "OOP & Design Patterns",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "In a statically typed language with sound subtyping, how may an overriding method in a subclass vary its signature while still respecting the Liskov Substitution Principle?",
+   "options": [
+    "Parameter types covariant and return types contravariant",
+    "Both parameter and return types must be exactly the same in every language",
+    "Parameter types may be contravariant (accept the same or more general types) and return types covariant (return the same or more specific types)",
+    "Parameter types may be narrowed freely because callers will adapt"
+   ],
+   "answer": 2,
+   "explanation": "A caller written against the base type may pass any base-typed argument, so the override must accept at least that much (contravariance). The caller expects a result of the base return type, so returning a subtype is safe (covariance). Narrowing parameters breaks substitutability, which is why many languages restrict it or lose type safety (for example array covariance).",
+   "tags": [
+    "lsp",
+    "type-systems",
+    "variance"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-oop-024",
+   "topic": "OOP & Design Patterns",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design a plugin architecture for a long-lived desktop or server product where third parties can extend behaviour. Cover extension points, isolation, versioning and failure handling.",
+   "model_answer": "Define explicit, narrow extension points as stable interfaces in a separate API module (for example `ExportFormat`, `AuthProvider`, `CommandContribution`) so the host never exposes its internals. Plugins are discovered by a manifest (id, version, required API range, declared capabilities) and loaded through a registry, ideally with their own classloader or process so dependency conflicts do not leak. Use semantic versioning for the API: additive changes are minor, breaking changes bump the major version, and the host rejects plugins whose required range it does not satisfy. Provide a host-owned context object with capabilities (logger, storage, event bus) instead of globals, which makes permission control possible. For isolation, run untrusted plugins out of process or in a sandbox (WebAssembly, separate worker) with timeouts, memory limits and an RPC boundary; for trusted ones in-process loading is fine. Handle failure by wrapping every callback, disabling a plugin after repeated errors, and never letting one crash the host. Add lifecycle hooks (init, start, stop), lazy activation to protect startup time, and deprecation periods with compatibility tests (contract tests plus a sample plugin per API version). Decide early whether plugin ordering and conflicts matter and make priorities explicit.",
+   "explanation": "Look for: stable API module, capability-based context, versioning policy, isolation level matched to trust, and failure containment. Weak answers just say 'use interfaces and reflection'.",
+   "tags": [
+    "plugins",
+    "architecture",
+    "versioning"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "qc-oop-025",
+   "topic": "OOP & Design Patterns",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design a flexible pricing and promotions engine for an e-commerce checkout (percentage and fixed discounts, buy-X-get-Y, tiered pricing, coupon stacking rules) so that the business can add new rules without code deploys.",
+   "model_answer": "Separate three concerns: the facts (cart, customer, time, channel), the rules (when does a promotion apply) and the effects (what it changes). Represent a cart as an immutable value object and a promotion as an interface with `applicable(cart)` and `apply(cart) -> adjustments`, so new promotion types are new classes (Open/Closed) or, for business-driven rules, data in a rule table interpreted by a small expression engine. Returning adjustments, not mutating the cart, makes each rule testable and the final breakdown explainable on the receipt. Order and conflict matter, so each promotion has a priority and a stacking policy (exclusive, stackable, best-of-group), resolved by a coordinator that applies them in a deterministic order, usually before tax and with rounding done once on money types (integer minor units or Decimal). Guard coupon limits (per user, global budget) through the transactional layer, not the rule objects, since they are shared mutable state. For auditability, persist which rules fired and the version of the rule set. Precompute eligibility for large catalogues through indexes, and add a dry-run mode and property tests (discount never exceeds price, total never negative, order independence where promised).",
+   "explanation": "Interviewers value explicit handling of rule ordering and stacking, money precision and auditability. A pure Strategy answer that ignores conflict resolution is incomplete.",
+   "tags": [
+    "strategy",
+    "rules-engine",
+    "design"
+   ],
+   "companies": [
+    "Amazon",
+    "Shopify",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-sd-001",
+   "topic": "System Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the primary purpose of a load balancer in front of several identical application servers?",
+   "options": [
+    "Distribute incoming requests across servers and stop sending traffic to unhealthy ones",
+    "Store user sessions permanently",
+    "Encrypt the database at rest",
+    "Convert SQL queries into NoSQL queries"
+   ],
+   "answer": 0,
+   "explanation": "A load balancer spreads traffic using an algorithm (round robin, least connections, hash) and uses health checks to remove failed instances. It improves availability and capacity. It does not store durable state; that belongs in a database or session store.",
+   "tags": [
+    "load-balancing",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qc-sd-002",
+   "topic": "System Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does a CDN mainly improve for a website with global users?",
+   "options": [
+    "Database write throughput",
+    "The correctness of transactions",
+    "Latency and origin load, by serving cacheable content from edge locations near the user",
+    "The strength of password hashing"
+   ],
+   "answer": 2,
+   "explanation": "A CDN caches static (and sometimes dynamic) responses at edge points of presence. Users get lower latency from a nearby server, and the origin sees fewer requests. It does not change database throughput or transaction semantics.",
+   "tags": [
+    "cdn",
+    "caching"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-sd-003",
+   "topic": "System Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A service is CPU-bound and traffic is doubling. Which statement correctly contrasts vertical and horizontal scaling?",
+   "options": [
+    "Vertical scaling adds resources to one machine and hits a ceiling; horizontal scaling adds more machines but requires the app to handle distribution",
+    "Vertical scaling adds machines; horizontal scaling upgrades one machine",
+    "Horizontal scaling is always cheaper and needs no code changes",
+    "Vertical scaling removes single points of failure"
+   ],
+   "answer": 0,
+   "explanation": "Scaling up is simple but limited by the largest available machine and keeps a single point of failure. Scaling out raises capacity and availability, but needs stateless services or partitioned state, load balancing and handling of partial failure.",
+   "tags": [
+    "scalability",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-sd-004",
+   "topic": "System Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A product adds read replicas to its primary database. What is the main trade-off a developer must handle?",
+   "options": [
+    "Writes become faster because they are spread across replicas",
+    "Replicas remove the need for backups",
+    "Reads must now be routed to every replica at once",
+    "Replicas may lag behind the primary, so reads can return slightly stale data"
+   ],
+   "answer": 3,
+   "explanation": "With asynchronous replication, a replica applies changes after the primary commits, so a read right after a write may not see it. Writes still go to the primary. Replication helps read scaling and availability, but it is not a backup against logical errors such as accidental deletes.",
+   "tags": [
+    "replication",
+    "databases"
+   ],
+   "companies": [
+    "Amazon",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-sd-005",
+   "topic": "System Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the key difference between replication and sharding (partitioning)?",
+   "options": [
+    "Sharding copies all data to each node; replication splits it",
+    "Replication copies the same data to multiple nodes; sharding splits different data across nodes",
+    "They are synonyms",
+    "Replication only applies to caches; sharding only to files"
+   ],
+   "answer": 1,
+   "explanation": "Replication gives redundancy and read capacity, as every replica holds the whole dataset. Sharding gives write and storage capacity because each shard holds a subset. Large systems typically do both: each shard is replicated.",
+   "tags": [
+    "sharding",
+    "replication"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-sd-006",
+   "topic": "System Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "An order service must send a confirmation email after checkout, but email provider outages should not make checkout fail. What is the best approach?",
+   "options": [
+    "Call the email provider synchronously and fail checkout if it errors",
+    "Poll the orders table every millisecond from the browser",
+    "Store emails in the session cookie",
+    "Publish an event to a message queue and let a separate worker send the email with retries"
+   ],
+   "answer": 3,
+   "explanation": "A queue decouples the request path from slow or unreliable work. Checkout commits and enqueues; consumers retry failures without blocking users, and the queue absorbs bursts. The cost is eventual delivery and the need for idempotent consumers.",
+   "tags": [
+    "queues",
+    "decoupling"
+   ],
+   "companies": [
+    "Amazon",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-sd-007",
+   "topic": "System Design",
+   "level": "Basic",
+   "type": "open",
+   "question": "When would you choose a relational (SQL) database and when a NoSQL store? Give concrete examples and the trade-offs.",
+   "model_answer": "I choose SQL when data is structured with relationships, I need multi-row ACID transactions, ad-hoc queries and joins, and strong consistency: orders and payments, inventory, accounting. The schema and constraints (foreign keys, unique) catch bugs early, and mature tooling helps. Scaling writes beyond one node is harder (sharding is manual). I choose NoSQL when the access patterns are known and simple, scale or latency demand horizontal partitioning, or the data model fits a specific shape: key-value for sessions and caches (Redis, DynamoDB), document for flexible product catalogs (MongoDB), wide-column for time-series and high write volumes (Cassandra), graph for relationships such as recommendations. The price is weaker joins and transactions, denormalized data to maintain by hand, and queries limited to designed indexes. In practice many systems use both (polyglot persistence), and modern SQL databases handle a lot more scale than people assume, so I start with the relational option unless the requirements clearly say otherwise.",
+   "explanation": "Interviewers dislike 'NoSQL is faster' answers. Look for access patterns, consistency needs and an honest default to SQL.",
+   "tags": [
+    "databases",
+    "sql-vs-nosql"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-sd-008",
+   "topic": "System Design",
+   "level": "Basic",
+   "type": "open",
+   "question": "Explain how you would add a cache in front of a database. What do you cache, how do you decide on eviction, and what are the invalidation risks?",
+   "model_answer": "I cache data that is read much more often than it changes and is expensive to compute or fetch: product details, user profiles, rendered fragments, results of heavy queries. I place it in a fast store such as Redis or in-process memory, using cache-aside: read from cache, on a miss load from the database and populate with a TTL. Eviction when memory fills is usually LRU (good for temporal locality) or LFU (stable hot sets), and TTLs bound staleness. The hardest part is invalidation: on writes I either delete the cached key (preferred, rather than update, to avoid races) or use short TTLs where staleness is acceptable. Risks include stale reads, a cache stampede when a hot key expires and many requests hit the database (mitigate with request coalescing, jittered TTLs or refresh-ahead), and cache penetration from requests for non-existent keys (cache negative results or use a Bloom filter). I measure hit rate and latency to confirm it is worth the complexity.",
+   "explanation": "Strong answers cover hit rate, TTL, invalidation races and stampedes. Weak answers say 'just use Redis'.",
+   "tags": [
+    "caching",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-sd-009",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is the difference between a write-through and a write-back (write-behind) cache?",
+   "options": [
+    "Write-through delays writes to the store; write-back writes to the store first",
+    "They differ only in eviction policy",
+    "Write-through writes to the cache and the backing store synchronously; write-back acknowledges after writing the cache and flushes to the store later",
+    "Write-back never writes to the store"
+   ],
+   "answer": 2,
+   "explanation": "Write-through keeps the cache and store consistent at the cost of write latency. Write-back is faster and absorbs write bursts, but data not yet flushed is lost if the cache node fails, so it needs replication or a durable log.",
+   "tags": [
+    "caching",
+    "consistency"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-sd-010",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A web app uses sticky sessions with in-memory sessions on each server behind a load balancer. What is the main drawback?",
+   "options": [
+    "Cookies cannot be used",
+    "TLS can no longer be terminated",
+    "Requests can never be retried",
+    "If a server dies or is scaled in, its sessions are lost and load can become uneven"
+   ],
+   "answer": 3,
+   "explanation": "Sticky sessions couple a user to one instance. Failures or deployments log users out and hot users can overload a server. Storing sessions in a shared store (Redis) or using signed stateless tokens lets any server handle any request.",
+   "tags": [
+    "stateless",
+    "sessions"
+   ],
+   "companies": [
+    "Amazon",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qc-sd-011",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A user posts a comment, then reloads and does not see it because the read hit a lagging replica. Which technique best restores the expected behaviour?",
+   "options": [
+    "Remove all replicas",
+    "Read-your-writes consistency: route that user's reads to the primary (or a replica caught up to their write) for a short period",
+    "Increase the cache TTL",
+    "Use a bigger load balancer"
+   ],
+   "answer": 1,
+   "explanation": "The user expects to see their own writes. Common approaches: read from the primary for recently written entities, track the replication position (LSN) from the write and read only from replicas that have reached it, or keep a short-lived client-side copy. Other users can tolerate seeing it a bit later.",
+   "tags": [
+    "consistency",
+    "replication"
+   ],
+   "companies": [
+    "Meta",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-sd-012",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A table is sharded by an auto-incrementing `order_id` using range partitioning, and the newest shard receives almost all writes. What is this problem and a good fix?",
+   "options": [
+    "A read replica lag; add more replicas",
+    "A deadlock; use shorter transactions",
+    "A cache stampede; add jitter to TTLs",
+    "A write hotspot; use hash-based sharding (or a compound/prefixed key) to spread new keys evenly"
+   ],
+   "answer": 3,
+   "explanation": "Monotonic keys under range sharding send every insert to the last range. Hashing the key distributes load but loses cheap range scans; compound keys (tenant_id then time) or time bucketing keep some locality while spreading writes.",
+   "tags": [
+    "sharding",
+    "hotspots"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-sd-013",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A queue consumer processes messages with at-least-once delivery. A message is delivered twice after a timeout. How should the consumer be designed?",
+   "options": [
+    "Assume the broker never redelivers",
+    "Make processing idempotent, for example by recording processed message ids or using natural idempotency keys",
+    "Disable retries to avoid duplicates",
+    "Process messages only on weekdays"
+   ],
+   "answer": 1,
+   "explanation": "At-least-once delivery guarantees no loss but allows duplicates, because acknowledgements can be lost. The consumer must make repeated handling harmless: dedupe by id, use upserts or conditional updates, or make side effects keyed by a unique operation id.",
+   "tags": [
+    "queues",
+    "idempotency"
+   ],
+   "companies": [
+    "Amazon",
+    "Uber",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qc-sd-014",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "You deployed a new version of `app.js` to a CDN-served site, but some users still get the old file for hours. What is the most robust fix going forward?",
+   "options": [
+    "Ask users to clear their browser cache",
+    "Set the TTL of every asset to zero",
+    "Fingerprint asset filenames (content hash in the name) and cache them with a very long TTL; keep the HTML short-lived",
+    "Disable the CDN for JavaScript"
+   ],
+   "answer": 2,
+   "explanation": "A new build produces a new filename (`app.3f9a1c.js`), so there is no stale copy to invalidate: references in the fresh HTML point at new URLs. Old files can stay cached forever. Purging by URL is a fallback, but slow and error-prone.",
+   "tags": [
+    "cdn",
+    "caching"
+   ],
+   "companies": [
+    "Netflix",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-sd-015",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Walk through how you would evolve the architecture of a web app from 100 users to 1 million users.",
+   "model_answer": "Start simple: one app server and one database. Step 1: split the database from the web tier, add automated backups and monitoring. Step 2: put the app tier behind a load balancer, make it stateless (sessions and uploads moved to Redis and object storage) and scale out horizontally. Step 3: add caching (CDN for static assets, Redis for hot reads) and tune indexes and queries after profiling; this solves most read load. Step 4: add read replicas and route reads to them, accepting replication lag. Step 5: move slow or bursty work (emails, image processing, reports) to queues and workers. Step 6: when the write load or data size exceeds a single primary, partition: functional splits first (separate databases per domain), then sharding with a well-chosen key. Step 7: multi-region for latency and disaster recovery, DNS or global load balancing, and tested failover. At each step I measure first, find the actual bottleneck and apply the cheapest fix, resisting microservices or sharding before they are needed. Operational maturity (metrics, tracing, alerts, load tests, runbooks) grows alongside.",
+   "explanation": "Interviewers want a measured, bottleneck-driven progression rather than jumping to microservices. Stateless tier, caching, replicas, queues, sharding is the usual ordering.",
+   "tags": [
+    "scalability",
+    "architecture"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-sd-016",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Design Pastebin: users paste text, get a short URL, and others can view it. Pastes may expire.",
+   "model_answer": "Requirements: create paste (up to ~1 MB), read by id, optional expiry, 10:1 to 100:1 read-heavy, 5M new pastes per day, high availability for reads. Estimate: 5M/day is about 60 writes/s and perhaps 6k reads/s; at 10 KB average, 50 GB per day, so about 18 TB per year, which favours object storage for contents. API: POST /pastes returns an id; GET /pastes/{id}. Id generation: a pre-generated pool or a counter-based id encoded in base62 (7 characters give 3.5 trillion), or a distributed id generator; avoid collision checks on the hot path. Storage: metadata (id, owner, created_at, expires_at, size, content key) in a key-value or SQL store; content in object storage (S3) addressed by id, which scales cheaply and is served via CDN. Read path: CDN, then app server, then metadata lookup in a Redis cache, then object store; pastes are immutable so they cache very well. Expiry: check expires_at on read (lazy), and a background job deletes expired records and objects in batches. Scaling: shard metadata by id hash; stateless app tier behind a load balancer. Extras: abuse and rate limiting, malware and spam scanning, private pastes with unguessable ids, and syntax highlighting done client side.",
+   "explanation": "A good answer starts with requirements and numbers, separates metadata from blob storage, and treats immutability as a caching advantage. Bonus for id generation and expiry strategy.",
+   "tags": [
+    "design",
+    "storage",
+    "caching"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-sd-017",
+   "topic": "System Design",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Design a real-time game leaderboard for 50 million players that shows the global top 100 and a player's own rank.",
+   "model_answer": "Requirements: update scores frequently, read top-N cheaply, return an individual's rank with low latency, near-real-time freshness. The natural structure is a sorted set. Redis sorted sets (skip list plus hash) give O(log n) insert, O(log n + k) top-k, and O(log n) rank, and handle tens of thousands of ops per second per node. Fifty million entries at about 100 bytes is around 5 GB, so one primary with a replica fits in memory. Writes: the game server sends score events through a queue; a consumer applies `ZADD` (or `ZINCRBY`), and the durable source of truth is the database or event log, so the sorted set can be rebuilt. Reads: top 100 is cached for a second or two or served straight from the set; a user's rank comes from `ZREVRANK`. Scaling beyond one node: shard by score range (rank equals the sum of the sizes of higher shards plus the in-shard rank) or shard by user id and merge top-k lists from each shard for the global board, accepting approximate rank for far-from-the-top players (for example, a histogram of score buckets gives rank within a tolerable error). Variants: daily, weekly and friends leaderboards use separate keys with TTLs; ties are broken by encoding the timestamp in the score. Failure handling: replicas and periodic snapshots, and replay of the event log after loss.",
+   "explanation": "The core is choosing the right data structure and then scaling it. Strong answers discuss the rebuild path and approximate ranks at large scale.",
+   "tags": [
+    "design",
+    "redis",
+    "ranking"
+   ],
+   "companies": [
+    "Uber",
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-sd-018",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A replicated store has N=5 replicas. Which read/write quorum configuration guarantees that a read sees the latest acknowledged write (assuming no concurrent writes)?",
+   "options": [
+    "W=2, R=2, because both are at least two",
+    "W=3, R=3, because R + W > N",
+    "W=1, R=1 for the lowest latency",
+    "W=5, R=0 because every replica has the data"
+   ],
+   "answer": 1,
+   "explanation": "If R + W > N, every read set overlaps every write set in at least one replica holding the latest version. With N=5, W=2 and R=2 gives 4, which can miss it. W=3, R=3 gives 6. Overlap must still be combined with version comparison and does not alone guarantee linearizability.",
+   "tags": [
+    "quorum",
+    "consistency"
+   ],
+   "companies": [
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-sd-019",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A leader holding a distributed lock pauses for a long GC, its lease expires, a new leader is elected, then the old one resumes and writes to storage. How do you prevent corruption?",
+   "options": [
+    "Increase the lease duration to one day",
+    "Rely on synchronized clocks to guarantee the old leader stops",
+    "Retry the write until it succeeds",
+    "Use fencing tokens: monotonically increasing numbers issued with each lease, which the storage rejects if older than the highest seen"
+   ],
+   "answer": 3,
+   "explanation": "A client cannot know that its lease expired while it was paused, and clocks cannot be trusted to prevent this. The resource itself must enforce ordering: each acquisition returns a higher token and the store rejects writes carrying a lower token than one it has seen.",
+   "tags": [
+    "distributed-locks",
+    "fencing"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-sd-020",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A business operation spans three microservices, each with its own database. Why is the saga pattern often preferred over two-phase commit here?",
+   "options": [
+    "Sagas use local transactions plus compensating actions, avoiding long-held cross-service locks and coordinator blocking",
+    "Sagas provide full ACID isolation across services",
+    "Two-phase commit cannot work with SQL databases",
+    "Sagas remove the need for idempotency"
+   ],
+   "answer": 0,
+   "explanation": "2PC blocks participants holding locks if the coordinator fails and is unsupported by many services and brokers. A saga performs a sequence of local commits and, on failure, runs compensating transactions (refund, release stock). The cost is eventual consistency, lack of isolation (others can see intermediate states) and the need for idempotent steps.",
+   "tags": [
+    "saga",
+    "distributed-transactions"
+   ],
+   "companies": [
+    "Uber",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-sd-021",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design a web crawler that fetches one billion pages per month and keeps them reasonably fresh.",
+   "model_answer": "Requirements: politeness (respect robots.txt and per-host rate limits), scale (one billion pages per month is about 400 pages/s average, with peaks several times higher), dedup, and freshness. Architecture: a URL frontier, a fleet of fetchers, a parser, a content store, and a duplicate detector. The frontier is the heart: it prioritizes URLs (by PageRank-like importance and change frequency) and enforces politeness by routing all URLs of a host to one queue so a single worker handles that host with a delay between requests; back queues per host plus front queues per priority is a classic design (Mercator). Fetchers resolve DNS through a local cache, use async I/O and connection reuse, handle timeouts, redirects and traps (depth and URL pattern limits). The parser extracts links and normalizes URLs (lowercase host, remove fragments, sort parameters). Dedup: a Bloom filter or a sharded key-value store of URL hashes for seen URLs, and content fingerprints (SimHash) for near-duplicate pages. Storage: raw HTML in object storage, metadata (last fetch, ETag, hash) in a wide-column store. Freshness: re-crawl based on observed change rate, and use conditional GET (If-None-Match) to save bandwidth. Distribute by hashing the host to crawler nodes so politeness state stays local, and checkpoint the frontier for recovery. Monitor error rates, per-host latency and queue depth.",
+   "explanation": "Look for politeness handling, frontier design, URL normalization, dedup at two levels (URL and content) and host-based partitioning. Forgetting crawler traps is a common miss.",
+   "tags": [
+    "design",
+    "crawler"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-sd-022",
+   "topic": "System Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design a typeahead/autocomplete service that returns the top 5 suggestions as a user types, for a search box with 100,000 queries per second.",
+   "model_answer": "Requirements: very low latency (under 100 ms end-to-end, ideally 20 ms server side), suggestions ranked by popularity and perhaps personalization, fresh enough to reflect trends, high availability. Data structure: a trie where each node caches the top-k completions for its prefix; this makes a query O(length of prefix) with no subtree scan. Build offline: aggregate query logs (a batch job over the last N days, with time decay) into counts, build the trie or an equivalent sorted structure, and ship it as a snapshot to serving nodes. For freshness, a small streaming path (Kafka and a stream processor) maintains a short-term trending overlay that is merged at query time. Serving: tries are held in memory, partitioned by prefix range or hash of the first characters, and replicated; the first one or two characters can be pre-computed and cached. Use a CDN or browser cache for common short prefixes, plus client-side tricks: debounce keystrokes (wait 100-200 ms), cancel in-flight requests, and prefetch. Filtering: remove offensive or illegal terms and apply personalization or locale as a re-rank step. Scale: 100k QPS across tens of replicas is easy when each lookup is a memory read. Trade-offs: memory use of tries (compress with radix trees), staleness versus build cost, and handling typos with edit distance as a fallback.",
+   "explanation": "The key idea is precomputing top-k per prefix and separating the offline ranking pipeline from the online serving path. Mention client-side debounce and caching.",
+   "tags": [
+    "design",
+    "trie",
+    "search"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-sd-023",
+   "topic": "System Design",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "A message broker advertises exactly-once delivery. What is the most accurate way to understand this in a distributed system?",
+   "options": [
+    "The network never loses or duplicates packets",
+    "Each message is physically transmitted only once",
+    "Exactly-once effects are achieved with at-least-once delivery plus idempotent or transactional processing; true exactly-once delivery over an unreliable network is not possible",
+    "Consumers no longer need to handle failure"
+   ],
+   "answer": 2,
+   "explanation": "A sender that does not receive an acknowledgement cannot tell if the message was lost or only the ack was, so it must resend, which risks duplicates. Systems like Kafka transactions achieve exactly-once processing within a defined scope by deduplicating and committing offsets and outputs atomically. Side effects outside that scope (HTTP calls, emails) still need idempotency keys.",
+   "tags": [
+    "messaging",
+    "exactly-once",
+    "distributed-systems"
+   ],
+   "companies": [
+    "Uber",
+    "Netflix",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qc-sd-024",
+   "topic": "System Design",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design a collaborative document editor like Google Docs supporting dozens of simultaneous editors, offline edits and version history.",
+   "model_answer": "Core problem: concurrent edits to the same document must converge to the same state on every client without losing intent. Two families of solutions: Operational Transformation (OT), where a central server orders operations and transforms concurrent ones against each other (insert at position changes as others insert before), and CRDTs (e.g. sequence CRDTs like RGA/Yjs/Automerge), where every character has a unique, ordered id so operations commute and merging needs no central transform. OT is proven in Docs, but needs a central sequencer and tricky transform functions; CRDTs fit offline and peer-to-peer better, at the cost of metadata growth that needs garbage collection or compaction. Architecture: clients hold a local replica and apply edits optimistically; edits go over WebSocket to a document session server, which persists them to an append-only operation log, broadcasts to peers, and periodically writes snapshots to cut replay time. Route all clients of a document to the same session server (consistent hashing on doc id) so ordering is simple, with failover that rebuilds from snapshot plus log. Presence (cursors, selections) is ephemeral and sent via a separate lightweight channel. Offline: queue local operations and merge on reconnect. History: the operation log plus snapshots give named versions, diffs and restore. Permissions are checked on each connection and operation; the storage is sharded by document id. Edge cases: large pastes, undo semantics (undo my own changes only), rich text formatting ranges, and very large documents requiring paging.",
+   "explanation": "Excellent answers name OT versus CRDT with real trade-offs, explain optimistic local application, ordering by a per-document owner, and snapshot plus log. Hand-waving 'use last-write-wins' fails the concurrency requirement.",
+   "tags": [
+    "design",
+    "collaboration",
+    "crdt"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "qc-sd-025",
+   "topic": "System Design",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design a distributed job scheduler that runs millions of delayed and recurring jobs per day with at-least-once execution, and survives node failures.",
+   "model_answer": "Requirements: schedule by time (one-off and cron), retry policy, priorities, visibility into status, scale to millions of jobs per day (thousands per second at peak), no job lost, tolerable duplicates. Data model: a durable job table (id, payload reference, next_run_at, status, attempts, lease_owner, lease_expires_at, schedule). Partition by hash of job id into many shards so that each shard can be owned by one scheduler worker at a time. Triggering: each partition owner polls for jobs with next_run_at <= now using an index on (partition, next_run_at), claims them with a conditional update that sets a lease (compare-and-set), and pushes them to a work queue; a small in-memory timing wheel or a Redis sorted set can serve the near-term window so the database is read in batches rather than per job. Execution: workers pull from the queue, heartbeat to extend the lease, and mark the job complete; if a worker dies the lease expires and another claims the job, which is why execution is at-least-once and jobs must be idempotent (give each run a run_id as the idempotency key). Recurring jobs compute and insert the next occurrence transactionally when the current one is claimed, so a crash cannot skip a run. Partition ownership uses a coordination service (etcd or ZooKeeper) or a consistent hashing ring with leases and fencing tokens against split brain. Handling: exponential backoff with jitter and a dead letter queue; priorities via separate queues; backpressure when workers are saturated; misfire policies (skip, run once, or catch up) after outages; and time zone and DST rules for cron. Observability: metrics for scheduling lag (actual minus intended start), queue depth and failure rates, with alerts on lag.",
+   "explanation": "Interviewers look for leases and fencing, partitioned ownership, idempotent execution, transactional rescheduling and an explicit misfire policy. Pure 'cron on one box with a database' fails the availability requirement.",
+   "tags": [
+    "design",
+    "scheduler",
+    "distributed-systems"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-api-001",
+   "topic": "API Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the usual difference between `PUT` and `PATCH` in a REST API?",
+   "options": [
+    "`PUT` replaces the whole resource with the supplied representation; `PATCH` applies a partial modification",
+    "`PUT` creates and `PATCH` deletes",
+    "`PUT` is not idempotent but `PATCH` always is",
+    "`PATCH` replaces the whole resource and `PUT` modifies a single field"
+   ],
+   "answer": 0,
+   "explanation": "PUT sends the full new state, so repeating it yields the same result (idempotent). PATCH describes a change, such as a JSON Merge Patch or a list of operations, and idempotency depends on the patch semantics (setting a field is idempotent, appending is not).",
+   "tags": [
+    "http-methods",
+    "rest"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-api-002",
+   "topic": "API Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A client sends a JSON body to `POST /users` with a malformed email address. The JSON itself is valid. Which response is the most appropriate?",
+   "options": [
+    "`200 OK` with an error message in the body",
+    "`404 Not Found`",
+    "`422 Unprocessable Content` (or `400 Bad Request`) with details about the invalid field",
+    "`500 Internal Server Error`"
+   ],
+   "answer": 2,
+   "explanation": "A client error should use a 4xx status. 422 states the syntax was fine but the content failed validation; many APIs use 400 for the same purpose. Returning 200 for errors breaks clients and monitoring, and 500 wrongly blames the server.",
+   "tags": [
+    "status-codes",
+    "validation"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-api-003",
+   "topic": "API Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which HTTP method is defined as safe, meaning it should not change server state?",
+   "options": [
+    "`GET`",
+    "`POST`",
+    "`DELETE`",
+    "`PUT`"
+   ],
+   "answer": 0,
+   "explanation": "Safe methods (GET, HEAD, OPTIONS) are read-only by contract, so crawlers, prefetchers and caches may call them freely. An endpoint like `GET /items/5/delete` violates this and can be triggered accidentally by link previews.",
+   "tags": [
+    "http-methods",
+    "fundamentals"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-api-004",
+   "topic": "API Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the best status code for a successful `DELETE /orders/42` where the response has no body?",
+   "options": [
+    "`201 Created`",
+    "`301 Moved Permanently`",
+    "`202 Accepted` always",
+    "`204 No Content`"
+   ],
+   "answer": 3,
+   "explanation": "204 tells the client that the action succeeded and there is nothing to return. 202 is for work accepted but not finished, and 201 is for creation. Some APIs return 200 with a body of the deleted object, which is also acceptable if documented.",
+   "tags": [
+    "status-codes",
+    "rest"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qc-api-005",
+   "topic": "API Design",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In `GET /products?category=books&sort=price`, what are `category` and `sort` best described as?",
+   "options": [
+    "Path parameters that identify a single resource",
+    "Query parameters used for filtering and ordering a collection",
+    "Request body fields",
+    "HTTP headers"
+   ],
+   "answer": 1,
+   "explanation": "Path segments identify resources (`/products/17`); the query string refines or modifies how a collection is retrieved: filter, sort, page, fields. Keeping this convention makes URLs cacheable and predictable.",
+   "tags": [
+    "rest",
+    "url-design"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-api-006",
+   "topic": "API Design",
+   "level": "Basic",
+   "type": "open",
+   "question": "What does it mean for an API to be RESTful? Which constraints matter most in practice and which are often skipped?",
+   "model_answer": "REST is an architectural style with constraints: client-server separation, statelessness (each request carries everything needed, no server session), cacheability (responses declare if they can be cached), a uniform interface (resources identified by URIs, manipulated through representations with standard methods, self-descriptive messages, and hypermedia), and layering. In practice most so-called REST APIs follow resource-oriented URLs, correct HTTP methods and status codes, JSON representations, statelessness with token auth, and cache headers. The constraint most often skipped is hypermedia (HATEOAS), where responses include links that tell the client what it can do next; skipping it means clients hard-code URL structures and need documentation like OpenAPI. I treat 'REST' pragmatically: consistent resources and semantics matter more than purity, as long as I am clear about what the API promises. Statelessness is the one that matters most for scaling: any server can handle any request.",
+   "explanation": "Candidates should show they know that REST is a style, not a protocol, and that HATEOAS is the uncommon one. Avoid dogma; pragmatic consistency is valued.",
+   "tags": [
+    "rest",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qc-api-007",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why is cursor-based (keyset) pagination preferred over offset pagination for a large feed that receives new items constantly?",
+   "options": [
+    "It lets clients jump to an arbitrary page number",
+    "Pages remain stable and efficient because the cursor encodes a position (like the last seen id or timestamp), so inserts do not shift items and the query uses an index seek",
+    "It requires no sorting",
+    "It stores a server-side snapshot of the whole result set"
+   ],
+   "answer": 1,
+   "explanation": "With offset, a new row at the top pushes items down, producing duplicates or skips on the next page, and a large offset forces the database to scan and discard rows. A cursor like `WHERE (created_at, id) < (?, ?) ORDER BY created_at DESC, id DESC LIMIT 20` is stable and uses an index. The trade-off is no random page access.",
+   "tags": [
+    "pagination",
+    "performance"
+   ],
+   "companies": [
+    "Meta",
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-api-008",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Two clients update the same record at nearly the same time, and the server must reject the second one instead of silently overwriting. Which status code signals a failed precondition when using `If-Match`?",
+   "options": [
+    "`412 Precondition Failed`",
+    "`301 Moved Permanently`",
+    "`304 Not Modified`",
+    "`415 Unsupported Media Type`"
+   ],
+   "answer": 0,
+   "explanation": "If-Match carries the ETag the client last saw. If the current ETag differs, the server answers 412 and does not apply the change. `428 Precondition Required` can be used to insist that clients send the header. 409 Conflict is also commonly used for version conflicts in the body.",
+   "tags": [
+    "concurrency",
+    "http"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-api-009",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A GraphQL endpoint resolves `posts { author { name } }` and executes one query for the list and then one per post for the author. What is this problem and the standard fix?",
+   "options": [
+    "The over-fetching problem; switch to REST",
+    "The diamond problem; use interfaces",
+    "The N+1 query problem; batch and cache lookups per request with a DataLoader",
+    "The cold start problem; add a CDN"
+   ],
+   "answer": 2,
+   "explanation": "Resolvers run per field and per item, so related loads multiply. A DataLoader collects all keys requested during one tick and fetches them with a single batched query (`WHERE id IN (...)`), caching results for the request. Alternatives include joins or look-ahead query planning.",
+   "tags": [
+    "graphql",
+    "performance"
+   ],
+   "companies": [
+    "Meta",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "qc-api-010",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "In a JSON Merge Patch (RFC 7396), what does `{\"nickname\": null}` mean?",
+   "options": [
+    "Set `nickname` to the string \"null\"",
+    "Leave `nickname` unchanged",
+    "Reject the request as invalid",
+    "Remove the `nickname` field from the target"
+   ],
+   "answer": 3,
+   "explanation": "Merge Patch recursively merges the patch into the target, and a null value deletes the member. That means it cannot set a field to a literal null, and arrays are replaced entirely. JSON Patch (RFC 6902) with explicit operations avoids those limits.",
+   "tags": [
+    "patch",
+    "json"
+   ],
+   "companies": [
+    "Microsoft",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qc-api-011",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Design a consistent error format for a public JSON API. What fields do you include, and how do you decide HTTP statuses versus application error codes?",
+   "model_answer": "I use a single structure across the API, ideally following RFC 9457 Problem Details: `type` (a stable URI or short code that clients can switch on), `title` (short, human readable), `status` (mirrors the HTTP status), `detail` (specific explanation for this occurrence), `instance` or `request_id` (for support and log correlation), and extensions like `errors: [{field, code, message}]` for validation. The HTTP status carries the category that generic clients, proxies and monitoring understand (400/422 invalid input, 401 unauthenticated, 403 forbidden, 404 missing, 409 conflict, 429 throttled, 5xx server fault), while the application code distinguishes the precise cause within it (`card_declined`, `insufficient_stock`), so clients can react without parsing messages. Rules: never return 200 for failures, never leak stack traces or internals, keep messages free of sensitive data, make codes stable and documented as part of the contract, localize only the human text, and set `Retry-After` for 429 or 503. Same format for gateway-generated errors so clients handle one shape.",
+   "explanation": "Look for: stable machine-readable codes separate from human text, request ids, field-level validation details, and security awareness (no stack traces).",
+   "tags": [
+    "errors",
+    "design"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-api-012",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Design the filtering, sorting and field selection parameters for a `GET /orders` endpoint that must support many filters without turning into an unmaintainable mess.",
+   "model_answer": "Keep the common cases simple and predictable. Filtering uses explicit, documented parameters named after fields: `status=paid`, `customer_id=7`, with ranges expressed as `created_after` and `created_before` (or `created[gte]=`), and multiple values with a repeated or comma-separated parameter (`status=paid,shipped`). Sorting uses `sort=-created_at,total`, where a minus prefix means descending and the allowed fields are whitelisted and indexed, with a deterministic tiebreaker (id) so pagination is stable. Field selection via `fields=id,total,status` reduces payload; related resources via `expand=customer` or `include=` with a limit on depth. Pagination is cursor-based with `limit` capped at a maximum. Validate every parameter and return 400 with a clear message for unknown ones instead of silently ignoring typos. Back every supported filter with an index and limit combinations that would scan; for free text and complex boolean search offer a separate `/orders/search` endpoint (POST with a body is acceptable if the query is large) rather than overloading the list endpoint. Document the allowed operators in OpenAPI and keep the grammar small, because every filter becomes a contract and a performance liability.",
+   "explanation": "Interviewers value restraint: whitelisting, indexing, deterministic ordering and a separate search endpoint. A free-form query language exposed directly to the database is a red flag (injection and performance).",
+   "tags": [
+    "design",
+    "filtering",
+    "pagination"
+   ],
+   "companies": [
+    "Amazon",
+    "Shopify",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-api-013",
+   "topic": "API Design",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Your mobile client needs to create 500 items efficiently. Compare designing a bulk endpoint, parallel single requests, and an async batch job. What do you recommend?",
+   "model_answer": "Parallel single requests are simple and keep each operation isolated, but 500 round trips, retries and per-request auth/overhead cost latency and rate limit budget. A bulk endpoint (`POST /items:batch`) reduces overhead, but needs a decided contract: all-or-nothing (atomic, simple to reason about but one bad item fails everything) or partial success. For partial success return `207 Multi-Status`-style per-item results (index, status, id or error) with the overall request 200, and make clients retry only failed items. Impose a sensible cap per request (say 100) and a payload size limit. Each item should carry a client-supplied idempotency key so a retried batch does not create duplicates. For very large or slow operations an async job is better: `POST /imports` returns `202 Accepted` with a job URL; the client polls or receives a webhook, results are downloadable, and the server can process in chunks with backpressure. My recommendation: a bulk endpoint with partial-success semantics and idempotency keys up to a modest batch size, and an async import for bigger volumes.",
+   "explanation": "Strong answers pick atomic versus partial semantics explicitly and discuss idempotency, limits and per-item error reporting.",
+   "tags": [
+    "design",
+    "bulk",
+    "idempotency"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "qc-api-014",
+   "topic": "API Design",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A gRPC service adds a new field to a protobuf message. Which practice keeps old clients and servers compatible?",
+   "options": [
+    "Reuse the number of a deleted field to keep numbers compact",
+    "Change the type of an existing field when needed",
+    "Add the field with a new, never-reused field number and treat missing values as defaults; never renumber or reuse numbers of removed fields",
+    "Rename the field number to match its position alphabetically"
+   ],
+   "answer": 2,
+   "explanation": "On the wire, protobuf identifies fields by number and wire type, not by name. Reusing a number or changing a type can make old data decode as the wrong thing. Removed fields should be marked `reserved`. Unknown fields are skipped by older readers, so additive changes are safe.",
+   "tags": [
+    "grpc",
+    "protobuf",
+    "compatibility"
+   ],
+   "companies": [
+    "Google",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qc-api-015",
+   "topic": "API Design",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "A public GraphQL API must defend itself from expensive queries such as deeply nested relations. Which control is most appropriate?",
+   "options": [
+    "Query depth and cost (complexity) limits, combined with timeouts, pagination limits and persisted queries where possible",
+    "Block all queries that contain nested fields",
+    "Rely on HTTP rate limits per IP only",
+    "Disable introspection and consider the API safe"
+   ],
+   "answer": 0,
+   "explanation": "A single GraphQL request can ask for exponential amounts of data by nesting connections. Assign costs to fields (list size times child cost), reject queries over budget, cap depth and page sizes, and apply per-client rate limiting based on cost, not just request count. Hiding introspection is not a defence.",
+   "tags": [
+    "graphql",
+    "security",
+    "performance"
+   ],
+   "companies": [
+    "Meta",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "qc-api-016",
+   "topic": "API Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "What is a Backend-for-Frontend (BFF), and when would you use one versus a single general-purpose API gateway?",
+   "model_answer": "A BFF is a backend service owned by a client team (web, iOS, Android) that aggregates and shapes calls to downstream microservices for that specific client. A general API gateway handles cross-cutting concerns for all traffic: routing, TLS termination, authentication, rate limiting, logging. A BFF is warranted when clients have genuinely different needs: a mobile app wants a single call returning a compact payload for a screen, minimal round trips on slow networks and different pagination, while a web dashboard wants richer data. The BFF composes several service calls in parallel, trims fields, converts formats and can hide backend churn from the client. Benefits: simpler clients, faster screens, independent client release cycles. Costs: more services to run, duplicated logic across BFFs if not careful (push shared business rules down into domain services), and a risk of becoming a mini monolith. I use a gateway for the shared edge concerns and add BFFs only when the aggregation logic would otherwise live awkwardly in clients or in generic services. GraphQL can play the BFF role when one schema serves many clients.",
+   "explanation": "A good answer separates edge concerns (gateway) from client-specific composition (BFF), and names the cost of duplication and ownership.",
+   "tags": [
+    "architecture",
+    "gateway",
+    "bff"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon",
+    "Spotify"
+   ]
+  },
+  {
+   "id": "qc-api-017",
+   "topic": "API Design",
+   "level": "Advanced",
+   "type": "open",
+   "question": "A feed API using cursor pagination sees items being inserted, edited and deleted while users scroll. How do you design the cursor so clients do not see duplicates or miss items?",
+   "model_answer": "The cursor must encode a position in a total order that is immune to concurrent changes. For a reverse-chronological feed I order by an immutable, unique key such as `(created_at, id)`, and the cursor is an opaque, base64-encoded tuple of the last item's values, with an optional signature to prevent tampering. The query is `WHERE (created_at, id) < (:ts, :id) ORDER BY created_at DESC, id DESC LIMIT :n+1`, using the extra row to compute `has_more`. New inserts after the first page land before the cursor and are simply not part of the traversal (clients fetch them with a separate `since` or refresh call returning items newer than the first cursor). Deletes do not disturb the position; edits that change the sort key are a problem, so never sort by mutable fields like `updated_at` or score for a stable scroll, or accept that items may move, or snapshot. For ranked feeds where order is computed, return a server-side generated, time-limited session or snapshot id with the cursor so pages come from one ranking run. Keep cursors opaque so the implementation can change, expire them after some time, and return a clear error for invalid ones.",
+   "explanation": "Key points: unique total order with tiebreaker, opaque cursors, never sort on mutable keys, and a separate path for fresh items. Snapshotting for ranked feeds is a strong addition.",
+   "tags": [
+    "pagination",
+    "design",
+    "feeds"
+   ],
+   "companies": [
+    "Meta",
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-api-018",
+   "topic": "API Design",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "Which of these changes to a published JSON API is NOT backward compatible for existing clients?",
+   "options": [
+    "Adding a new optional field to a response",
+    "Changing the type of an existing response field from a number to a string",
+    "Adding a new optional query parameter",
+    "Adding a new endpoint"
+   ],
+   "answer": 1,
+   "explanation": "Adding optional response fields, parameters or endpoints is generally safe provided clients ignore unknown fields (the tolerant reader). Changing a field's type, removing or renaming fields, tightening validation, or altering semantics breaks existing consumers and requires a new version or an additive migration.",
+   "tags": [
+    "versioning",
+    "compatibility"
+   ],
+   "companies": [
+    "Stripe",
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-api-019",
+   "topic": "API Design",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design the API and versioning strategy for a multi-tenant SaaS platform with thousands of integrators, a ten-year support horizon, and generated SDKs in six languages.",
+   "model_answer": "Treat the API as a long-lived product with a contract. Describe it in OpenAPI (or protobuf) as the source of truth and generate SDKs, docs, mock servers and contract tests from it; lint the spec in CI and run a breaking-change detector (oasdiff, buf breaking) that blocks merges. Evolve additively: new optional fields, parameters and endpoints, with clients required to ignore unknown fields and use enums tolerantly (an `unknown` fallback). For real breaking changes use date-based or major-version negotiation: each account is pinned to the version in effect when it first integrated, and can override per request with a header (`API-Version: 2026-03-01`), allowing the server to translate between versions through a chain of small transformation modules rather than maintain many full copies. Publish a deprecation policy: `Deprecation` and `Sunset` headers, changelog and migration guides, usage dashboards by version and tenant so the team can contact the stragglers, and minimum notice periods (for example 12 months). Multi-tenant concerns: tenant identity from credentials (not trusted ids in the body), per-tenant rate limits and quotas, scoped keys or OAuth scopes, idempotency keys scoped per tenant, and webhook signing with secret rotation. SDKs: semantic versioning tied to API versions, hand-tuned ergonomics layered over generated code, retries with backoff and idempotency built in. Observability: per-version, per-endpoint latency and error metrics and request ids on every response. Governance: an API review board or guild and design guidelines to keep naming, pagination and errors consistent.",
+   "explanation": "Interviewers want a system, not just 'put /v2 in the URL': spec-driven tooling, automated breaking-change detection, pinned versions with translation layers, and deprecation telemetry.",
+   "tags": [
+    "versioning",
+    "design",
+    "sdk"
+   ],
+   "companies": [
+    "Stripe",
+    "Twilio",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "qc-api-020",
+   "topic": "API Design",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design the sync API for a mobile app that must work offline, with users editing the same data on multiple devices. Cover the protocol, conflict handling, and what the server must guarantee.",
+   "model_answer": "Use a delta-based sync protocol rather than refetching everything. The server keeps a monotonically increasing change log per user (or per tenant scope), and every change gets a sequence number. The client stores a sync cursor (last seen sequence) and calls `GET /sync?since=cursor` to receive changes (creates, updates, tombstones for deletes) in pages, then `POST /sync/push` with its queued local mutations. Each mutation carries a client-generated id (UUID) for idempotency, the base version the edit was made on, and an operation type. The server applies mutations transactionally, returns per-mutation results (applied, rejected, conflict with the current state), and the new cursor. Conflict handling depends on the data: last-writer-wins per field with hybrid logical clocks for simple profile-like data, field-level merge so unrelated edits on the same record do not collide, CRDTs or OT for collaborative text and counters, and explicit user resolution for rare semantic conflicts (two different edits of the same field). Tombstones are retained long enough for slow clients, with a policy to force a full resync if the cursor is older than the retention window. The server must guarantee ordered, gap-free delivery of the change log per scope, idempotent mutation handling, authorization on every record, and bounded payloads (pagination, compression). On the client: a local database with an outbox queue, optimistic UI, exponential backoff with retries, and background sync. Test with simulated clocks, network partitions and duplicate delivery.",
+   "explanation": "Look for: change log with cursors, tombstones, idempotent client mutation ids, a clear conflict policy per data type, and a retention/full-resync story.",
+   "tags": [
+    "design",
+    "sync",
+    "offline",
+    "mobile"
+   ],
+   "companies": [
+    "Meta",
+    "Google",
+    "Dropbox"
+   ]
+  },
+  {
+   "id": "qc-web-001",
+   "topic": "Web & HTTP",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why should a search form that only reads data normally use `GET` rather than `POST`?",
+   "options": [
+    "`GET` encrypts the parameters",
+    "`GET` requests are safe, cacheable, bookmarkable and shareable because the parameters are in the URL",
+    "`POST` cannot send form fields",
+    "`GET` is the only method browsers allow in forms"
+   ],
+   "answer": 1,
+   "explanation": "GET expresses a read-only operation: browsers and proxies may cache it, and users can bookmark or share the URL. Parameters in a URL are not encrypted by GET itself (HTTPS protects both), and sensitive data should not be placed in query strings because it ends up in logs and history.",
+   "tags": [
+    "http-methods",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-web-002",
+   "topic": "Web & HTTP",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the practical difference between status codes `301` and `302`?",
+   "options": [
+    "`301` is temporary and `302` is permanent",
+    "`301` means the resource was deleted",
+    "`302` forces a `POST` to be re-sent with the same body",
+    "`301` is a permanent redirect that clients and search engines may cache; `302` is temporary"
+   ],
+   "answer": 3,
+   "explanation": "Use 301 (or 308) when a URL has moved for good, so caches and crawlers update their references. Use 302 (or 307) for temporary moves such as a login redirect. 307 and 308 additionally preserve the request method; historically browsers changed POST to GET on 301/302.",
+   "tags": [
+    "status-codes",
+    "redirects"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-web-003",
+   "topic": "Web & HTTP",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does HTTPS protect against that plain HTTP does not?",
+   "options": [
+    "Cross-site scripting in the page",
+    "Eavesdropping and tampering in transit, plus server authentication through certificates",
+    "SQL injection on the server",
+    "Malicious behaviour of the web server itself"
+   ],
+   "answer": 1,
+   "explanation": "TLS encrypts and integrity-protects traffic between client and server and lets the client verify the server's identity. It does not make the application code safe: XSS, SQL injection and logic flaws are unaffected.",
+   "tags": [
+    "https",
+    "tls"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-web-004",
+   "topic": "Web & HTTP",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "A server sets a cookie with `Set-Cookie: sid=abc; HttpOnly`. What does `HttpOnly` do?",
+   "options": [
+    "Forces the cookie to be sent only over HTTPS",
+    "Prevents the cookie from being sent cross-site",
+    "Prevents JavaScript from reading the cookie through `document.cookie`",
+    "Makes the cookie expire when the tab closes"
+   ],
+   "answer": 2,
+   "explanation": "HttpOnly hides the cookie from scripts, limiting the damage of XSS (the attacker cannot simply steal the session id, although the browser still attaches it to requests). `Secure` restricts to HTTPS and `SameSite` controls cross-site sending.",
+   "tags": [
+    "cookies",
+    "security"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-web-005",
+   "topic": "Web & HTTP",
+   "level": "Basic",
+   "type": "open",
+   "question": "Compare cookies, `localStorage` and `sessionStorage`. Where would you keep a session token?",
+   "model_answer": "Cookies are small key-value pairs the browser automatically attaches to matching requests, with attributes such as `HttpOnly`, `Secure`, `SameSite`, `Domain`, `Path` and expiry; they are sent on every request, so they should stay small. `localStorage` is a per-origin key-value store, about 5 MB, persistent until cleared, only accessible from JavaScript and never sent automatically. `sessionStorage` is the same but scoped to one tab and cleared when it closes. For a session token I prefer an `HttpOnly; Secure; SameSite=Lax` (or Strict) cookie: JavaScript, including injected scripts, cannot read it. Putting tokens in `localStorage` makes them readable by any XSS payload. The trade-off with cookies is CSRF exposure because the browser attaches them automatically, mitigated by SameSite and CSRF tokens. Use `localStorage` for non-sensitive preferences and caches, `sessionStorage` for per-tab state like a wizard step.",
+   "explanation": "The decisive point is token theft via XSS versus CSRF exposure, and which flags reduce each risk.",
+   "tags": [
+    "storage",
+    "cookies",
+    "security"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-web-006",
+   "topic": "Web & HTTP",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A response has `Cache-Control: max-age=3600` and an `ETag`. After 3600 seconds the browser needs the resource again. What happens next?",
+   "options": [
+    "It always downloads the full body again",
+    "It serves the stale copy forever",
+    "It sends a conditional request with `If-None-Match`; the server can answer `304 Not Modified` without a body",
+    "It deletes the ETag and refuses to cache"
+   ],
+   "answer": 2,
+   "explanation": "max-age defines freshness; once stale, the cache revalidates using the validator. A 304 response tells the client to reuse the stored body and refreshes its freshness lifetime, saving bandwidth but still costing a round trip.",
+   "tags": [
+    "caching",
+    "etag"
+   ],
+   "companies": [
+    "Google",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qc-web-007",
+   "topic": "Web & HTTP",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which cross-origin request will trigger a CORS preflight (`OPTIONS`) request in a browser?",
+   "options": [
+    "A `fetch` with method `PUT` and header `Content-Type: application/json`",
+    "A simple `GET` for an image tag",
+    "A form `POST` with `application/x-www-form-urlencoded`",
+    "A `HEAD` request with no custom headers"
+   ],
+   "answer": 0,
+   "explanation": "Preflights are sent for non-simple requests: methods other than GET, HEAD, POST, or any custom headers or content types beyond form-urlencoded, multipart/form-data and text/plain. The server must respond with matching `Access-Control-Allow-*` headers before the browser sends the real request.",
+   "tags": [
+    "cors",
+    "browsers"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-web-008",
+   "topic": "Web & HTTP",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A CDN caches `/api/greeting` which returns different content depending on the `Accept-Language` request header, but users in France are receiving English text. What header was probably missing?",
+   "options": [
+    "`Content-Length`",
+    "`Vary: Accept-Language`",
+    "`Access-Control-Allow-Origin`",
+    "`Connection: close`"
+   ],
+   "answer": 1,
+   "explanation": "A cache key normally uses the URL only. `Vary` tells caches which request headers also select the stored variant, so French and English responses are stored separately. Overusing `Vary` on high-cardinality headers (like User-Agent) fragments the cache.",
+   "tags": [
+    "caching",
+    "headers"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-web-009",
+   "topic": "Web & HTTP",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Why does HTTP keep-alive (persistent connections) improve performance?",
+   "options": [
+    "It compresses the response bodies",
+    "It forces the server to keep every response in memory",
+    "It makes DNS lookups unnecessary",
+    "It reuses an existing TCP/TLS connection for several requests, avoiding repeated handshakes"
+   ],
+   "answer": 3,
+   "explanation": "Setting up TCP and TLS costs several round trips. Reusing the connection saves that per request and lets TCP congestion windows grow. HTTP/1.1 uses persistent connections by default; HTTP/2 goes further with multiplexing on one connection.",
+   "tags": [
+    "http",
+    "performance"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-web-010",
+   "topic": "Web & HTTP",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "A page has a poor Largest Contentful Paint. Outline how you would investigate and fix it from the HTTP and browser side.",
+   "model_answer": "First measure with real-user monitoring and a lab tool (Lighthouse, DevTools Performance and Network panels) to find which element is the LCP and what delays it. Break it into four parts: time to first byte, resource load delay, resource load duration, and render delay. If TTFB is high, check server processing, database calls, missing page caching, lack of a CDN, or redirects chains. If the LCP element is an image, make it discoverable early (not lazy-loaded, not injected by JavaScript), add `fetchpriority=high` or a preload, serve modern formats (AVIF/WebP) with correct dimensions and responsive `srcset`, and compress it. If render is blocked, cut render-blocking CSS and JavaScript: inline critical CSS, defer scripts, split bundles, and remove unused code. Reduce connection costs with `preconnect` to critical origins, HTTP/2 or HTTP/3, and long-lived caching of static assets with fingerprinted names. For client-rendered apps consider server-side rendering or static generation so content is in the first HTML. Re-measure on slow devices and networks, and set performance budgets in CI to prevent regressions.",
+   "explanation": "Expect a method (measure, decompose, fix the biggest phase) rather than a list of tricks. Mentioning real-user data and the breakdown of LCP is a sign of experience.",
+   "tags": [
+    "performance",
+    "web-vitals"
+   ],
+   "companies": [
+    "Google",
+    "Shopify",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qc-web-011",
+   "topic": "Web & HTTP",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "HTTP/2 multiplexes many streams over one TCP connection. Why can a single lost packet still slow every stream on that connection?",
+   "options": [
+    "TCP delivers bytes in order, so a lost segment blocks all later data, including other streams, until it is retransmitted (head-of-line blocking at the transport layer)",
+    "HTTP/2 serializes streams so requests are sent one at a time",
+    "Lost packets force the TLS handshake to restart",
+    "Servers refuse new streams after a loss"
+   ],
+   "answer": 0,
+   "explanation": "HTTP/2 removed head-of-line blocking at the HTTP layer, but all streams share one TCP byte stream. HTTP/3 over QUIC gives each stream independent delivery, so loss in one stream does not stall the others.",
+   "tags": [
+    "http2",
+    "http3",
+    "networking"
+   ],
+   "companies": [
+    "Google",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qc-web-012",
+   "topic": "Web & HTTP",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Compare long polling, Server-Sent Events and WebSockets. How do you choose for a live dashboard, a chat app and a notification badge?",
+   "model_answer": "Long polling: the client sends a request that the server holds until data is ready, then the client immediately re-requests. It works everywhere and through any proxy, but costs a request per event and adds latency and overhead. Server-Sent Events (SSE): one long-lived HTTP response streaming text events from server to client, with built-in reconnection and last-event-id resume; it is one-way, simple and plays well with HTTP infrastructure and HTTP/2 (but has per-domain connection limits on HTTP/1.1 and text only). WebSockets: a full-duplex, low-overhead binary or text channel after an HTTP upgrade; needed when the client sends frequent messages too, but you must handle heartbeats, reconnects, backpressure, load balancer affinity and authentication yourself. Choices: a live dashboard or notification badge is mostly server-to-client updates, so SSE is the simplest robust fit (and polling every 30 s is fine for a badge with low urgency). A chat app benefits from WebSockets for bidirectional low-latency messages, with a fallback to long polling for restrictive networks. At scale, all persistent options need sticky routing or a pub/sub backend (Redis, Kafka) so any node can deliver to any connection, and connection-count capacity planning.",
+   "explanation": "Strong candidates tie the choice to directionality and operational cost, and mention the pub/sub fan-out layer needed at scale.",
+   "tags": [
+    "realtime",
+    "websockets",
+    "sse"
+   ],
+   "companies": [
+    "Meta",
+    "Slack",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qc-web-013",
+   "topic": "Web & HTTP",
+   "level": "Advanced",
+   "type": "open",
+   "question": "A user reports that a web page is slow to load only on mobile networks. Walk through how you would diagnose the problem, from DNS to rendering.",
+   "model_answer": "Reproduce with throttled network and CPU (DevTools 4G/3G and 4x slowdown) and collect a HAR or a WebPageTest run on a real device, since mobile CPUs and high latency change the picture. Go through the stages. DNS: slow resolution or too many distinct hostnames; fix with fewer origins, `dns-prefetch` and `preconnect`. Connection: TCP and TLS handshakes cost round trips at high RTT, so enable TLS 1.3, HTTP/2 or HTTP/3, session resumption and a CDN close to users. Request: look for redirect chains, large cookies on every request, and uncompressed headers. Server: TTFB, caching and compression (Brotli or gzip). Transfer: payload size; compress images, split JavaScript, remove unused code, lazy-load below the fold. Parse and execute: long main-thread tasks from large JavaScript bundles hurt far more on mid-range phones; use code splitting, defer or async, and avoid heavy hydration. Rendering: layout shifts and render-blocking CSS. Verify with field data segmented by device and connection type, since averages hide the slow tail (use p75/p95). Fix the largest contributor first and set budgets.",
+   "explanation": "A structured walk through the stack with mobile-specific causes (latency-bound handshakes, CPU-bound JavaScript) shows depth. Field data by percentile is a good sign.",
+   "tags": [
+    "performance",
+    "debugging",
+    "mobile"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-web-014",
+   "topic": "Web & HTTP",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "In an HTTP request smuggling attack involving a front-end proxy and a back-end server, what is the root cause?",
+   "options": [
+    "The TLS certificates on the two servers do not match",
+    "The back-end uses HTTP/3 while the proxy uses HTTP/2",
+    "Cookies are shared between the two servers",
+    "The two servers disagree on where one request ends and the next begins, for example due to conflicting `Content-Length` and `Transfer-Encoding` handling"
+   ],
+   "answer": 3,
+   "explanation": "If the front end believes a request body ends at one byte offset and the back end at another, leftover bytes are interpreted as the start of the next request, which can be attacker-controlled and be attached to another user's connection. Defences: normalise and reject ambiguous messages, use HTTP/2 end to end, disable connection reuse between proxy and back end if needed, and keep parsers consistent.",
+   "tags": [
+    "request-smuggling",
+    "security",
+    "proxies"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qc-web-015",
+   "topic": "Web & HTTP",
+   "level": "Expert",
+   "type": "open",
+   "question": "Users of a service behind a cloud load balancer see sporadic 502 errors even though the application logs show no errors. How do you find and fix the cause?",
+   "model_answer": "Sporadic 502s with a healthy app often come from connection reuse races between the load balancer and the backend. A frequent cause: the backend (Node, Gunicorn, nginx) has a keep-alive idle timeout shorter than the load balancer's idle timeout. The backend closes an idle connection at the same moment the load balancer sends a new request over it, producing a reset and a 502. To confirm: correlate the 502 timestamps in load balancer logs (which show backend status as - and error reason) with TCP resets, check the idle timeout values on both sides, and see whether failures appear after quiet periods or when traffic is bursty. Fix: make the backend keep-alive timeout longer than the load balancer's (for example 65 s versus 60 s), and ensure the balancer retries idempotent requests safely. Other causes to rule out: backend crashes or out-of-memory kills (check restarts), requests exceeding the response header size or body limits, deployments removing instances without connection draining (use deregistration delay and graceful shutdown on SIGTERM), health checks passing while the app is overloaded, and TLS or HTTP/2 mismatches. Add the load balancer request id to application logs and alert on 5xx ratios by target.",
+   "explanation": "The signature insight is the keep-alive timeout mismatch. Strong answers also describe a method (correlate logs, check resets, rule out deploy and OOM) rather than guessing.",
+   "tags": [
+    "debugging",
+    "load-balancers",
+    "networking"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qc-sec-001",
+   "topic": "Security",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the key difference between hashing and encryption?",
+   "options": [
+    "Hashing is reversible and encryption is not",
+    "Encryption always produces fixed-length output; hashing does not",
+    "Hashing is a one-way function with no key for recovering the input; encryption is reversible with the right key",
+    "They are the same operation with different names"
+   ],
+   "answer": 2,
+   "explanation": "Encryption protects confidentiality: ciphertext can be decrypted by someone holding the key. A cryptographic hash maps data to a fixed-size digest that cannot practically be inverted, which suits integrity checks and password storage (with a slow, salted password hash).",
+   "tags": [
+    "cryptography",
+    "fundamentals"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-sec-002",
+   "topic": "Security",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does the principle of least privilege mean?",
+   "options": [
+    "Give each user, process or service only the permissions it needs to do its job, and no more",
+    "Give administrators all permissions by default to avoid support tickets",
+    "Use the lowest-cost security tool available",
+    "Allow all users the same role for simplicity"
+   ],
+   "answer": 0,
+   "explanation": "Limiting permissions reduces the blast radius of compromised accounts, bugs and mistakes. Examples: a read-only database user for a reporting service, scoped API tokens, and containers that run as non-root.",
+   "tags": [
+    "access-control",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-sec-003",
+   "topic": "Security",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why is multi-factor authentication (MFA) effective even when a password has leaked?",
+   "options": [
+    "It encrypts the password in the database",
+    "It makes passwords longer automatically",
+    "The attacker also needs a second factor such as a device, authenticator code or security key",
+    "It blocks all phishing without exceptions"
+   ],
+   "answer": 2,
+   "explanation": "MFA combines something you know with something you have or are. Stolen passwords alone are not enough. Phishable factors (SMS, TOTP codes typed into fake sites) can still be relayed in real time; phishing-resistant methods such as FIDO2/WebAuthn bind the login to the real site.",
+   "tags": [
+    "authentication",
+    "mfa"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-sec-004",
+   "topic": "Security",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why should user-supplied data never be concatenated into an HTML page without proper handling?",
+   "options": [
+    "Because HTML cannot contain user text",
+    "It can contain script that runs in other users' browsers (XSS), so output must be context-appropriately escaped or sanitized",
+    "Because browsers refuse to render long strings",
+    "Because it breaks the server's TLS certificate"
+   ],
+   "answer": 1,
+   "explanation": "If untrusted text such as `<script>` reaches the page unescaped, the browser treats it as code from your origin. Escape for the output context (HTML body, attribute, JavaScript, URL), use frameworks that auto-escape, and add CSP as a second layer.",
+   "tags": [
+    "xss",
+    "input-handling"
+   ],
+   "companies": [
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "qc-sec-005",
+   "topic": "Security",
+   "level": "Basic",
+   "type": "open",
+   "question": "Explain the difference between authentication and authorization with examples, and describe where each check should happen in a web application.",
+   "model_answer": "Authentication answers 'who are you?': verifying an identity by a password, passkey, token or certificate. Authorization answers 'what are you allowed to do?': deciding whether that identity may perform a given action on a given resource. Example: logging in proves you are Alice (authentication); deciding that Alice may edit her own invoices but not Bob's, and may not delete any, is authorization. Authentication typically happens once per session or request at the edge (middleware, API gateway, identity provider) and produces an identity context (session or validated token claims). Authorization must be enforced on the server for every request that touches data, close to the resource, in the business layer or through a policy engine, using both roles or permissions and object-level checks (does this user own this record or belong to this tenant?). Never rely on hiding buttons in the UI or on client-supplied role fields. Failing to check authorization on each object is the origin of broken access control and IDOR bugs, the top-ranked category in OWASP's web list. Default to deny, centralize policy logic, and log authorization failures.",
+   "explanation": "Check that the candidate places authorization checks per request and per object on the server, not only at login or in the UI.",
+   "tags": [
+    "authn",
+    "authz",
+    "fundamentals"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qc-sec-006",
+   "topic": "Security",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "What is the purpose of adding a unique salt to each password before hashing?",
+   "options": [
+    "It encrypts the password so it can be recovered later",
+    "It makes identical passwords hash differently and defeats precomputed rainbow tables, forcing attackers to attack each hash individually",
+    "It makes the hash function run faster",
+    "It replaces the need for a slow hash algorithm"
+   ],
+   "answer": 1,
+   "explanation": "A salt is random, stored beside the hash, and not secret. It prevents reuse of precomputed tables and hides that two users share a password. Slowness (bcrypt, scrypt, Argon2) is a separate defence that limits the guesses per second; a salt does not replace it.",
+   "tags": [
+    "passwords",
+    "hashing"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-sec-007",
+   "topic": "Security",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "Which `SameSite` cookie setting blocks the cookie on cross-site subrequests (such as images and `fetch`/form `POST` from another site) but still sends it when the user navigates to your site by clicking a link?",
+   "options": [
+    "`SameSite=None`",
+    "`SameSite=Strict`",
+    "There is no such setting",
+    "`SameSite=Lax`"
+   ],
+   "answer": 3,
+   "explanation": "Lax (the default in modern browsers) withholds cookies on cross-site POSTs, iframes and background requests but allows top-level GET navigations, so users arriving from a link stay logged in. Strict never sends the cookie on cross-site requests, even link clicks. None sends it always and requires `Secure`.",
+   "tags": [
+    "cookies",
+    "csrf"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-sec-008",
+   "topic": "Security",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A developer accidentally pushed an API key to a public Git repository and then deleted the file in the next commit. What is the right response?",
+   "options": [
+    "Nothing; the key is gone once the file is deleted",
+    "Wait to see if anyone abuses it",
+    "Revoke and rotate the key immediately; assume it is compromised because it remains in history and may have been copied",
+    "Rename the repository"
+   ],
+   "answer": 2,
+   "explanation": "Git history, forks, caches and automated scrapers keep secrets after deletion; bots scan public pushes within seconds. Rotate first, then review access logs for misuse, and remove the secret from history if needed. Prevent repeats with secret scanning, pre-commit hooks and secret managers.",
+   "tags": [
+    "secrets",
+    "incident-response"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qc-sec-009",
+   "topic": "Security",
+   "level": "Intermediate",
+   "type": "mcq",
+   "question": "A JWT verifier accepts tokens whose header says `{\"alg\":\"none\"}` and treats them as valid. What is the problem?",
+   "options": [
+    "Attackers can forge tokens with no signature; the verifier must enforce an allowed algorithm list and always require a valid signature",
+    "None; `none` is a stronger algorithm",
+    "It only affects expired tokens",
+    "It only matters for refresh tokens"
+   ],
+   "answer": 0,
+   "explanation": "The `alg` header comes from the untrusted token. A library that honours `none` or lets the token choose the algorithm lets anyone mint tokens with arbitrary claims. Pin the algorithm and key per issuer on the server side, and validate `exp`, `aud` and `iss` too.",
+   "tags": [
+    "jwt",
+    "authentication"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qc-sec-010",
+   "topic": "Security",
+   "level": "Intermediate",
+   "type": "open",
+   "question": "Walk through how you would threat-model a new password reset feature.",
+   "model_answer": "I would draw the flow (user requests reset by email, receives a link with a token, sets a new password) and list assets, actors and trust boundaries, then apply STRIDE-style questions to each step. Spoofing: tokens must be unguessable (at least 128 bits from a CSPRNG), single use, short-lived, stored hashed on the server and bound to the account. Tampering: the reset link should not trust a user-supplied host header when building URLs (host header injection could send tokens to an attacker's domain). Repudiation: log reset requests and completions with IP and user agent and notify the account owner by email. Information disclosure: respond identically whether or not the email exists, with similar timing, to avoid account enumeration; do not log tokens; use the Referrer-Policy so the token in a URL is not leaked to third parties. Denial of service: rate limit per account, IP and email to prevent mail bombing. Elevation of privilege: after reset, invalidate other sessions and tokens, require re-authentication for sensitive changes and consider MFA, since email account takeover becomes account takeover. I would also add tests for token reuse and expiry and review support-assisted resets, which are a classic social engineering path.",
+   "explanation": "Strong answers cover token properties, account enumeration, host header injection and session invalidation. A method (data-flow diagram plus STRIDE) is more important than any single item.",
+   "tags": [
+    "threat-modeling",
+    "authentication"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-sec-011",
+   "topic": "Security",
+   "level": "Advanced",
+   "type": "mcq",
+   "question": "Why should secret comparisons such as HMAC signatures or API tokens use a constant-time comparison function?",
+   "options": [
+    "Constant-time comparison is faster",
+    "It prevents SQL injection",
+    "It makes the secret longer",
+    "A normal `==` can exit at the first differing byte, leaking through timing how many leading bytes were correct"
+   ],
+   "answer": 3,
+   "explanation": "If comparison time depends on the number of matching prefix bytes, an attacker can recover the secret byte by byte with many measured guesses. Use `hmac.compare_digest`, `crypto.timingSafeEqual` or equivalents; network jitter makes this harder but not impossible with enough samples.",
+   "tags": [
+    "timing-attack",
+    "cryptography"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qc-sec-012",
+   "topic": "Security",
+   "level": "Advanced",
+   "type": "open",
+   "question": "How would you design secure file uploads for a web application that accepts images and PDFs from untrusted users?",
+   "model_answer": "Treat every upload as hostile. Validation: enforce a maximum size at the proxy and app, restrict to an allowlist of types, and verify the content by inspecting magic bytes and parsing with a library, not by trusting the filename extension or the client's `Content-Type`. Storage: never save files into the web root or execute them; generate random server-side names (do not use the original filename to avoid path traversal such as `../../`), store them in object storage in a separate bucket or domain with no script execution, and serve with `Content-Disposition: attachment` or correct `Content-Type` plus `X-Content-Type-Options: nosniff`. Serve user content from a different origin (a sandbox domain) so any HTML or SVG script cannot access the main site's cookies. Processing: re-encode images (which strips embedded payloads and metadata), run parsers and PDF renderers in a sandbox with resource limits to contain zip bombs and decompression bombs, and scan with antivirus or a malware service asynchronously, keeping files quarantined until clean. Access: authorize downloads per object and use short-lived signed URLs. Abuse: rate limit and cap per-user storage, and for large files use direct-to-storage presigned uploads with enforced conditions. Log and alert on rejected files.",
+   "explanation": "The checklist should include content verification (not just extension), isolated serving origin, SVG/HTML script risk, path traversal, and sandboxed processing.",
+   "tags": [
+    "file-upload",
+    "appsec"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qc-sec-013",
+   "topic": "Security",
+   "level": "Advanced",
+   "type": "open",
+   "question": "Design session management for a web app so that users can log out everywhere, and a stolen token has limited usefulness. Compare server-side sessions and JWT-based access tokens.",
+   "model_answer": "Server-side sessions: an opaque random id (at least 128 bits) in an `HttpOnly; Secure; SameSite` cookie maps to state in Redis or a database. Revocation is trivial (delete the record), log out everywhere is one query, and sensitive data stays on the server. Costs: a lookup on each request and a shared session store to scale. JWT access tokens are self-contained and verified without a lookup, which suits distributed services, but cannot be revoked easily before expiry. The usual compromise: short-lived access tokens (5-15 minutes) plus a refresh token held server-side or in an HttpOnly cookie, with refresh token rotation (each use issues a new one and invalidates the old; reuse of an old refresh token signals theft and revokes the whole family). To support logout everywhere, keep a per-user token version or a session id in the database and check it on refresh (and optionally against a small denylist cache on each request for high-risk operations). Other controls: regenerate the session id at login to prevent fixation, idle and absolute timeouts, bind sessions to device metadata and flag anomalies, step-up authentication for sensitive actions, record sessions in a user-visible device list, and never put sensitive data in token claims. For browser apps I prefer server-side sessions or the BFF pattern, keeping tokens out of JavaScript entirely.",
+   "explanation": "Look for the revocation trade-off, refresh rotation with reuse detection, session fixation protection and a recommendation tied to the architecture.",
+   "tags": [
+    "sessions",
+    "jwt",
+    "authentication"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Okta"
+   ]
+  },
+  {
+   "id": "qc-sec-014",
+   "topic": "Security",
+   "level": "Expert",
+   "type": "mcq",
+   "question": "A service verifies RS256-signed JWTs using a public key but its library accepts whatever algorithm the token header specifies. What attack does this enable?",
+   "options": [
+    "Algorithm confusion: the attacker signs a forged token with HS256 using the public key as the HMAC secret, and the server verifies it successfully",
+    "The attacker can decrypt every past token",
+    "The attacker can brute-force the private key from the signature",
+    "A downgrade of TLS to SSL 3.0"
+   ],
+   "answer": 0,
+   "explanation": "The public key is not secret. If the verifier lets the token choose HS256 and passes the same key material, it will compute an HMAC using the public key, which the attacker can reproduce. Fix: configure the expected algorithm explicitly per key, use separate key types in the API, and reject mismatches.",
+   "tags": [
+    "jwt",
+    "cryptography",
+    "attacks"
+   ],
+   "companies": [
+    "Google",
+    "Okta"
+   ]
+  },
+  {
+   "id": "qc-sec-015",
+   "topic": "Security",
+   "level": "Expert",
+   "type": "open",
+   "question": "Design a key management and encryption strategy for a SaaS product storing sensitive customer data, including rotation, tenant isolation and compromise response.",
+   "model_answer": "Use envelope encryption. A root key lives in a managed KMS or HSM (never exportable, access governed by IAM and audited). Each tenant (or each data set) gets a unique data encryption key (DEK), generated locally, used with an authenticated mode such as AES-256-GCM, and stored only in encrypted form (wrapped by a key encryption key in the KMS) beside the data. Reading data requires the application to call the KMS to unwrap the DEK, cache it briefly in memory, and discard it. Benefits: per-tenant keys limit the blast radius and enable cryptographic erasure (deleting a tenant's key renders its data unrecoverable), and bulk data never travels to the KMS. Rotation: rotate KEKs on a schedule by re-wrapping DEKs (cheap, no data re-encryption); rotate DEKs by versioning and re-encrypting lazily or in background jobs, keeping a key id and version in every ciphertext header so old data still decrypts. Isolation: bind ciphertext to context with associated data (tenant id, record id) so ciphertexts cannot be swapped between tenants; use separate IAM roles per service so only the services that need decryption can call unwrap. Customer-managed keys (BYOK) can be offered by letting the tenant's KMS key wrap the DEK, accepting the availability dependency. Compromise response: have runbooks to revoke a key, rotate and re-encrypt, reissue credentials, review KMS audit logs, and notify per policy. Also cover keys in transit (TLS 1.2+ with mTLS internally), backups encrypted with separate keys, secrets for the application stored in a secret manager, and regular key-recovery drills so a lost key does not mean lost data.",
+   "explanation": "Interviewers look for envelope encryption, key hierarchy, rotation without full re-encryption, authenticated encryption with context binding, and operational realism (audit, recovery drills).",
+   "tags": [
+    "encryption",
+    "kms",
+    "key-management"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Microsoft"
+   ]
+  }
+ ]
+}

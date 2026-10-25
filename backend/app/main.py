@@ -2,6 +2,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from .config import get_settings
 from .content import store
@@ -23,6 +24,8 @@ app = FastAPI(
     version="0.2.0",
 )
 
+# Large JSON (question bank, problem lists) compresses ~10x
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,

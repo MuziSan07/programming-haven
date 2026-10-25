@@ -9,6 +9,7 @@ On startup, seed items are inserted or refreshed; items edited in the admin pane
 (source="admin") are never overwritten by seeds.
 """
 
+import hashlib
 import json
 import logging
 import threading
@@ -17,7 +18,7 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import ContentItem
+from ..models import AppMeta, ContentItem
 
 log = logging.getLogger("haven.content")
 
@@ -60,7 +61,21 @@ def load_seed_files() -> dict[str, list[dict]]:
     return out
 
 
-def seed(db: Session) -> None:
+def seed_fingerprint() -> str:
+    h = hashlib.sha256()
+    for path in sorted(SEED_DIR.rglob("*.json")):
+        stat = path.stat()
+        h.update(f"{path.relative_to(SEED_DIR)}:{stat.st_size}:{stat.st_mtime_ns}".encode())
+    return h.hexdigest()
+
+
+def seed(db: Session, force: bool = False) -> None:
+    """Insert/refresh seed content. Skipped when the seed files haven't changed since the last run."""
+    fingerprint = seed_fingerprint()
+    meta = db.get(AppMeta, "seed_fingerprint")
+    if not force and meta is not None and meta.value == fingerprint:
+        log.info("Content seed unchanged, skipping")
+        return
     seeds = load_seed_files()
     existing = {(c.kind, c.slug): c for c in db.scalars(select(ContentItem))}
     added = updated = 0
@@ -74,6 +89,10 @@ def seed(db: Session) -> None:
             elif row.source == "seed" and row.data != item:
                 row.data = item
                 updated += 1
+    if meta is None:
+        db.add(AppMeta(key="seed_fingerprint", value=fingerprint))
+    else:
+        meta.value = fingerprint
     db.commit()
     invalidate()
     log.info("Content seeded: %d added, %d refreshed", added, updated)

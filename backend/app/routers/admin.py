@@ -224,3 +224,41 @@ def patch_user(user_id: int, body: UserPatch, admin: User = Depends(require_admi
     u.is_admin = body.is_admin
     db.commit()
     return {"id": u.id, "is_admin": u.is_admin}
+
+
+# ---------------------------------------------------------------- interview integrity
+
+@router.get("/integrity")
+def integrity_overview(admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    from ..models import InterviewBan, InterviewStrike
+    from ..services.integrity import active_ban, ban_out
+
+    bans = db.scalars(select(InterviewBan).order_by(InterviewBan.id.desc()).limit(200)).all()
+    strikes = db.scalars(select(InterviewStrike).order_by(InterviewStrike.id.desc()).limit(200)).all()
+    users = {u.id: u for u in db.scalars(select(User).where(User.id.in_({b.user_id for b in bans} | {s.user_id for s in strikes})))}
+
+    def who(uid):
+        u = users.get(uid)
+        return {"id": uid, "name": u.name if u else "?", "email": u.email if u else ""}
+
+    return {
+        "bans": [{**ban_out(b), "user": who(b.user_id), "session_id": b.session_id,
+                  "active": active_ban(db, b.user_id) is b} for b in bans],
+        "strikes": [{"id": s.id, "user": who(s.user_id), "session_id": s.session_id, "kind": s.kind,
+                     "detail": s.detail, "action": s.action, "created_at": s.created_at.isoformat()} for s in strikes],
+    }
+
+
+@router.post("/integrity/bans/{ban_id}/lift")
+def lift_ban(ban_id: int, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    from datetime import datetime, timezone
+
+    from ..models import InterviewBan
+
+    ban = db.get(InterviewBan, ban_id)
+    if not ban:
+        raise HTTPException(404, "Ban not found")
+    ban.lifted_at = datetime.now(timezone.utc)
+    ban.lifted_by = admin.id
+    db.commit()
+    return {"ok": True}

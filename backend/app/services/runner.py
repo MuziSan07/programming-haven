@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..config import get_settings
+from . import polyglot
 
 RESULT_MARKER = "<<<HAVEN_RESULT>>>"
 MAX_OUTPUT = 20_000
@@ -53,13 +54,14 @@ class RunResult:
     timed_out: bool
 
 
-def _compile_command(language: str, path: str, workdir: str) -> list[str] | None:
+def _compile_command(language: str, paths: list[str], workdir: str) -> list[str] | None:
     if language == "java":
-        return [shutil.which("javac"), "-encoding", "UTF-8", path]
+        return [shutil.which("javac"), "-encoding", "UTF-8", *paths]
     if language == "cpp":
-        return [shutil.which("g++"), "-O2", "-std=c++17", path, "-o", os.path.join(workdir, "main.exe")]
+        return [shutil.which("g++"), "-O2", "-std=c++17", *[p for p in paths if p.endswith(".cpp")], "-o",
+                os.path.join(workdir, "main.exe")]
     if language == "go":
-        return [shutil.which("go"), "build", "-o", os.path.join(workdir, "main.exe"), path]
+        return [shutil.which("go"), "build", "-o", os.path.join(workdir, "main.exe"), *paths]
     return None
 
 
@@ -105,7 +107,8 @@ def _env(workdir: str) -> dict:
     return env
 
 
-def execute(language: str, source: str, stdin: str = "", max_output: int = MAX_OUTPUT) -> RunResult:
+def execute(language: str, source: str, stdin: str = "", max_output: int = MAX_OUTPUT,
+            extra_files: dict[str, str] | None = None) -> RunResult:
     settings = get_settings()
     if not language_available(language):
         return RunResult("", f"{LANGUAGES.get(language, {}).get('label', language)} is not installed on this server",
@@ -114,8 +117,14 @@ def execute(language: str, source: str, stdin: str = "", max_output: int = MAX_O
         path = os.path.join(workdir, LANGUAGES[language]["file"])
         with open(path, "w", encoding="utf-8") as f:
             f.write(source)
+        paths = [path]
+        for name, content in (extra_files or {}).items():
+            extra = os.path.join(workdir, name)
+            with open(extra, "w", encoding="utf-8") as f:
+                f.write(content)
+            paths.append(extra)
         env = _env(workdir)
-        compile_cmd = _compile_command(language, path, workdir)
+        compile_cmd = _compile_command(language, paths, workdir)
         if compile_cmd:
             GO_CACHE.mkdir(parents=True, exist_ok=True)
             try:
@@ -195,10 +204,19 @@ def _normalize(value, compare: str):
 
 def run_tests(problem: dict, language: str, code: str, tests: list[dict]) -> dict:
     """Run `code` against `tests` and return a structured verdict."""
-    fn = problem["function"][language]
-    driver = _python_driver(fn) if language == "python" else _js_driver(fn)
-    # The result payload can be large; only the learner's own prints are trimmed below
-    result = execute(language, code + driver, json.dumps([t["input"] for t in tests]), max_output=HARNESS_MAX_OUTPUT)
+    stdin = json.dumps([t["input"] for t in tests])
+    if language in polyglot.TYPED_LANGUAGES:
+        built = polyglot.build(language, problem, code)
+        if built is None:
+            return {"time_ms": 0, "total": len(tests), "status": "Not Supported", "passed": 0, "cases": [], "stdout": "",
+                    "stderr": f"{LANGUAGES[language]['label']} isn't available for this problem yet. Use Python or JavaScript."}
+        source, extra = built
+        result = execute(language, source, stdin, max_output=HARNESS_MAX_OUTPUT, extra_files=extra)
+    else:
+        fn = problem["function"][language]
+        driver = _python_driver(fn) if language == "python" else _js_driver(fn)
+        # The result payload can be large; only the learner's own prints are trimmed below
+        result = execute(language, code + driver, stdin, max_output=HARNESS_MAX_OUTPUT)
 
     base = {"time_ms": round(result.time_ms, 1), "total": len(tests)}
     if result.timed_out:

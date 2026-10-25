@@ -1,0 +1,2949 @@
+{
+ "questions": [
+  {
+   "id": "qb-cpp-001",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does this program print?",
+   "code": "int next() {\n    static int n = 0;\n    return ++n;\n}\n\nint main() {\n    cout << next() << \" \" << next() << \" \" << next();\n}",
+   "options": [
+    "1 1 1",
+    "3 3 3",
+    "1 2 3",
+    "0 1 2"
+   ],
+   "answer": 2,
+   "explanation": "A `static` local variable is initialized once, the first time control reaches its declaration, and keeps its value for the lifetime of the program. Each call increments the same object, so the output is `1 2 3`. Without `static` every call would create a fresh `n` and print `1 1 1`.",
+   "tags": [
+    "storage-duration",
+    "basics"
+   ],
+   "companies": [
+    "Microsoft",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qb-cpp-002",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does this program print (C++11 and later)?",
+   "code": "int main() {\n    cout << -7 / 2 << \" \" << -7 % 2;\n}",
+   "options": [
+    "-4 1",
+    "-3 1",
+    "-3 -1",
+    "-4 -1"
+   ],
+   "answer": 2,
+   "explanation": "Since C++11 integer division truncates toward zero, so `-7 / 2` is `-3`. The remainder is defined so that `(a / b) * b + a % b == a`, which gives `-7 % 2 == -1` (the remainder takes the sign of the dividend). Languages like Python use floor division and would give `-4 1`, which is a common source of porting bugs.",
+   "tags": [
+    "arithmetic",
+    "basics"
+   ],
+   "companies": [
+    "Google",
+    "Adobe"
+   ]
+  },
+  {
+   "id": "qb-cpp-003",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What is the status of reading a local variable declared as `int x;` (no initializer) inside a function and printing it?",
+   "options": [
+    "It is always zero-initialized, like a global",
+    "Its value is indeterminate; reading it is undefined behavior",
+    "It is initialized to a garbage value but the read is well-defined",
+    "It is a compile error in standard C++"
+   ],
+   "answer": 1,
+   "explanation": "Only objects with static storage duration (globals, statics) are zero-initialized. A non-static local of built-in type has an indeterminate value and reading it before assignment is undefined behavior; compilers may even exploit this to remove code. Always initialize (`int x{};` or `int x = 0;`) and enable warnings such as `-Wuninitialized`.",
+   "tags": [
+    "undefined-behavior",
+    "initialization"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-cpp-004",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does this program print?",
+   "code": "void swap_vals(int a, int b) {\n    int t = a;\n    a = b;\n    b = t;\n}\n\nint main() {\n    int x = 1, y = 2;\n    swap_vals(x, y);\n    cout << x << \" \" << y;\n}",
+   "options": [
+    "2 1",
+    "1 1",
+    "1 2",
+    "2 2"
+   ],
+   "answer": 2,
+   "explanation": "`swap_vals` takes its parameters by value, so it swaps copies and the caller's variables are untouched: the output stays `1 2`. Taking `int&` parameters (or pointers) would make the swap visible to the caller.",
+   "tags": [
+    "pass-by-value",
+    "references"
+   ],
+   "companies": [
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qb-cpp-005",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does this program print?",
+   "code": "int main() {\n    vector<int> a(5);\n    vector<int> b{5};\n    cout << a.size() << \" \" << b.size();\n}",
+   "options": [
+    "1 5",
+    "5 5",
+    "5 1",
+    "1 1"
+   ],
+   "answer": 2,
+   "explanation": "`vector<int> a(5)` uses the size constructor and creates five zeros. Braces prefer an `initializer_list` constructor when one is viable, so `vector<int> b{5}` creates a vector with one element whose value is 5. This brace-versus-parentheses difference is a classic gotcha in uniform initialization.",
+   "tags": [
+    "vector",
+    "initialization"
+   ],
+   "companies": [
+    "Google",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qb-cpp-006",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What problem do include guards (or `#pragma once`) solve?",
+   "options": [
+    "Circular dependencies between two .cpp files at link time",
+    "The same header being processed more than once in one translation unit, which would cause redefinition errors",
+    "Header files being compiled into the final binary twice",
+    "Multiple translation units defining the same function, which causes linker errors"
+   ],
+   "answer": 1,
+   "explanation": "The preprocessor pastes headers textually. If a header is reachable through two include paths, its class definitions would appear twice in the same translation unit and violate the one-definition rule at compile time. A guard makes the second inclusion expand to nothing. They do not stop multiple translation units from each including the header (that is fine for declarations and inline definitions), and they do not fix linker errors from non-inline function definitions placed in headers.",
+   "tags": [
+    "preprocessor",
+    "build"
+   ],
+   "companies": [
+    "Microsoft",
+    "Adobe"
+   ]
+  },
+  {
+   "id": "qb-cpp-007",
+   "topic": "C++",
+   "type": "open",
+   "level": "Basic",
+   "question": "What is RAII in C++, and why is it the idiomatic way to manage resources?",
+   "model_answer": "RAII (Resource Acquisition Is Initialization) ties a resource's lifetime to an object's lifetime: the constructor acquires the resource (memory, file handle, mutex lock, socket) and the destructor releases it. Because destructors run deterministically when an object goes out of scope, including during stack unwinding after an exception, cleanup happens on every exit path without `finally` blocks or manual `goto cleanup` code. Standard examples are `std::unique_ptr` and `std::shared_ptr` for memory, `std::lock_guard`/`std::scoped_lock` for mutexes, `std::fstream` for files and `std::vector`/`std::string` for buffers. Writing your own wrapper means making it non-copyable (or defining proper copy/move semantics), releasing in the destructor and never throwing from it. The practical rule is that naked `new`/`delete`, `fopen`/`fclose` or `lock`/`unlock` pairs should almost never appear in application code.",
+   "explanation": "Interviewers want to hear that RAII gives exception safety and leak freedom without a garbage collector, and to see concrete standard-library examples. Weak answers describe only smart pointers, or forget that the destructor must not throw and that copying an owning wrapper needs deliberate handling.",
+   "tags": [
+    "raii",
+    "resource-management"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qb-cpp-008",
+   "topic": "C++",
+   "type": "open",
+   "level": "Basic",
+   "question": "What does const-correctness mean in C++? Explain `const` member functions, `const` references and why they matter.",
+   "model_answer": "Const-correctness means marking everything that should not change as `const` and letting the compiler enforce it. A `const` member function (`int size() const`) promises not to modify the object's observable state, so it can be called on `const` objects and through `const&` parameters; inside it `this` has type `const T*`. Passing large objects as `const T&` avoids copies while guaranteeing the callee will not mutate them; it also lets the function accept temporaries. `const int* p` means the pointee is read-only, `int* const p` means the pointer itself cannot be reseated, and reading declarations right to left helps decode them. `mutable` members (caches, mutexes) may change inside const functions, and `const_cast` to remove constness is only safe if the original object was not defined const. Overloading on constness (`T& operator[]` and `const T& operator[] const`) is how containers support both read-only and mutable access.",
+   "explanation": "A good answer links `const` to API design: it documents intent, enables optimization-friendly interfaces and prevents accidents. Common pitfalls are confusing top-level and low-level const, claiming `const` guarantees thread safety (it does not) and forgetting that `mutable` exists.",
+   "tags": [
+    "const",
+    "api-design"
+   ],
+   "companies": [
+    "Amazon",
+    "Apple",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qb-cpp-009",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "A `std::vector<int> v` has `size() == capacity()`. You hold `int* p = &v[0];` and then call `v.push_back(7);`. What can you say about `p`?",
+   "options": [
+    "It is always invalid, even when capacity is large enough",
+    "It stays valid, but iterators `end()` and `begin()` are invalidated",
+    "It stays valid because push_back only appends at the end",
+    "It may dangle, because a reallocation invalidates all pointers, references and iterators into the vector"
+   ],
+   "answer": 3,
+   "explanation": "When the vector is full, `push_back` allocates a larger block, moves or copies the elements and frees the old block, so every pointer, reference and iterator into it dangles and using `p` is undefined behavior. If there were spare capacity, only `end()` would be invalidated. Call `reserve` up front, or hold indices instead of pointers, when you must keep handles across insertions.",
+   "tags": [
+    "vector",
+    "iterator-invalidation"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qb-cpp-010",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does this program print?",
+   "code": "struct Base { virtual void speak() { cout << \"Base\"; } };\nstruct Derived : Base { void speak() override { cout << \"Derived\"; } };\n\nint main() {\n    Base b = Derived();\n    b.speak();\n}",
+   "options": [
+    "Base",
+    "It does not compile",
+    "Derived Base",
+    "Derived"
+   ],
+   "answer": 0,
+   "explanation": "`Base b = Derived();` copy-initializes a `Base` object from the `Derived` temporary, which slices off the derived part. The object really is a `Base`, so even though `speak` is virtual the call dispatches to `Base::speak`. Virtual dispatch needs a reference or pointer to the original object (`Base&` or `Base*`), or store pointers/smart pointers in containers.",
+   "tags": [
+    "slicing",
+    "polymorphism"
+   ],
+   "companies": [
+    "Microsoft",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qb-cpp-011",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does this program print?",
+   "code": "struct P { P(const char* s) { cout << s; } };\n\nclass X {\n    P first{\"A\"};\n    P second{\"B\"};\npublic:\n    X() : second(\"b\"), first(\"a\") {}\n};\n\nint main() { X x; }",
+   "options": [
+    "ba",
+    "It does not compile",
+    "ab",
+    "Undefined; the order is unspecified"
+   ],
+   "answer": 2,
+   "explanation": "Non-static data members are initialized in the order they are declared in the class, never in the order of the constructor's initializer list. `first` is declared before `second`, so it prints `a` first, then `b`. Mismatched orders are legal but misleading (compilers warn with `-Wreorder`) and become real bugs when one member's initializer uses another.",
+   "tags": [
+    "constructors",
+    "initialization-order"
+   ],
+   "companies": [
+    "Adobe",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-cpp-012",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does this program print?",
+   "code": "int main() {\n    map<string, int> m;\n    if (m[\"a\"] == 0) {}\n    cout << m.size();\n}",
+   "options": [
+    "2",
+    "1",
+    "It throws std::out_of_range",
+    "0"
+   ],
+   "answer": 1,
+   "explanation": "`operator[]` on `std::map` inserts a value-initialized element if the key is missing and returns a reference to it. So the lookup `m[\"a\"]` creates the entry with value 0, the comparison is true, and the map ends with size 1. Use `find`, `count`/`contains` or `at` (which throws) when you do not want to insert.",
+   "tags": [
+    "stl",
+    "map"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qb-cpp-013",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does this program print?",
+   "code": "int main() {\n    int x = 1;\n    auto f = [x]() mutable { return ++x; };\n    f();\n    f();\n    cout << x << f();\n}",
+   "options": [
+    "14",
+    "44",
+    "12",
+    "13"
+   ],
+   "answer": 0,
+   "explanation": "The lambda captures `x` by value into its own member copy. `mutable` lets the call operator modify that copy, so each `f()` increments the closure's private `x` (1 -> 2, then 2 -> 3, then 3 -> 4), never the outer `x`. The outer `x` is still 1 when `cout` prints it (C++17 guarantees left-to-right evaluation of `<<` operands), and the third call returns 4, giving `14`.",
+   "tags": [
+    "lambdas",
+    "capture"
+   ],
+   "companies": [
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-cpp-014",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "You pass a comparator `[](int a, int b) { return a <= b; }` to `std::sort` on a vector containing many equal elements. What is the problem?",
+   "options": [
+    "It is fine; `<=` just makes the sort stable",
+    "It only slows the sort to O(n^2) but is otherwise correct",
+    "It violates the strict weak ordering requirement, so behavior is undefined and may crash or loop",
+    "It fails to compile because comparators must use `<`"
+   ],
+   "answer": 2,
+   "explanation": "`std::sort` requires a strict weak ordering: `comp(a, a)` must be false. With `<=`, equal elements compare as 'less', which breaks irreflexivity and can make introsort run past array bounds, crash, or never terminate. Use `<` (or `>` for descending order). For stability use `std::stable_sort`; `<=` does not provide it.",
+   "tags": [
+    "stl",
+    "sorting",
+    "undefined-behavior"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qb-cpp-015",
+   "topic": "C++",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "Explain the Rule of Three, Rule of Five and Rule of Zero. How would you design a class that owns a heap buffer?",
+   "model_answer": "If a class needs a user-defined destructor, copy constructor or copy assignment operator, it almost certainly needs all three (Rule of Three), because the compiler-generated versions copy the raw pointer and lead to double frees or leaks. Since C++11, move constructor and move assignment join them (Rule of Five); declaring any of the five suppresses the implicit generation of some others, so you should define, `= default` or `= delete` each deliberately. The Rule of Zero is the preferred design: build classes from members that already manage themselves (`std::vector`, `std::string`, `std::unique_ptr`) and declare none of the special members, so the compiler-generated ones are correct. For a class that really must own a raw buffer, wrap it in a small RAII type, implement deep copy, implement noexcept moves that steal the pointer and null out the source, make assignment safe for self-assignment (copy-and-swap is a clean option) and keep the destructor non-throwing.",
+   "explanation": "Strong answers explain why defaults are dangerous for owning raw pointers, mention noexcept moves (needed for `std::vector` to move on reallocation) and favor Rule of Zero. Common misses are forgetting self-assignment and leaving moved-from objects in an invalid state.",
+   "tags": [
+    "special-members",
+    "raii",
+    "move-semantics"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qb-cpp-016",
+   "topic": "C++",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "Compare templates (compile-time polymorphism) with virtual functions (runtime polymorphism). When would you use each?",
+   "model_answer": "Virtual functions use inheritance and a vtable: the concrete type is chosen at runtime, so one compiled function can work on a heterogeneous collection (`vector<unique_ptr<Shape>>`), and plug-ins or types unknown at compile time are supported. The costs are an indirect call that is hard to inline, a pointer per object, heap allocation for polymorphic objects and a required common base class. Templates resolve the type at compile time: calls can be fully inlined, no inheritance is needed (duck typing, or concepts in C++20), and there is no per-object overhead, but each instantiation generates code (binary bloat, longer compile times), the type must be known statically and error messages are harder to read. Use virtual dispatch for open-ended hierarchies, runtime configuration and ABI boundaries; use templates for containers, algorithms and performance-critical generic code. Techniques such as CRTP, `std::variant` with `std::visit`, and type erasure (`std::function`) blend the two.",
+   "explanation": "Look for trade-off thinking rather than 'templates are faster'. Good answers mention inlining, code size, compile times, heterogeneous containers and at least one hybrid approach.",
+   "tags": [
+    "templates",
+    "polymorphism",
+    "design"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qb-cpp-017",
+   "topic": "C++",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "How does `std::vector` grow, and what is the difference between `push_back`, `emplace_back` and `reserve`? When does it matter?",
+   "model_answer": "A vector stores elements in one contiguous heap block with a `size` and a `capacity`. When `push_back` exceeds capacity it allocates a bigger block (commonly 1.5x or 2x, which makes appends amortized O(1)), moves the elements over (using `std::move_if_noexcept`, so a throwing move constructor forces slower copies) and frees the old block, which invalidates all iterators, pointers and references. `reserve(n)` allocates capacity ahead of time without changing size, avoiding repeated reallocations and keeping references stable until the capacity is exceeded; it is the right tool when the final size is known. `push_back(T)` takes an already constructed object (copying or moving it), whereas `emplace_back(args...)` forwards constructor arguments and builds the element in place, saving a temporary for non-trivial types; for plain ints the difference is nil. `shrink_to_fit` requests but does not guarantee giving memory back, and `clear()` keeps capacity.",
+   "explanation": "Interviewers check for amortized complexity, invalidation rules and the noexcept-move interaction. A frequent mistake is claiming `emplace_back` is always faster, or using `reserve` and then indexing past `size()`.",
+   "tags": [
+    "vector",
+    "performance",
+    "stl"
+   ],
+   "companies": [
+    "Amazon",
+    "Bloomberg",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qb-cpp-018",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "What does this program print?",
+   "code": "void h(int&)  { cout << \"L\"; }\nvoid h(int&&) { cout << \"R\"; }\n\nvoid f(int&& x) {\n    h(x);\n    h(std::move(x));\n}\n\nint main() { f(1); }",
+   "options": [
+    "LR",
+    "LL",
+    "RR",
+    "RL"
+   ],
+   "answer": 0,
+   "explanation": "Inside `f`, the parameter `x` has type `int&&` but, as a named variable, it is an lvalue expression. `h(x)` therefore selects the lvalue overload and prints `L`. Only `std::move(x)` casts it back to an rvalue, selecting `h(int&&)` and printing `R`. This is why `std::forward` or `std::move` is needed inside functions that take rvalue references.",
+   "tags": [
+    "move-semantics",
+    "overload-resolution",
+    "value-categories"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-cpp-019",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "What is the 'static initialization order fiasco'?",
+   "options": [
+    "Function-local statics initialize lazily and are therefore not thread-safe in C++11",
+    "Namespace-scope objects in different translation units are initialized in an unspecified relative order, so one may use another before it is constructed",
+    "Static data members always initialize in reverse declaration order, which breaks inheritance",
+    "Global variables are initialized after `main` starts when they live in shared libraries"
+   ],
+   "answer": 1,
+   "explanation": "The standard does not specify the order in which globals defined in different .cpp files are dynamically initialized. If `A`'s initializer reads global `B` from another file, `B` may still be zero-initialized/unconstructed. The usual fix is the construct-on-first-use idiom: a function returning a reference to a function-local static (`Foo& foo() { static Foo f; return f; }`), whose initialization is guaranteed on first call and is thread-safe since C++11. Option C is wrong: C++11 made local-static initialization thread-safe.",
+   "tags": [
+    "initialization",
+    "linking",
+    "globals"
+   ],
+   "companies": [
+    "Bloomberg",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-cpp-020",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "A class `Widget` inside `Widget::start()` runs `callbacks.push_back(std::shared_ptr<Widget>(this));` while callers already own the object through another `shared_ptr<Widget>`. What goes wrong, and what is the standard fix?",
+   "options": [
+    "Two unrelated control blocks own the same object, causing a double delete; derive from `std::enable_shared_from_this` and call `shared_from_this()`",
+    "Reference counts overflow; use `weak_ptr` instead of `shared_ptr` everywhere",
+    "The object is leaked because `this` is a raw pointer; call `delete this` afterwards",
+    "Nothing; `shared_ptr` detects existing owners via a global registry"
+   ],
+   "answer": 0,
+   "explanation": "Each `shared_ptr` constructed from a raw pointer creates its own control block, so the object ends up with independent reference counts and is destroyed twice. `std::enable_shared_from_this<Widget>` embeds a `weak_ptr` that the first owning `shared_ptr` initializes, and `shared_from_this()` returns a pointer sharing the same control block. It is only valid when the object is already owned by a `shared_ptr` (otherwise it throws `bad_weak_ptr` since C++17). Prefer `make_shared` for creation.",
+   "tags": [
+    "smart-pointers",
+    "ownership",
+    "shared_ptr"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qb-cpp-021",
+   "topic": "C++",
+   "type": "open",
+   "level": "Advanced",
+   "question": "Explain copy elision and return value optimization. Why is `return std::move(local);` usually a mistake?",
+   "model_answer": "Copy elision lets the compiler construct a returned object directly in the caller's storage instead of creating a temporary and copying or moving it. Since C++17 it is mandatory when returning a prvalue (`return T{...};` or `return make();`), and the object does not even need to be copyable or movable. Named return value optimization (NRVO), returning a local variable by name, is permitted but not guaranteed. When elision is not applied, the language still treats `return local;` as an rvalue first, so the move constructor is used automatically. Writing `return std::move(local);` changes the expression into an xvalue of type `T&&`, which is no longer the name of the local, so NRVO is disabled and a move is always executed; at best it costs one move, at worst (types with expensive or deleted moves) it is slower or fails. Compilers warn with `-Wpessimizing-move` and `-Wredundant-move`. Return by value is therefore the right default, and `std::move` is only needed when returning something that is not a plain local, such as a member or a differently-typed object.",
+   "explanation": "Interviewers look for the C++17 guarantee versus NRVO distinction and the reason `std::move` defeats elision. Pitfalls: believing returning by value is always a copy, or returning references to locals to 'avoid copies'.",
+   "tags": [
+    "copy-elision",
+    "move-semantics",
+    "performance"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qb-cpp-022",
+   "topic": "C++",
+   "type": "open",
+   "level": "Advanced",
+   "question": "Describe the exception safety guarantees in C++. How do you implement a strongly exception-safe assignment operator?",
+   "model_answer": "There are four levels. No-throw (`noexcept`): the operation never fails, required for destructors, swap and move operations used by containers. Strong guarantee: if the operation throws, the program state is exactly as before (commit-or-rollback). Basic guarantee: invariants hold and nothing leaks, but state may have changed. No guarantee: avoid. Resources must be RAII-managed, otherwise early exits leak. The copy-and-swap idiom gives a strong assignment operator: take the parameter by value (`T& operator=(T other) { swap(*this, other); return *this; }`), which performs the potentially throwing copy before touching `*this`; then swap with a non-throwing `swap` and let the by-value parameter's destructor release the old state. It also handles self-assignment correctly. The cost is an extra move and sometimes a needless allocation, so hot paths may prefer hand-written assignment. `std::vector::push_back` offers the strong guarantee when moves are noexcept, using `move_if_noexcept` for that reason.",
+   "explanation": "Good answers name the levels precisely, tie strong safety to doing all throwing work first, and mention `noexcept` moves. Weak answers equate 'exception safe' with try/catch blocks.",
+   "tags": [
+    "exceptions",
+    "idioms",
+    "raii"
+   ],
+   "companies": [
+    "Bloomberg",
+    "Microsoft",
+    "Adobe"
+   ]
+  },
+  {
+   "id": "qb-cpp-023",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "Two threads run `x.store(1, mo); r1 = y.load(mo);` and `y.store(1, mo); r2 = x.load(mo);` respectively, with `x` and `y` being `std::atomic<int>` initialized to 0. Which choice of `mo` for all four operations makes the outcome `r1 == 0 && r2 == 0` impossible?",
+   "options": [
+    "`std::memory_order_relaxed`",
+    "`std::memory_order_seq_cst` (the default)",
+    "`std::memory_order_release` for stores and `memory_order_acquire` for loads",
+    "`std::memory_order_acq_rel` on the stores and loads"
+   ],
+   "answer": 1,
+   "explanation": "This is the store-buffering litmus test. Release/acquire and relaxed orderings let each thread's store sit in a buffer while its load reads the old value from the other variable, so both reads can return 0 (on x86 this is the one reordering the hardware really performs). Only sequential consistency imposes a single total order on all four operations, which forbids that outcome. (`acq_rel` is not even valid for a plain load or store.) With weaker orders you need `std::atomic_thread_fence(std::memory_order_seq_cst)` between the store and the load.",
+   "tags": [
+    "memory-model",
+    "atomics",
+    "concurrency"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qb-cpp-024",
+   "topic": "C++",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "On a typical 64-bit platform with 4-byte `int` and natural alignment, what does this program print?",
+   "code": "struct A { char a; int b; char c; };\nstruct B { int b; char a; char c; };\n\nint main() {\n    cout << sizeof(A) << \" \" << sizeof(B);\n}",
+   "options": [
+    "12 12",
+    "12 8",
+    "6 6",
+    "8 8"
+   ],
+   "answer": 1,
+   "explanation": "Members are placed at offsets aligned to their type. In `A`, `char a` is at offset 0, 3 bytes of padding follow, `int b` sits at offset 4, `char c` at offset 8, and 3 bytes of tail padding round the size up to a multiple of the struct's alignment (4): 12 bytes. Ordering members largest-first (`B`) needs only 2 bytes of tail padding, giving 8. Reordering members is a cheap way to shrink objects and improve cache density, but it changes layout, so mind ABI and serialization.",
+   "tags": [
+    "memory-layout",
+    "alignment",
+    "performance"
+   ],
+   "companies": [
+    "Google",
+    "Apple",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-cpp-025",
+   "topic": "C++",
+   "type": "open",
+   "level": "Expert",
+   "question": "What is type erasure in C++? Show how `std::function` can be implemented conceptually and discuss its costs.",
+   "model_answer": "Type erasure hides a concrete type behind a uniform interface without requiring that type to inherit from anything. The classic implementation has a non-template outer class that owns a pointer to an abstract inner base (`struct Concept { virtual R call(Args...) = 0; virtual Concept* clone() const = 0; virtual ~Concept() = default; }`) and a templated derived class `Model<F>` that stores the callable `F` and implements `call` by invoking it. The outer class's templated constructor instantiates `Model<std::decay_t<F>>` and stores it, so lambdas, function pointers and functors with the same signature all become the same type `std::function<R(Args...)>`. Costs: one indirect call per invocation (a vtable call that cannot be inlined across the boundary), potential heap allocation when the callable does not fit in the small buffer (implementations usually have 16-32 bytes of small-object storage), copy semantics that require a copyable callable (C++23 `std::move_only_function` removes this), and a possible `bad_function_call` when empty. When performance matters, take a template parameter or a non-owning function view instead. The same technique underlies `std::any`, `std::shared_ptr`'s deleter and many pimpl-like designs.",
+   "explanation": "Strong answers show the Concept/Model split, explain why the outer type stays non-template, and quantify the cost (indirect call, small-buffer optimization, allocation). Weak answers treat it as just 'a function pointer with captures'.",
+   "tags": [
+    "type-erasure",
+    "templates",
+    "design"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qb-go-001",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does this program print?",
+   "code": "func main() {\n    var s []int\n    fmt.Println(s == nil, len(s))\n}",
+   "options": [
+    "true 0",
+    "false 0",
+    "It panics",
+    "true 1"
+   ],
+   "answer": 0,
+   "explanation": "A declared-but-unassigned slice has the zero value `nil`, with length 0 and capacity 0. `s == nil` is true, `len(s)` is 0, and ranging over or appending to a nil slice is perfectly safe. Note that an empty but non-nil slice (`[]int{}`) is *not* equal to nil, which matters for JSON encoding (`null` versus `[]`).",
+   "tags": [
+    "slices",
+    "zero-values"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-go-002",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does this program print?",
+   "code": "func main() {\n    a := []int{1, 2, 3}\n    b := a[:2]\n    b = append(b, 99)\n    fmt.Println(a)\n}",
+   "options": [
+    "[1 2 3 99]",
+    "[1 2 99]",
+    "[1 2 3]",
+    "[99 2 3]"
+   ],
+   "answer": 1,
+   "explanation": "`b := a[:2]` shares the same backing array as `a`, with length 2 and capacity 3. Because there is spare capacity, `append(b, 99)` writes into index 2 of the shared array instead of allocating, which overwrites `a[2]`. Printing `a` shows `[1 2 99]`. Use a full slice expression (`a[:2:2]`) or `copy` to prevent such aliasing.",
+   "tags": [
+    "slices",
+    "aliasing"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-go-003",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does this program print?",
+   "code": "func main() {\n    m := map[string]int{\"a\": 0}\n    _, ok := m[\"a\"]\n    v, ok2 := m[\"b\"]\n    fmt.Println(ok, ok2, v)\n}",
+   "options": [
+    "true false 0",
+    "false false 0",
+    "true false 1",
+    "true true 0"
+   ],
+   "answer": 0,
+   "explanation": "Reading a missing key from a map returns the element type's zero value, so `m[\"b\"]` is `0`. The comma-ok form distinguishes a present key whose value is zero (`ok` true for `\"a\"`) from a missing key (`ok2` false for `\"b\"`). Use it whenever zero is a legitimate stored value.",
+   "tags": [
+    "maps",
+    "zero-values"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-go-004",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does this program print?",
+   "code": "func main() {\n    s := \"h\\u00e9llo\"\n    fmt.Println(len(s), len([]rune(s)))\n}",
+   "options": [
+    "6 5",
+    "5 5",
+    "5 6",
+    "6 6"
+   ],
+   "answer": 0,
+   "explanation": "`len` on a string counts bytes, and strings are UTF-8 encoded. The character `e-acute` takes two bytes, so `\"h\\u00e9llo\"` has 6 bytes. Converting to `[]rune` decodes code points, giving 5. Use `utf8.RuneCountInString` to count characters without allocating, and remember that indexing a string yields bytes, not runes.",
+   "tags": [
+    "strings",
+    "unicode"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-go-005",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Which of the following causes a compile-time error in Go?",
+   "options": [
+    "Declaring an unused package-level variable",
+    "Declaring an unused function parameter",
+    "Declaring an unused function",
+    "Declaring a local variable and never using it"
+   ],
+   "answer": 3,
+   "explanation": "Go rejects unused local variables and unused imports at compile time, to keep code clean and builds fast. Unused package-level variables, function parameters, and functions are all allowed. A local can be explicitly discarded with `_ = x`, and an import for side effects uses `import _ \"pkg\"`.",
+   "tags": [
+    "compiler",
+    "basics"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-go-006",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does this program print?",
+   "code": "type Counter struct{ n int }\n\nfunc (c Counter) Inc() { c.n++ }\n\nfunc main() {\n    c := Counter{}\n    c.Inc()\n    fmt.Println(c.n)\n}",
+   "options": [
+    "1",
+    "It does not compile",
+    "2",
+    "0"
+   ],
+   "answer": 3,
+   "explanation": "`Inc` has a value receiver, so it operates on a copy of `c`; the increment is lost when the method returns. To mutate the caller's struct, declare the method with a pointer receiver (`func (c *Counter) Inc()`). `c.Inc()` on an addressable variable is still allowed for pointer receivers because Go takes `&c` automatically.",
+   "tags": [
+    "methods",
+    "receivers"
+   ],
+   "companies": [
+    "Uber",
+    "Google",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qb-go-007",
+   "topic": "Go",
+   "type": "open",
+   "level": "Basic",
+   "question": "How do interfaces work in Go? Explain implicit satisfaction and give guidance on designing good interfaces.",
+   "model_answer": "An interface is a set of method signatures. A type satisfies it automatically by having those methods; there is no `implements` keyword. This decouples the consumer from the producer: the package that *uses* a behavior can define a small interface for what it needs, and any existing type (even from the standard library) can satisfy it. Internally an interface value is a pair of a dynamic type and a value (or pointer), which is why comparing with nil has subtleties. Good practice: keep interfaces small (`io.Reader`, `io.Writer`, `fmt.Stringer`), define them where they are consumed, accept interfaces and return concrete types, avoid defining an interface before there are at least two implementations or a need for test doubles, and use type assertions or type switches sparingly. The empty interface (`any`) removes compile-time checking, so prefer generics when you need type-safe reuse.",
+   "explanation": "Interviewers want to hear 'implicit', 'small' and 'defined by the consumer', plus awareness of the (type, value) representation. A frequent weak answer copies Java-style large interfaces and creates mock-driven abstractions for everything.",
+   "tags": [
+    "interfaces",
+    "design"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-go-008",
+   "topic": "Go",
+   "type": "open",
+   "level": "Basic",
+   "question": "How does error handling work in Go? Explain wrapping with `%w`, `errors.Is`, `errors.As` and when to use sentinel errors versus custom error types.",
+   "model_answer": "Errors are ordinary values returned as the last result; callers check `if err != nil` and either handle it or return it with added context. `fmt.Errorf(\"loading config: %w\", err)` wraps the cause so the chain is preserved, and `errors.Is(err, target)` walks the chain comparing against a sentinel such as `io.EOF` or `sql.ErrNoRows`, while `errors.As(err, &target)` finds the first error of a given concrete type so you can read its fields (for example a `*os.PathError` or your own `*ValidationError`). Sentinels suit simple, well-known conditions that callers branch on; custom types suit errors that carry data (HTTP status, field name, retry-after). Add context once at each layer without duplicating messages, do not compare errors with `==` after wrapping, avoid logging and returning the same error, and reserve `panic` for programmer errors. `errors.Join` (Go 1.20) combines several errors.",
+   "explanation": "A strong answer shows the chain mechanics (`Unwrap`), names `Is` versus `As` correctly, and states a policy on where to log. Pitfalls: string-matching `err.Error()`, wrapping with `%v` (which loses the chain) and ignoring errors with `_`.",
+   "tags": [
+    "errors",
+    "idioms"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qb-go-009",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does this program print?",
+   "code": "type MyErr struct{}\n\nfunc (*MyErr) Error() string { return \"boom\" }\n\nfunc mayFail() error {\n    var e *MyErr\n    return e\n}\n\nfunc main() {\n    err := mayFail()\n    fmt.Println(err == nil)\n}",
+   "options": [
+    "false",
+    "It does not compile",
+    "true",
+    "It panics with a nil pointer dereference"
+   ],
+   "answer": 0,
+   "explanation": "`mayFail` returns a typed nil pointer `(*MyErr)(nil)` converted to the `error` interface. An interface value is nil only when both its dynamic type and value are nil; here the type is `*MyErr`, so `err == nil` is false even though the pointer inside is nil. The fix is to return an untyped `nil` explicitly when there is no error, never a typed nil pointer in an `error`-returning function.",
+   "tags": [
+    "interfaces",
+    "nil",
+    "gotchas"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-go-010",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does this program print?",
+   "code": "func main() {\n    for i := 0; i < 3; i++ {\n        defer fmt.Print(i)\n    }\n}",
+   "options": [
+    "012",
+    "333",
+    "210",
+    "222"
+   ],
+   "answer": 2,
+   "explanation": "Deferred calls run in last-in-first-out order when the function returns, and their arguments are evaluated at the time of the `defer` statement. Each iteration therefore defers a call with its own value of `i` (0, 1, 2), and they run in reverse: `210`.",
+   "tags": [
+    "defer",
+    "control-flow"
+   ],
+   "companies": [
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-go-011",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does this program print?",
+   "code": "func main() {\n    ch := make(chan int, 1)\n    ch <- 5\n    close(ch)\n    v, ok := <-ch\n    v2, ok2 := <-ch\n    fmt.Println(v, ok, v2, ok2)\n}",
+   "options": [
+    "5 true 0 true",
+    "5 true 0 false",
+    "5 true 5 true",
+    "It panics: receive on closed channel"
+   ],
+   "answer": 1,
+   "explanation": "Closing a channel does not discard values already buffered: the first receive drains `5` with `ok == true`. After that, receives from a closed, empty channel return immediately with the zero value and `ok == false`. Receiving never panics; sending to or closing an already closed channel does.",
+   "tags": [
+    "channels",
+    "close"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-go-012",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What is wrong with this pattern?",
+   "code": "var wg sync.WaitGroup\nfor i := 0; i < 3; i++ {\n    go func() {\n        wg.Add(1)\n        defer wg.Done()\n        work()\n    }()\n}\nwg.Wait()",
+   "options": [
+    "A `WaitGroup` must be passed by value to goroutines",
+    "`wg.Add(1)` runs inside the goroutine, so `wg.Wait()` may return before the goroutine has registered itself",
+    "`wg.Done()` must be called before the goroutine body",
+    "Nothing; `Add` and `Done` may be called from any goroutine at any time"
+   ],
+   "answer": 1,
+   "explanation": "`Add` must happen-before `Wait`, so call it in the spawning goroutine before `go func()`. If `Add(1)` is inside the new goroutine, the scheduler may run `Wait` first, see a zero counter and return while work is still pending (and the race detector flags it). Also, a `WaitGroup` must be shared by pointer (copying it breaks the counter). Typical fix: `wg.Add(1); go func() { defer wg.Done(); work() }()`.",
+   "tags": [
+    "sync",
+    "waitgroup",
+    "concurrency"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-go-013",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does this program print?",
+   "code": "func main() {\n    a := [3]int{1, 2, 3}\n    b := a\n    b[0] = 9\n    s := a[:]\n    s[1] = 8\n    fmt.Println(a, b)\n}",
+   "options": [
+    "[9 8 3] [9 8 3]",
+    "[1 2 3] [9 2 3]",
+    "[1 8 3] [9 2 3]",
+    "[1 8 3] [1 2 3]"
+   ],
+   "answer": 2,
+   "explanation": "Arrays are values: `b := a` copies all three elements, so changing `b[0]` leaves `a` alone. `a[:]` however creates a slice that aliases the array `a`, so `s[1] = 8` writes into `a`. The result is `a = [1 8 3]` and `b = [9 2 3]`. Assignment of arrays copies; slicing shares.",
+   "tags": [
+    "arrays",
+    "slices",
+    "value-semantics"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-go-014",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does this program print?",
+   "code": "type A struct{}\ntype B struct{ A }\n\nfunc (A) Hi() { fmt.Print(\"A\") }\nfunc (B) Hi() { fmt.Print(\"B\") }\n\nfunc main() {\n    B{}.Hi()\n    B{}.A.Hi()\n}",
+   "options": [
+    "BA",
+    "AA",
+    "BB",
+    "AB"
+   ],
+   "answer": 0,
+   "explanation": "`B` embeds `A`, so `A`'s methods are promoted, but `B` defines its own `Hi`, which shadows the promoted one: `B{}.Hi()` calls `B.Hi`. The embedded value is still reachable as a field named after its type, so `B{}.A.Hi()` calls `A.Hi`. Embedding is composition with convenient forwarding, not inheritance; there is no virtual dispatch from `A` back to `B`.",
+   "tags": [
+    "embedding",
+    "methods"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-go-015",
+   "topic": "Go",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "What is a goroutine leak? Give common causes and describe how you detect and prevent them.",
+   "model_answer": "A goroutine leak is a goroutine that can never finish, so its stack and everything it references stay alive for the life of the process; leaks accumulate until memory or scheduler overhead hurts. Typical causes: sending on or receiving from a channel nobody will ever service (an unbuffered result channel whose reader gave up after a timeout), a `select` or loop without a `ctx.Done()` or quit case, ranging over a channel that is never closed, forgetting to stop a `time.Ticker`, a blocked `http` request without timeout, and missing `wg.Done()`. Prevention: give every goroutine a clear owner and an exit path (context cancellation or a closed done channel), make senders select on `ctx.Done()`, use buffered channels sized so a producer can always complete, close channels from the sender side, set timeouts on I/O, and use `errgroup` to tie lifetimes together. Detection: watch `runtime.NumGoroutine()` metrics, dump `/debug/pprof/goroutine?debug=2` to see where thousands of goroutines are parked, use `goleak` in tests, and run the race detector.",
+   "explanation": "The best answers describe ownership and cancellation as a design rule and mention practical tooling (pprof goroutine profile, goleak). Weak answers only say 'use WaitGroup'.",
+   "tags": [
+    "goroutines",
+    "leaks",
+    "concurrency"
+   ],
+   "companies": [
+    "Uber",
+    "Cloudflare",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-go-016",
+   "topic": "Go",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "Explain how slices work internally: length, capacity, `append` growth and the pitfalls of sharing a backing array.",
+   "model_answer": "A slice is a small header (pointer to an array element, length, capacity) passed by value; the data lives in a backing array that several slices can share. `len` is the number of accessible elements, `cap` is how many fit from the slice's start to the end of the array. `append` writes in place when `len < cap`; otherwise it allocates a larger array (roughly doubling for small slices, with a smoother growth factor for large ones), copies the elements and returns a slice pointing to the new array, which is why you must always use the returned value (`s = append(s, x)`). Pitfalls: two slices of the same array can see each other's writes (and appends); a function that appends to its parameter may or may not affect the caller depending on spare capacity; a small subslice keeps the whole large array alive (copy it out to release memory); and modifying while iterating needs care. Tools: `s[a:b:c]` caps capacity to force a copy on append, `copy`, `slices.Clone`, and preallocating with `make([]T, 0, n)` when the size is known.",
+   "explanation": "Expect the header model, the 'return value of append' rule, and a concrete aliasing bug. Candidates who say 'slices are references' usually miss that the header itself is copied.",
+   "tags": [
+    "slices",
+    "memory"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-go-017",
+   "topic": "Go",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "When would you choose `sync.Mutex`, `sync.RWMutex`, channels, or `sync/atomic` to share state between goroutines?",
+   "model_answer": "Use channels to transfer ownership of data or coordinate stages (pipelines, fan-in/fan-out, signaling, cancellation): 'share memory by communicating'. Use a `sync.Mutex` to protect a small critical section of shared state such as a cache map or counters with several related fields; it is simpler and faster than funneling every access through a goroutine. `sync.RWMutex` helps only when reads clearly dominate and the critical section is not tiny, because it has more overhead and writer starvation concerns; benchmark before choosing it. Use `sync/atomic` (or `atomic.Int64`, `atomic.Value`, `atomic.Pointer`) for single independent values like counters, flags or config snapshots where lock-free access is enough. Also consider `sync.Once`, `sync.Pool`, `sync.Map` (for write-once/read-many or disjoint key sets) and `errgroup`. Rules: never copy a mutex, keep lock scope short, do not call unknown code while holding a lock, always use `defer Unlock()` unless profiling says otherwise, and verify with `go test -race`.",
+   "explanation": "Good answers argue from what is being shared (ownership transfer versus guarding state) and mention the race detector. Dogma ('always channels') or reaching for RWMutex by default are warning signs.",
+   "tags": [
+    "concurrency",
+    "sync",
+    "design"
+   ],
+   "companies": [
+    "Uber",
+    "Google",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qb-go-018",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "A goroutine started by `main` panics and the only `recover()` call is in a deferred function inside `main`. What happens?",
+   "options": [
+    "The whole program crashes, because `recover` only works in the goroutine that panicked",
+    "The runtime converts the panic into an error returned from `go`",
+    "Only the panicking goroutine terminates; other goroutines are unaffected",
+    "The panic is caught by `main`'s deferred `recover` and the program continues"
+   ],
+   "answer": 0,
+   "explanation": "Panics unwind only the stack of the goroutine that raised them, and `recover` is only effective when called directly by a deferred function in that same goroutine. An unrecovered panic in any goroutine terminates the entire process. Server code therefore wraps goroutine bodies with a deferred recover (logging and converting to an error) when isolation is needed; `net/http` does this per request for you.",
+   "tags": [
+    "panic",
+    "recover",
+    "goroutines"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-go-019",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "What does this program print?",
+   "code": "func main() {\n    s := make([]int, 3, 10)\n    t := append(s, 1)\n    u := append(s, 2)\n    fmt.Println(t[3], u[3])\n}",
+   "options": [
+    "2 2",
+    "1 1",
+    "2 1",
+    "1 2"
+   ],
+   "answer": 0,
+   "explanation": "`s` has length 3 and capacity 10, so both `append` calls write into the same spare slot at index 3 of the shared backing array. `t[3]` and `u[3]` therefore alias the same element, which finally holds 2. Appending to different slices that share capacity is a classic data-corruption source; use `append(s[:len(s):len(s)], x)` or copy first when you need independent results.",
+   "tags": [
+    "slices",
+    "append",
+    "aliasing"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-go-020",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "Given `func Index[T comparable](s []T, v T) int`, which call fails to compile?",
+   "options": [
+    "`Index([][]int{{1}}, []int{1})`",
+    "`Index([]string{\"a\"}, \"a\")`",
+    "`Index([]*int{nil}, nil)`",
+    "`Index([]struct{ X, Y int }{{1, 2}}, struct{ X, Y int }{1, 2})`"
+   ],
+   "answer": 0,
+   "explanation": "The `comparable` constraint admits types whose values can be compared with `==`. Slices, maps and functions are not comparable, so `T = []int` is rejected at compile time. Strings, structs whose fields are all comparable, and pointers are fine. (Interface types satisfy `comparable` since Go 1.20 but may panic at run time if their dynamic value is not comparable.)",
+   "tags": [
+    "generics",
+    "constraints"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-go-021",
+   "topic": "Go",
+   "type": "open",
+   "level": "Advanced",
+   "question": "How would you implement graceful shutdown for a Go HTTP service that also runs background workers?",
+   "model_answer": "Create a root context that is cancelled on SIGINT/SIGTERM using `signal.NotifyContext`. Start the `http.Server` in a goroutine; when the context is done, call `server.Shutdown(shutdownCtx)` with a bounded timeout (for example 20-30 seconds, below the orchestrator's kill grace period). `Shutdown` stops accepting new connections, waits for in-flight requests to finish, and returns; fall back to `Close` if the timeout expires. Pass the cancellable context (or a derived one) to background workers so they stop pulling new work, finish or checkpoint the current item and return; track them with a `sync.WaitGroup` or `errgroup` and wait for them after the server stops. Ordering matters: first fail readiness checks so the load balancer stops sending traffic, then drain HTTP, then stop workers and flush producers, and finally close databases, message clients and loggers. Make handlers respect `r.Context()`, avoid `os.Exit` inside goroutines, make long-running jobs idempotent so a hard kill is safe, and test shutdown with an integration test that sends SIGTERM mid-request.",
+   "explanation": "Interviewers look for `Shutdown` with a timeout, context propagation, WaitGroup/errgroup for workers, and an explicit ordering including readiness. Pitfalls: calling `Close` immediately, ignoring the Kubernetes grace period, and leaking workers.",
+   "tags": [
+    "http",
+    "shutdown",
+    "context",
+    "production"
+   ],
+   "companies": [
+    "Uber",
+    "Cloudflare",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qb-go-022",
+   "topic": "Go",
+   "type": "open",
+   "level": "Advanced",
+   "question": "A Go service's memory and goroutine count keep growing in production. Walk through how you would investigate using Go's tooling.",
+   "model_answer": "First confirm the symptom with metrics: `runtime.MemStats`/`go_memstats_*`, `go_goroutines`, GC pause and heap-in-use trends, and whether growth correlates with traffic. Enable `net/http/pprof` (on an internal port) and take heap profiles at two points in time: `go tool pprof -base old.pb.gz new.pb.gz` shows what grew; use `-sample_index=inuse_space` for live memory and `alloc_space` for churn. For goroutines, fetch `/debug/pprof/goroutine?debug=2` and group by stack to find thousands parked on the same channel receive, lock, or network read, which points at a leak (missing cancellation, an unbuffered result channel, unclosed ticker). Execution traces (`go tool trace`) and the block and mutex profiles reveal contention. Look for common sources: unbounded caches or maps, global slices that retain large arrays via subslicing, `time.After` in loops, un-closed response bodies, per-request goroutines without timeouts and `sync.Pool` misuse. Reproduce under load with a benchmark or a staging replay, fix, and add guards: `goleak` in tests, timeouts on all outbound calls, bounded queues and a `GOMEMLIMIT` as a safety net. Re-profile to verify the fix.",
+   "explanation": "Look for a data-driven workflow (metrics, differential profiles, goroutine dump) and familiarity with typical leak sources. Weak answers jump to 'increase memory' or 'tune GC' without evidence.",
+   "tags": [
+    "pprof",
+    "debugging",
+    "memory",
+    "production"
+   ],
+   "companies": [
+    "Uber",
+    "Cloudflare",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-go-023",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "According to the Go memory model, which of the following does NOT establish a happens-before relationship between two goroutines?",
+   "options": [
+    "`close(ch)` followed by a receive that returns because the channel is closed",
+    "`mu.Unlock()` followed by a later `mu.Lock()` of the same mutex in another goroutine",
+    "A send on a channel and the completion of the matching receive",
+    "Calling `time.Sleep` in the reader long enough for the writer to finish"
+   ],
+   "answer": 3,
+   "explanation": "Synchronization in Go comes from channel operations, mutexes, `sync.Once`, `WaitGroup`, atomics and goroutine creation or exit rules. Sleeping provides no ordering guarantee at all: without a synchronizing operation the reader may observe stale or partial values, and the program has a data race even if it 'works' in tests. The other three are explicit happens-before edges in the specification.",
+   "tags": [
+    "memory-model",
+    "synchronization",
+    "data-race"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-go-024",
+   "topic": "Go",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "What happens when this program runs?",
+   "code": "func main() {\n    var a, b any = []int{1}, []int{1}\n    fmt.Println(a == b)\n}",
+   "options": [
+    "It fails to compile",
+    "It prints `true`",
+    "It panics at run time with 'comparing uncomparable type []int'",
+    "It prints `false`"
+   ],
+   "answer": 2,
+   "explanation": "Interface values are compared by dynamic type and value. Both hold the same dynamic type `[]int`, and slices are not comparable, so `a == b` panics at run time. The compiler cannot catch it because the static type is `any`. This is why map keys of interface type, or `==` on `any`, can crash if a slice, map or function sneaks in; check with `reflect.TypeOf(x).Comparable()` or use `reflect.DeepEqual`/`slices.Equal`.",
+   "tags": [
+    "interfaces",
+    "comparison",
+    "runtime-panics"
+   ],
+   "companies": [
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-go-025",
+   "topic": "Go",
+   "type": "open",
+   "level": "Expert",
+   "question": "Explain how the Go garbage collector affects latency and throughput. How do `GOGC`, `GOMEMLIMIT` and `sync.Pool` come into play, and what are their pitfalls?",
+   "model_answer": "Go uses a concurrent, non-moving, tri-color mark-and-sweep collector with short stop-the-world phases (typically well under a millisecond). Marking runs concurrently using about 25% of CPU, and goroutines that allocate fast can be drafted into mark assists, which is where tail latency appears. Cost scales with live heap size and pointer density, not with garbage. `GOGC` (default 100) sets the heap growth target: the next cycle starts when the heap reaches live*(1+GOGC/100); raising it trades memory for fewer collections. `GOMEMLIMIT` sets a soft total-memory limit so the collector works harder as usage approaches it, which is useful in containers together with a high GOGC, though a limit set too low can cause GC thrashing. Reducing allocations is the real lever: preallocate slices and maps, reuse buffers, avoid pointers in large structures (`[]struct` beats `[]*struct`), avoid unnecessary interface boxing and let escape analysis keep values on the stack (`go build -gcflags=-m`). `sync.Pool` caches temporary objects between cycles to cut allocations for hot paths, but items can be dropped at any GC, objects must be reset before reuse, it is not a bounded cache, and it can hurt if objects are cheap or retained. Always measure with `GODEBUG=gctrace=1`, pprof alloc profiles and benchmarks (`-benchmem`).",
+   "explanation": "A strong answer says GC cost depends on live heap and pointers, explains the GOGC formula and the soft nature of GOMEMLIMIT, and treats sync.Pool as an optimization with caveats. Common mistake: tuning GOGC before reducing allocations or profiling.",
+   "tags": [
+    "gc",
+    "performance",
+    "runtime"
+   ],
+   "companies": [
+    "Cloudflare",
+    "Uber",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-os-001",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Why can a user-mode program not directly execute privileged instructions such as disabling interrupts or accessing I/O ports?",
+   "options": [
+    "The compiler removes those instructions from user programs at build time",
+    "They exist only on servers, not on desktop CPUs",
+    "The linker places them in a read-only section that cannot be executed",
+    "The CPU enforces privilege levels (user vs kernel mode); privileged instructions trap unless the CPU is in kernel mode, so the OS mediates access"
+   ],
+   "answer": 3,
+   "explanation": "Hardware provides at least two modes. In user mode, privileged instructions (halting, changing page tables, I/O port access, masking interrupts) raise a general-protection fault that the kernel handles. This protection is what lets the OS isolate processes and control devices. A program that needs such a service makes a system call, which switches into kernel mode at a controlled entry point, performs the checked operation and returns.",
+   "tags": [
+    "kernel",
+    "protection",
+    "basics"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-os-002",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "A process is blocked waiting for a disk read. When the read completes, what state transition happens next?",
+   "options": [
+    "Waiting to Terminated",
+    "Waiting (blocked) to Ready; the scheduler will later choose it to run",
+    "Waiting to Running immediately, because I/O completion has the highest priority",
+    "Running to Ready"
+   ],
+   "answer": 1,
+   "explanation": "The classic five-state model has New, Ready, Running, Waiting and Terminated. I/O completion moves a process from Waiting to Ready; it only becomes Running when the scheduler dispatches it onto a CPU. Some schedulers boost the priority of I/O-bound processes, but the transition is still via the ready queue (a preemption may follow quickly).",
+   "tags": [
+    "processes",
+    "scheduling",
+    "basics"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-os-003",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Which resources are shared by all threads of one process, and which are private to each thread?",
+   "options": [
+    "Shared: program counter and registers. Private: code and heap",
+    "Shared: stacks and registers. Private: heap and globals",
+    "Shared: code, heap and globals, open files. Private: stack, registers and program counter",
+    "Shared: nothing, since threads are isolated like processes"
+   ],
+   "answer": 2,
+   "explanation": "Threads in one process share the address space (code, global data, heap) and kernel resources such as the file descriptor table. Each thread needs its own stack (for call frames and locals), register set and program counter, plus thread-local storage. Sharing is what makes communication cheap and also what makes data races possible.",
+   "tags": [
+    "threads",
+    "memory"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qb-os-004",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What is a zombie process on a Unix system?",
+   "options": [
+    "A child process whose parent has exited and has been adopted by `init`",
+    "A process that has terminated but whose entry remains in the process table until its parent reads its exit status with `wait`",
+    "A process using 100% CPU while in a sleeping state",
+    "A process that is stuck in an infinite loop and cannot be killed"
+   ],
+   "answer": 1,
+   "explanation": "When a child exits, the kernel keeps a small record (PID, exit status, resource usage) so the parent can collect it via `wait`/`waitpid`. Until then the child shows as `Z` (defunct). Zombies use no CPU or memory beyond that entry, but too many exhaust PIDs. You cannot kill a zombie, only get the parent to reap it (or kill the parent so `init` reaps it). Option C describes an orphan, which is a different thing.",
+   "tags": [
+    "unix",
+    "processes"
+   ],
+   "companies": [
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-os-005",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "A process needs 10,000 bytes and the system uses 4096-byte pages. How much internal fragmentation does its last page contain?",
+   "options": [
+    "2,288 bytes",
+    "0 bytes",
+    "1,808 bytes",
+    "4,096 bytes"
+   ],
+   "answer": 0,
+   "explanation": "10,000 / 4,096 = 2.44, so 3 pages (12,288 bytes) are allocated. The unused tail of the last page is 12,288 - 10,000 = 2,288 bytes of internal fragmentation. Paging eliminates external fragmentation but wastes on average about half a page per region; larger pages increase this waste but reduce page-table size and TLB pressure.",
+   "tags": [
+    "paging",
+    "memory"
+   ],
+   "companies": [
+    "Microsoft",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-os-006",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "In round-robin scheduling, what happens as the time quantum grows very large?",
+   "options": [
+    "It degenerates into first-come, first-served behavior",
+    "It becomes equivalent to shortest-job-first",
+    "Context-switch overhead increases without bound",
+    "It guarantees no process ever waits"
+   ],
+   "answer": 0,
+   "explanation": "With a quantum longer than any CPU burst, each process runs to completion or blocks before being preempted, which is exactly FCFS. A tiny quantum has the opposite problem: great responsiveness but context-switch overhead dominates. A common rule of thumb is to choose a quantum so that about 80% of bursts finish within one slice.",
+   "tags": [
+    "scheduling",
+    "round-robin"
+   ],
+   "companies": [
+    "Amazon",
+    "Adobe"
+   ]
+  },
+  {
+   "id": "qb-os-007",
+   "topic": "Operating Systems",
+   "type": "open",
+   "level": "Basic",
+   "question": "Compare deadlock prevention, avoidance and detection. Which would a general-purpose OS use, and why?",
+   "model_answer": "Deadlock needs four conditions at once: mutual exclusion, hold-and-wait, no preemption and circular wait. Prevention breaks one of them by design, for example acquiring all locks at once, allowing preemption of resources, or imposing a global lock ordering so cycles cannot form. It is simple and safe but can reduce concurrency or be impractical. Avoidance (the Banker's algorithm) lets processes declare maximum needs and only grants a request if the resulting state is safe; it needs advance knowledge and is costly, so it is rare in practice. Detection and recovery allows deadlocks, periodically searches the wait-for or resource-allocation graph for cycles and recovers by killing a victim or rolling back. General-purpose operating systems largely ignore the problem for application resources (the 'ostrich algorithm'), because deadlocks are rare and the cost of avoidance is high, and push the responsibility to programmers: lock ordering, timeouts with `trylock`, and keeping critical sections small. Databases, by contrast, detect deadlocks and abort a victim transaction.",
+   "explanation": "A strong answer lists the four conditions, ties each strategy to which condition it attacks, and gives practical advice (lock ordering, timeouts). A pitfall is describing the Banker's algorithm as common in real operating systems.",
+   "tags": [
+    "deadlock",
+    "synchronization"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-os-008",
+   "topic": "Operating Systems",
+   "type": "open",
+   "level": "Basic",
+   "question": "What is the difference between a monolithic kernel and a microkernel? Give examples and trade-offs.",
+   "model_answer": "A monolithic kernel runs the core OS services (scheduler, memory management, file systems, network stack and most device drivers) in one privileged address space; Linux and traditional Unix are examples. Calls between components are plain function calls, which is fast, but a bug in any driver can crash the whole system and the trusted computing base is large. A microkernel keeps only the minimum in kernel mode (address spaces, scheduling, IPC) and runs file systems, drivers and servers as user-space processes that communicate via message passing; examples are QNX, seL4 and MINIX 3. This improves isolation, fault containment and verifiability and makes it possible to restart a crashed driver, but IPC and extra context switches add overhead and design is more complex. Hybrid kernels (Windows NT, macOS XNU) put some services back in the kernel for performance. Linux gains modularity through loadable kernel modules, though they still run with full privileges.",
+   "explanation": "Interviewers look for clear trade-offs (performance vs isolation and reliability) and accurate examples. A frequent mistake is calling Linux a microkernel because it has modules.",
+   "tags": [
+    "kernel",
+    "architecture"
+   ],
+   "companies": [
+    "Microsoft",
+    "Google",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qb-os-009",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "Four jobs with CPU bursts 6, 8, 7 and 3 ms all arrive at time 0. Using non-preemptive Shortest Job First, what is the average waiting time?",
+   "options": [
+    "9 ms",
+    "10.5 ms",
+    "7 ms",
+    "6 ms"
+   ],
+   "answer": 2,
+   "explanation": "SJF runs the jobs in the order 3, 6, 7, 8. Waiting times are 0, 3, 9 and 16 ms, whose sum is 28; 28 / 4 = 7 ms. FCFS in the given order would have waits 0, 6, 14, 21 (average 10.25 ms), so SJF is optimal for average waiting time but requires knowing burst lengths in advance and can starve long jobs.",
+   "tags": [
+    "scheduling",
+    "sjf",
+    "calculation"
+   ],
+   "companies": [
+    "Amazon",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-os-010",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "In the bounded-buffer producer-consumer solution using semaphores `empty`, `full` and a `mutex`, the producer is written as `wait(mutex); wait(empty); insert; signal(mutex); signal(full);`. What is the flaw?",
+   "options": [
+    "It allows two producers to insert simultaneously",
+    "There is no flaw; the order of waits is irrelevant",
+    "It starves the consumer by never signaling `full`",
+    "It can deadlock: if the buffer is full the producer sleeps on `empty` while holding `mutex`, so the consumer can never run"
+   ],
+   "answer": 3,
+   "explanation": "Acquiring the mutex before the counting semaphore means a producer can block on `empty` while holding the lock. The consumer then blocks on `wait(mutex)` and never frees a slot, giving a deadlock. The correct order is `wait(empty); wait(mutex); ...; signal(mutex); signal(full);`: block on resource availability first, then take the short critical-section lock.",
+   "tags": [
+    "semaphores",
+    "producer-consumer",
+    "deadlock"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-os-011",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "A system uses 32-bit virtual addresses, 4 KB pages and 4-byte page-table entries with a two-level page table in which each table fits exactly in one page. How are the 32 address bits split?",
+   "options": [
+    "8 bits outer, 12 bits inner, 12 bits offset",
+    "16 bits outer, 4 bits inner, 12 bits offset",
+    "12 bits outer, 8 bits inner, 12 bits offset",
+    "10 bits outer index, 10 bits inner index, 12 bits offset"
+   ],
+   "answer": 3,
+   "explanation": "The 4 KB page gives a 12-bit offset. A page-table page holds 4096 / 4 = 1024 entries, requiring 10 index bits per level. 10 + 10 + 12 = 32. Multi-level tables save memory because second-level tables are only allocated for regions of the address space that are actually used.",
+   "tags": [
+    "paging",
+    "page-tables",
+    "calculation"
+   ],
+   "companies": [
+    "Microsoft",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qb-os-012",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "On a Unix file system, where is a file's name stored, and what does a hard link do?",
+   "options": [
+    "The name lives in the data blocks of the file; a hard link duplicates the data",
+    "The name is stored in the inode, and a hard link copies the inode",
+    "The name lives in a directory entry that maps it to an inode number; a hard link adds another directory entry pointing to the same inode",
+    "The name is stored in the superblock; a hard link is a path alias to it"
+   ],
+   "answer": 2,
+   "explanation": "An inode stores metadata (owner, permissions, size, timestamps, block pointers, link count) but not the name. Directories are files that map names to inode numbers. A hard link is simply another name for the same inode and increments its link count; the data is freed only when the count reaches zero and no process has the file open. Hard links cannot cross file systems; symbolic links store a path instead and can dangle.",
+   "tags": [
+    "file-systems",
+    "inodes"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-os-013",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "Why must a thread wait on a condition variable inside a `while (!predicate)` loop rather than an `if`?",
+   "options": [
+    "Because condition variables only work correctly in loops on x86",
+    "Because `wait` returns an error code that must be retried",
+    "Because the mutex is released permanently after `wait`",
+    "Because of spurious wakeups and because another thread may consume the condition between the signal and the wakeup"
+   ],
+   "answer": 3,
+   "explanation": "A thread returning from `wait` is not guaranteed that the predicate holds: implementations may wake spuriously, `notify_all` wakes several waiters but only one may find the resource available, and another thread may run first and change state. Re-checking the predicate under the mutex in a loop (or using the `wait(lock, predicate)` form) is the only correct pattern. `wait` atomically releases the mutex while sleeping and reacquires it before returning.",
+   "tags": [
+    "condition-variables",
+    "synchronization"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qb-os-014",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What is thrashing?",
+   "options": [
+    "A disk head moving back and forth between tracks",
+    "A process repeatedly acquiring and releasing a lock",
+    "The TLB being flushed on every system call",
+    "The system spends most of its time swapping pages in and out because the combined working sets exceed physical memory, so useful CPU work collapses"
+   ],
+   "answer": 3,
+   "explanation": "When processes lack enough frames for their working sets, nearly every access page-faults, the CPU waits on disk, utilization falls, and a naive scheduler may admit more processes, worsening it. Remedies include reducing the degree of multiprogramming, working-set or page-fault-frequency allocation, adding RAM, or fixing memory-hungry code.",
+   "tags": [
+    "virtual-memory",
+    "thrashing"
+   ],
+   "companies": [
+    "Oracle",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-os-015",
+   "topic": "Operating Systems",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "Explain paging versus segmentation, and describe the role of the TLB in address translation.",
+   "model_answer": "Paging splits virtual memory into fixed-size pages mapped to physical frames through a page table. It removes external fragmentation, makes allocation simple and enables demand paging, but is invisible to the programmer and causes some internal fragmentation. Segmentation divides the address space into variable-size logical units (code, stack, heap) with a base and limit for each; it matches the program's logical structure and supports per-segment protection, but suffers from external fragmentation. Modern systems use paging (x86-64 and ARM essentially only page), sometimes with segment-like regions at the OS level. Translation requires a page-table walk, which for multi-level tables means several memory accesses per reference, so a Translation Lookaside Buffer (TLB), a small associative cache of recent virtual-to-physical mappings, is checked first. A TLB hit adds almost nothing; a miss triggers a hardware or software page walk, and a page fault if the page is not resident. Effective access time is about hit_rate * (t_tlb + t_mem) + miss_rate * (t_tlb + levels * t_mem + t_mem). TLB entries are tagged with address-space IDs or flushed on context switches, and huge pages extend TLB reach.",
+   "explanation": "Good answers contrast fragmentation types, mention multi-level walks and compute or explain effective access time. Pitfalls: saying the TLB caches data, or confusing a TLB miss with a page fault.",
+   "tags": [
+    "paging",
+    "tlb",
+    "virtual-memory"
+   ],
+   "companies": [
+    "Microsoft",
+    "Apple",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-os-016",
+   "topic": "Operating Systems",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "Compare common CPU scheduling algorithms: FCFS, SJF/SRTF, round-robin, priority and multilevel feedback queues. What are their trade-offs, including starvation?",
+   "model_answer": "FCFS is simple and fair in order but suffers from the convoy effect: short jobs wait behind long ones. SJF minimizes average waiting time for known bursts, and its preemptive form SRTF is optimal for waiting time, but real bursts must be estimated (exponential averaging) and long jobs can starve. Round-robin gives each runnable process a time quantum, providing good response time and fairness for interactive loads; the quantum trades responsiveness against context-switch overhead, and average turnaround can be worse than SJF. Priority scheduling serves the highest priority first and can starve low-priority tasks; aging (gradually boosting waiting tasks) fixes this, and priority inversion needs priority inheritance. A multilevel feedback queue (MLFQ) uses several queues: new and interactive jobs start high with short quanta, jobs that use their whole quantum are demoted, and periodic boosts prevent starvation, approximating SJF without knowing burst lengths. Linux's CFS (and later EEVDF) instead tracks virtual runtime to share CPU proportionally by weight. Metrics to compare: turnaround, waiting, response time, throughput and fairness.",
+   "explanation": "Strong answers tie each algorithm to a metric, mention starvation and aging, and know MLFQ. Weak answers memorize definitions without describing when each fails.",
+   "tags": [
+    "scheduling",
+    "fairness"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-os-017",
+   "topic": "Operating Systems",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "How do file systems stay consistent after a crash? Compare fsck-style recovery, journaling and copy-on-write designs.",
+   "model_answer": "A single logical operation (creating a file, appending data) touches several on-disk structures: inode, directory entry, bitmap, data blocks. A crash between writes leaves them inconsistent. Early file systems relied on `fsck`, which scans the whole disk after an unclean shutdown to repair invariants; it is correct but takes time proportional to disk size. Journaling (ext4, NTFS, XFS) first writes a description of the intended changes to a log, issues a commit record once the log is durable, and only then updates the real locations (checkpoint). After a crash, recovery replays committed transactions and ignores incomplete ones, in time proportional to the log. Modes differ: metadata-only journaling is faster but may expose stale data, full data journaling writes everything twice. Copy-on-write file systems (ZFS, Btrfs, APFS) never overwrite live blocks: they write new versions and atomically switch a root pointer, which gives consistent snapshots without a log but can fragment data and write more. Correctness also requires honoring write barriers and `fsync`, since disk and OS caches reorder writes; applications must `fsync` files and parent directories for durability.",
+   "explanation": "Interviewers want the multi-block atomicity problem, the write-ahead logic of a journal (log, commit, checkpoint) and awareness that `fsync` is part of the contract.",
+   "tags": [
+    "file-systems",
+    "journaling",
+    "durability"
+   ],
+   "companies": [
+    "Google",
+    "Oracle",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qb-os-018",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "A FIFO page-replacement algorithm is run on the reference string 1 2 3 4 1 2 5 1 2 3 4 5. How many page faults occur with 3 frames and with 4 frames, respectively?",
+   "options": [
+    "9 and 10",
+    "9 and 8",
+    "8 and 6",
+    "10 and 9"
+   ],
+   "answer": 0,
+   "explanation": "With 3 frames FIFO faults on 9 references; with 4 frames it faults on 10 - more memory made it worse. This is Belady's anomaly, which affects FIFO but not stack algorithms such as LRU and OPT, whose resident set for n frames is always a subset of that for n+1 frames.",
+   "tags": [
+    "page-replacement",
+    "belady",
+    "calculation"
+   ],
+   "companies": [
+    "Microsoft",
+    "Oracle",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-os-019",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "Memory access takes 200 ns and servicing a page fault takes 8 ms. If the page-fault rate is 1 in 1,000 accesses, what is the effective access time (ignoring TLB effects)?",
+   "options": [
+    "About 200 ns",
+    "About 8,200 ns",
+    "About 80,000 ns",
+    "About 1,000 ns"
+   ],
+   "answer": 1,
+   "explanation": "EAT = (1 - p) * 200 ns + p * 8,000,000 ns = 0.999 * 200 + 0.001 * 8,000,000 = 199.8 + 8,000 = 8,199.8 ns, roughly 8.2 microseconds, a 40x slowdown from just 0.1% faults. To keep degradation under 10% you need p below about 2.5 faults per million accesses, which is why working-set size and page-replacement quality matter so much.",
+   "tags": [
+    "virtual-memory",
+    "calculation",
+    "performance"
+   ],
+   "companies": [
+    "Microsoft",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-os-020",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "The disk head is at cylinder 53 and requests arrive for cylinders 98, 183, 37, 122, 14, 124, 65, 67. How many cylinders does the head travel using SSTF (shortest seek time first)?",
+   "options": [
+    "640",
+    "208",
+    "299",
+    "236"
+   ],
+   "answer": 3,
+   "explanation": "SSTF always picks the closest pending request: 53 -> 65 (12) -> 67 (2) -> 37 (30) -> 14 (23) -> 98 (84) -> 122 (24) -> 124 (2) -> 183 (59), totaling 236. FCFS would travel 640. SSTF reduces seek time but can starve distant requests; SCAN/C-SCAN trade a little throughput for bounded waiting. (On SSDs seek time does not exist, so these algorithms matter far less.)",
+   "tags": [
+    "disk-scheduling",
+    "calculation"
+   ],
+   "companies": [
+    "Oracle",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-os-021",
+   "topic": "Operating Systems",
+   "type": "open",
+   "level": "Advanced",
+   "question": "What is copy-on-write, and how does it make `fork()` efficient? Explain how `mmap` relates to the page cache.",
+   "model_answer": "After `fork()` the child needs a logical copy of the parent's address space, but copying gigabytes would be wasteful, especially since most children immediately call `exec`. With copy-on-write (COW) the kernel duplicates only the page tables, maps all writable pages in both processes as shared and read-only, and increments frame reference counts. When either process writes, the CPU raises a protection fault; the kernel allocates a new frame, copies that single page, updates the faulting process's mapping to writable, and resumes. The cost is proportional to pages actually modified, plus the page-table copy (large processes still pay for it, which is why `vfork` and `posix_spawn` exist, and why forking a huge Redis process can cause latency spikes and memory growth). `mmap` maps a file (or anonymous memory) directly into the address space. File-backed mappings go through the page cache: pages are loaded on demand by page faults, all processes mapping the file share the same cached frames, and dirty pages are written back by the kernel (or via `msync`). `MAP_PRIVATE` uses COW semantics, `MAP_SHARED` propagates writes to the file. mmap avoids copies between kernel and user buffers and simplifies random access, but page-fault overhead, lack of explicit I/O error handling (SIGBUS) and TLB costs can make plain `read` faster for sequential access.",
+   "explanation": "Look for the protection-fault mechanism, reference counts, the exec rationale and the link between mmap and the shared page cache. Common error: saying fork duplicates all memory immediately.",
+   "tags": [
+    "fork",
+    "cow",
+    "mmap",
+    "virtual-memory"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qb-os-022",
+   "topic": "Operating Systems",
+   "type": "open",
+   "level": "Advanced",
+   "question": "Explain the difference between user-level threads, kernel threads and M:N threading. How does this relate to runtimes like Go's goroutines or Java's virtual threads?",
+   "model_answer": "Kernel threads (1:1 model, used by Linux pthreads and Windows) are scheduled by the OS: each can run on a different core, a blocking system call blocks only that thread, but creation and context switches are relatively expensive (microseconds, a megabyte of stack reserved). User-level threads (N:1) are managed by a library in user space; switching is a cheap function-like operation, but the kernel sees one thread, so there is no parallelism and a blocking system call stalls all of them. M:N threading multiplexes many user-level tasks onto a smaller pool of kernel threads, combining cheap tasks with parallelism, at the cost of a more complex runtime that must handle blocking calls (by handing the OS thread's other tasks to another thread, using non-blocking I/O with epoll/kqueue) and preemption. Go goroutines are M:N: small growable stacks, a work-stealing scheduler with a per-CPU run queue, and a network poller so that blocked goroutines do not hold OS threads; Java's virtual threads (Project Loom) similarly unmount from carrier threads when blocking. The trade-offs are runtime complexity, pitfalls with native/FFI calls that block carrier threads, thread-local semantics and debugging/stack-trace cost. For CPU-bound parallelism the number of kernel threads still bounds throughput.",
+   "explanation": "Interviewers look for the three models, how blocking calls are handled and a concrete runtime example. Weak answers claim green threads are always faster or can use many cores by themselves.",
+   "tags": [
+    "threads",
+    "scheduling",
+    "runtimes"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-os-023",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "A lock-free stack uses `compare_and_swap(&head, old, new)` to pop. Thread 1 reads `head = A` and `A->next = B`, is preempted, and other threads pop A, pop B, and then push A back (so head is A again, but B has been freed). Thread 1 resumes and its CAS succeeds. What is this problem called and what is a standard fix?",
+   "options": [
+    "The ABA problem; use tagged/versioned pointers (double-width CAS), hazard pointers or epoch-based reclamation",
+    "A false sharing problem; pad the head pointer to a cache line",
+    "A priority inversion; use priority inheritance",
+    "A livelock; use exponential backoff"
+   ],
+   "answer": 0,
+   "explanation": "CAS only checks that the value equals the expected one, not that nothing happened in between. The head is A again, but `A->next` has changed, so installing the stale `B` corrupts the stack (it now points to freed memory). Fixes: pair the pointer with a version counter so the CAS fails, use safe memory reclamation (hazard pointers, epoch-based reclamation, RCU) so A and B cannot be reused while a thread may still read them, or use load-linked/store-conditional where available. Garbage-collected languages avoid the memory-reuse flavor of the problem.",
+   "tags": [
+    "lock-free",
+    "atomics",
+    "concurrency"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Apple"
+   ]
+  },
+  {
+   "id": "qb-os-024",
+   "topic": "Operating Systems",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "After the kernel unmaps a page or changes its permissions on a multi-core machine, why must it perform a 'TLB shootdown'?",
+   "options": [
+    "Other cores may hold stale cached translations for that page, and hardware does not keep TLBs coherent, so the kernel must send inter-processor interrupts to invalidate them",
+    "Because the TLB is shared by all cores and locks during updates",
+    "The TLB is write-through and must be flushed to main memory",
+    "Page tables are stored in the TLB and must be written back to disk"
+   ],
+   "answer": 0,
+   "explanation": "Each core has its own TLB, and x86/ARM hardware does not automatically invalidate remote TLB entries when page tables change. If another core kept using a stale mapping, it could access freed memory or ignore a revoked permission (a security issue). The kernel therefore sends IPIs to the cores that may have the address space loaded, which execute `invlpg` (or equivalent) and acknowledge. Shootdowns are expensive, which is why kernels batch them, track which CPUs ran a process, use lazy flushing, and why frequent `munmap`/`mprotect` in multithreaded programs hurts scalability.",
+   "tags": [
+    "tlb",
+    "multicore",
+    "virtual-memory"
+   ],
+   "companies": [
+    "Google",
+    "Apple",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qb-os-025",
+   "topic": "Operating Systems",
+   "type": "open",
+   "level": "Expert",
+   "question": "A container is killed by the Linux OOM killer even though the host has free memory. Explain overcommit, cgroup memory limits and how you would diagnose and prevent it.",
+   "model_answer": "Linux allows memory overcommit: `malloc`/`mmap` hand out virtual address space that is only backed by physical frames when pages are first touched, so the kernel can promise more than exists. Under `vm.overcommit_memory=0` (heuristic) obviously absurd requests fail, mode 1 always allows, mode 2 enforces a commit limit. Memory cgroups (v1/v2) add a per-container limit (`memory.max`, or the Kubernetes memory limit) counting anonymous memory, page cache and kernel memory such as page tables and socket buffers. When a cgroup reaches its limit the kernel first reclaims what it can (dropping clean page cache, swapping if allowed); if allocation still cannot be satisfied it invokes the cgroup-scoped OOM killer, which picks a victim by `oom_score` (largest usage, adjustable with `oom_score_adj`), regardless of free memory on the host. Diagnosis: check `dmesg`/`journalctl -k` for 'Memory cgroup out of memory' with the per-process table, read `memory.events` (oom, oom_kill), `memory.current` and `memory.stat` (anon vs file, slab), use Kubernetes `OOMKilled` termination reason and the working-set metric, and profile the app (heap profiler, RSS versus the language runtime's accounting, thread stacks, mmap'd files, JVM/Go heap sizing relative to the limit). Prevention: set limits from measured peak plus headroom, configure runtimes to respect the limit (`GOMEMLIMIT`, `-XX:MaxRAMPercentage`), bound caches and queues, set requests close to limits for predictable scheduling, alert on `memory.high` pressure (PSI), and consider `memory.high` throttling before hard kills.",
+   "explanation": "A strong answer separates virtual from resident memory, explains that the cgroup limit (not host free memory) triggers the kill and gives concrete diagnostics. Weak answers say 'add more RAM' or confuse page cache with leaks.",
+   "tags": [
+    "linux",
+    "oom",
+    "cgroups",
+    "containers"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-db-001",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Given the setup and query below, what is returned?",
+   "code": "CREATE TABLE t (x INT);\nINSERT INTO t VALUES (1),(NULL),(3),(NULL);\n\nSELECT COUNT(*), COUNT(x), AVG(x) FROM t;",
+   "options": [
+    "4, 2, 1.0",
+    "4, 4, 1.0",
+    "4, 2, 2.0",
+    "2, 2, 2.0"
+   ],
+   "answer": 2,
+   "explanation": "`COUNT(*)` counts rows (4); `COUNT(x)` counts only non-NULL values (2); `AVG(x)` ignores NULLs, so it is (1 + 3) / 2 = 2.0, not 4 / 4. Aggregates other than `COUNT(*)` skip NULLs, which is why a column full of NULLs yields `SUM` = NULL rather than 0.",
+   "tags": [
+    "null",
+    "aggregates"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-db-002",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Using the tables `c` (customers) and `o` (orders), how many rows does this query return?",
+   "code": "CREATE TABLE c (id INT, name TEXT);\nINSERT INTO c VALUES (1,'Ann'),(2,'Bo'),(3,'Cy');\nCREATE TABLE o (id INT, cid INT, amt INT);\nINSERT INTO o VALUES (1,1,10),(2,1,20),(3,2,5);\n\nSELECT c.name, COUNT(o.id) FROM c LEFT JOIN o ON o.cid = c.id WHERE o.amt > 8 GROUP BY c.name;",
+   "options": [
+    "3 rows: (Ann, 2), (Bo, 1), (Cy, 0)",
+    "2 rows: (Ann, 2), (Bo, 1)",
+    "3 rows: (Ann, 2), (Bo, 0), (Cy, 0)",
+    "1 row: (Ann, 2)"
+   ],
+   "answer": 3,
+   "explanation": "The `LEFT JOIN` first produces Bo's order (amt 5) and Cy with NULL columns, but the `WHERE o.amt > 8` filter runs afterwards and removes both (5 > 8 is false, NULL > 8 is unknown). Only Ann's two orders remain, so the result is a single row. Putting the condition in the `ON` clause (`ON o.cid = c.id AND o.amt > 8`) would preserve Bo and Cy with a count of 0. Filtering on the right-hand table in `WHERE` silently turns an outer join into an inner join.",
+   "tags": [
+    "joins",
+    "left-join",
+    "gotchas"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qb-db-003",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "A table `order_items` has a foreign key `order_id` referencing `orders(id)` declared with `ON DELETE CASCADE`. What happens when you delete an order that has 5 items?",
+   "options": [
+    "The 5 item rows are archived to a hidden table",
+    "The 5 item rows are deleted automatically along with the order",
+    "The delete fails with a constraint violation",
+    "The 5 item rows keep their `order_id` and become orphans"
+   ],
+   "answer": 1,
+   "explanation": "`ON DELETE CASCADE` propagates the delete from the parent to dependent child rows, keeping referential integrity. Without a cascade clause the default (`NO ACTION`/`RESTRICT`) would reject the delete, and `ON DELETE SET NULL` would null the foreign key instead. Cascades are convenient but dangerous on large trees or when you need audit trails; consider soft deletes for important data.",
+   "tags": [
+    "constraints",
+    "foreign-keys"
+   ],
+   "companies": [
+    "Oracle",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qb-db-004",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Table `a` contains x = 1, 1, 2 and table `b` contains x = 2, 3. How many rows does `SELECT x FROM a UNION SELECT x FROM b` return?",
+   "code": "CREATE TABLE a (x INT);\nINSERT INTO a VALUES (1),(1),(2);\nCREATE TABLE b (x INT);\nINSERT INTO b VALUES (2),(3);\n\nSELECT COUNT(*) FROM (SELECT x FROM a UNION SELECT x FROM b);",
+   "options": [
+    "5",
+    "4",
+    "3",
+    "2"
+   ],
+   "answer": 2,
+   "explanation": "`UNION` removes duplicates across the combined result, producing 1, 2, 3 (three rows). `UNION ALL` keeps every row and would return 5. `UNION` needs a sort or hash step to deduplicate, so prefer `UNION ALL` when duplicates are impossible or acceptable.",
+   "tags": [
+    "set-operations",
+    "union"
+   ],
+   "companies": [
+    "Microsoft",
+    "Oracle",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qb-db-005",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Which is the correct logical order in which a SQL engine evaluates these clauses?",
+   "options": [
+    "WHERE, FROM, GROUP BY, SELECT, HAVING, ORDER BY",
+    "FROM, SELECT, WHERE, GROUP BY, HAVING, ORDER BY",
+    "SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY",
+    "FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY"
+   ],
+   "answer": 3,
+   "explanation": "Logically, rows are produced by `FROM`/`JOIN`, filtered by `WHERE`, grouped, filtered by `HAVING`, projected by `SELECT` (where aliases are created) and finally sorted by `ORDER BY` and limited. This explains why you cannot use a `SELECT` alias in `WHERE` (it does not exist yet) but can in `ORDER BY`, and why window functions can only appear in `SELECT` and `ORDER BY`. Physical execution can reorder operations as long as results match.",
+   "tags": [
+    "query-semantics",
+    "basics"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-db-006",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Table `t` has x = 1, 2, NULL. What does `SELECT COUNT(*) FROM t WHERE x <> 1` return?",
+   "code": "CREATE TABLE t (x INT);\nINSERT INTO t VALUES (1),(2),(NULL);\n\nSELECT COUNT(*) FROM t WHERE x <> 1;",
+   "options": [
+    "3",
+    "0",
+    "1",
+    "2"
+   ],
+   "answer": 2,
+   "explanation": "Predicates use three-valued logic. For x = 2 the condition is true; for x = 1 false; for NULL the comparison `NULL <> 1` is UNKNOWN, and `WHERE` keeps only rows where the condition is true. So only one row qualifies. To include NULLs use `x IS DISTINCT FROM 1` (or `x <> 1 OR x IS NULL`).",
+   "tags": [
+    "null",
+    "three-valued-logic"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qb-db-007",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "A query `SELECT * FROM events LIMIT 10` returns rows in a particular order in testing. Can production code rely on that order?",
+   "options": [
+    "Yes; rows always return in insertion order",
+    "Only on databases that use B-tree indexes",
+    "Yes; rows always return in primary key order",
+    "No; without `ORDER BY` the row order is unspecified and may change with plans, indexes or data layout"
+   ],
+   "answer": 3,
+   "explanation": "Relational tables are unordered sets; the optimizer may scan heap pages, an index or parallel workers, so order can change after updates, vacuuming, or a plan change. If the order matters, say so with `ORDER BY` and add a unique tie-breaker column for deterministic pagination.",
+   "tags": [
+    "ordering",
+    "basics"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qb-db-008",
+   "topic": "Databases & SQL",
+   "type": "open",
+   "level": "Basic",
+   "question": "Explain INNER, LEFT, RIGHT, FULL OUTER and CROSS joins, with an example of when you would use each.",
+   "model_answer": "An `INNER JOIN` returns only rows where the join condition matches in both tables, such as orders with their customers. A `LEFT JOIN` keeps every row from the left table and fills the right table's columns with NULL when there is no match; use it to find customers with or without orders, and combine it with `WHERE right.id IS NULL` for an anti-join (customers with no orders). `RIGHT JOIN` is the mirror image and is usually rewritten as a left join by swapping tables. `FULL OUTER JOIN` keeps unmatched rows from both sides, which is useful for reconciling two datasets (what is in A but not B, and vice versa). `CROSS JOIN` produces the Cartesian product (every pairing), used deliberately to generate combinations such as sizes by colors or calendar grids, and accidentally when a join condition is forgotten. Remember that conditions on the outer side's table belong in `ON`, not `WHERE`, or the join collapses to an inner join, and that duplicate keys on the join side multiply rows, which inflates aggregates.",
+   "explanation": "Strong answers include an example for each type, the anti-join pattern and the ON-versus-WHERE trap. Weak answers recite Venn diagrams without mentioning row multiplication or NULLs.",
+   "tags": [
+    "joins",
+    "sql-basics"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-db-009",
+   "topic": "Databases & SQL",
+   "type": "open",
+   "level": "Basic",
+   "question": "What is the difference between `DELETE`, `TRUNCATE` and `DROP`?",
+   "model_answer": "`DELETE` is a DML statement that removes rows matching an optional `WHERE` clause one by one; it fires row triggers, is fully logged, can be rolled back, respects foreign keys and leaves the table structure and identity counters intact (so space may not be reclaimed immediately). `TRUNCATE TABLE` is DDL-like: it removes all rows quickly by deallocating data pages with minimal logging, usually cannot take a `WHERE`, typically resets auto-increment/identity values, does not fire row-level delete triggers and may be blocked by foreign keys; whether it can be rolled back depends on the database (it can in PostgreSQL and SQL Server, but implicitly commits in MySQL and Oracle). `DROP TABLE` removes the table itself, including its structure, indexes, constraints and data, and any views or code depending on it will break. Use `DELETE` for selective removal, `TRUNCATE` to empty staging or temp tables, and `DROP` when the table is no longer needed; always run destructive statements inside a transaction or with a backup when possible.",
+   "explanation": "Interviewers want rollback, logging, WHERE support and identity behavior, and an awareness that the details are engine-specific.",
+   "tags": [
+    "ddl",
+    "dml",
+    "basics"
+   ],
+   "companies": [
+    "Oracle",
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qb-db-010",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "Given the table below, what does this query return?",
+   "code": "CREATE TABLE e (dept TEXT, sal INT);\nINSERT INTO e VALUES ('A',40),('A',70),('B',100),('C',30),('C',20),('C',90),('D',55),('E',60),('E',61);\n\nSELECT dept FROM e GROUP BY dept HAVING COUNT(*) >= 2 AND AVG(sal) > 50 ORDER BY dept;",
+   "options": [
+    "A, C, E",
+    "A, B, E",
+    "A, E",
+    "A, B, C, D, E"
+   ],
+   "answer": 2,
+   "explanation": "`HAVING` filters groups after aggregation. Department A has 2 rows with average 55; B has one row (fails `COUNT(*) >= 2`); C has 3 rows but its average is 46.67; D has one row; E has 2 rows averaging 60.5. Only A and E satisfy both conditions. Row-level filters belong in `WHERE`, aggregate filters in `HAVING`.",
+   "tags": [
+    "group-by",
+    "having"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-db-011",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What running totals does this query produce, in the order of the rows shown by `ORDER BY d, x`?",
+   "code": "CREATE TABLE s (d INT, x INT);\nINSERT INTO s VALUES (1,10),(2,20),(2,30),(3,40);\n\nSELECT SUM(x) OVER (ORDER BY d) AS running FROM s ORDER BY d, x;",
+   "options": [
+    "10, 60, 60, 100",
+    "10, 60, 90, 130",
+    "10, 30, 60, 100",
+    "10, 20, 50, 90"
+   ],
+   "answer": 0,
+   "explanation": "With `ORDER BY` and no explicit frame, the default window frame is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. `RANGE` treats rows with equal ordering values as peers, so both rows with d = 2 see the same total: 10 + 20 + 30 = 60. To get a strict row-by-row running total add `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` or a unique tie-breaker in the `ORDER BY`.",
+   "tags": [
+    "window-functions",
+    "frames"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-db-012",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "Which employees does this query return?",
+   "code": "CREATE TABLE e2 (name TEXT, dept TEXT, sal INT);\nINSERT INTO e2 VALUES ('a','X',10),('b','X',30),('c','X',50),('d','Y',20),('e','Y',20);\n\nSELECT name FROM e2 x WHERE sal > (SELECT AVG(sal) FROM e2 y WHERE y.dept = x.dept) ORDER BY name;",
+   "options": [
+    "No rows",
+    "Only c",
+    "c, d and e",
+    "b and c"
+   ],
+   "answer": 1,
+   "explanation": "The correlated subquery recomputes the average for each outer row's department. Department X averages (10+30+50)/3 = 30, so only c (50) is above it (b equals the average, not above). Department Y averages 20 and both employees earn exactly 20, so neither is greater. Alternatively compute it with `AVG(sal) OVER (PARTITION BY dept)` to avoid repeated subqueries.",
+   "tags": [
+    "subqueries",
+    "correlated"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "qb-db-013",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "Using tables `c` and `o` below, what row does this query return for customer Cy (who has no orders)?",
+   "code": "CREATE TABLE c (id INT, name TEXT);\nINSERT INTO c VALUES (1,'Ann'),(2,'Bo'),(3,'Cy');\nCREATE TABLE o (id INT, cid INT, amt INT);\nINSERT INTO o VALUES (1,1,10),(2,1,20),(3,2,5);\n\nSELECT c.name, COUNT(*), COUNT(o.id) FROM c LEFT JOIN o ON o.cid = c.id WHERE c.name = 'Cy' GROUP BY c.name;",
+   "options": [
+    "(Cy, 1, 0)",
+    "(Cy, 1, 1)",
+    "No row for Cy",
+    "(Cy, 0, 0)"
+   ],
+   "answer": 0,
+   "explanation": "The left join keeps Cy with all `o` columns NULL, which is one joined row. `COUNT(*)` counts that row (1), but `COUNT(o.id)` skips the NULL and returns 0. To count related rows correctly after an outer join, always count a column from the optional side.",
+   "tags": [
+    "joins",
+    "aggregates",
+    "null"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qb-db-014",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "There is an index on `orders(customer_id, total)`. Which query can be answered using only the index (an index-only or covering scan)?",
+   "options": [
+    "`SELECT total FROM orders WHERE customer_id = 42`",
+    "`SELECT status FROM orders WHERE customer_id = 42`",
+    "`SELECT customer_id FROM orders WHERE total > 100`",
+    "`SELECT * FROM orders WHERE customer_id = 42`"
+   ],
+   "answer": 0,
+   "explanation": "A covering index contains every column the query needs. The first query filters on the leading column and returns only `total`, both present in the index, so the table is never touched. The second needs all columns, the fourth needs `status`, and the third filters only on the second index column (no efficient seek, though some engines might scan the whole index). Included columns (`INCLUDE` in PostgreSQL/SQL Server) let you cover queries without enlarging the sort key.",
+   "tags": [
+    "indexes",
+    "performance",
+    "covering-index"
+   ],
+   "companies": [
+    "Amazon",
+    "Oracle",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-db-015",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "Two concurrent requests each run `SELECT balance` into the application, add 10, and `UPDATE ... SET balance = <computed>` under READ COMMITTED. The final balance reflects only one of the deposits. What is the anomaly and the best fix?",
+   "options": [
+    "Dirty read; switch to READ UNCOMMITTED",
+    "Lost update; do the arithmetic in the database (`SET balance = balance + 10`) or use `SELECT ... FOR UPDATE` / optimistic versioning",
+    "Deadlock; add retries",
+    "Phantom read; add an index"
+   ],
+   "answer": 1,
+   "explanation": "Both transactions read the same starting value and each overwrites the other's result, so one update is lost. A single atomic statement `UPDATE accounts SET balance = balance + 10 WHERE id = ?` makes the database take the row lock and apply the delta. When logic must happen in the application, lock the row with `SELECT ... FOR UPDATE`, use a version column and retry, or use a higher isolation level that detects the conflict.",
+   "tags": [
+    "transactions",
+    "concurrency",
+    "lost-update"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-db-016",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "A boolean column `is_active` is true for 97% of rows. Would a plain B-tree index on `is_active` help `SELECT * FROM users WHERE is_active = true`?",
+   "options": [
+    "Yes; an index always makes WHERE clauses faster",
+    "Usually not; the predicate is not selective, so the optimizer will prefer a sequential scan",
+    "No; boolean columns cannot be indexed",
+    "Yes, but only for `ORDER BY`"
+   ],
+   "answer": 1,
+   "explanation": "Index lookups involve random I/O for each matching row, which is slower than reading the table sequentially once the query returns a large fraction of it. Indexes pay off for selective predicates (a few percent of rows or fewer). Such a column may still be useful for the rare value: a partial index like `WHERE is_active = false` is small and efficient for finding the 3% minority.",
+   "tags": [
+    "indexes",
+    "selectivity"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-db-017",
+   "topic": "Databases & SQL",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "How would you find and remove duplicate rows in a table while keeping one copy of each?",
+   "model_answer": "First define what 'duplicate' means (the columns that should be unique, for example `email`) and decide which row to keep (oldest id, newest timestamp). Detect them with `SELECT email, COUNT(*) FROM users GROUP BY email HAVING COUNT(*) > 1`. To delete, number the rows in each group with a window function and remove everything except the first: `DELETE FROM users WHERE id IN (SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY email ORDER BY id) AS rn FROM users) t WHERE rn > 1)`. Variants include a self-join (`DELETE a FROM users a JOIN users b ON a.email = b.email AND a.id > b.id` in MySQL), a CTE with `DELETE` in PostgreSQL, or building a new deduplicated table with `SELECT DISTINCT ON` or `MIN(id)` and swapping it in. Do it inside a transaction after taking a backup, run the `SELECT` first to review which rows will be removed, handle child rows that reference the duplicates (re-point foreign keys before deleting), and batch large deletes to limit locks and log growth. Finally prevent recurrence with a `UNIQUE` constraint or unique index, normalizing values first (lower-casing emails), and use `INSERT ... ON CONFLICT` for upserts.",
+   "explanation": "Look for the keep-rule decision, a window-function solution, awareness of foreign keys and large-table batching, and the preventive unique constraint. A weak answer stops at `SELECT DISTINCT`, which does not delete anything.",
+   "tags": [
+    "window-functions",
+    "data-cleaning",
+    "dedup"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-db-018",
+   "topic": "Databases & SQL",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "A query is slow in production. How do you diagnose it using the query plan, and what do you look for?",
+   "model_answer": "Reproduce with realistic data and parameters, then run `EXPLAIN` (estimated plan) and `EXPLAIN ANALYZE` (actual execution with timings and row counts; careful with writes, wrap them in a rolled-back transaction). Read the plan from the innermost nodes outward and compare estimated rows with actual rows: large mismatches indicate stale or insufficient statistics (`ANALYZE`, extended statistics, histogram settings) and lead to poor join orders. Look for sequential scans on big tables with selective filters (missing or unusable index: functions on the column, type mismatches, leading wildcards, wrong column order in a composite index), nested-loop joins over large inputs, sorts and hashes spilling to disk, repeated subplans, high buffer reads or heap fetches, and lock waits. Fixes: add or reshape indexes (composite, covering, partial), rewrite the query (avoid `SELECT *`, push filters down, replace correlated subqueries with joins, limit early), update statistics, reduce data returned, partition or archive old data, cache results, or tune memory settings (`work_mem`). Verify improvement with the same metrics, check the write cost of new indexes and monitor with slow-query logs or `pg_stat_statements`.",
+   "explanation": "Good answers are systematic: measure first, compare estimates with actuals, then pick a targeted fix. Pitfall: adding indexes blindly or ignoring statistics.",
+   "tags": [
+    "performance",
+    "explain",
+    "indexes"
+   ],
+   "companies": [
+    "Amazon",
+    "Google",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-db-019",
+   "topic": "Databases & SQL",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "Compare OFFSET pagination with keyset (seek) pagination. Why does the former degrade on deep pages, and how do you implement the latter correctly?",
+   "model_answer": "`LIMIT 20 OFFSET 100000` forces the database to produce and discard the first 100,000 rows before returning 20, so cost grows linearly with page depth; it is also unstable when rows are inserted or deleted between requests (items repeat or are skipped). Keyset pagination remembers the last row seen and asks for rows after it: `WHERE (created_at, id) < (:last_created_at, :last_id) ORDER BY created_at DESC, id DESC LIMIT 20`. With an index on `(created_at, id)` the database seeks directly to the position, so every page costs about the same, and results are stable under concurrent writes. Requirements: a deterministic total order, which means a unique tie-breaker column (id) in both the `ORDER BY` and the cursor; an index matching the sort; and the cursor passed opaquely to the client (encode it, sign it if needed). Drawbacks: no random access to page N, awkward for multi-column mixed sort directions, and you must handle NULL ordering. OFFSET remains acceptable for small, mostly static datasets or admin screens.",
+   "explanation": "Strong answers mention row skipping/duplication under writes, the tuple comparison with a tie-breaker and the matching index. Common mistake: keyset paging on a non-unique column.",
+   "tags": [
+    "pagination",
+    "performance",
+    "api-design"
+   ],
+   "companies": [
+    "Meta",
+    "Stripe",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-db-020",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "A salaries table contains a:100, b:100, c:90, d:80. What does this query return?",
+   "code": "CREATE TABLE s (n TEXT, sal INT);\nINSERT INTO s VALUES ('a',100),('b',100),('c',90),('d',80);\n\nSELECT n FROM (SELECT n, DENSE_RANK() OVER (ORDER BY sal DESC) AS r FROM s) WHERE r = 2;",
+   "options": [
+    "c",
+    "No rows",
+    "c, d",
+    "b"
+   ],
+   "answer": 0,
+   "explanation": "`DENSE_RANK` gives tied salaries the same rank without gaps: 100 -> 1 (a, b), 90 -> 2 (c), 80 -> 3 (d). The query therefore returns c. With `RANK` the ranks would be 1, 1, 3, 4 and there would be no rank 2 at all, and `ROW_NUMBER` would arbitrarily label b as 2. For 'second highest distinct salary' use `DENSE_RANK` (or `SELECT DISTINCT ... OFFSET 1`).",
+   "tags": [
+    "window-functions",
+    "ranking"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Meta",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-db-021",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "The table `i` holds ids 1, 2, 3, 7, 8, 10. What does this 'gaps and islands' query return as (start, end) pairs?",
+   "code": "CREATE TABLE i (id INT);\nINSERT INTO i VALUES (1),(2),(3),(7),(8),(10);\n\nSELECT MIN(id), MAX(id) FROM (SELECT id, id - ROW_NUMBER() OVER (ORDER BY id) AS g FROM i) GROUP BY g ORDER BY 1;",
+   "options": [
+    "(1,3), (7,10)",
+    "(1,3), (7,8), (10,10)",
+    "(1,10)",
+    "(1,2), (3,3), (7,8), (10,10)"
+   ],
+   "answer": 1,
+   "explanation": "Within a run of consecutive ids, `id - ROW_NUMBER()` is constant. Row numbers are 1 to 6, so the differences are 0, 0, 0 for ids 1, 2, 3; 3, 3 for ids 7, 8; and 4 for id 10. Grouping by that difference yields three islands: (1,3), (7,8) and (10,10). This is the standard technique for finding streaks, sessions and gaps.",
+   "tags": [
+    "window-functions",
+    "gaps-and-islands"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-db-022",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "Several workers poll a `jobs` table for work. Which query pattern lets each worker claim a different pending job without blocking on rows other workers have locked?",
+   "options": [
+    "`SELECT ... LIMIT 1 FOR UPDATE` without any modifier",
+    "`SELECT ... WHERE status = 'pending' ORDER BY id LIMIT 1 FOR UPDATE SKIP LOCKED`",
+    "`LOCK TABLE jobs IN EXCLUSIVE MODE` before each select",
+    "`SELECT ... WHERE status = 'pending' LIMIT 1` followed by an `UPDATE` in a separate transaction"
+   ],
+   "answer": 1,
+   "explanation": "`FOR UPDATE SKIP LOCKED` (PostgreSQL 9.5+, MySQL 8, Oracle) locks the first unlocked matching row and silently skips rows already locked by other transactions, so workers proceed in parallel without duplicates or waiting. Plain `FOR UPDATE` makes workers queue behind the same row, and a separate select-then-update allows two workers to claim the same job. A table lock serializes everything. Commit (or set status to 'running') promptly and add a reaper for crashed workers.",
+   "tags": [
+    "locking",
+    "queues",
+    "concurrency"
+   ],
+   "companies": [
+    "Uber",
+    "Stripe",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-db-023",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "What does this recursive query return?",
+   "code": "CREATE TABLE emp (id INT, mgr INT);\nINSERT INTO emp VALUES (1,NULL),(2,1),(3,1),(4,2),(5,2),(6,4),(7,3);\n\nWITH RECURSIVE t(id) AS (\n  SELECT id FROM emp WHERE mgr = 2\n  UNION ALL\n  SELECT e.id FROM emp e JOIN t ON e.mgr = t.id\n)\nSELECT COUNT(*) FROM t;",
+   "options": [
+    "3",
+    "4",
+    "2",
+    "6"
+   ],
+   "answer": 0,
+   "explanation": "The anchor selects direct reports of employee 2 (ids 4 and 5). The recursive step repeatedly adds rows whose `mgr` is in the set found so far: employee 4 has report 6, while 5 has none. The final set is {4, 5, 6}, so the count is 3. Employee 2 itself is not included because the anchor starts from their reports. Recursive CTEs traverse hierarchies; guard against cycles in dirty data with a depth limit or visited-path check.",
+   "tags": [
+    "recursive-cte",
+    "hierarchies"
+   ],
+   "companies": [
+    "Amazon",
+    "Microsoft",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qb-db-024",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "You implement optimistic locking with a `version` column. Which update statement is correct, and how does the application detect a conflict?",
+   "options": [
+    "`UPDATE docs SET body = ?, version = version + 1 WHERE id = ? AND version = ?` and check that exactly one row was affected",
+    "`UPDATE docs SET body = ? WHERE id = ?` and compare timestamps afterwards",
+    "`UPDATE docs SET version = ? WHERE id = ?` before changing the body",
+    "`SELECT version` first, then `UPDATE docs SET body = ?` without a version predicate"
+   ],
+   "answer": 0,
+   "explanation": "The version check and the write must be one atomic statement. If someone else committed first, the `WHERE version = ?` predicate matches zero rows and the app sees 'rows affected = 0', then reloads, merges or reports a conflict. Checking in a separate statement leaves a race window. This avoids holding locks while a user edits, at the cost of retries under high contention.",
+   "tags": [
+    "optimistic-locking",
+    "concurrency"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon",
+    "Uber"
+   ]
+  },
+  {
+   "id": "qb-db-025",
+   "topic": "Databases & SQL",
+   "type": "open",
+   "level": "Advanced",
+   "question": "Design a relational schema for an e-commerce order system. Cover keys, price history, money, status, and the indexes you would add.",
+   "model_answer": "Core tables: `customers`, `products`, `orders`, `order_items`, `addresses` and `payments`. Use surrogate primary keys (bigint or UUID) plus natural unique constraints where they exist (`customers.email`, `products.sku`). `order_items(order_id, product_id, quantity, unit_price_cents, ...)` must snapshot the price, name and tax at purchase time rather than reference the current product price, so history stays correct when the catalog changes; a `product_prices` table with `valid_from`/`valid_to` handles scheduled pricing. Store money as integers in minor units (or `NUMERIC(12,2)`), with a currency code, never floating point. Keep order state in a constrained `status` column (enum or lookup table) with a separate `order_events` table for an audit trail, and use timestamps in UTC. Foreign keys enforce integrity; decide deliberately on `ON DELETE` (restrict for orders, no hard deletes of customers with orders, use soft delete or anonymization for privacy rules). Add a `CHECK (quantity > 0)` and a unique `(order_id, product_id)` if lines are merged. Indexes: `orders(customer_id, created_at DESC)` for order history, `orders(status, created_at)` for fulfillment queues (possibly partial), `order_items(order_id)` for joins, and `order_items(product_id)` for product analytics; avoid over-indexing write-heavy tables. Address copies on the order avoid breaking history when a customer edits an address. Inventory needs care: decrement with atomic `UPDATE ... WHERE stock >= qty` or reservation rows; payments should use idempotency keys. For reporting, offload to a replica or warehouse rather than adding indexes for analytics.",
+   "explanation": "Look for the price/address snapshot idea, integer money, deliberate delete and status modelling, and indexes justified by query patterns. Weak answers join to the live product price or use floats for money.",
+   "tags": [
+    "schema-design",
+    "modeling",
+    "indexes"
+   ],
+   "companies": [
+    "Amazon",
+    "Stripe",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "qb-db-026",
+   "topic": "Databases & SQL",
+   "type": "open",
+   "level": "Advanced",
+   "question": "Compare replication, read replicas and sharding. What problems does each solve and what new problems does it introduce?",
+   "model_answer": "Replication copies data from a primary to one or more standbys, usually by streaming the write-ahead log. It provides high availability (failover) and durability, and read replicas additionally scale read throughput. Asynchronous replication gives low write latency but introduces replica lag, so a user may not see their own write (mitigate with read-your-writes routing, sticky sessions, or reading from the primary after a write, or by using lag-aware routing); synchronous or quorum replication reduces data loss but increases commit latency and can stall writes if the replica is down. Failover brings split-brain risks that need fencing and consensus tooling. Replication does not scale writes or total data size, because every node stores everything. Sharding (horizontal partitioning) splits data across independent databases by a shard key (hash, range or directory-based) so both writes and storage scale. Costs: choosing a key that avoids hot shards and supports the main access patterns, cross-shard queries and joins becoming scatter-gather or impossible, distributed transactions (use sagas or avoid), resharding operations (consistent hashing or many small logical shards help), globally unique ids, and heavy operational complexity. Practical advice: first optimize queries and indexes, add caching, use vertical scaling, read replicas and partitioning within one node, and shard only when a single primary cannot keep up. Managed distributed SQL systems (Spanner, CockroachDB, Vitess) hide part of this at a cost in latency and complexity.",
+   "explanation": "A strong answer separates read scaling from write scaling, names replica lag and shard-key design as the central problems, and recommends sharding as a late step. Mixing up partitioning, replication and sharding is a red flag.",
+   "tags": [
+    "scalability",
+    "replication",
+    "sharding"
+   ],
+   "companies": [
+    "Meta",
+    "Uber",
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-db-027",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "A query joins two large tables (hundreds of millions of rows each) on an equality predicate, neither input is sorted, and there is no useful index. Which join algorithm will most optimizers choose?",
+   "options": [
+    "Merge join, sorting both inputs on the fly is always cheapest",
+    "Cartesian product followed by filtering",
+    "Nested loop join: scan the inner table once per outer row",
+    "Hash join: build a hash table on the smaller input and probe it with the other"
+   ],
+   "answer": 3,
+   "explanation": "For equi-joins on large unsorted inputs the hash join reads each side once, building an in-memory (or spilled-to-disk partitioned) hash table on the smaller one, giving O(N + M) work. Nested loops win when the outer side is small and the inner has an index. Merge join is attractive when both inputs are already sorted (for example by index order) or the output must be sorted; sorting 100M rows just to merge is typically costlier than hashing. Hash joins cannot handle non-equality predicates.",
+   "tags": [
+    "query-planner",
+    "joins",
+    "performance"
+   ],
+   "companies": [
+    "Google",
+    "Oracle",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-db-028",
+   "topic": "Databases & SQL",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "Why is it sufficient for a database to `fsync` the write-ahead log at commit, without flushing the modified data pages?",
+   "options": [
+    "Because uncommitted changes are never written to disk anyway",
+    "After a crash the log can be replayed to redo committed changes, so durability depends only on the log; data pages can be written lazily in the background",
+    "Because the OS guarantees pages are flushed within one second",
+    "Because data pages are always written before the log"
+   ],
+   "answer": 1,
+   "explanation": "WAL follows the rule 'log before data': a change's log record must be durable before the page is written, and a commit record must be durable before acknowledging commit. Sequential log appends are cheap, and on recovery the system redoes committed work from the last checkpoint (and undoes or ignores uncommitted work), so random page writes can be deferred and batched. Group commit amortizes the `fsync` across many transactions. This is also why losing the log device or disabling `fsync` breaks durability.",
+   "tags": [
+    "wal",
+    "durability",
+    "recovery"
+   ],
+   "companies": [
+    "Oracle",
+    "Google",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-db-029",
+   "topic": "Databases & SQL",
+   "type": "open",
+   "level": "Expert",
+   "question": "How would you perform a zero-downtime schema migration on a large, busy table, for example renaming a column or adding a NOT NULL column with a default?",
+   "model_answer": "Treat it as a multi-step rollout compatible with both old and new application versions (the expand/contract pattern). Expand: add the new nullable column (a metadata-only change in modern PostgreSQL and MySQL 8 for constant defaults, otherwise a long rewrite and lock), deploy code that writes both old and new columns (or use a trigger / dual-write), and backfill existing rows in small batches with throttling, keyed by primary key ranges, committing between batches to avoid long transactions, replication lag and lock pile-ups. Verify consistency with checksums or counts. Then switch reads to the new column behind a feature flag, monitor, and finally contract: stop writing the old column, deploy, and drop it later. Add constraints safely: create `NOT NULL`/`CHECK` as `NOT VALID` then `VALIDATE` (PostgreSQL), build indexes with `CREATE INDEX CONCURRENTLY`, add foreign keys the same way, and set `lock_timeout` plus retries so a DDL statement waiting for a lock cannot block the whole queue behind it. For large tables with unavoidable rewrites use online schema change tools (gh-ost, pt-online-schema-change, pg_repack) that copy rows into a shadow table, replay changes and cut over atomically. Always have a rollback plan, test on a production-sized copy, schedule outside peak, and watch replica lag and error rates.",
+   "explanation": "A top answer shows the phased expand/backfill/contract structure, lock awareness (lock timeouts, concurrent indexes) and batching. Weak answers propose a single `ALTER TABLE` during a maintenance window.",
+   "tags": [
+    "migrations",
+    "operations",
+    "availability"
+   ],
+   "companies": [
+    "Stripe",
+    "Meta",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "qb-db-030",
+   "topic": "Databases & SQL",
+   "type": "open",
+   "level": "Expert",
+   "question": "A query that was fast for months suddenly becomes 100x slower in production, with no schema change. What are the likely causes and how do you investigate and prevent recurrence?",
+   "model_answer": "Suspect a plan regression first: compare the current plan (`EXPLAIN (ANALYZE, BUFFERS)`, or plan history in Query Store / `pg_stat_statements` / AWR) with a previous good one. Common causes: stale or skewed statistics after data growth or a bulk load (rows estimated at 100, actual 10 million), so the planner flips from an index nested loop to a bad hash/seq-scan or the reverse; a data distribution change (a new customer with millions of rows) combined with a generic cached plan or 'parameter sniffing' where the plan compiled for one parameter value is reused for very different ones; table or index bloat and dead tuples (autovacuum not keeping up); a dropped or invalidated index, or an index no longer usable after a type or collation change in the application; memory pressure (`work_mem` too small causing disk spills, buffer cache evicted); lock contention or long-running transactions holding back vacuum; increased concurrency; or a version/config change. Investigation: reproduce with the problem parameter values, compare estimated and actual rows per node, check last analyze/vacuum times and bloat, look at wait events and locks, and examine system metrics (I/O, CPU, cache hit ratio). Remedies: `ANALYZE` or higher statistics targets and extended statistics, rewrite the query or use `OPTION (RECOMPILE)` / custom plans for skewed parameters, add or fix indexes, vacuum or reindex, pin plans temporarily with hints or plan baselines as an emergency stop-gap, and size memory. Prevention: monitor query latency percentiles per statement, alert on plan changes and on estimate-versus-actual drift, keep autovacuum tuned, test with production-like statistics and data skew, and have regression benchmarks in CI.",
+   "explanation": "Interviewers look for plan comparison as the first step, knowledge of statistics and parameter sniffing, and concrete observability. A weak answer says 'add an index' without diagnosing why the plan changed.",
+   "tags": [
+    "performance",
+    "query-planner",
+    "operations"
+   ],
+   "companies": [
+    "Amazon",
+    "Oracle",
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "qb-net-001",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Which well-known service listens on TCP port 22 by default?",
+   "options": [
+    "HTTPS",
+    "Telnet",
+    "SMTP",
+    "SSH"
+   ],
+   "answer": 3,
+   "explanation": "SSH uses port 22. Telnet uses 23, SMTP 25 (587 for submission), HTTP 80 and HTTPS 443. Port numbers below 1024 are 'well-known' and usually need elevated privileges to bind. Remember that the mapping is only a convention; any service can listen elsewhere.",
+   "tags": [
+    "ports",
+    "protocols"
+   ],
+   "companies": [
+    "Amazon",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-net-002",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What is the main job of DHCP?",
+   "options": [
+    "Automatically assign IP addresses and network settings (gateway, DNS servers) to hosts on a network",
+    "Translate domain names into IP addresses",
+    "Translate private IP addresses into a public address",
+    "Map IP addresses to MAC addresses on a LAN"
+   ],
+   "answer": 0,
+   "explanation": "A DHCP server leases an IP address together with the subnet mask, default gateway, DNS servers and other options through the DORA exchange (Discover, Offer, Request, Acknowledge). DNS resolves names, NAT rewrites addresses at a router, and ARP maps IPv4 addresses to MAC addresses.",
+   "tags": [
+    "dhcp",
+    "basics"
+   ],
+   "companies": [
+    "Microsoft",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "qb-net-003",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "What does ARP (Address Resolution Protocol) do on an Ethernet LAN?",
+   "options": [
+    "Routes packets between different subnets",
+    "Resolves a known IPv4 address of a neighbor into its MAC address",
+    "Resolves a hostname into an IP address",
+    "Assigns IP addresses to hosts"
+   ],
+   "answer": 1,
+   "explanation": "Before a host can send an Ethernet frame to a next hop it needs that hop's MAC address. It broadcasts an ARP request ('who has 192.168.1.1?'), the owner replies unicast, and the result is cached for a short time. For off-subnet destinations the host ARPs for its default gateway, not for the final destination. IPv6 uses Neighbor Discovery instead of ARP.",
+   "tags": [
+    "arp",
+    "layer2"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-net-004",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "A user is logged in, but requests an admin page they are not permitted to see. Which HTTP status code is the most appropriate response?",
+   "options": [
+    "401 Unauthorized",
+    "404 Not Found only, never 403",
+    "400 Bad Request",
+    "403 Forbidden"
+   ],
+   "answer": 3,
+   "explanation": "`403` means the server understood the request and knows who you are (or does not care), but refuses to authorize it. `401` (despite its name) means authentication is missing or invalid and should come with a `WWW-Authenticate` challenge. `400` is for malformed requests. Some sites return `404` to hide a resource's existence, but that is a deliberate disclosure trade-off rather than the standard answer.",
+   "tags": [
+    "http",
+    "status-codes"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Turing"
+   ]
+  },
+  {
+   "id": "qb-net-005",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "Which of these HTTP methods is defined as idempotent?",
+   "options": [
+    "POST",
+    "CONNECT",
+    "PUT",
+    "PATCH (always)"
+   ],
+   "answer": 2,
+   "explanation": "An idempotent method has the same effect on the server whether it is sent once or many times. `PUT` replaces a resource with the given representation, so repeating it leaves the same state; `GET`, `HEAD`, `DELETE` and `OPTIONS` are idempotent too. `POST` usually creates something new on each call and is not idempotent. `PATCH` may or may not be, depending on the patch semantics. This is why clients may safely retry `PUT` after a timeout but need idempotency keys for `POST`.",
+   "tags": [
+    "http",
+    "rest",
+    "idempotency"
+   ],
+   "companies": [
+    "Stripe",
+    "Amazon",
+    "Google"
+   ]
+  },
+  {
+   "id": "qb-net-006",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Basic",
+   "question": "How many usable host addresses are there in the subnet 192.168.5.0/27?",
+   "options": [
+    "31",
+    "62",
+    "30",
+    "32"
+   ],
+   "answer": 2,
+   "explanation": "A /27 leaves 32 - 27 = 5 host bits, so 2^5 = 32 addresses. The network address and the broadcast address are reserved, leaving 30 usable hosts. (/26 gives 62, /28 gives 14.)",
+   "tags": [
+    "subnetting",
+    "ip"
+   ],
+   "companies": [
+    "Microsoft",
+    "Oracle",
+    "Adobe"
+   ]
+  },
+  {
+   "id": "qb-net-007",
+   "topic": "Computer Networks",
+   "type": "open",
+   "level": "Basic",
+   "question": "Compare TCP and UDP. When would you pick each, and what does 'reliable' actually mean in TCP?",
+   "model_answer": "TCP is connection-oriented: a three-way handshake establishes state, and it provides reliable, ordered, byte-stream delivery using sequence numbers, acknowledgements, retransmission on timeout or duplicate ACKs, checksums, flow control (receive window) and congestion control. It also hides message boundaries, so applications must frame their own messages. UDP is connectionless and message-oriented: datagrams are sent with only a checksum, with no ordering, retransmission, congestion control or handshake. It has lower overhead and latency and supports broadcast and multicast. 'Reliable' means the stack will retransmit lost segments and deliver bytes in order or report a failure, not that data arrives on time or that the peer processed it. Use TCP for web traffic, databases, file transfer and APIs where correctness matters. Use UDP when timeliness beats completeness (VoIP, video calls, gaming, telemetry), for simple request/response such as DNS, or as the base for custom transports like QUIC, which re-implements reliability and congestion control with per-stream independence.",
+   "explanation": "Good answers go beyond 'TCP reliable, UDP fast': they mention framing, head-of-line blocking, congestion control and that QUIC builds on UDP. A pitfall is saying UDP is unreliable so it is never used for important data.",
+   "tags": [
+    "tcp",
+    "udp",
+    "transport"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-net-008",
+   "topic": "Computer Networks",
+   "type": "open",
+   "level": "Basic",
+   "question": "Explain how DNS resolution works for `www.example.com`, including recursive versus iterative queries and the role of caching and TTL.",
+   "model_answer": "The application asks the OS stub resolver, which checks its cache and then sends a recursive query to a configured resolver (ISP, corporate, or public like 8.8.8.8). The recursive resolver does the work iteratively if its cache lacks the answer: it asks a root server, which refers it to the `.com` TLD servers; the TLD servers refer it to the authoritative name servers for `example.com`; and those return the A/AAAA record (or a CNAME to follow). Each response carries a TTL, and resolvers cache both final answers and delegations (NS records), so most lookups never leave the resolver, and negative answers (NXDOMAIN) are cached too. Short TTLs allow fast failover and migrations but increase query load and latency; long TTLs reduce load but make changes slow to propagate, so teams lower the TTL before planned changes. Queries typically use UDP port 53, falling back to TCP for large responses or zone transfers, and DNSSEC, DoH and DoT secure integrity and privacy. Other record types worth knowing: MX, TXT, NS, SRV and the zone apex restriction on CNAME.",
+   "explanation": "Interviewers check that the candidate knows who talks to whom (stub, recursive, authoritative), that referrals are iterative, and that caching and TTL explain 'propagation delay'. Common error: saying DNS changes 'propagate' by being pushed.",
+   "tags": [
+    "dns",
+    "caching"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-net-009",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "Which of these addresses is NOT a private (RFC 1918) address?",
+   "options": [
+    "192.168.100.5",
+    "172.32.4.1",
+    "10.200.1.1",
+    "172.16.8.9"
+   ],
+   "answer": 1,
+   "explanation": "RFC 1918 private ranges are 10.0.0.0/8, 172.16.0.0/12 (172.16.0.0 to 172.31.255.255) and 192.168.0.0/16. 172.32.4.1 falls just outside the /12 block, so it is a public address. Mistaking all of 172.x for private is a common error that leads to broken firewall rules.",
+   "tags": [
+    "ip",
+    "private-addresses"
+   ],
+   "companies": [
+    "Microsoft",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-net-010",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does a NAT gateway doing port address translation (PAT) keep in its translation table?",
+   "options": [
+    "Only the private IPs, since ports are never translated",
+    "Mappings from (private IP, private port) to (public IP, translated port) for each active flow, so replies can be returned to the right host",
+    "A copy of each packet's payload for retransmission",
+    "The MAC addresses of all internet servers contacted"
+   ],
+   "answer": 1,
+   "explanation": "With many hosts sharing one public IP, the NAT rewrites the source address and port of outgoing packets to a unique public port and records the mapping. Return traffic to that port is rewritten back. Entries expire after idle timeouts, which explains dropped long-idle connections (use keepalives). Because inbound flows have no mapping, NAT also blocks unsolicited connections by default and complicates peer-to-peer apps (hole punching, STUN/TURN).",
+   "tags": [
+    "nat",
+    "ip"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Cisco"
+   ]
+  },
+  {
+   "id": "qb-net-011",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "A browser has a cached copy of a resource with `ETag: \"v7\"`. How does it revalidate, and what does the server send if the resource is unchanged?",
+   "options": [
+    "It sends `Cache-Control: no-cache`; the server replies `204 No Content`",
+    "It sends `If-Match: \"v7\"`; the server replies `200 OK` with the full body",
+    "It sends `Range: bytes=0-`; the server replies `206 Partial Content`",
+    "It sends `If-None-Match: \"v7\"`; the server replies `304 Not Modified` with no body"
+   ],
+   "answer": 3,
+   "explanation": "Conditional GET: the client sends the validator in `If-None-Match` (or `If-Modified-Since` for dates). If the ETag still matches, the server returns `304` with headers but no body, saving bandwidth while still confirming freshness. `If-Match` is for safe updates (optimistic concurrency) on writes. `Cache-Control: max-age` decides whether a revalidation is needed at all.",
+   "tags": [
+    "http",
+    "caching"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qb-net-012",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "Which single summary route correctly aggregates the four networks 10.0.4.0/24, 10.0.5.0/24, 10.0.6.0/24 and 10.0.7.0/24 without including other addresses?",
+   "options": [
+    "10.0.4.0/23",
+    "10.0.4.0/21",
+    "10.0.4.0/22",
+    "10.0.0.0/22"
+   ],
+   "answer": 2,
+   "explanation": "The third octets 4 to 7 differ only in the last two bits (000001xx), so the shared prefix is 16 + 6 = 22 bits and the block is 10.0.4.0/22, which covers exactly 10.0.4.0 through 10.0.7.255. A /23 would cover only two of them; 10.0.0.0/22 covers third octets 0 to 3; a /21 would also include 10.0.0.x - 10.0.3.x. The block must also start on a boundary aligned to its size.",
+   "tags": [
+    "cidr",
+    "routing",
+    "calculation"
+   ],
+   "companies": [
+    "Microsoft",
+    "Cisco",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-net-013",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "A client connects to a TCP port on which no process is listening. What does the server's OS typically send back?",
+   "options": [
+    "Nothing; the client times out after the handshake retries",
+    "A FIN segment, closing the connection politely",
+    "An ICMP echo reply",
+    "A TCP segment with the RST flag, so the client immediately gets 'connection refused'"
+   ],
+   "answer": 3,
+   "explanation": "A SYN to a closed port is answered with RST (reset), which the client reports as connection refused almost instantly. A firewall that silently drops packets instead causes a timeout, which is a useful diagnostic distinction: 'refused' means the host is reachable but nothing is listening, 'timed out' means filtering, routing problems or a dead host. (UDP to a closed port typically yields an ICMP port unreachable.)",
+   "tags": [
+    "tcp",
+    "troubleshooting"
+   ],
+   "companies": [
+    "Amazon",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-net-014",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Intermediate",
+   "question": "What does the `HttpOnly` cookie attribute protect against?",
+   "options": [
+    "Cross-site requests including the cookie (CSRF)",
+    "Reading the cookie from JavaScript, which limits session theft via XSS",
+    "Cookie theft by a network eavesdropper",
+    "Sending the cookie over plain HTTP"
+   ],
+   "answer": 1,
+   "explanation": "`HttpOnly` hides the cookie from `document.cookie`, so an injected script cannot read the session ID (it can still make requests that carry the cookie). `Secure` restricts it to HTTPS, and `SameSite` limits cross-site sending, which is the main CSRF defense. Use all three on session cookies.",
+   "tags": [
+    "cookies",
+    "security",
+    "http"
+   ],
+   "companies": [
+    "Google",
+    "Meta",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qb-net-015",
+   "topic": "Computer Networks",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "Compare REST over HTTP, gRPC, WebSockets and Server-Sent Events. Which would you choose for different scenarios?",
+   "model_answer": "REST over HTTP/JSON is ubiquitous, cacheable, easy to debug and works through every proxy, so it suits public APIs and CRUD-style services; the costs are text serialization overhead, no built-in streaming contract and weak typing unless OpenAPI is used. gRPC runs on HTTP/2 with Protocol Buffers: compact binary messages, generated typed clients, deadlines, and four call types including client, server and bidirectional streaming. It is excellent for internal service-to-service traffic and polyglot microservices, but needs proxies for browsers (gRPC-web), is harder to inspect and is less cache-friendly. WebSockets upgrade an HTTP connection to a persistent, full-duplex channel for low-latency two-way messages (chat, collaborative editing, games) at the cost of stateful connections that complicate load balancing, auth refresh, scaling and backpressure. Server-Sent Events provide one-way server-to-client streaming over plain HTTP with automatic reconnection and event IDs, which is ideal for notifications, live feeds and progress updates, and simpler than WebSockets when the client does not need to stream back. Selection criteria: direction of data flow, latency, browser support, payload size, evolvability and operational tooling.",
+   "explanation": "Strong answers choose by requirements, not fashion, and mention operational concerns like load balancing sticky connections, proxies and observability.",
+   "tags": [
+    "api-design",
+    "websockets",
+    "grpc"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qb-net-016",
+   "topic": "Computer Networks",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "How does a CDN work, and how do you handle cache invalidation and personalized content?",
+   "model_answer": "A CDN places caching reverse proxies (points of presence) near users. DNS (GeoDNS) or anycast routing steers a request to a nearby edge; on a cache hit the edge serves it directly, on a miss it fetches from the origin (often through a mid-tier or origin shield to collapse duplicate misses), stores the response according to `Cache-Control`/`Surrogate-Control`, and serves later requests. Benefits: lower latency, offloaded origin, absorbed traffic spikes and DDoS, plus TLS termination close to users. Cache keys are built from URL plus selected headers or cookies (`Vary`), so careless variation fragments the cache. Invalidation options: versioned or fingerprinted asset URLs (`app.3f9a1c.js`) with very long TTLs, which avoids invalidation entirely; short TTLs with `stale-while-revalidate`; explicit purge by URL, surrogate key/tag, or soft purge via API. Personalized or authenticated responses should be `private`/`no-store` or bypass the cache, or be split: cache the static shell and fetch user-specific data via API, or use edge compute and signed cookies for access control. Watch for accidentally caching personalized pages (a serious data leak), cache poisoning via unkeyed headers, and for monitoring hit ratio and origin load.",
+   "explanation": "Interviewers want the miss path, cache-key reasoning, fingerprinting as the primary invalidation strategy and an awareness of the security risk of caching private data.",
+   "tags": [
+    "cdn",
+    "caching",
+    "architecture"
+   ],
+   "companies": [
+    "Cloudflare",
+    "Netflix",
+    "Amazon"
+   ]
+  },
+  {
+   "id": "qb-net-017",
+   "topic": "Computer Networks",
+   "type": "open",
+   "level": "Intermediate",
+   "question": "A website is slow only for users in one office. Walk through how you would diagnose this using network tools.",
+   "model_answer": "Start by scoping: is it all sites or one, all users or one device, always or at certain times, wired or Wi-Fi? Then break the request into stages. DNS: `dig`/`nslookup` against the office resolver versus a public one to compare latency and answers. Connectivity and path: `ping` for loss and RTT, `traceroute`/`mtr` to find where latency or loss begins (remembering that ICMP rate limiting can mislead). Transport and TLS: `curl -w` with timing variables (`time_namelookup`, `time_connect`, `time_appconnect`, `time_starttransfer`, `time_total`) shows which phase is slow; large TLS or first-byte time implicates the server, slow connect implicates the network. Compare with a user elsewhere and with a different protocol version. Packet capture (`tcpdump`/Wireshark) can reveal retransmissions, zero-window advertisements, MTU or fragmentation issues, or a proxy/firewall injecting delays. Local factors include saturated uplinks (check interface counters and QoS), Wi-Fi interference, a misconfigured proxy or DPI appliance, a bad DNS forwarder, MTU/MSS clamping problems on a VPN, or IPv6 fallback delays. Fix the confirmed cause, then verify with the same measurements and add monitoring (synthetic checks from that office).",
+   "explanation": "Good answers show a layered, hypothesis-driven approach and name specific tools and what each rules in or out. Weak answers say 'restart the router' or reach for packet captures first.",
+   "tags": [
+    "troubleshooting",
+    "dns",
+    "tcp"
+   ],
+   "companies": [
+    "Amazon",
+    "Cloudflare",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "qb-net-018",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "A 100 Mbps path has a round-trip time of 80 ms. Roughly what receive window does a single TCP connection need to fully use the link, and what throughput is limited to by a fixed 65,535-byte window?",
+   "options": [
+    "About 10 KB window; about 1 Mbps with a 64 KB window",
+    "About 64 KB window; about 100 Mbps with a 64 KB window",
+    "About 1,000,000 bytes (1 MB) window; about 6.5 Mbps with a 64 KB window",
+    "About 1,000,000 bytes (1 MB) window; about 65 Mbps with a 64 KB window"
+   ],
+   "answer": 2,
+   "explanation": "Bandwidth-delay product = 100,000,000 bit/s * 0.08 s = 8,000,000 bits = 1,000,000 bytes must be in flight to keep the pipe full. With only 65,535 bytes in flight per RTT, throughput = 65,535 * 8 bits / 0.08 s = about 6.55 Mbps, regardless of link speed. This is why TCP window scaling (RFC 7323) exists and why long fat networks need large buffers.",
+   "tags": [
+    "tcp",
+    "bdp",
+    "calculation"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "qb-net-019",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "Pings work and small requests succeed, but large HTTPS responses from one server hang. Packets are sent with the DF bit set, and a firewall on the path drops all ICMP. What is the likely cause?",
+   "options": [
+    "TCP slow start never completes because of ECN",
+    "The server's TLS certificate has expired",
+    "A DNS cache poisoning attack",
+    "A path MTU black hole: ICMP 'fragmentation needed' messages are blocked, so the sender keeps using packets too large for a smaller-MTU link"
+   ],
+   "answer": 3,
+   "explanation": "Path MTU Discovery relies on routers returning ICMP 'destination unreachable / fragmentation needed' when a DF packet exceeds a link MTU. If a firewall drops those ICMP messages, the sender never learns the right size: small packets (handshakes, small responses) pass but full-size segments vanish silently and the connection stalls. Typical culprits are tunnels and VPNs (reduced MTU). Fixes: allow ICMP type 3 code 4 (and ICMPv6 Packet Too Big), clamp the MSS on the tunnel interface, or enable PLPMTUD (packetization-layer discovery).",
+   "tags": [
+    "mtu",
+    "icmp",
+    "troubleshooting"
+   ],
+   "companies": [
+    "Cloudflare",
+    "Google",
+    "Cisco"
+   ]
+  },
+  {
+   "id": "qb-net-020",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Advanced",
+   "question": "Which statement about BGP is correct?",
+   "options": [
+    "It is a path-vector protocol used between autonomous systems, selecting routes by policy attributes such as local preference and AS-path length",
+    "It is a link-state protocol used inside one network that floods topology via Dijkstra",
+    "It is a layer 2 protocol that builds loop-free Ethernet topologies",
+    "It uses hop count only, like RIP, and cannot express policy"
+   ],
+   "answer": 0,
+   "explanation": "BGP exchanges reachability (prefixes with attributes such as AS_PATH, LOCAL_PREF, MED) between autonomous systems and picks routes primarily by business and policy rules rather than shortest distance; the AS_PATH also provides loop prevention. OSPF and IS-IS are link-state interior gateway protocols; RIP is distance-vector hop-count; spanning tree is the layer 2 loop prevention. BGP's trust-based design is why route leaks and hijacks occur and why RPKI/ROA validation matters.",
+   "tags": [
+    "routing",
+    "bgp"
+   ],
+   "companies": [
+    "Cloudflare",
+    "Google",
+    "Cisco"
+   ]
+  },
+  {
+   "id": "qb-net-021",
+   "topic": "Computer Networks",
+   "type": "open",
+   "level": "Advanced",
+   "question": "How does a SYN flood attack work, and how do SYN cookies and other mitigations defend against it?",
+   "model_answer": "In the TCP handshake the server allocates connection state (a half-open entry in the SYN queue) when it receives a SYN and replies SYN-ACK, waiting for the final ACK. An attacker sends many SYNs, often with spoofed source addresses, so the ACK never arrives; the SYN backlog fills and legitimate clients are refused. SYN cookies avoid keeping state: the server encodes the needed information (a hash of addresses, ports and a timestamp secret, plus the MSS index) into its initial sequence number in the SYN-ACK and discards the entry. When a genuine client returns an ACK with ISN+1, the server validates the cookie and reconstructs the connection, so spoofed SYNs cost almost nothing. The trade-off is that some TCP options (window scale, SACK) are lost unless encoded or via timestamps. Other mitigations: larger backlog and shorter SYN-ACK retry timers, rate limiting and connection limits per source, ingress filtering (BCP 38) to stop spoofing, upstream scrubbing or anycast absorption, and offloading to load balancers or CDNs that terminate TCP. SYN floods are a volumetric or resource-exhaustion DoS, distinct from application-layer attacks like slowloris.",
+   "explanation": "Interviewers want the stateful-allocation insight, how cookies make the server stateless until the final ACK, and the limitations. Common mistake: confusing SYN cookies with HTTP cookies or claiming they stop all DDoS.",
+   "tags": [
+    "security",
+    "tcp",
+    "ddos"
+   ],
+   "companies": [
+    "Cloudflare",
+    "Google",
+    "Cisco"
+   ]
+  },
+  {
+   "id": "qb-net-022",
+   "topic": "Computer Networks",
+   "type": "open",
+   "level": "Advanced",
+   "question": "Explain how email delivery works end to end and how SPF, DKIM and DMARC reduce spoofing.",
+   "model_answer": "A mail client submits a message to its provider's SMTP submission server (port 587 with STARTTLS or 465), which authenticates the user. The sending server looks up the recipient domain's MX records in DNS, connects to the highest-priority reachable MX host on port 25 and relays the message via SMTP, retrying with backoff on temporary failures. The receiving server may filter spam, then stores the message in a mailbox that users read via IMAP or POP3 or a web client. Because SMTP does not authenticate the visible `From` header, three DNS-based mechanisms were added. SPF publishes in a TXT record which IPs may send mail for a domain; receivers check the connecting IP against the envelope sender (MAIL FROM). DKIM signs selected headers and the body with a private key; the public key is in DNS under a selector, so receivers can verify integrity and the signing domain. DMARC ties them together: it requires that SPF or DKIM pass *and align* with the visible From domain, and tells receivers what to do on failure (`none`, `quarantine`, `reject`), with reporting addresses for visibility. Forwarding and mailing lists can break SPF and modify content (breaking DKIM), which ARC helps with. Deployment practice is to start DMARC at `p=none`, analyze reports, fix legitimate senders, then tighten.",
+   "explanation": "Strong answers explain alignment with the visible From header (the key idea in DMARC) and mention MX lookups plus retries. A pitfall is claiming SPF validates the From address a user sees.",
+   "tags": [
+    "email",
+    "smtp",
+    "security",
+    "dns"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "qb-net-023",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "How does BBR congestion control fundamentally differ from loss-based algorithms such as CUBIC?",
+   "options": [
+    "BBR only reacts to ECN marks and ignores RTT",
+    "BBR builds a model from measured bottleneck bandwidth and minimum RTT and paces packets to that rate, instead of treating loss as the congestion signal",
+    "BBR retransmits every packet twice to avoid loss",
+    "BBR uses a fixed window equal to the receiver window"
+   ],
+   "answer": 1,
+   "explanation": "CUBIC (and Reno) grow the congestion window until packets are lost and then back off, which fills router buffers (bufferbloat) and misreads random loss on wireless or long paths as congestion. BBR continuously estimates the bottleneck bandwidth and the minimum RTT, keeps about one bandwidth-delay product in flight, and paces transmissions, aiming for high throughput with low queueing delay. It can beat loss-based algorithms on lossy long-haul links, but early versions could be unfair to CUBIC flows sharing a bottleneck, which BBRv2/v3 address.",
+   "tags": [
+    "tcp",
+    "congestion-control"
+   ],
+   "companies": [
+    "Google",
+    "Netflix",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-net-024",
+   "topic": "Computer Networks",
+   "type": "mcq",
+   "level": "Expert",
+   "question": "A request/response protocol sends a small header and then a small body in two separate `write()` calls on a TCP socket. Latency is consistently about 40 ms higher than expected. What is the most likely cause, and the fix?",
+   "options": [
+    "Slow start restarting after each write; increase initial cwnd",
+    "DNS lookups being repeated for every write",
+    "TIME_WAIT accumulation; enable SO_REUSEADDR",
+    "Interaction of Nagle's algorithm with the receiver's delayed ACK; disable Nagle with `TCP_NODELAY` or send header and body in one write"
+   ],
+   "answer": 3,
+   "explanation": "Nagle's algorithm holds back a small segment while earlier data is unacknowledged. The receiver, waiting to piggyback its ACK (delayed ACK, typically up to 40 ms on Linux and 200 ms on others), has nothing to send until the second segment arrives, so each side waits on the other until the timer fires. Coalescing the two writes (`writev` or buffering) is the cleanest fix; `TCP_NODELAY` is the usual remedy for latency-sensitive protocols. TCP quick-ACK modes also help.",
+   "tags": [
+    "tcp",
+    "latency",
+    "nagle"
+   ],
+   "companies": [
+    "Google",
+    "Amazon",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "qb-net-025",
+   "topic": "Computer Networks",
+   "type": "open",
+   "level": "Expert",
+   "question": "Design the network path for a latency-sensitive API serving users globally. Cover DNS, edge termination, protocol choices, connection reuse and failure handling.",
+   "model_answer": "Goals: minimize round trips and distance to the user while keeping the origin region count manageable. Routing: use anycast IPs and/or latency-based GeoDNS with low TTLs and health checks so users reach the nearest healthy edge or regional endpoint; fail over by withdrawing anycast announcements or updating DNS. Edge: terminate TLS and (where possible) QUIC/HTTP/3 near users, using TLS 1.3 (1-RTT) with session resumption; 0-RTT can cut another round trip but is replayable, so allow it only for idempotent requests. Between edge and origin keep long-lived, multiplexed HTTP/2 or gRPC connections over a private backbone to avoid repeated handshakes and slow-start penalties, tune initial congestion window and enable BBR where beneficial. Application: cache what is cacheable at the edge, collapse duplicate misses with an origin shield, use read replicas or multi-region data close to users with a clear consistency model, and move per-user decisions (auth token validation, routing) to the edge. Resilience: timeouts and budgets per hop, retries with jitter only for idempotent calls and with retry budgets to prevent storms, circuit breakers, connection draining on deploys, and load shedding at overload. Observability: measure DNS, connect, TLS and TTFB per region from real-user monitoring and synthetic probes, and track p99 rather than averages. Trade-offs include consistency versus latency for writes, the operational cost of multi-region, and 0-RTT security.",
+   "explanation": "A top answer combines concrete mechanisms (anycast, TLS 1.3, HTTP/3, connection pooling) with failure-handling discipline (retry budgets, draining) and explicit trade-offs. Weak answers just say 'use a CDN'.",
+   "tags": [
+    "system-design",
+    "latency",
+    "quic",
+    "dns"
+   ],
+   "companies": [
+    "Cloudflare",
+    "Netflix",
+    "Google",
+    "Uber"
+   ]
+  }
+ ]
+}

@@ -71,6 +71,14 @@ class TestAttempt(Base):
     result: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
+class AppMeta(Base):
+    """Small key/value store for app bookkeeping (e.g. the hash of the last content seed)."""
+    __tablename__ = "app_meta"
+
+    key: Mapped[str] = mapped_column(String(60), primary_key=True)
+    value: Mapped[str] = mapped_column(String(200), default="")
+
+
 class ContentItem(Base):
     __tablename__ = "content_items"
     __table_args__ = (UniqueConstraint("kind", "slug"),)
@@ -264,5 +272,39 @@ class HackathonSubmission(Base):
     rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    user: Mapped[User] = relationship()
+
+
+# ---------------------------------------------------------------- interview integrity
+
+class InterviewStrike(Base):
+    """One suspected cheating event during an AI interview."""
+    __tablename__ = "interview_strikes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("interview_sessions.id", ondelete="CASCADE"), index=True)
+    # left_tab | paste | ai_tool_on_screen | another_person | phone | other
+    kind: Mapped[str] = mapped_column(String(30))
+    detail: Mapped[str] = mapped_column(String(400), default="")
+    action: Mapped[str] = mapped_column(String(12), default="warning")  # warning | terminated
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class InterviewBan(Base):
+    """Escalating bans from AI interviews after an interview is terminated for cheating."""
+    __tablename__ = "interview_bans"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    session_id: Mapped[int | None] = mapped_column(ForeignKey("interview_sessions.id", ondelete="SET NULL"),
+                                                   nullable=True)
+    offense: Mapped[int] = mapped_column(Integer)  # counted offense number (1st, 2nd, ...)
+    reason: Mapped[str] = mapped_column(String(400), default="")
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)  # None = permanent
+    lifted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lifted_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     user: Mapped[User] = relationship()

@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api, getToken, setToken } from "./api";
+import { clearApiCache } from "./useApi";
 
 const AuthContext = createContext(null);
 
@@ -42,6 +43,7 @@ export function AuthProvider({ children }) {
 
   const signIn = useCallback(async (path, payload) => {
     const data = await api(path, { body: payload });
+    clearApiCache();
     setToken(data.token);
     setUser(data.user);
     return data.user;
@@ -56,6 +58,7 @@ export function AuthProvider({ children }) {
       login: (email, password) => signIn("/api/auth/login", { email, password }),
       register: (payload) => signIn("/api/auth/register", payload),
       logout: () => {
+        clearApiCache();
         setToken(null);
         setUser(null);
       },

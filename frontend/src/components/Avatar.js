@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import Avatar3D from "./Avatar3D";
 import { cx } from "./ui";
 
 const DEFAULT_LOOK = {
@@ -17,12 +18,23 @@ function shade(hex, amount) {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 }
 
+const MIN_3D_SIZE = 120;
+
 /**
- * Animated AI interviewer with body motion.
- * `persona` supplies gender + appearance; `level` (0–1) drives lip-sync and gestures;
- * `state` is idle | speaking | listening | thinking.
+ * The AI interviewer. Uses the persona's realistic 3D model (with lip-sync) when one is configured
+ * and there's room for it, otherwise the illustrated avatar.
+ * `state` is idle | speaking | listening | thinking; `utterance` is { id, text, duration } while speaking.
  */
-export default function Avatar({ persona, level = 0, state = "idle", size = 260 }) {
+export default function Avatar({ persona, level = 0, state = "idle", size = 260, utterance }) {
+  const illustrated = <IllustratedAvatar persona={persona} level={level} state={state} size={size} />;
+  if (persona?.model_url && size >= MIN_3D_SIZE) {
+    return <Avatar3D persona={persona} state={state} utterance={utterance} size={size} fallback={illustrated} />;
+  }
+  return illustrated;
+}
+
+/** Illustrated SVG interviewer with body motion; `level` (0–1) drives lip-sync and gestures. */
+export function IllustratedAvatar({ persona, level = 0, state = "idle", size = 260 }) {
   const uid = useId().replace(/:/g, "");
   const female = (persona?.gender || "female") === "female";
   const look = { ...DEFAULT_LOOK[female ? "female" : "male"], ...(persona?.appearance || {}) };

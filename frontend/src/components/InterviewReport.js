@@ -16,6 +16,12 @@ export default function InterviewReport({ session }) {
 
   return (
     <div className="mx-auto max-w-5xl animate-fade-up">
+      {f.terminated && (
+        <div className="mb-6 rounded-2xl border border-bad/40 bg-bad/10 p-4 text-sm text-bad">
+          <p className="font-semibold">This interview was terminated for an integrity violation.</p>
+          <p className="mt-1 text-bad/80">{f.summary}</p>
+        </div>
+      )}
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs font-semibold tracking-widest text-brand uppercase">Interview report</p>

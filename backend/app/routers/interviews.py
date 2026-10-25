@@ -13,7 +13,7 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import InterviewSession, User
 from ..routers.auth import user_out
-from ..services import ai
+from ..services import ai, integrity
 from ..services.scoring import XP_INTERVIEW, award
 
 router = APIRouter(prefix="/api/interviews", tags=["interviews"])
@@ -126,10 +126,13 @@ def _system_prompt(db: Session, s: InterviewSession) -> str:
     brief = kind["brief"].format(role=s.role, level=s.level, problem=_problem_text(problem) if problem else "")
     kb = q.relevant_knowledge(db, f"{s.kind} {s.role} {kind['title']} interview hinting analogies", limit=2)
     kb_text = "\n\n".join(f"[{d['title']}]\n{d['content']}" for d in kb)
+    candidate = s.context.get("candidate") or "the candidate"
     return (
         f"You are {persona['name']}, {persona.get('title', 'an interviewer')} at Programming Haven. "
         f"Personality: {persona.get('personality', '')}\n"
         f"You are conducting {brief}\n\n"
+        f"The candidate's name is {candidate}. Address them as {candidate}. Your own name is {persona['name']}: "
+        f"never call the candidate {persona['name']} or any other name.\n\n"
         "Rules:\n"
         "- This is a live voice call. Speak naturally. No Markdown, bullet points or code blocks.\n"
         "- Keep every turn under 60 words and ask exactly ONE question per turn.\n"
@@ -160,10 +163,12 @@ def _session_out(db: Session, s: InterviewSession) -> dict:
     return {
         "id": s.id, "kind": s.kind, "mode": kind["mode"], "title": kind["title"], "role": s.role, "level": s.level,
         "interviewer": persona["name"],
-        "persona": {k: persona.get(k) for k in ("id", "name", "gender", "title", "voice", "browser_voice", "appearance")},
+        "persona": {k: persona.get(k) for k in ("id", "name", "gender", "title", "voice", "browser_voice", "appearance",
+                                                 "model_url", "body")},
         "problem": public_problem(problem) if problem else None,
         "transcript": s.transcript, "feedback": s.feedback,
         "questions_total": kind["questions"], "questions_asked": _questions_asked(s),
+        "terminated": bool(s.context.get("terminated")),
         "done": s.ended_at is not None or _questions_asked(s) > kind["questions"],
         "created_at": s.created_at.isoformat(),
     }
@@ -180,6 +185,12 @@ def _own_session(db: Session, session_id: int, user: User) -> InterviewSession:
 def kinds():
     return [{"id": k, "title": v["title"], "description": v["description"], "questions": v["questions"],
              "minutes": v["minutes"], "mode": v["mode"]} for k, v in KINDS.items()]
+
+
+@router.get("/ban")
+def ban_status(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """The user's current interview ban, if any (shown on the interview page)."""
+    return {"ban": integrity.ban_out(integrity.active_ban(db, user.id))}
 
 
 @router.get("")
@@ -209,13 +220,20 @@ def _pick_problem(db: Session, level: str) -> str | None:
 def start(body: StartIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if body.kind not in KINDS:
         raise HTTPException(400, "Unknown interview type")
+    ban = integrity.active_ban(db, user.id)
+    if ban:
+        info = integrity.ban_out(ban)
+        raise HTTPException(403, "You're locked out of AI interviews after an integrity violation. " + (
+            "Contact support to restore access." if info["permanent"] else f"Try again after {info['ends_at']}."))
     persona_id = body.persona_id or user.persona_id or q.default_persona_id(db, user.gender)
-    context = {"problem": _pick_problem(db, body.level)} if body.kind == "live-coding" else {}
+    first_name = user.name.split()[0]
+    context = {"candidate": first_name}
+    if body.kind == "live-coding":
+        context["problem"] = _pick_problem(db, body.level)
     s = InterviewSession(user_id=user.id, kind=body.kind, role=body.role, level=body.level, persona_id=persona_id,
                          mode=KINDS[body.kind]["mode"], context=context, transcript=[])
-    first_name = user.name.split()[0]
     persona = q.persona(db, persona_id)
-    opener = ("(The candidate has joined with camera, microphone and screen sharing. Greet them by first name in "
+    opener = (f"({first_name} has joined with camera, microphone and screen sharing. Greet {first_name} by name in "
               "one short sentence, introduce yourself, briefly present the problem in plain words, and ask them to "
               "restate it and ask clarifying questions.)" if body.kind == "live-coding" else
               f"(The candidate, {first_name}, has joined the call. Greet them by first name in one short sentence, "
@@ -256,6 +274,13 @@ def reply(session_id: int, body: ReplyIn, user: User = Depends(get_current_user)
     answer = body.text.strip()
     stored = answer + (f"\n\n[Code at this moment, {body.language or 'code'}]\n{body.code}" if body.code else "")
     s.transcript = s.transcript + [{"role": "candidate", "content": stored}]
+    flag = integrity.vision_check(body.images) if body.images else None
+    if flag:
+        result = integrity.record_strike(db, s, user, flag["kind"], flag["evidence"])
+        s.transcript = s.transcript + [{"role": "interviewer", "content": result["message"]}]
+        flag_modified(s, "transcript")
+        db.commit()
+        return {**_session_out(db, s), "integrity": result}
     asked = _questions_asked(s)
     if asked >= kind["questions"]:
         closing = (f"Thank you, {user.name.split()[0]}, that's all from my side. "
@@ -277,6 +302,25 @@ def reply(session_id: int, body: ReplyIn, user: User = Depends(get_current_user)
     flag_modified(s, "transcript")
     db.commit()
     return _session_out(db, s)
+
+
+class IntegrityIn(BaseModel):
+    kind: str = Field(pattern="^(left_tab|paste)$")
+    detail: str = Field(default="", max_length=300)
+
+
+@router.post("/{session_id}/integrity")
+def report_integrity(session_id: int, body: IntegrityIn, user: User = Depends(get_current_user),
+                     db: Session = Depends(get_db)):
+    """The browser reports leaving the interview window or pasting into an answer."""
+    s = _own_session(db, session_id, user)
+    if s.ended_at:
+        return {**_session_out(db, s), "integrity": None}
+    result = integrity.record_strike(db, s, user, body.kind, body.detail)
+    s.transcript = s.transcript + [{"role": "interviewer", "content": result["message"]}]
+    flag_modified(s, "transcript")
+    db.commit()
+    return {**_session_out(db, s), "integrity": result}
 
 
 @router.post("/{session_id}/end")
