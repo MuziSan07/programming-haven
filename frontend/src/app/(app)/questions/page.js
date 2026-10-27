@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight, BookOpen, Building, ChevronLeft, Circle, CircleCheck, CircleDot, CircleQuestionMark, Lightbulb, Send, Zap,
@@ -197,7 +198,8 @@ function Practice({ question, onAnswered, onNext, onBack }) {
 }
 
 export default function QuestionBankPage() {
-  const [topic, setTopic] = useState("");
+  const searchParams = useSearchParams();
+  const [topic, setTopic] = useState(() => searchParams.get("topic") || "");
   const [level, setLevel] = useState("");
   const [type, setType] = useState("");
   const [activeId, setActiveId] = useState(null);

@@ -34,6 +34,8 @@ KINDS = {
     "projects": "project",
     "knowledge": "knowledge",
     "personas": "persona",
+    "debug_rounds": "debug",
+    "review_rounds": "review",
 }
 # Field used as each kind's unique slug
 SLUG_FIELD = {"problem": "slug"}

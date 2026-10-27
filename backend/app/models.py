@@ -308,3 +308,222 @@ class InterviewBan(Base):
     lifted_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     user: Mapped[User] = relationship()
+
+
+# ---------------------------------------------------------------- progress & gamification
+
+class XpEvent(Base):
+    """Every XP award, so weekly leagues and group leaderboards can sum XP by period."""
+    __tablename__ = "xp_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    amount: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+class UserBadge(Base):
+    __tablename__ = "user_badges"
+    __table_args__ = (UniqueConstraint("user_id", "badge_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    badge_id: Mapped[str] = mapped_column(String(60))
+    awarded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Certificate(Base):
+    """Publicly verifiable certificate (e.g. passing a proctored mock test with clean integrity)."""
+    __tablename__ = "certificates"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)  # random public id
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(20))  # test | hackathon
+    ref: Mapped[str] = mapped_column(String(120))
+    title: Mapped[str] = mapped_column(String(200))
+    score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    integrity: Mapped[float | None] = mapped_column(Float, nullable=True)
+    meta: Mapped[dict] = mapped_column(JSON, default=dict)
+    issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    user: Mapped[User] = relationship()
+
+
+class Flashcard(Base):
+    """A question in a learner's spaced-repetition deck (SM-2 scheduling)."""
+    __tablename__ = "flashcards"
+    __table_args__ = (UniqueConstraint("user_id", "question_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    question_id: Mapped[str] = mapped_column(String(120))
+    ease: Mapped[float] = mapped_column(Float, default=2.5)
+    interval_days: Mapped[int] = mapped_column(Integer, default=0)
+    reps: Mapped[int] = mapped_column(Integer, default=0)
+    lapses: Mapped[int] = mapped_column(Integer, default=0)
+    due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    last_reviewed: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class FlashcardReview(Base):
+    __tablename__ = "flashcard_reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    flashcard_id: Mapped[int] = mapped_column(ForeignKey("flashcards.id", ondelete="CASCADE"))
+    grade: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+# ---------------------------------------------------------------- career
+
+class StudyPlan(Base):
+    __tablename__ = "study_plans"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    target: Mapped[str] = mapped_column(String(60))
+    target_label: Mapped[str] = mapped_column(String(120))
+    weeks: Mapped[int] = mapped_column(Integer)
+    hours_per_week: Mapped[int] = mapped_column(Integer)
+    language: Mapped[str] = mapped_column(String(20), default="python")
+    start_date: Mapped[date] = mapped_column(Date)
+    plan: Mapped[dict] = mapped_column(JSON, default=dict)  # {weeks: [{week, focus, days: [{date, tasks: [...]}]}]}
+    coach: Mapped[dict] = mapped_column(JSON, default=dict)  # AI notes per week, weak spots
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class ProfileReview(Base):
+    """AI review of a CV, LinkedIn profile or GitHub account."""
+    __tablename__ = "profile_reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(20))  # cv | linkedin | github
+    target: Mapped[str] = mapped_column(String(80), default="")
+    source: Mapped[str] = mapped_column(String(200), default="")  # file name, username...
+    result: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+# ---------------------------------------------------------------- leagues & contests
+
+class LeagueMembership(Base):
+    """A user's league group for one week (Monday-start, UTC)."""
+    __tablename__ = "league_memberships"
+    __table_args__ = (UniqueConstraint("user_id", "week_start"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    week_start: Mapped[date] = mapped_column(Date, index=True)
+    tier: Mapped[int] = mapped_column(Integer, default=0)
+    group_no: Mapped[int] = mapped_column(Integer, default=1)
+    final_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    outcome: Mapped[str | None] = mapped_column(String(12), nullable=True)  # promoted | stayed | demoted
+
+    user: Mapped[User] = relationship()
+
+
+class Contest(Base):
+    __tablename__ = "contests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(160))
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    duration_minutes: Mapped[int] = mapped_column(Integer, default=90)  # personal timer once started
+    problems: Mapped[list] = mapped_column(JSON, default=list)  # [{slug, points}]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContestEntry(Base):
+    __tablename__ = "contest_entries"
+    __table_args__ = (UniqueConstraint("contest_id", "user_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    contest_id: Mapped[int] = mapped_column(ForeignKey("contests.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    deadline: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    score: Mapped[int] = mapped_column(Integer, default=0)
+    penalty_minutes: Mapped[int] = mapped_column(Integer, default=0)
+    solved: Mapped[dict] = mapped_column(JSON, default=dict)  # {slug: {minutes, wrong}}
+    wrong: Mapped[dict] = mapped_column(JSON, default=dict)  # {slug: count}
+
+    user: Mapped[User] = relationship()
+
+
+# ---------------------------------------------------------------- study groups
+
+class StudyGroup(Base):
+    __tablename__ = "study_groups"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(80))
+    target: Mapped[str] = mapped_column(String(60), default="")
+    description: Mapped[str] = mapped_column(String(400), default="")
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    invite_code: Mapped[str] = mapped_column(String(16), unique=True, index=True)
+    max_members: Mapped[int] = mapped_column(Integer, default=8)
+    is_public: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GroupMember(Base):
+    __tablename__ = "group_members"
+    __table_args__ = (UniqueConstraint("group_id", "user_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("study_groups.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    role: Mapped[str] = mapped_column(String(10), default="member")  # owner | member
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    user: Mapped[User] = relationship()
+
+
+class GroupMessage(Base):
+    __tablename__ = "group_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("study_groups.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    body: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(12), default="published")
+    moderation: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    user: Mapped[User] = relationship()
+
+
+class GroupChallenge(Base):
+    __tablename__ = "group_challenges"
+    __table_args__ = (UniqueConstraint("group_id", "week_start"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("study_groups.id", ondelete="CASCADE"), index=True)
+    week_start: Mapped[date] = mapped_column(Date)
+    title: Mapped[str] = mapped_column(String(160))
+    description: Mapped[str] = mapped_column(Text, default="")
+    tasks: Mapped[list] = mapped_column(JSON, default=list)  # [{type, ref, title}]
+
+
+# ---------------------------------------------------------------- debugging & code review rounds
+
+class RoundAttempt(Base):
+    __tablename__ = "round_attempts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(10))  # debug | review
+    round_id: Mapped[str] = mapped_column(String(120), index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    submission: Mapped[dict] = mapped_column(JSON, default=dict)
+    result: Mapped[dict] = mapped_column(JSON, default=dict)

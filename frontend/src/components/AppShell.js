@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import {
-  BookOpen, Briefcase, ClipboardCheck, Code, Flame, LayoutDashboard, LogOut, Map, MessageSquare, MessagesSquare, Mic, ScanFace, Settings, ShieldCheck, Trophy, Zap,
+  Award, BookOpen, Briefcase, Bug, ClipboardCheck, Code, Compass, FileUser, Flame, Layers, LayoutDashboard, LogOut, Map,
+  Medal, Menu, MessageSquare, MessagesSquare, Mic, ScanFace, Settings, ShieldCheck, Swords, Trophy, UsersRound, X, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -13,45 +14,93 @@ import { PageLoader, cx } from "./ui";
 
 export const NAV = [
   { href: "/dashboard", label: "Dashboard", short: "Home", icon: LayoutDashboard, mobile: true },
-  { href: "/learn", label: "Language Paths", short: "Learn", icon: BookOpen, mobile: true },
-  { href: "/questions", label: "Question Bank", short: "Questions", icon: MessageSquare },
-  { href: "/dsa", label: "DSA Track", short: "DSA", icon: Code, mobile: true },
-  { href: "/tests", label: "Mock Tests", short: "Tests", icon: ClipboardCheck, mobile: true },
-  { href: "/projects", label: "Take-Home Projects", short: "Projects", icon: Briefcase },
-  { href: "/interview", label: "AI Interviews", short: "Interview", icon: Mic, mobile: true },
-  { href: "/mirror", label: "Test Your Interviewer", short: "Mirror", icon: ScanFace },
-  { href: "/community", label: "Community", short: "Community", icon: MessagesSquare },
-  { href: "/hackathons", label: "Hackathons", short: "Hackathons", icon: Trophy },
-  { href: "/paths", label: "Company Paths", short: "Paths", icon: Map },
-  { href: "/settings", label: "Settings", short: "Settings", icon: Settings },
-  { href: "/admin", label: "Admin", short: "Admin", icon: ShieldCheck, admin: true },
+  { href: "/coach", label: "Career Coach", short: "Coach", icon: Compass, section: "Plan" },
+  { href: "/career", label: "Profile Review", short: "Profile", icon: FileUser, section: "Plan" },
+  { href: "/learn", label: "Language Paths", short: "Learn", icon: BookOpen, mobile: true, section: "Practice" },
+  { href: "/questions", label: "Question Bank", short: "Questions", icon: MessageSquare, section: "Practice" },
+  { href: "/flashcards", label: "Flashcards", short: "Cards", icon: Layers, section: "Practice" },
+  { href: "/dsa", label: "DSA Track", short: "DSA", icon: Code, mobile: true, section: "Practice" },
+  { href: "/rounds", label: "Debug & Review", short: "Rounds", icon: Bug, section: "Practice" },
+  { href: "/tests", label: "Mock Tests", short: "Tests", icon: ClipboardCheck, section: "Practice" },
+  { href: "/projects", label: "Take-Home Projects", short: "Projects", icon: Briefcase, section: "Practice" },
+  { href: "/interview", label: "AI Interviews", short: "Interview", icon: Mic, mobile: true, section: "Interview" },
+  { href: "/mirror", label: "Test Your Interviewer", short: "Mirror", icon: ScanFace, section: "Interview" },
+  { href: "/leagues", label: "Leagues", short: "Leagues", icon: Medal, section: "Compete" },
+  { href: "/contests", label: "Weekly Contests", short: "Contests", icon: Swords, section: "Compete" },
+  { href: "/badges", label: "Badges & Certificates", short: "Badges", icon: Award, section: "Compete" },
+  { href: "/community", label: "Community", short: "Community", icon: MessagesSquare, section: "Together" },
+  { href: "/groups", label: "Study Groups", short: "Groups", icon: UsersRound, section: "Together" },
+  { href: "/hackathons", label: "Hackathons", short: "Hackathons", icon: Trophy, section: "Together" },
+  { href: "/paths", label: "Company Paths", short: "Paths", icon: Map, section: "More" },
+  { href: "/settings", label: "Settings", short: "Settings", icon: Settings, section: "More" },
+  { href: "/admin", label: "Admin", short: "Admin", icon: ShieldCheck, admin: true, section: "More" },
 ];
 
-function NavLinks({ mobile, isAdmin }) {
+function NavLinks({ mobile, isAdmin, onNavigate }) {
   const pathname = usePathname();
-  return <NavList mobile={mobile} pathname={pathname} isAdmin={isAdmin} />;
+  return <NavList mobile={mobile} pathname={pathname} isAdmin={isAdmin} onNavigate={onNavigate} />;
 }
 
-function NavList({ mobile, pathname = "", isAdmin }) {
+function NavList({ mobile, pathname = "", isAdmin, onNavigate }) {
   const items = NAV.filter((n) => (mobile ? n.mobile : !n.admin || isAdmin));
-  return items.map(({ href, label, short, icon: Icon }) => {
+  let section = null;
+  return items.map(({ href, label, short, icon: Icon, section: group }) => {
     const active = pathname === href || pathname.startsWith(`${href}/`);
-    return mobile ? (
-      <Link key={href} href={href}
-        className={cx("flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium",
-          active ? "text-brand" : "text-muted")}>
-        <Icon className="size-5" />
-        {short}
-      </Link>
-    ) : (
-      <Link key={href} href={href}
-        className={cx("flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
-          active ? "bg-brand/15 text-white" : "text-muted hover:bg-surface-2 hover:text-text")}>
-        <Icon className={cx("size-[18px]", active && "text-brand")} />
-        {label}
-      </Link>
+    if (mobile) {
+      return (
+        <Link key={href} href={href}
+          className={cx("flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium",
+            active ? "text-brand" : "text-muted")}>
+          <Icon className="size-5" />
+          {short}
+        </Link>
+      );
+    }
+    const heading = group && group !== section ? group : null;
+    section = group;
+    return (
+      <div key={href}>
+        {heading && (
+          <p className="mb-1 mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-faint">{heading}</p>
+        )}
+        <Link href={href} onClick={onNavigate}
+          className={cx("flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+            active ? "bg-brand/15 text-white" : "text-muted hover:bg-surface-2 hover:text-text")}>
+          <Icon className={cx("size-[18px]", active && "text-brand")} />
+          {label}
+        </Link>
+      </div>
     );
   });
+}
+
+function MobileMore({ isAdmin }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpen(true)}
+        className="flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium text-muted">
+        <Menu className="size-5" />
+        More
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-40 flex flex-col bg-bg/98 backdrop-blur-xl lg:hidden">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-line px-4">
+            <Logo href="/dashboard" />
+            <button onClick={() => setOpen(false)} aria-label="Close menu"
+              className="rounded-lg p-2 text-muted hover:bg-surface-2 hover:text-text">
+              <X className="size-5" />
+            </button>
+          </div>
+          <nav className="flex-1 overflow-y-auto px-4 pb-8">
+            <Suspense fallback={<NavList isAdmin={isAdmin} />}>
+              <NavLinks isAdmin={isAdmin} onNavigate={() => setOpen(false)} />
+            </Suspense>
+          </nav>
+        </div>
+      )}
+    </>
+  );
 }
 
 function AiStatus() {
@@ -116,7 +165,7 @@ export default function AppShell({ children }) {
         <div className="px-2 py-3">
           <Logo href="/dashboard" />
         </div>
-        <nav className="mt-4 flex min-h-0 flex-col gap-0.5 overflow-y-auto">
+        <nav className="mt-2 flex min-h-0 flex-col gap-0.5 overflow-y-auto pb-2">
           <Suspense fallback={<NavList isAdmin={user.is_admin} />}>
             <NavLinks isAdmin={user.is_admin} />
           </Suspense>
@@ -150,6 +199,7 @@ export default function AppShell({ children }) {
         <Suspense fallback={<NavList mobile />}>
           <NavLinks mobile />
         </Suspense>
+        <MobileMore isAdmin={user.is_admin} />
       </nav>
     </div>
   );

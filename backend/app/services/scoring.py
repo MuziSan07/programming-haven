@@ -3,10 +3,10 @@
 from datetime import date, timedelta
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from ..content import queries as q
-from ..models import ActivitySession, InterviewSession, LessonProgress, Submission, TestAttempt, User
+from ..models import ActivitySession, InterviewSession, LessonProgress, Submission, TestAttempt, User, XpEvent
 
 XP_LESSON = 20
 XP_PROBLEM = {"Easy": 15, "Medium": 30, "Hard": 50, "Expert": 80}
@@ -31,6 +31,10 @@ def touch_activity(user: User) -> None:
 def award(user: User, xp: int) -> None:
     user.xp += xp
     touch_activity(user)
+    # Log the event so leagues and group leaderboards can sum XP per week
+    session = object_session(user)
+    if xp and session is not None:
+        session.add(XpEvent(user_id=user.id, amount=xp))
 
 
 def level_for(xp: int) -> dict:
@@ -122,3 +126,15 @@ def _verdict(score: int) -> str:
     if score >= 30:
         return "Building momentum"
     return "Just getting started"
+
+
+def xp_since(db: Session, user_ids: list[int], since) -> dict[int, int]:
+    """Total XP per user earned since a datetime."""
+    if not user_ids:
+        return {}
+    rows = db.execute(select(XpEvent.user_id, func.sum(XpEvent.amount))
+                      .where(XpEvent.user_id.in_(user_ids), XpEvent.created_at >= since)
+                      .group_by(XpEvent.user_id)).all()
+    totals = {uid: 0 for uid in user_ids}
+    totals.update({uid: int(total or 0) for uid, total in rows})
+    return totals

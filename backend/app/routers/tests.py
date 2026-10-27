@@ -13,6 +13,7 @@ from ..deps import get_current_user
 from ..models import TestAttempt, User
 from ..routers.auth import user_out
 from ..services import runner
+from ..services.gamification import cert_out, evaluate, issue_certificate
 from ..services.scoring import XP_TEST, award
 
 router = APIRouter(prefix="/api/tests", tags=["tests"])
@@ -149,8 +150,13 @@ def submit(attempt_id: int, body: SubmitIn, user: User = Depends(get_current_use
                       "passed": passed, "late": late, "pass_mark": test["pass_mark"]}
     xp = XP_TEST if passed else 10
     award(user, xp)
+    certificate = None
+    if passed and integrity >= 80:
+        certificate = issue_certificate(db, user, "test", attempt.test_id, test["title"], score=score,
+                                        integrity=integrity, meta={"style": test.get("style", "")})
     db.commit()
-    return {**_attempt_out(db, attempt), "xp_gained": xp, "user": user_out(user)}
+    return {**_attempt_out(db, attempt), "xp_gained": xp, "badges": evaluate(db, user),
+            "certificate": cert_out(certificate) if certificate else None, "user": user_out(user)}
 
 
 def _aware(dt: datetime) -> datetime:

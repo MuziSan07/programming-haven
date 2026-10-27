@@ -159,12 +159,54 @@ def validate_structure(seeds: dict[str, list[dict]], r: Report, all_problems: li
 
     for k in seeds["knowledge"]:
         r.need(f"knowledge {k.get('id')}", k, "id", "title", "content")
+    for d in seeds.get("debug", []):
+        w = f"debug {d.get('id')}"
+        r.need(w, d, "id", "title", "language", "difficulty", "scenario", "files", "tests", "solution", "hints",
+               "time_minutes", "bug_count")
+        if d.get("language") not in ("python", "javascript"):
+            r.err(w, "language must be python or javascript")
+        if d.get("difficulty") not in DIFFICULTIES:
+            r.err(w, f"difficulty must be one of {sorted(DIFFICULTIES)}")
+        if set(d.get("solution", {})) - set(d.get("files", {})):
+            r.err(w, "solution may only contain files that exist in `files`")
+        if d.get("files") and d.get("tests") and d.get("solution"):
+            jobs.append(("debug", w, d))
+
+    for rv in seeds.get("review", []):
+        w = f"review {rv.get('id')}"
+        r.need(w, rv, "id", "title", "language", "difficulty", "context", "files", "issues", "time_minutes")
+        if rv.get("difficulty") not in DIFFICULTIES:
+            r.err(w, f"difficulty must be one of {sorted(DIFFICULTIES)}")
+        for i, issue in enumerate(rv.get("issues", [])):
+            r.need(f"{w} issue {i}", issue, "id", "file", "line", "category", "severity", "description")
+            if issue.get("category") not in ("bug", "security", "performance", "design", "readability", "testing"):
+                r.err(f"{w} issue {i}", "category must be bug|security|performance|design|readability|testing")
+            if issue.get("severity") not in ("low", "medium", "high", "critical"):
+                r.err(f"{w} issue {i}", "severity must be low|medium|high|critical")
+            lines = (rv.get("files", {}).get(issue.get("file"), "") or "").count("\n") + 1
+            if issue.get("file") not in rv.get("files", {}):
+                r.err(f"{w} issue {i}", f"unknown file {issue.get('file')}")
+            elif not isinstance(issue.get("line"), int) or not 1 <= issue["line"] <= lines:
+                r.err(f"{w} issue {i}", f"line {issue.get('line')} outside 1..{lines}")
+
     for p in seeds["persona"]:
         r.need(f"persona {p.get('id')}", p, "id", "name", "gender", "personality", "appearance")
     return jobs
 
 
 def run_job(job):
+    if job[0] == "debug":
+        from ..services.rounds import run_challenge
+
+        _, where, d = job
+        broken = run_challenge(d["language"], d["files"], d["tests"])
+        fixed = run_challenge(d["language"], {**d["files"], **d["solution"]}, d["tests"])
+        if broken["total"] == 0 or broken["passed"] == broken["total"]:
+            return f"{where}: the buggy code must fail at least one test ({broken['status']} {broken['passed']}/{broken['total']}) {broken.get('stderr', '')[:200]}"
+        if fixed["status"] != "All tests pass":
+            fails = [x for x in fixed["results"] if not x["passed"]][:2]
+            return f"{where}: solution must pass all tests ({fixed['status']} {fixed['passed']}/{fixed['total']}) {fixed.get('stderr', '')[:200]} {fails}"
+        return None
     if job[0] == "stdout":
         _, where, lang, src, expected = job
         res = runner.execute(lang, src)

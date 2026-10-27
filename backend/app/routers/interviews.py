@@ -107,6 +107,27 @@ KINDS = {
             "Your primary database region goes down. What happens to users?",
         ],
     },
+    "whiteboard": {
+        "title": "System Design Whiteboard", "questions": 7, "minutes": 40, "mode": "whiteboard",
+        "description": "Draw your architecture on a live whiteboard while the interviewer reads the diagram and grills you on it.",
+        "brief": "a whiteboard system design interview for a {level} {role}. Pick ONE realistic system (ride "
+                 "dispatch, chat, news feed, video upload pipeline, payments ledger, rate limiter) and ask the "
+                 "candidate to DRAW it. With each answer you receive a snapshot of their whiteboard: refer to "
+                 "specific boxes and arrows you can see ('your cache sits after the load balancer, why?'), point "
+                 "out missing components (queues, replicas, CDN, monitoring), single points of failure and "
+                 "unrealistic numbers. If the board is empty or unreadable, ask them to draw it. Drive: "
+                 "requirements, estimates, high-level diagram, data model, deep dive on one component, scaling, "
+                 "failures.",
+        "fallback": [
+            "Let's design a ride-hailing dispatch system. Start by listing requirements, then sketch the main components on the board.",
+            "Walk me through your diagram from the rider's phone to a matched driver.",
+            "Estimate the location updates per second and where they are stored.",
+            "Where in your diagram is the single point of failure?",
+            "How do you find the nearest available drivers quickly?",
+            "Add what's needed for surge pricing to the board and explain it.",
+            "A whole region goes down. Point to what keeps riders working.",
+        ],
+    },
 }
 
 
@@ -260,6 +281,7 @@ class ReplyIn(BaseModel):
     code: str | None = Field(default=None, max_length=30_000)
     language: str | None = Field(default=None, max_length=20)
     images: list[str] = Field(default_factory=list, max_length=2)  # camera / screen frames as JPEG data URLs
+    board: str | None = None  # whiteboard snapshot (PNG/JPEG data URL) for whiteboard interviews
 
 
 @router.post("/{session_id}/reply")
@@ -268,7 +290,7 @@ def reply(session_id: int, body: ReplyIn, user: User = Depends(get_current_user)
     kind = KINDS[s.kind]
     if s.ended_at or _questions_asked(s) > kind["questions"]:
         raise HTTPException(409, "This interview has finished")
-    if any(len(img) > MAX_IMAGE_CHARS for img in body.images):
+    if any(len(img) > MAX_IMAGE_CHARS for img in body.images + ([body.board] if body.board else [])):
         raise HTTPException(413, "Image frame too large")
 
     answer = body.text.strip()
@@ -291,9 +313,11 @@ def reply(session_id: int, body: ReplyIn, user: User = Depends(get_current_user)
         progress = {"role": "system", "content": f"You are about to ask question {asked + 1} of "
                                                  f"{kind['questions']}. Pace the interview accordingly."}
         messages = _as_messages(db, s)[:-1]
-        if body.images:
-            messages += [progress, ai.with_images(stored + "\n\n(Attached: the candidate's live camera/screen.)",
-                                                  body.images)]
+        board = [body.board] if body.board and s.kind == "whiteboard" else []
+        if body.images or board:
+            note = ("(Attached: the candidate's live camera/screen" + (", and LAST, their current whiteboard "
+                    "diagram. Read it carefully and refer to what is drawn." if board else ".") + ")")
+            messages += [progress, ai.with_images(stored + "\n\n" + note, body.images + board)]
             text, _ = ai.vision_chat(messages, lambda: f"Thanks. {fallback_q}", max_tokens=900)
         else:
             text, _ = ai.chat(messages + [progress, {"role": "user", "content": stored}],

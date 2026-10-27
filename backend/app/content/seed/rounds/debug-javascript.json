@@ -1,0 +1,580 @@
+{
+ "debug_rounds": [
+  {
+   "id": "dbg-js-cart-reducer",
+   "title": "Cart totals drift and old state changes",
+   "language": "javascript",
+   "difficulty": "Easy",
+   "time_minutes": 12,
+   "bug_count": 2,
+   "scenario": "SHOP-2231: The storefront shows a total of $0.30000000000000004 for a cart with a $0.10 sample and a $0.20 sample. Separately, the 'undo add to cart' feature in the React app is broken: after adding a second unit of an item, the previous state object also shows quantity 2, so the UI never re-renders correctly.",
+   "files": {
+    "cart.js": "const initial = { items: [], coupon: null };\n\nfunction reducer(state = initial, action) {\n  switch (action.type) {\n    case \"add\": {\n      const qty = action.qty || 1;\n      const existing = state.items.find((i) => i.sku === action.sku);\n      if (existing) {\n        existing.qty += qty;\n        return { ...state, items: [...state.items] };\n      }\n      const item = { sku: action.sku, price: action.price, qty };\n      return { ...state, items: [...state.items, item] };\n    }\n    case \"remove\":\n      return { ...state, items: state.items.filter((i) => i.sku !== action.sku) };\n    case \"coupon\":\n      return { ...state, coupon: action.code };\n    default:\n      return state;\n  }\n}\n\nfunction total(state) {\n  let sum = 0;\n  for (const item of state.items) {\n    sum += item.price * item.qty;\n  }\n  if (state.coupon === \"SAVE10\") {\n    sum = sum * 0.9;\n  }\n  return sum;\n}\n\nmodule.exports = { reducer, total, initial };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { reducer, total } = require(\"./cart.js\");\n\nconst add = (sku, price, qty) => ({ type: \"add\", sku, price, qty });\n\nmodule.exports = {\n  \"adds a new item\": () => {\n    const s = reducer(undefined, add(\"a\", 5, 2));\n    assert.deepStrictEqual(s.items, [{ sku: \"a\", price: 5, qty: 2 }], \"new item should be appended with its qty\");\n  },\n  \"adding an existing sku increases its quantity\": () => {\n    let s = reducer(undefined, add(\"a\", 5, 1));\n    s = reducer(s, add(\"a\", 5, 2));\n    assert.strictEqual(s.items.length, 1, \"same sku must not create a second line\");\n    assert.strictEqual(s.items[0].qty, 3, \"quantity should be 3\");\n  },\n  \"reducer does not mutate the previous state\": () => {\n    const s1 = reducer(undefined, add(\"a\", 5, 1));\n    const s2 = reducer(s1, add(\"a\", 5, 2));\n    assert.strictEqual(s1.items[0].qty, 1, \"previous state was mutated (qty changed to \" + s1.items[0].qty + \")\");\n    assert.strictEqual(s2.items[0].qty, 3, \"new state should have qty 3\");\n    assert.notStrictEqual(s1.items[0], s2.items[0], \"changed line items must be new objects\");\n  },\n  \"removes an item by sku\": () => {\n    let s = reducer(undefined, add(\"a\", 5, 1));\n    s = reducer(s, add(\"b\", 7, 1));\n    s = reducer(s, { type: \"remove\", sku: \"a\" });\n    assert.deepStrictEqual(s.items.map((i) => i.sku), [\"b\"]);\n  },\n  \"total does not show floating point drift\": () => {\n    let s = reducer(undefined, add(\"a\", 0.1, 1));\n    s = reducer(s, add(\"b\", 0.2, 1));\n    assert.strictEqual(total(s), 0.3, \"0.1 + 0.2 should total exactly 0.3, got \" + total(s));\n  },\n  \"coupon takes 10 percent off rounded to a whole cent\": () => {\n    let s = reducer(undefined, add(\"a\", 19.99, 1));\n    s = reducer(s, { type: \"coupon\", code: \"SAVE10\" });\n    assert.strictEqual(total(s), 17.99, \"19.99 with SAVE10 should be 17.99, got \" + total(s));\n  },\n  \"unknown actions return the same state object\": () => {\n    const s = reducer(undefined, add(\"a\", 1, 1));\n    assert.strictEqual(reducer(s, { type: \"nope\" }), s);\n  },\n};\n",
+   "solution": {
+    "cart.js": "const initial = { items: [], coupon: null };\n\nfunction reducer(state = initial, action) {\n  switch (action.type) {\n    case \"add\": {\n      const qty = action.qty || 1;\n      const exists = state.items.some((i) => i.sku === action.sku);\n      if (exists) {\n        const items = state.items.map((i) => (i.sku === action.sku ? { ...i, qty: i.qty + qty } : i));\n        return { ...state, items };\n      }\n      const item = { sku: action.sku, price: action.price, qty };\n      return { ...state, items: [...state.items, item] };\n    }\n    case \"remove\":\n      return { ...state, items: state.items.filter((i) => i.sku !== action.sku) };\n    case \"coupon\":\n      return { ...state, coupon: action.code };\n    default:\n      return state;\n  }\n}\n\nfunction toCents(amount) {\n  return Math.round(amount * 100);\n}\n\nfunction total(state) {\n  let cents = 0;\n  for (const item of state.items) {\n    cents += toCents(item.price) * item.qty;\n  }\n  if (state.coupon === \"SAVE10\") {\n    cents = Math.round(cents * 0.9);\n  }\n  return cents / 100;\n}\n\nmodule.exports = { reducer, total, initial };\n"
+   },
+   "hints": [
+    "There are two unrelated problems: one is about numbers, one is about object identity. Check the 'existing' branch of `add` first.",
+    "`existing.qty += qty` changes an object that the previous state still points at. Separately, summing decimal dollar amounts with `+` cannot be exact in binary floating point.",
+    "Replace the matching line with a copy (`map` + spread) instead of editing it. For money, convert each price to integer cents, do all arithmetic on integers (round the discount once), and divide by 100 at the very end."
+   ],
+   "explanation": "Bug 1 is state mutation: the reducer copied the items array but not the line item inside it, so the old state shared the object that was edited; immutable updates must copy every level that changes. Bug 2 is floating point money: 0.1 + 0.2 is not 0.3 in IEEE-754. Do money maths in integer cents and round once at the discount step.",
+   "tags": [
+    "immutability",
+    "floating-point",
+    "redux"
+   ],
+   "companies": [
+    "Amazon",
+    "Meta"
+   ]
+  },
+  {
+   "id": "dbg-js-pagination-off-by-one",
+   "title": "Last page is empty and page count is wrong",
+   "language": "javascript",
+   "difficulty": "Easy",
+   "time_minutes": 10,
+   "bug_count": 2,
+   "scenario": "ADMIN-884: In the users table, page 1 skips the first ten users and the 'Next' button disappears one page too early. With 25 users and 10 per page the footer says there are 2 pages. Pages are 1-based in the UI.",
+   "files": {
+    "paginate.js": "function paginate(items, page = 1, perPage = 10) {\n  const totalPages = Math.floor(items.length / perPage);\n  const start = page * perPage;\n  const slice = items.slice(start, start + perPage);\n  return {\n    items: slice,\n    page,\n    perPage,\n    total: items.length,\n    totalPages,\n    hasNext: page < totalPages,\n    hasPrev: page > 1,\n  };\n}\n\nmodule.exports = { paginate };\n",
+    "labels.js": "function describeRange(p) {\n  if (p.total === 0) return \"No results\";\n  const first = (p.page - 1) * p.perPage + 1;\n  const last = Math.min(p.page * p.perPage, p.total);\n  return \"Showing \" + first + \"-\" + last + \" of \" + p.total;\n}\n\nfunction pageWindow(current, totalPages, size = 5) {\n  const half = Math.floor(size / 2);\n  let from = Math.max(1, current - half);\n  let to = Math.min(totalPages, from + size - 1);\n  from = Math.max(1, to - size + 1);\n  const out = [];\n  for (let n = from; n <= to; n++) out.push(n);\n  return out;\n}\n\nmodule.exports = { describeRange, pageWindow };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { paginate } = require(\"./paginate.js\");\nconst { describeRange, pageWindow } = require(\"./labels.js\");\n\nconst nums = (n) => Array.from({ length: n }, (_, i) => i + 1);\n\nmodule.exports = {\n  \"page 1 returns the first items\": () => {\n    const p = paginate(nums(25), 1, 10);\n    assert.deepStrictEqual(p.items, nums(10), \"page 1 should hold items 1-10, got \" + JSON.stringify(p.items));\n  },\n  \"last partial page returns the remainder\": () => {\n    const p = paginate(nums(25), 3, 10);\n    assert.deepStrictEqual(p.items, [21, 22, 23, 24, 25]);\n  },\n  \"total pages rounds up\": () => {\n    assert.strictEqual(paginate(nums(25), 1, 10).totalPages, 3, \"25 items at 10 per page is 3 pages\");\n  },\n  \"exact multiple does not add an extra page\": () => {\n    assert.strictEqual(paginate(nums(20), 1, 10).totalPages, 2);\n  },\n  \"hasNext and hasPrev flags\": () => {\n    assert.strictEqual(paginate(nums(25), 2, 10).hasNext, true, \"page 2 of 3 has a next page\");\n    assert.strictEqual(paginate(nums(25), 3, 10).hasNext, false, \"page 3 of 3 has no next page\");\n    assert.strictEqual(paginate(nums(25), 1, 10).hasPrev, false);\n  },\n  \"empty list has zero pages\": () => {\n    const p = paginate([], 1, 10);\n    assert.strictEqual(p.totalPages, 0);\n    assert.strictEqual(p.hasNext, false);\n    assert.strictEqual(describeRange(p), \"No results\");\n  },\n  \"labels describe the visible range\": () => {\n    assert.strictEqual(describeRange(paginate(nums(25), 3, 10)), \"Showing 21-25 of 25\");\n    assert.deepStrictEqual(pageWindow(1, 3), [1, 2, 3]);\n    assert.deepStrictEqual(pageWindow(9, 12), [7, 8, 9, 10, 11]);\n  },\n};\n",
+   "solution": {
+    "paginate.js": "function paginate(items, page = 1, perPage = 10) {\n  const totalPages = Math.ceil(items.length / perPage);\n  const start = (page - 1) * perPage;\n  const slice = items.slice(start, start + perPage);\n  return {\n    items: slice,\n    page,\n    perPage,\n    total: items.length,\n    totalPages,\n    hasNext: page < totalPages,\n    hasPrev: page > 1,\n  };\n}\n\nmodule.exports = { paginate };\n"
+   },
+   "hints": [
+    "Only `paginate.js` is wrong; `labels.js` already assumes 1-based pages. Compare how `describeRange` computes the first item with how `paginate` computes `start`.",
+    "`start` treats `page` as 0-based, and `Math.floor` drops the final partial page.",
+    "Use `(page - 1) * perPage` for the offset and `Math.ceil` for the page count."
+   ],
+   "explanation": "Two classic pagination errors: a 0-based offset formula applied to 1-based page numbers (page 1 skipped the first page of data), and floor instead of ceil when dividing item count by page size (the partial last page was not counted, so hasNext was false too early).",
+   "tags": [
+    "off-by-one",
+    "pagination"
+   ],
+   "companies": [
+    "Amazon",
+    "Adobe"
+   ]
+  },
+  {
+   "id": "dbg-js-query-builder",
+   "title": "Query strings lose zeros and break on special characters",
+   "language": "javascript",
+   "difficulty": "Easy",
+   "time_minutes": 12,
+   "bug_count": 2,
+   "scenario": "API-1517: The search client builds URLs with our small query helper. Searching for 'R&D budget' returns results for 'R' only, and filters like 'page=0' or 'archived=false' are silently dropped, so the backend applies its defaults instead.",
+   "files": {
+    "query.js": "function buildQuery(params) {\n  const parts = [];\n  for (const key of Object.keys(params)) {\n    const value = params[key];\n    if (!value) continue;\n    if (Array.isArray(value)) {\n      for (const v of value) parts.push(key + \"=\" + v);\n    } else {\n      parts.push(key + \"=\" + value);\n    }\n  }\n  return parts.length ? \"?\" + parts.join(\"&\") : \"\";\n}\n\nfunction parseQuery(qs) {\n  const out = {};\n  const s = qs.startsWith(\"?\") ? qs.slice(1) : qs;\n  if (!s) return out;\n  for (const pair of s.split(\"&\")) {\n    const idx = pair.indexOf(\"=\");\n    const key = decodeURIComponent(idx === -1 ? pair : pair.slice(0, idx));\n    const value = idx === -1 ? \"\" : decodeURIComponent(pair.slice(idx + 1));\n    if (Object.prototype.hasOwnProperty.call(out, key)) {\n      out[key] = [].concat(out[key], value);\n    } else {\n      out[key] = value;\n    }\n  }\n  return out;\n}\n\nmodule.exports = { buildQuery, parseQuery };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { buildQuery, parseQuery } = require(\"./query.js\");\n\nmodule.exports = {\n  \"builds a simple query\": () => {\n    assert.strictEqual(buildQuery({ q: \"cat\", sort: \"new\" }), \"?q=cat&sort=new\");\n  },\n  \"empty params give an empty string\": () => {\n    assert.strictEqual(buildQuery({}), \"\");\n  },\n  \"keeps zero and false values\": () => {\n    assert.strictEqual(buildQuery({ page: 0, archived: false }), \"?page=0&archived=false\",\n      \"0 and false are real values and must not be dropped\");\n  },\n  \"skips null and undefined\": () => {\n    assert.strictEqual(buildQuery({ a: null, b: undefined, c: \"x\" }), \"?c=x\");\n  },\n  \"encodes reserved characters\": () => {\n    assert.strictEqual(buildQuery({ q: \"R&D budget=2024\" }), \"?q=R%26D%20budget%3D2024\");\n  },\n  \"encodes keys too\": () => {\n    assert.strictEqual(buildQuery({ \"a b\": 1 }), \"?a%20b=1\");\n  },\n  \"repeats the key for arrays\": () => {\n    assert.strictEqual(buildQuery({ tag: [\"a\", \"b&c\"] }), \"?tag=a&tag=b%26c\");\n  },\n  \"round trips through parseQuery\": () => {\n    const qs = buildQuery({ q: \"x y/z\", n: 2, tag: [\"1\", \"2\"] });\n    assert.deepStrictEqual(parseQuery(qs), { q: \"x y/z\", n: \"2\", tag: [\"1\", \"2\"] });\n  },\n};\n",
+   "solution": {
+    "query.js": "function buildQuery(params) {\n  const parts = [];\n  const enc = encodeURIComponent;\n  for (const key of Object.keys(params)) {\n    const value = params[key];\n    if (value === null || value === undefined) continue;\n    if (Array.isArray(value)) {\n      for (const v of value) parts.push(enc(key) + \"=\" + enc(v));\n    } else {\n      parts.push(enc(key) + \"=\" + enc(value));\n    }\n  }\n  return parts.length ? \"?\" + parts.join(\"&\") : \"\";\n}\n\nfunction parseQuery(qs) {\n  const out = {};\n  const s = qs.startsWith(\"?\") ? qs.slice(1) : qs;\n  if (!s) return out;\n  for (const pair of s.split(\"&\")) {\n    const idx = pair.indexOf(\"=\");\n    const key = decodeURIComponent(idx === -1 ? pair : pair.slice(0, idx));\n    const value = idx === -1 ? \"\" : decodeURIComponent(pair.slice(idx + 1));\n    if (Object.prototype.hasOwnProperty.call(out, key)) {\n      out[key] = [].concat(out[key], value);\n    } else {\n      out[key] = value;\n    }\n  }\n  return out;\n}\n\nmodule.exports = { buildQuery, parseQuery };\n"
+   },
+   "hints": [
+    "Two separate lines in `buildQuery` are at fault. One decides which values are skipped, the other builds the pair string.",
+    "`if (!value)` is true for `0`, `false` and `\"\"`, which are all legitimate values. And values are concatenated raw, so `&` and `=` inside them corrupt the structure.",
+    "Skip only `null`/`undefined`, and wrap both key and value in `encodeURIComponent`."
+   ],
+   "explanation": "Truthiness checks conflate 'missing' with 'falsy but meaningful'; only null and undefined mean absent. And URL components must be percent-encoded, otherwise user data can terminate a parameter early (a mini injection bug).",
+   "tags": [
+    "truthiness",
+    "url-encoding"
+   ],
+   "companies": [
+    "Google",
+    "Toptal"
+   ]
+  },
+  {
+   "id": "dbg-js-form-validator",
+   "title": "Validator rejects zero and accepts NaN",
+   "language": "javascript",
+   "difficulty": "Easy",
+   "time_minutes": 12,
+   "bug_count": 2,
+   "scenario": "FORM-310: In the order form, entering a quantity of 0 for a free sample shows 'qty is required' even though 0 is allowed. Meanwhile, someone pasted 'abc' into the age field, the UI parsed it to NaN, and the form happily submitted it because 'min 18' did not complain.",
+   "files": {
+    "validator.js": "const isEmpty = (v) => v == \"\" || v == null;\n\nconst rules = {\n  required: () => (v) => (isEmpty(v) ? \"is required\" : null),\n  min: (n) => (v) => (v < n ? \"must be at least \" + n : null),\n  max: (n) => (v) => (v > n ? \"must be at most \" + n : null),\n  email: () => (v) => (/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(v) ? null : \"must be a valid email\"),\n};\n\nfunction validate(schema, data) {\n  const errors = {};\n  for (const field of Object.keys(schema)) {\n    const value = data[field];\n    for (const rule of schema[field]) {\n      const [name, arg] = Array.isArray(rule) ? rule : [rule];\n      if (name !== \"required\" && isEmpty(value)) continue;\n      const message = rules[name](arg)(value);\n      if (message) {\n        errors[field] = field + \" \" + message;\n        break;\n      }\n    }\n  }\n  return { valid: Object.keys(errors).length === 0, errors };\n}\n\nmodule.exports = { validate };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { validate } = require(\"./validator.js\");\n\nmodule.exports = {\n  \"required rejects empty string and null\": () => {\n    const s = { name: [\"required\"] };\n    assert.strictEqual(validate(s, { name: \"\" }).valid, false, \"empty string must fail required\");\n    assert.strictEqual(validate(s, {}).valid, false, \"missing field must fail required\");\n    assert.strictEqual(validate(s, { name: null }).valid, false);\n  },\n  \"required accepts zero\": () => {\n    const r = validate({ qty: [\"required\", [\"min\", 0]] }, { qty: 0 });\n    assert.strictEqual(r.valid, true, \"0 is a real value, got errors \" + JSON.stringify(r.errors));\n  },\n  \"required accepts false\": () => {\n    assert.strictEqual(validate({ agreed: [\"required\"] }, { agreed: false }).valid, true, \"false is a real value\");\n  },\n  \"min rejects NaN\": () => {\n    const r = validate({ age: [\"required\", [\"min\", 18]] }, { age: NaN });\n    assert.strictEqual(r.valid, false, \"NaN must not pass a min rule\");\n  },\n  \"max rejects NaN\": () => {\n    assert.strictEqual(validate({ n: [[\"max\", 10]] }, { n: NaN }).valid, false);\n  },\n  \"min and max boundaries are inclusive\": () => {\n    const s = { age: [[\"min\", 18], [\"max\", 65]] };\n    assert.strictEqual(validate(s, { age: 18 }).valid, true);\n    assert.strictEqual(validate(s, { age: 65 }).valid, true);\n    assert.strictEqual(validate(s, { age: 17 }).valid, false);\n    assert.strictEqual(validate(s, { age: 66 }).valid, false);\n  },\n  \"optional empty fields skip other rules\": () => {\n    assert.strictEqual(validate({ email: [\"email\"] }, { email: \"\" }).valid, true);\n  },\n  \"email format and message\": () => {\n    const r = validate({ email: [\"required\", \"email\"] }, { email: \"bob@\" });\n    assert.strictEqual(r.errors.email, \"email must be a valid email\");\n  },\n};\n",
+   "solution": {
+    "validator.js": "const isEmpty = (v) => v === \"\" || v === null || v === undefined;\n\nconst rules = {\n  required: () => (v) => (isEmpty(v) ? \"is required\" : null),\n  min: (n) => (v) => (v >= n ? null : \"must be at least \" + n),\n  max: (n) => (v) => (v <= n ? null : \"must be at most \" + n),\n  email: () => (v) => (/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(v) ? null : \"must be a valid email\"),\n};\n\nfunction validate(schema, data) {\n  const errors = {};\n  for (const field of Object.keys(schema)) {\n    const value = data[field];\n    for (const rule of schema[field]) {\n      const [name, arg] = Array.isArray(rule) ? rule : [rule];\n      if (name !== \"required\" && isEmpty(value)) continue;\n      const message = rules[name](arg)(value);\n      if (message) {\n        errors[field] = field + \" \" + message;\n        break;\n      }\n    }\n  }\n  return { valid: Object.keys(errors).length === 0, errors };\n}\n\nmodule.exports = { validate };\n"
+   },
+   "hints": [
+    "Look at `isEmpty` for the zero problem, and at what every comparison with NaN evaluates to for the NaN problem.",
+    "Loose equality: `0 == \"\"` and `false == \"\"` are both true. And `NaN < 18` and `NaN > 65` are both false, so a rule written as 'fail when out of range' lets NaN through.",
+    "Use strict comparisons in `isEmpty`. Write min/max as 'pass when the condition holds' (`v >= n`) so that NaN, which fails every comparison, produces an error."
+   ],
+   "explanation": "`==` coerces types, so 0 and false compare equal to the empty string. NaN is never less than or greater than anything, so negative-form range checks (`v < n` means error) accept it. Positive-form checks fail safe.",
+   "tags": [
+    "equality",
+    "NaN",
+    "validation"
+   ],
+   "companies": [
+    "Microsoft",
+    "Turing"
+   ]
+  },
+  {
+   "id": "dbg-js-leaderboard-ties",
+   "title": "Leaderboard order is scrambled and ties are ranked wrong",
+   "language": "javascript",
+   "difficulty": "Easy",
+   "time_minutes": 15,
+   "bug_count": 3,
+   "scenario": "GAME-77: The weekly leaderboard sometimes lists a lower score above a higher one. Players tied on points should share a rank (1, 2, 2, 4) but get 1, 2, 3, 4. Also, the 'players' array on the profile page changes order after the leaderboard renders.",
+   "files": {
+    "leaderboard.js": "function rank(players) {\n  const sorted = players.sort((a, b) => a.score < b.score);\n  return sorted.map((p, i) => ({ ...p, rank: i + 1 }));\n}\n\nfunction topN(players, n) {\n  return rank(players).filter((p) => p.rank <= n);\n}\n\nfunction positionOf(players, name) {\n  const row = rank(players).find((p) => p.name === name);\n  return row ? row.rank : null;\n}\n\nmodule.exports = { rank, topN, positionOf };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { rank, topN, positionOf } = require(\"./leaderboard.js\");\n\nconst sample = () => [\n  { name: \"dina\", score: 50 },\n  { name: \"bo\", score: 90 },\n  { name: \"eli\", score: 70 },\n  { name: \"al\", score: 70 },\n  { name: \"cy\", score: 10 },\n  { name: \"fay\", score: 90 },\n];\n\nmodule.exports = {\n  \"sorts by score descending\": () => {\n    const scores = rank(sample()).map((p) => p.score);\n    assert.deepStrictEqual(scores, [90, 90, 70, 70, 50, 10], \"got \" + JSON.stringify(scores));\n  },\n  \"ties share a rank and the next rank skips\": () => {\n    const ranks = rank(sample()).map((p) => p.rank);\n    assert.deepStrictEqual(ranks, [1, 1, 3, 3, 5, 6], \"got \" + JSON.stringify(ranks));\n  },\n  \"ties are ordered by name\": () => {\n    const names = rank(sample()).map((p) => p.name);\n    assert.deepStrictEqual(names, [\"bo\", \"fay\", \"al\", \"eli\", \"dina\", \"cy\"]);\n  },\n  \"does not reorder or modify the input\": () => {\n    const input = sample();\n    rank(input);\n    assert.deepStrictEqual(input.map((p) => p.name), [\"dina\", \"bo\", \"eli\", \"al\", \"cy\", \"fay\"], \"input array was re-sorted\");\n    assert.strictEqual(\"rank\" in input[0], false, \"input objects must not gain a rank\");\n  },\n  \"topN keeps everyone tied at the boundary\": () => {\n    assert.deepStrictEqual(topN(sample(), 3).map((p) => p.name), [\"bo\", \"fay\", \"al\", \"eli\"]);\n  },\n  \"positionOf finds a player or null\": () => {\n    assert.strictEqual(positionOf(sample(), \"eli\"), 3);\n    assert.strictEqual(positionOf(sample(), \"zed\"), null);\n  },\n  \"empty and single player lists\": () => {\n    assert.deepStrictEqual(rank([]), []);\n    assert.deepStrictEqual(rank([{ name: \"x\", score: 0 }]), [{ name: \"x\", score: 0, rank: 1 }]);\n  },\n};\n",
+   "solution": {
+    "leaderboard.js": "function rank(players) {\n  const sorted = [...players].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));\n  let prevScore = null;\n  let prevRank = 0;\n  return sorted.map((p, i) => {\n    const r = p.score === prevScore ? prevRank : i + 1;\n    prevScore = p.score;\n    prevRank = r;\n    return { ...p, rank: r };\n  });\n}\n\nfunction topN(players, n) {\n  return rank(players).filter((p) => p.rank <= n);\n}\n\nfunction positionOf(players, name) {\n  const row = rank(players).find((p) => p.name === name);\n  return row ? row.rank : null;\n}\n\nmodule.exports = { rank, topN, positionOf };\n"
+   },
+   "hints": [
+    "Three problems in `rank`: what the comparator returns, what the sort touches, and how the rank number is assigned.",
+    "A sort comparator must return a negative, zero or positive number. A boolean becomes 1 or 0 and never says 'comes first'. Also `Array.prototype.sort` sorts in place.",
+    "Sort a copy with `b.score - a.score` (then name as tie-break). Track the previous score and previous rank; if the score equals the previous one reuse its rank, otherwise use `i + 1`."
+   ],
+   "explanation": "A boolean comparator is a classic JS trap: it never returns a negative value, so engines cannot order elements correctly. `sort` mutates the original array, which leaked ordering changes elsewhere. And `index + 1` ignores ties; competition ranking reuses the previous rank on equal scores.",
+   "tags": [
+    "sort-comparator",
+    "mutation",
+    "ranking"
+   ],
+   "companies": [
+    "Uber",
+    "Meta"
+   ]
+  },
+  {
+   "id": "dbg-js-debounce-throttle",
+   "title": "Search box fires too often and loses its context",
+   "language": "javascript",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "bug_count": 3,
+   "scenario": "UI-902: The autocomplete box is supposed to wait until the user stops typing for 300 ms, but it fires one request for every keystroke once the delay passes. Method handlers wrapped with our debounce see 'this' as undefined. And the scroll-tracking throttle ignores the very first event of a session and also swallows an event that arrives exactly one interval after the previous one.",
+   "files": {
+    "debounce.js": "function debounce(fn, wait, timers = { setTimeout, clearTimeout }) {\n  let timer = null;\n\n  function debounced(...args) {\n    timer = timers.setTimeout(() => {\n      timer = null;\n      fn(...args);\n    }, wait);\n  }\n\n  debounced.cancel = () => {\n    if (timer !== null) timers.clearTimeout(timer);\n    timer = null;\n  };\n\n  return debounced;\n}\n\nmodule.exports = { debounce };\n",
+    "throttle.js": "function throttle(fn, wait, now = Date.now) {\n  let last = 0;\n\n  return function throttled(...args) {\n    const t = now();\n    if (t - last > wait) {\n      last = t;\n      return fn.apply(this, args);\n    }\n    return undefined;\n  };\n}\n\nmodule.exports = { throttle };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { debounce } = require(\"./debounce.js\");\nconst { throttle } = require(\"./throttle.js\");\n\nfunction fakeTimers() {\n  let now = 0;\n  let id = 0;\n  const pending = new Map();\n  return {\n    now: () => now,\n    setTimeout(fn, ms) {\n      const t = ++id;\n      pending.set(t, { fn, at: now + ms });\n      return t;\n    },\n    clearTimeout(t) {\n      pending.delete(t);\n    },\n    advance(ms) {\n      const end = now + ms;\n      for (;;) {\n        let next = null;\n        for (const [t, e] of pending) {\n          if (e.at <= end && (!next || e.at < next.e.at)) next = { t, e };\n        }\n        if (!next) break;\n        pending.delete(next.t);\n        now = next.e.at;\n        next.e.fn();\n      }\n      now = end;\n    },\n  };\n}\n\nmodule.exports = {\n  \"debounce collapses a burst into one call with the last arguments\": () => {\n    const clock = fakeTimers();\n    const calls = [];\n    const d = debounce((x) => calls.push(x), 100, clock);\n    d(\"a\");\n    d(\"b\");\n    d(\"c\");\n    clock.advance(100);\n    assert.deepStrictEqual(calls, [\"c\"], \"expected one call with the last args, got \" + JSON.stringify(calls));\n  },\n  \"debounce restarts the wait on every call\": () => {\n    const clock = fakeTimers();\n    let n = 0;\n    const d = debounce(() => n++, 100, clock);\n    d();\n    clock.advance(60);\n    d();\n    clock.advance(60);\n    assert.strictEqual(n, 0, \"only 60ms passed since the last call\");\n    clock.advance(40);\n    assert.strictEqual(n, 1);\n  },\n  \"debounce preserves this\": () => {\n    const clock = fakeTimers();\n    const obj = { name: \"box\", seen: null };\n    obj.run = debounce(function () {\n      this.seen = this.name;\n    }, 10, clock);\n    obj.run();\n    clock.advance(10);\n    assert.strictEqual(obj.seen, \"box\", \"this was not forwarded to the wrapped function\");\n  },\n  \"debounce cancel prevents the call\": () => {\n    const clock = fakeTimers();\n    let n = 0;\n    const d = debounce(() => n++, 50, clock);\n    d();\n    d.cancel();\n    clock.advance(100);\n    assert.strictEqual(n, 0);\n  },\n  \"throttle runs the first call immediately even at time zero\": () => {\n    const clock = fakeTimers();\n    const calls = [];\n    const t = throttle((x) => calls.push(x), 100, clock.now);\n    t(\"first\");\n    assert.deepStrictEqual(calls, [\"first\"], \"first call must not be throttled\");\n  },\n  \"throttle drops calls inside the window\": () => {\n    const clock = fakeTimers();\n    const calls = [];\n    const t = throttle((x) => calls.push(x), 100, clock.now);\n    t(1);\n    clock.advance(50);\n    t(2);\n    clock.advance(49);\n    t(3);\n    assert.deepStrictEqual(calls, [1]);\n  },\n  \"throttle allows a call exactly one interval later\": () => {\n    const clock = fakeTimers();\n    const calls = [];\n    const t = throttle((x) => calls.push(x), 100, clock.now);\n    clock.advance(1000);\n    t(\"a\");\n    clock.advance(100);\n    t(\"b\");\n    assert.deepStrictEqual(calls, [\"a\", \"b\"], \"a call at exactly t+wait should go through\");\n  },\n  \"throttle returns the value and keeps this\": () => {\n    const clock = fakeTimers();\n    const o = { k: 7, get: throttle(function () { return this.k; }, 10, clock.now) };\n    assert.strictEqual(o.get(), 7);\n  },\n};\n",
+   "solution": {
+    "debounce.js": "function debounce(fn, wait, timers = { setTimeout, clearTimeout }) {\n  let timer = null;\n\n  function debounced(...args) {\n    if (timer !== null) timers.clearTimeout(timer);\n    const ctx = this;\n    timer = timers.setTimeout(() => {\n      timer = null;\n      fn.apply(ctx, args);\n    }, wait);\n  }\n\n  debounced.cancel = () => {\n    if (timer !== null) timers.clearTimeout(timer);\n    timer = null;\n  };\n\n  return debounced;\n}\n\nmodule.exports = { debounce };\n",
+    "throttle.js": "function throttle(fn, wait, now = Date.now) {\n  let last = -Infinity;\n\n  return function throttled(...args) {\n    const t = now();\n    if (t - last >= wait) {\n      last = t;\n      return fn.apply(this, args);\n    }\n    return undefined;\n  };\n}\n\nmodule.exports = { throttle };\n"
+   },
+   "hints": [
+    "Three bugs across two files: debounce has two (look at what happens to earlier timers and to the receiver), throttle has one root cause pair in its initial state and comparison.",
+    "A debounced function must cancel the previously scheduled call each time. An arrow callback calling `fn(...args)` drops `this`. In throttle, `last = 0` means 'a call happened at time 0', and `>` excludes the boundary.",
+    "In debounce: `clearTimeout(timer)` before scheduling, capture `this` in `const ctx = this`, and call `fn.apply(ctx, args)`. In throttle: start with `last = -Infinity` and compare with `>=`."
+   ],
+   "explanation": "Debounce without clearing the previous timer is just a delayed call per event. `this` is dynamic in JS, so a wrapper must capture it from the call site (`function`, not arrow) and forward it with `apply`. Throttle's initial 'last call' time must be 'never' (-Infinity), and the boundary is inclusive when the interval has fully elapsed.",
+   "tags": [
+    "this-binding",
+    "timers",
+    "closures"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "dbg-js-promise-pool",
+   "title": "Promise pool returns results out of order and over-runs its limit",
+   "language": "javascript",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "bug_count": 2,
+   "scenario": "INFRA-455: The thumbnail uploader uses pool(tasks, 4) so we do not hammer the storage API. Monitoring shows 5 simultaneous uploads, and the returned URL list does not line up with the input files: the fastest uploads come first, so the UI attaches thumbnails to the wrong images.",
+   "files": {
+    "pool.js": "async function pool(tasks, limit) {\n  const results = [];\n  let next = 0;\n\n  async function worker() {\n    while (next < tasks.length) {\n      const task = tasks[next++];\n      const value = await task();\n      results.push(value);\n    }\n  }\n\n  const workers = [];\n  for (let i = 0; i <= limit; i++) {\n    workers.push(worker());\n  }\n  await Promise.all(workers);\n  return results;\n}\n\nmodule.exports = { pool };\n",
+    "mapLimit.js": "const { pool } = require(\"./pool.js\");\n\nfunction mapLimit(items, limit, fn) {\n  const tasks = items.map((item, index) => () => fn(item, index));\n  return pool(tasks, limit);\n}\n\nmodule.exports = { mapLimit };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { pool } = require(\"./pool.js\");\nconst { mapLimit } = require(\"./mapLimit.js\");\n\nconst sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n\nfunction tracker() {\n  let running = 0;\n  const state = { peak: 0 };\n  state.task = (value, ms) => async () => {\n    running++;\n    state.peak = Math.max(state.peak, running);\n    await sleep(ms);\n    running--;\n    return value;\n  };\n  return state;\n}\n\nmodule.exports = {\n  \"returns results in input order, not completion order\": async () => {\n    const t = tracker();\n    const out = await pool([t.task(\"a\", 15), t.task(\"b\", 1), t.task(\"c\", 8), t.task(\"d\", 1)], 2);\n    assert.deepStrictEqual(out, [\"a\", \"b\", \"c\", \"d\"], \"got \" + JSON.stringify(out));\n  },\n  \"never runs more than limit tasks at once\": async () => {\n    const t = tracker();\n    const tasks = [1, 2, 3, 4, 5, 6].map((n) => t.task(n, 5));\n    await pool(tasks, 2);\n    assert.strictEqual(t.peak, 2, \"peak concurrency was \" + t.peak);\n  },\n  \"actually uses the full limit\": async () => {\n    const t = tracker();\n    await pool([1, 2, 3, 4, 5, 6].map((n) => t.task(n, 5)), 3);\n    assert.strictEqual(t.peak, 3);\n  },\n  \"empty task list resolves to an empty array\": async () => {\n    assert.deepStrictEqual(await pool([], 3), []);\n  },\n  \"limit larger than the task count is fine\": async () => {\n    const t = tracker();\n    const out = await pool([t.task(\"x\", 2), t.task(\"y\", 1)], 10);\n    assert.deepStrictEqual(out, [\"x\", \"y\"]);\n    assert.strictEqual(t.peak, 2);\n  },\n  \"a failing task rejects the pool with its error\": async () => {\n    const boom = new Error(\"upload failed\");\n    const tasks = [async () => 1, async () => { throw boom; }, async () => 3];\n    await assert.rejects(() => pool(tasks, 2), (e) => e === boom);\n  },\n  \"mapLimit passes item and index and keeps order\": async () => {\n    const out = await mapLimit([\"a\", \"b\", \"c\"], 2, async (x, i) => {\n      await sleep(3 - i);\n      return x + i;\n    });\n    assert.deepStrictEqual(out, [\"a0\", \"b1\", \"c2\"]);\n  },\n};\n",
+   "solution": {
+    "pool.js": "async function pool(tasks, limit) {\n  const results = new Array(tasks.length);\n  let next = 0;\n\n  async function worker() {\n    while (next < tasks.length) {\n      const index = next++;\n      results[index] = await tasks[index]();\n    }\n  }\n\n  const count = Math.min(limit, tasks.length);\n  const workers = [];\n  for (let i = 0; i < count; i++) {\n    workers.push(worker());\n  }\n  await Promise.all(workers);\n  return results;\n}\n\nmodule.exports = { pool };\n"
+   },
+   "hints": [
+    "Look at the worker loop bound and at where each result is stored.",
+    "`i <= limit` starts limit + 1 workers. And `results.push` records results in the order tasks finish, not the order they were given.",
+    "Loop `i < limit`, and capture `const index = next++` so you can write `results[index] = ...`."
+   ],
+   "explanation": "An inclusive loop bound created one extra worker, breaking the concurrency guarantee. Pushing results by completion order is a race-dependent bug: parallel async work must write each result into its own slot using the task's index.",
+   "tags": [
+    "concurrency",
+    "off-by-one",
+    "promises"
+   ],
+   "companies": [
+    "Uber",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "dbg-js-retry-backoff",
+   "title": "Retry helper never retries and backs off linearly",
+   "language": "javascript",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "bug_count": 3,
+   "scenario": "PAY-1204: During yesterday's gateway blip, our retry(fn, { retries: 3 }) wrapper gave up on the first error without a single retry. When we looked closer, even if it had retried, it would have made only 3 attempts in total instead of 1 + 3, and the delays were 0, 200, 400 instead of an exponential 100, 200, 400.",
+   "files": {
+    "retry.js": "const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\nasync function retry(fn, options = {}) {\n  const { retries = 3, baseMs = 100, sleep = defaultSleep, shouldRetry = () => true } = options;\n  let lastErr;\n\n  for (let attempt = 0; attempt < retries; attempt++) {\n    try {\n      return fn(attempt);\n    } catch (err) {\n      lastErr = err;\n      if (!shouldRetry(err)) throw err;\n      await sleep(baseMs * attempt * 2);\n    }\n  }\n  throw lastErr;\n}\n\nmodule.exports = { retry };\n",
+    "gateway.js": "const { retry } = require(\"./retry.js\");\n\nfunction isTransient(err) {\n  return !err.status || err.status >= 500;\n}\n\nfunction callGateway(client, request, options = {}) {\n  return retry(() => client.send(request), { retries: 3, baseMs: 100, shouldRetry: isTransient, ...options });\n}\n\nmodule.exports = { callGateway, isTransient };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { retry } = require(\"./retry.js\");\nconst { callGateway } = require(\"./gateway.js\");\n\nfunction flaky(failures, err = new Error(\"boom\")) {\n  let calls = 0;\n  const fn = async () => {\n    calls++;\n    if (calls <= failures) throw err;\n    return \"ok\";\n  };\n  fn.calls = () => calls;\n  return fn;\n}\n\nfunction recorder() {\n  const delays = [];\n  return { delays, sleep: async (ms) => { delays.push(ms); } };\n}\n\nmodule.exports = {\n  \"returns immediately on success without sleeping\": async () => {\n    const r = recorder();\n    const fn = flaky(0);\n    assert.strictEqual(await retry(fn, { sleep: r.sleep }), \"ok\");\n    assert.deepStrictEqual(r.delays, []);\n  },\n  \"retries an async failure and then succeeds\": async () => {\n    const r = recorder();\n    const fn = flaky(2);\n    const result = await retry(fn, { retries: 3, sleep: r.sleep });\n    assert.strictEqual(result, \"ok\");\n    assert.strictEqual(fn.calls(), 3);\n  },\n  \"waits with exponential backoff\": async () => {\n    const r = recorder();\n    await retry(flaky(3), { retries: 3, baseMs: 100, sleep: r.sleep });\n    assert.deepStrictEqual(r.delays, [100, 200, 400], \"got delays \" + JSON.stringify(r.delays));\n  },\n  \"makes retries + 1 attempts then throws the last error\": async () => {\n    const r = recorder();\n    const err = new Error(\"still down\");\n    const fn = flaky(99, err);\n    await assert.rejects(() => retry(fn, { retries: 2, sleep: r.sleep }), (e) => e === err);\n    assert.strictEqual(fn.calls(), 3, \"1 initial attempt + 2 retries = 3 calls, got \" + fn.calls());\n    assert.deepStrictEqual(r.delays, [100, 200], \"no sleep after the final failure\");\n  },\n  \"shouldRetry can stop retrying early\": async () => {\n    const r = recorder();\n    const fn = flaky(5, Object.assign(new Error(\"bad request\"), { status: 400 }));\n    await assert.rejects(() => retry(fn, { sleep: r.sleep, shouldRetry: (e) => e.status !== 400 }));\n    assert.strictEqual(fn.calls(), 1);\n  },\n  \"handles functions that throw synchronously\": async () => {\n    let calls = 0;\n    const r = recorder();\n    const result = await retry(() => {\n      calls++;\n      if (calls < 2) throw new Error(\"sync\");\n      return \"fine\";\n    }, { sleep: r.sleep });\n    assert.strictEqual(result, \"fine\");\n  },\n  \"passes the attempt number to fn\": async () => {\n    const seen = [];\n    await retry(async (n) => { seen.push(n); if (n < 2) throw new Error(\"x\"); }, { sleep: async () => {} });\n    assert.deepStrictEqual(seen, [0, 1, 2]);\n  },\n  \"gateway retries 5xx but not 4xx\": async () => {\n    const r = recorder();\n    let n = 0;\n    const client = { send: async () => { n++; if (n < 3) throw Object.assign(new Error(\"gw\"), { status: 503 }); return { ok: true }; } };\n    assert.deepStrictEqual(await callGateway(client, {}, { sleep: r.sleep }), { ok: true });\n    let m = 0;\n    const bad = { send: async () => { m++; throw Object.assign(new Error(\"nope\"), { status: 404 }); } };\n    await assert.rejects(() => callGateway(bad, {}, { sleep: r.sleep }));\n    assert.strictEqual(m, 1, \"404 must not be retried\");\n  },\n};\n",
+   "solution": {
+    "retry.js": "const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));\n\nasync function retry(fn, options = {}) {\n  const { retries = 3, baseMs = 100, sleep = defaultSleep, shouldRetry = () => true } = options;\n\n  for (let attempt = 0; attempt <= retries; attempt++) {\n    try {\n      return await fn(attempt);\n    } catch (err) {\n      if (attempt === retries || !shouldRetry(err)) throw err;\n      await sleep(baseMs * 2 ** attempt);\n    }\n  }\n}\n\nmodule.exports = { retry };\n"
+   },
+   "hints": [
+    "Three independent defects, all inside `retry.js`: one about async control flow, one about how many times the loop runs, one about the delay formula.",
+    "`return fn(attempt)` inside `try` returns the promise without awaiting it, so a rejection happens after the `try` block has already exited. Also, `retries` means retries, not total attempts.",
+    "Use `return await fn(attempt)`, loop `attempt <= retries`, rethrow on the last attempt before sleeping, and sleep `baseMs * 2 ** attempt`."
+   ],
+   "explanation": "A `try/catch` only catches rejections of promises that are awaited inside it; `return promise` skips the catch. The loop bound confused 'retries' with 'attempts', and a linear formula with a zero first term gave no initial delay. Sleeping after the final failure is also pointless and was removed.",
+   "tags": [
+    "missing-await",
+    "backoff",
+    "off-by-one"
+   ],
+   "companies": [
+    "Stripe",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "dbg-js-ttl-cache",
+   "title": "TTL cache serves expired and drops falsy values",
+   "language": "javascript",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "bug_count": 3,
+   "scenario": "CACHE-63: Feature flags are cached for 60 seconds. Operators report that cache.has('beta') still says true long after expiry, an entry is still served at exactly the 60 s mark, and a flag whose value is legitimately 0 is re-fetched from the database on every request because the cache seems to ignore it.",
+   "files": {
+    "cache.js": "class TTLCache {\n  constructor({ ttl = 1000, now = Date.now } = {}) {\n    this.ttl = ttl;\n    this.now = now;\n    this.store = new Map();\n  }\n\n  _expired(entry) {\n    return entry.expires < this.now();\n  }\n\n  set(key, value, ttl = this.ttl) {\n    this.store.set(key, { value, expires: this.now() + ttl });\n    return this;\n  }\n\n  get(key) {\n    const entry = this.store.get(key);\n    if (!entry) return undefined;\n    if (this._expired(entry)) {\n      this.store.delete(key);\n      return undefined;\n    }\n    return entry.value;\n  }\n\n  has(key) {\n    return this.store.has(key);\n  }\n\n  delete(key) {\n    return this.store.delete(key);\n  }\n\n  purge() {\n    for (const [key, entry] of this.store) {\n      if (this._expired(entry)) this.store.delete(key);\n    }\n  }\n\n  get size() {\n    this.purge();\n    return this.store.size;\n  }\n\n  async getOrSet(key, loader, ttl) {\n    const hit = this.get(key);\n    if (hit) return hit;\n    const value = await loader();\n    this.set(key, value, ttl);\n    return value;\n  }\n}\n\nmodule.exports = { TTLCache };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { TTLCache } = require(\"./cache.js\");\n\nfunction make(ttl = 100) {\n  const clock = { t: 0 };\n  const cache = new TTLCache({ ttl, now: () => clock.t });\n  return { clock, cache };\n}\n\nmodule.exports = {\n  \"returns a value before it expires\": () => {\n    const { clock, cache } = make();\n    cache.set(\"a\", 1);\n    clock.t = 99;\n    assert.strictEqual(cache.get(\"a\"), 1);\n  },\n  \"entry is expired exactly at ttl\": () => {\n    const { clock, cache } = make(100);\n    cache.set(\"a\", 1);\n    clock.t = 100;\n    assert.strictEqual(cache.get(\"a\"), undefined, \"an entry with ttl 100 is gone at t = 100\");\n  },\n  \"has() respects expiry\": () => {\n    const { clock, cache } = make(100);\n    cache.set(\"a\", 1);\n    assert.strictEqual(cache.has(\"a\"), true);\n    clock.t = 150;\n    assert.strictEqual(cache.has(\"a\"), false, \"has() returned true for an expired key\");\n  },\n  \"per-key ttl overrides the default\": () => {\n    const { clock, cache } = make(100);\n    cache.set(\"short\", 1, 10);\n    cache.set(\"long\", 2, 500);\n    clock.t = 50;\n    assert.strictEqual(cache.get(\"short\"), undefined);\n    assert.strictEqual(cache.get(\"long\"), 2);\n  },\n  \"size counts only live entries\": () => {\n    const { clock, cache } = make(100);\n    cache.set(\"a\", 1, 100);\n    cache.set(\"b\", 2, 500);\n    clock.t = 200;\n    assert.strictEqual(cache.size, 1);\n  },\n  \"getOrSet loads once and caches falsy values\": async () => {\n    const { cache } = make();\n    let loads = 0;\n    const loader = async () => { loads++; return 0; };\n    assert.strictEqual(await cache.getOrSet(\"flag\", loader), 0);\n    assert.strictEqual(await cache.getOrSet(\"flag\", loader), 0);\n    assert.strictEqual(loads, 1, \"loader ran \" + loads + \" times; 0 is a valid cached value\");\n  },\n  \"getOrSet reloads after expiry\": async () => {\n    const { clock, cache } = make(100);\n    let loads = 0;\n    const loader = async () => ++loads;\n    await cache.getOrSet(\"k\", loader);\n    clock.t = 100;\n    assert.strictEqual(await cache.getOrSet(\"k\", loader), 2);\n  },\n  \"delete removes a key\": () => {\n    const { cache } = make();\n    cache.set(\"a\", 1);\n    assert.strictEqual(cache.delete(\"a\"), true);\n    assert.strictEqual(cache.has(\"a\"), false);\n  },\n};\n",
+   "solution": {
+    "cache.js": "class TTLCache {\n  constructor({ ttl = 1000, now = Date.now } = {}) {\n    this.ttl = ttl;\n    this.now = now;\n    this.store = new Map();\n  }\n\n  _expired(entry) {\n    return entry.expires <= this.now();\n  }\n\n  _live(key) {\n    const entry = this.store.get(key);\n    if (!entry) return null;\n    if (this._expired(entry)) {\n      this.store.delete(key);\n      return null;\n    }\n    return entry;\n  }\n\n  set(key, value, ttl = this.ttl) {\n    this.store.set(key, { value, expires: this.now() + ttl });\n    return this;\n  }\n\n  get(key) {\n    const entry = this._live(key);\n    return entry ? entry.value : undefined;\n  }\n\n  has(key) {\n    return this._live(key) !== null;\n  }\n\n  delete(key) {\n    return this.store.delete(key);\n  }\n\n  purge() {\n    for (const [key, entry] of this.store) {\n      if (this._expired(entry)) this.store.delete(key);\n    }\n  }\n\n  get size() {\n    this.purge();\n    return this.store.size;\n  }\n\n  async getOrSet(key, loader, ttl) {\n    if (this.has(key)) return this.get(key);\n    const value = await loader();\n    this.set(key, value, ttl);\n    return value;\n  }\n}\n\nmodule.exports = { TTLCache };\n"
+   },
+   "hints": [
+    "Check three places: the expiry comparison, `has`, and the 'is it cached?' test in `getOrSet`.",
+    "`<` leaves an entry alive at the exact moment it expires; `has` never looks at the expiry time; `if (hit)` is a truthiness check, so `0`, `false` and `\"\"` look like a miss.",
+    "Use `<=` in `_expired`, make `has` go through the same liveness check as `get`, and in `getOrSet` ask `has(key)` instead of testing the value."
+   ],
+   "explanation": "Three expiry-related slips: an inclusive/exclusive boundary, a second read path (`has`) that bypassed the expiry logic, and truthiness used to detect a cache hit. Any read path must share one 'is this entry live?' helper, and 'hit' must be determined by presence, not by value.",
+   "tags": [
+    "cache",
+    "truthiness",
+    "boundary"
+   ],
+   "companies": [
+    "Amazon",
+    "Oracle"
+   ]
+  },
+  {
+   "id": "dbg-js-event-emitter",
+   "title": "Event emitter skips listeners and crashes on odd event names",
+   "language": "javascript",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "bug_count": 3,
+   "scenario": "PLAT-318: In the plugin host, a one-shot 'ready' listener sometimes causes the next listener on the same event to be silently skipped. Calling the unsubscribe function twice removed somebody else's handler. And a plugin that emits an event called 'constructor' crashes the whole host with a TypeError.",
+   "files": {
+    "emitter.js": "class Emitter {\n  constructor() {\n    this.handlers = {};\n  }\n\n  on(evt, fn) {\n    if (!this.handlers[evt]) this.handlers[evt] = [];\n    this.handlers[evt].push(fn);\n    return () => this.off(evt, fn);\n  }\n\n  off(evt, fn) {\n    const list = this.handlers[evt];\n    if (!list) return;\n    list.splice(list.indexOf(fn), 1);\n  }\n\n  once(evt, fn) {\n    const wrapper = (...args) => {\n      this.off(evt, wrapper);\n      return fn(...args);\n    };\n    return this.on(evt, wrapper);\n  }\n\n  emit(evt, ...args) {\n    const list = this.handlers[evt];\n    if (!list || list.length === 0) return false;\n    for (const fn of list) {\n      fn(...args);\n    }\n    return true;\n  }\n\n  listenerCount(evt) {\n    const list = this.handlers[evt];\n    return list ? list.length : 0;\n  }\n}\n\nmodule.exports = { Emitter };\n",
+    "bus.js": "const { Emitter } = require(\"./emitter.js\");\n\nfunction waitFor(emitter, evt) {\n  return new Promise((resolve) => {\n    emitter.once(evt, (...args) => resolve(args.length > 1 ? args : args[0]));\n  });\n}\n\nmodule.exports = { Emitter, waitFor };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { Emitter, waitFor } = require(\"./bus.js\");\n\nmodule.exports = {\n  \"delivers arguments to listeners\": () => {\n    const e = new Emitter();\n    const got = [];\n    e.on(\"msg\", (a, b) => got.push([a, b]));\n    assert.strictEqual(e.emit(\"msg\", 1, 2), true);\n    assert.deepStrictEqual(got, [[1, 2]]);\n  },\n  \"emit with no listeners returns false\": () => {\n    assert.strictEqual(new Emitter().emit(\"nothing\"), false);\n  },\n  \"on returns an unsubscribe function\": () => {\n    const e = new Emitter();\n    let n = 0;\n    const off = e.on(\"x\", () => n++);\n    e.emit(\"x\");\n    off();\n    e.emit(\"x\");\n    assert.strictEqual(n, 1);\n  },\n  \"removing an unknown handler leaves others alone\": () => {\n    const e = new Emitter();\n    let a = 0;\n    let b = 0;\n    e.on(\"x\", () => a++);\n    e.on(\"x\", () => b++);\n    e.off(\"x\", () => {});\n    e.emit(\"x\");\n    assert.deepStrictEqual([a, b], [1, 1], \"off() of an unregistered function removed a real listener\");\n  },\n  \"calling unsubscribe twice is harmless\": () => {\n    const e = new Emitter();\n    let other = 0;\n    const off = e.on(\"x\", () => {});\n    e.on(\"x\", () => other++);\n    off();\n    off();\n    e.emit(\"x\");\n    assert.strictEqual(other, 1, \"second unsubscribe removed a different listener\");\n  },\n  \"once fires a single time\": () => {\n    const e = new Emitter();\n    let n = 0;\n    e.once(\"x\", () => n++);\n    e.emit(\"x\");\n    e.emit(\"x\");\n    assert.strictEqual(n, 1);\n  },\n  \"a once listener does not make the next listener skip\": () => {\n    const e = new Emitter();\n    const order = [];\n    e.once(\"x\", () => order.push(\"once\"));\n    e.on(\"x\", () => order.push(\"second\"));\n    e.on(\"x\", () => order.push(\"third\"));\n    e.emit(\"x\");\n    assert.deepStrictEqual(order, [\"once\", \"second\", \"third\"], \"got \" + JSON.stringify(order));\n  },\n  \"event names that collide with Object.prototype work\": () => {\n    const e = new Emitter();\n    const seen = [];\n    for (const name of [\"constructor\", \"toString\", \"__proto__\", \"hasOwnProperty\"]) {\n      e.on(name, () => seen.push(name));\n      e.emit(name);\n    }\n    assert.deepStrictEqual(seen, [\"constructor\", \"toString\", \"__proto__\", \"hasOwnProperty\"]);\n  },\n  \"waitFor resolves with the first payload\": async () => {\n    const e = new Emitter();\n    const p = waitFor(e, \"ready\");\n    e.emit(\"ready\", { ok: true });\n    assert.deepStrictEqual(await p, { ok: true });\n    assert.strictEqual(e.listenerCount(\"ready\"), 0);\n  },\n};\n",
+   "solution": {
+    "emitter.js": "class Emitter {\n  constructor() {\n    this.handlers = new Map();\n  }\n\n  on(evt, fn) {\n    if (!this.handlers.has(evt)) this.handlers.set(evt, []);\n    this.handlers.get(evt).push(fn);\n    return () => this.off(evt, fn);\n  }\n\n  off(evt, fn) {\n    const list = this.handlers.get(evt);\n    if (!list) return;\n    const i = list.indexOf(fn);\n    if (i !== -1) list.splice(i, 1);\n  }\n\n  once(evt, fn) {\n    const wrapper = (...args) => {\n      this.off(evt, wrapper);\n      return fn(...args);\n    };\n    return this.on(evt, wrapper);\n  }\n\n  emit(evt, ...args) {\n    const list = this.handlers.get(evt);\n    if (!list || list.length === 0) return false;\n    for (const fn of [...list]) {\n      fn(...args);\n    }\n    return true;\n  }\n\n  listenerCount(evt) {\n    const list = this.handlers.get(evt);\n    return list ? list.length : 0;\n  }\n}\n\nmodule.exports = { Emitter };\n"
+   },
+   "hints": [
+    "Three separate flaws in `emitter.js`: how `off` locates the handler, how `emit` loops, and what data structure holds the handlers.",
+    "`indexOf` returns -1 when nothing matches and `splice(-1, 1)` removes the LAST element. A `for...of` over an array that a listener mutates (the `once` wrapper removes itself) shifts the remaining items. A plain `{}` already has keys like `constructor`.",
+    "Guard `off` with `if (i !== -1)`, iterate over a copy (`[...list]`) in `emit`, and store handlers in a `Map`."
+   ],
+   "explanation": "Negative index in `splice` is a classic: `indexOf` failing returns -1 which splice interprets as 'from the end'. Mutating a collection while iterating it skips elements; snapshot before dispatch. Using a plain object as a dictionary with user-controlled keys collides with inherited properties; use `Map` (or a null-prototype object).",
+   "tags": [
+    "event-emitter",
+    "iteration-mutation",
+    "prototype-keys"
+   ],
+   "companies": [
+    "Meta",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "dbg-js-currency-split",
+   "title": "Invoices are off by a cent and negative amounts print garbage",
+   "language": "javascript",
+   "difficulty": "Medium",
+   "time_minutes": 22,
+   "bug_count": 3,
+   "scenario": "BILL-2090: Finance reports invoices where a $19.99 item shows up as $19.98. Refunds are displayed as '-$-2.-50' instead of '-$1.50'. And when a $100.00 dinner is split three ways, the three shares add up to $99.99, so someone is always short a cent.",
+   "files": {
+    "money.js": "function toCents(amount) {\n  return parseInt(amount * 100, 10);\n}\n\nfunction formatCents(cents, symbol = \"$\") {\n  const sign = cents < 0 ? \"-\" : \"\";\n  const dollars = String(Math.floor(cents / 100)).replace(/\\B(?=(\\d{3})+(?!\\d))/g, \",\");\n  const rest = String(cents % 100).padStart(2, \"0\");\n  return sign + symbol + dollars + \".\" + rest;\n}\n\nfunction splitCents(total, parts) {\n  const base = Math.floor(total / parts);\n  return Array(parts).fill(base);\n}\n\nmodule.exports = { toCents, formatCents, splitCents };\n",
+    "invoice.js": "const { toCents, formatCents, splitCents } = require(\"./money.js\");\n\nfunction lineTotal(unitPrice, qty, discountPct = 0) {\n  const gross = toCents(unitPrice) * qty;\n  return Math.round((gross * (100 - discountPct)) / 100);\n}\n\nfunction invoiceSummary(lines, taxRate) {\n  const subtotal = lines.reduce((sum, l) => sum + lineTotal(l.price, l.qty, l.discount), 0);\n  const tax = Math.round(subtotal * taxRate);\n  const total = subtotal + tax;\n  return { subtotal, tax, total, display: formatCents(total) };\n}\n\nfunction splitBill(totalCents, names) {\n  const shares = splitCents(totalCents, names.length);\n  return Object.fromEntries(names.map((name, i) => [name, shares[i]]));\n}\n\nmodule.exports = { lineTotal, invoiceSummary, splitBill };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { toCents, formatCents, splitCents } = require(\"./money.js\");\nconst { lineTotal, invoiceSummary, splitBill } = require(\"./invoice.js\");\n\nmodule.exports = {\n  \"toCents rounds instead of truncating\": () => {\n    assert.strictEqual(toCents(19.99), 1999, \"19.99 -> \" + toCents(19.99));\n    assert.strictEqual(toCents(0.57), 57, \"0.57 -> \" + toCents(0.57));\n    assert.strictEqual(toCents(5), 500);\n  },\n  \"formats positive amounts with separators\": () => {\n    assert.strictEqual(formatCents(123456789), \"$1,234,567.89\");\n    assert.strictEqual(formatCents(5), \"$0.05\");\n    assert.strictEqual(formatCents(0), \"$0.00\");\n    assert.strictEqual(formatCents(100000), \"$1,000.00\");\n  },\n  \"formats negative amounts\": () => {\n    assert.strictEqual(formatCents(-150), \"-$1.50\");\n    assert.strictEqual(formatCents(-5), \"-$0.05\");\n    assert.strictEqual(formatCents(-123456), \"-$1,234.56\");\n  },\n  \"custom symbol\": () => {\n    assert.strictEqual(formatCents(2599, \"EUR \"), \"EUR 25.99\");\n  },\n  \"splitCents distributes every cent\": () => {\n    assert.deepStrictEqual(splitCents(100, 3), [34, 33, 33]);\n    assert.deepStrictEqual(splitCents(10, 4), [3, 3, 2, 2]);\n    assert.strictEqual(splitCents(1, 3).reduce((a, b) => a + b, 0), 1);\n    assert.deepStrictEqual(splitCents(9, 3), [3, 3, 3]);\n  },\n  \"line totals apply the discount\": () => {\n    assert.strictEqual(lineTotal(19.99, 3, 10), 5397, \"got \" + lineTotal(19.99, 3, 10));\n    assert.strictEqual(lineTotal(19.99, 1), 1999);\n  },\n  \"invoice summary with tax\": () => {\n    const s = invoiceSummary([{ price: 19.99, qty: 3, discount: 10 }], 0.08);\n    assert.deepStrictEqual(s, { subtotal: 5397, tax: 432, total: 5829, display: \"$58.29\" });\n  },\n  \"splitBill assigns shares by name\": () => {\n    const shares = splitBill(10000, [\"ann\", \"ben\", \"cat\"]);\n    assert.deepStrictEqual(shares, { ann: 3334, ben: 3333, cat: 3333 });\n  },\n};\n",
+   "solution": {
+    "money.js": "function toCents(amount) {\n  return Math.round(amount * 100);\n}\n\nfunction formatCents(cents, symbol = \"$\") {\n  const sign = cents < 0 ? \"-\" : \"\";\n  const abs = Math.abs(cents);\n  const dollars = String(Math.floor(abs / 100)).replace(/\\B(?=(\\d{3})+(?!\\d))/g, \",\");\n  const rest = String(abs % 100).padStart(2, \"0\");\n  return sign + symbol + dollars + \".\" + rest;\n}\n\nfunction splitCents(total, parts) {\n  const base = Math.floor(total / parts);\n  const remainder = total - base * parts;\n  return Array.from({ length: parts }, (_, i) => base + (i < remainder ? 1 : 0));\n}\n\nmodule.exports = { toCents, formatCents, splitCents };\n"
+   },
+   "hints": [
+    "All three bugs live in `money.js`; `invoice.js` is a consumer. Print `19.99 * 100` in a REPL to see the first.",
+    "`parseInt` truncates, and `19.99 * 100` is `1998.9999999999998`. Negative numbers: `Math.floor(-150 / 100)` is -2 and `-150 % 100` is -50. The even split throws away `total % parts`.",
+    "Use `Math.round`, format `Math.abs(cents)` and add the sign separately, and hand the remainder out one cent at a time to the first `remainder` parts."
+   ],
+   "explanation": "Money bugs come from three places: converting decimals to integers (truncating a value that is 1 ulp below the true amount), sign handling when splitting into dollars and cents with floor/modulo on negatives, and integer division that loses the remainder. The invariant for splits is that shares sum exactly to the total.",
+   "tags": [
+    "floating-point",
+    "money",
+    "rounding",
+    "negative-modulo"
+   ],
+   "companies": [
+    "Stripe",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "dbg-js-todo-undo",
+   "title": "Undo restores the wrong state and redo never clears",
+   "language": "javascript",
+   "difficulty": "Medium",
+   "time_minutes": 22,
+   "bug_count": 3,
+   "scenario": "APP-1120: In the todo app, toggling a task and pressing undo leaves it checked. After undoing an add and then adding something new, 'redo' brings back the old item on top of the new state. Clicking 'complete' on an item that was just deleted in another tab throws, and leaves a phantom entry in the undo history.",
+   "files": {
+    "todoStore.js": "class TodoStore {\n  constructor() {\n    this.todos = [];\n    this.past = [];\n    this.future = [];\n    this.nextId = 1;\n  }\n\n  _snapshot() {\n    this.past.push(this.todos.slice());\n  }\n\n  _find(id) {\n    return this.todos.find((t) => t.id === id);\n  }\n\n  add(text) {\n    this._snapshot();\n    const todo = { id: this.nextId++, text, done: false };\n    this.todos.push(todo);\n    return todo.id;\n  }\n\n  toggle(id) {\n    this._snapshot();\n    const todo = this._find(id);\n    todo.done = !todo.done;\n    return true;\n  }\n\n  remove(id) {\n    this._snapshot();\n    this.todos = this.todos.filter((t) => t.id !== id);\n    return true;\n  }\n\n  undo() {\n    if (this.past.length === 0) return false;\n    this.future.push(this.todos);\n    this.todos = this.past.pop();\n    return true;\n  }\n\n  redo() {\n    if (this.future.length === 0) return false;\n    this.past.push(this.todos);\n    this.todos = this.future.pop();\n    return true;\n  }\n\n  get canUndo() {\n    return this.past.length > 0;\n  }\n\n  get canRedo() {\n    return this.future.length > 0;\n  }\n}\n\nmodule.exports = { TodoStore };\n",
+    "stats.js": "function stats(todos) {\n  const total = todos.length;\n  const done = todos.filter((t) => t.done).length;\n  return { total, done, remaining: total - done, percent: total === 0 ? 0 : Math.round((done / total) * 100) };\n}\n\nmodule.exports = { stats };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { TodoStore } = require(\"./todoStore.js\");\nconst { stats } = require(\"./stats.js\");\n\nconst texts = (s) => s.todos.map((t) => t.text);\n\nmodule.exports = {\n  \"add then undo then redo\": () => {\n    const s = new TodoStore();\n    s.add(\"a\");\n    s.add(\"b\");\n    assert.deepStrictEqual(texts(s), [\"a\", \"b\"]);\n    s.undo();\n    assert.deepStrictEqual(texts(s), [\"a\"]);\n    s.redo();\n    assert.deepStrictEqual(texts(s), [\"a\", \"b\"]);\n  },\n  \"undo of a toggle restores the previous done flag\": () => {\n    const s = new TodoStore();\n    const id = s.add(\"a\");\n    s.toggle(id);\n    assert.strictEqual(s.todos[0].done, true);\n    s.undo();\n    assert.strictEqual(s.todos[0].done, false, \"undo did not restore done = false\");\n  },\n  \"redo of a toggle re-applies it\": () => {\n    const s = new TodoStore();\n    const id = s.add(\"a\");\n    s.toggle(id);\n    s.undo();\n    s.redo();\n    assert.strictEqual(s.todos[0].done, true);\n  },\n  \"a new action clears the redo history\": () => {\n    const s = new TodoStore();\n    s.add(\"a\");\n    s.add(\"b\");\n    s.undo();\n    s.add(\"c\");\n    assert.strictEqual(s.canRedo, false, \"redo should be unavailable after a new edit\");\n    assert.strictEqual(s.redo(), false);\n    assert.deepStrictEqual(texts(s), [\"a\", \"c\"]);\n  },\n  \"toggling or removing a missing id is a no-op\": () => {\n    const s = new TodoStore();\n    s.add(\"a\");\n    assert.strictEqual(s.toggle(999), false, \"toggle of a missing id should return false, not throw\");\n    assert.strictEqual(s.remove(999), false);\n    s.undo();\n    assert.deepStrictEqual(texts(s), [], \"undo should revert the add, not a phantom entry\");\n  },\n  \"undo of remove brings the item back\": () => {\n    const s = new TodoStore();\n    const id = s.add(\"a\");\n    s.add(\"b\");\n    s.remove(id);\n    assert.deepStrictEqual(texts(s), [\"b\"]);\n    s.undo();\n    assert.deepStrictEqual(texts(s), [\"a\", \"b\"]);\n  },\n  \"undo on an empty history returns false\": () => {\n    const s = new TodoStore();\n    assert.strictEqual(s.undo(), false);\n    assert.strictEqual(s.canUndo, false);\n  },\n  \"stats summarise completion\": () => {\n    const s = new TodoStore();\n    const a = s.add(\"a\");\n    s.add(\"b\");\n    s.add(\"c\");\n    s.toggle(a);\n    assert.deepStrictEqual(stats(s.todos), { total: 3, done: 1, remaining: 2, percent: 33 });\n  },\n};\n",
+   "solution": {
+    "todoStore.js": "class TodoStore {\n  constructor() {\n    this.todos = [];\n    this.past = [];\n    this.future = [];\n    this.nextId = 1;\n  }\n\n  _commit() {\n    this.past.push(this.todos.map((t) => ({ ...t })));\n    this.future = [];\n  }\n\n  _find(id) {\n    return this.todos.find((t) => t.id === id);\n  }\n\n  add(text) {\n    this._commit();\n    const todo = { id: this.nextId++, text, done: false };\n    this.todos.push(todo);\n    return todo.id;\n  }\n\n  toggle(id) {\n    const todo = this._find(id);\n    if (!todo) return false;\n    this._commit();\n    todo.done = !todo.done;\n    return true;\n  }\n\n  remove(id) {\n    if (!this._find(id)) return false;\n    this._commit();\n    this.todos = this.todos.filter((t) => t.id !== id);\n    return true;\n  }\n\n  undo() {\n    if (this.past.length === 0) return false;\n    this.future.push(this.todos);\n    this.todos = this.past.pop();\n    return true;\n  }\n\n  redo() {\n    if (this.future.length === 0) return false;\n    this.past.push(this.todos);\n    this.todos = this.future.pop();\n    return true;\n  }\n\n  get canUndo() {\n    return this.past.length > 0;\n  }\n\n  get canRedo() {\n    return this.future.length > 0;\n  }\n}\n\nmodule.exports = { TodoStore };\n"
+   },
+   "hints": [
+    "The three symptoms map to three code paths: the snapshot helper, the place where history is recorded, and the order of validation vs. recording.",
+    "`slice()` copies the array but not the todo objects inside it, so `toggle` mutates objects that old snapshots still reference. Nothing ever empties `future`. And `_snapshot()` runs before checking that the id exists.",
+    "Snapshot with `map((t) => ({ ...t }))`, reset `future = []` whenever you record a new snapshot, and look up the todo (return `false` if missing) before committing."
+   ],
+   "explanation": "Undo/redo needs deep-enough snapshots (shallow copies share nested objects), a redo stack that is invalidated by any new edit (otherwise history branches into nonsense), and history entries must only be recorded for operations that actually change state.",
+   "tags": [
+    "undo-redo",
+    "shallow-copy",
+    "state"
+   ],
+   "companies": [
+    "Adobe",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "dbg-js-middleware-chain",
+   "title": "Middleware chain: errors escape and timings read zero",
+   "language": "javascript",
+   "difficulty": "Hard",
+   "time_minutes": 30,
+   "bug_count": 3,
+   "scenario": "API-3011: After we moved to our in-house Koa-style middleware runner, the error boundary no longer catches errors thrown in async route handlers (requests crash with unhandled rejections), response-time headers always say 0 ms, and a buggy auth middleware that calls next() twice runs the handler twice (double charges!) instead of failing loudly.",
+   "files": {
+    "compose.js": "function compose(middleware) {\n  return function run(ctx, finalHandler) {\n    let index = -1;\n\n    function dispatch(i) {\n      if (i < index) {\n        return Promise.reject(new Error(\"next() called multiple times\"));\n      }\n      index = i;\n      let fn = middleware[i];\n      if (i === middleware.length) fn = finalHandler;\n      if (!fn) return Promise.resolve();\n      try {\n        return Promise.resolve(fn(ctx, () => dispatch(i + 1)));\n      } catch (err) {\n        return Promise.reject(err);\n      }\n    }\n\n    return dispatch(0);\n  };\n}\n\nmodule.exports = { compose };\n",
+    "middlewares.js": "function logger(lines) {\n  return async (ctx, next) => {\n    lines.push(\"-> \" + ctx.path);\n    await next();\n    lines.push(\"<- \" + ctx.path + \" \" + (ctx.status || 200));\n  };\n}\n\nfunction timing(now = Date.now) {\n  return async (ctx, next) => {\n    const start = now();\n    next();\n    ctx.elapsed = now() - start;\n  };\n}\n\nfunction errorBoundary(onError) {\n  return async (ctx, next) => {\n    try {\n      return next();\n    } catch (err) {\n      ctx.status = 500;\n      onError(err);\n    }\n  };\n}\n\nmodule.exports = { logger, timing, errorBoundary };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { compose } = require(\"./compose.js\");\nconst { logger, timing, errorBoundary } = require(\"./middlewares.js\");\n\nconst tick = () => new Promise((r) => setTimeout(r, 1));\n\nmodule.exports = {\n  \"runs middleware in onion order\": async () => {\n    const log = [];\n    const mk = (name) => async (ctx, next) => {\n      log.push(name + \":in\");\n      await tick();\n      await next();\n      log.push(name + \":out\");\n    };\n    await compose([mk(\"a\"), mk(\"b\")])({}, async () => { log.push(\"handler\"); });\n    assert.deepStrictEqual(log, [\"a:in\", \"b:in\", \"handler\", \"b:out\", \"a:out\"]);\n  },\n  \"middleware can short circuit\": async () => {\n    let reached = false;\n    const deny = async (ctx) => { ctx.status = 401; };\n    const ctx = {};\n    await compose([deny])(ctx, async () => { reached = true; });\n    assert.strictEqual(ctx.status, 401);\n    assert.strictEqual(reached, false);\n  },\n  \"calling next twice rejects\": async () => {\n    let handlerRuns = 0;\n    const twice = async (ctx, next) => {\n      await next();\n      await next();\n    };\n    await assert.rejects(\n      () => compose([twice])({}, async () => { handlerRuns++; }),\n      /multiple times/,\n      \"a second next() must reject\"\n    );\n    assert.strictEqual(handlerRuns, 1, \"handler ran \" + handlerRuns + \" times\");\n  },\n  \"synchronous throws become rejections\": async () => {\n    const boom = () => { throw new Error(\"sync boom\"); };\n    await assert.rejects(() => compose([boom])({}, async () => {}), /sync boom/);\n  },\n  \"errorBoundary catches async errors from downstream\": async () => {\n    const seen = [];\n    const ctx = {};\n    const handler = async () => {\n      await tick();\n      throw new Error(\"db down\");\n    };\n    await compose([errorBoundary((e) => seen.push(e.message))])(ctx, handler);\n    assert.deepStrictEqual(seen, [\"db down\"], \"error handler was not called\");\n    assert.strictEqual(ctx.status, 500);\n  },\n  \"errorBoundary lets normal requests through\": async () => {\n    const ctx = {};\n    await compose([errorBoundary(() => assert.fail(\"no error expected\"))])(ctx, async () => { ctx.body = \"ok\"; });\n    assert.strictEqual(ctx.body, \"ok\");\n    assert.strictEqual(ctx.status, undefined);\n  },\n  \"timing measures the downstream work\": async () => {\n    const clock = { t: 1000 };\n    const ctx = {};\n    await compose([timing(() => clock.t)])(ctx, async () => {\n      await tick();\n      clock.t += 50;\n    });\n    assert.strictEqual(ctx.elapsed, 50, \"elapsed was \" + ctx.elapsed);\n  },\n  \"logger wraps the whole request\": async () => {\n    const lines = [];\n    const ctx = { path: \"/pay\" };\n    await compose([logger(lines), errorBoundary(() => {})])(ctx, async () => { await tick(); throw new Error(\"x\"); });\n    assert.deepStrictEqual(lines, [\"-> /pay\", \"<- /pay 500\"]);\n  },\n};\n",
+   "solution": {
+    "compose.js": "function compose(middleware) {\n  return function run(ctx, finalHandler) {\n    let index = -1;\n\n    function dispatch(i) {\n      if (i <= index) {\n        return Promise.reject(new Error(\"next() called multiple times\"));\n      }\n      index = i;\n      let fn = middleware[i];\n      if (i === middleware.length) fn = finalHandler;\n      if (!fn) return Promise.resolve();\n      try {\n        return Promise.resolve(fn(ctx, () => dispatch(i + 1)));\n      } catch (err) {\n        return Promise.reject(err);\n      }\n    }\n\n    return dispatch(0);\n  };\n}\n\nmodule.exports = { compose };\n",
+    "middlewares.js": "function logger(lines) {\n  return async (ctx, next) => {\n    lines.push(\"-> \" + ctx.path);\n    await next();\n    lines.push(\"<- \" + ctx.path + \" \" + (ctx.status || 200));\n  };\n}\n\nfunction timing(now = Date.now) {\n  return async (ctx, next) => {\n    const start = now();\n    await next();\n    ctx.elapsed = now() - start;\n  };\n}\n\nfunction errorBoundary(onError) {\n  return async (ctx, next) => {\n    try {\n      return await next();\n    } catch (err) {\n      ctx.status = 500;\n      onError(err);\n    }\n  };\n}\n\nmodule.exports = { logger, timing, errorBoundary };\n"
+   },
+   "hints": [
+    "The three symptoms are in two files. Two of them share the same root cause: a promise-returning call that is not awaited. The third is a guard in `compose.js`.",
+    "`return next()` inside `try` hands back the promise before it settles, so `catch` never sees a rejection; `next();` with no `await` lets the timer read the clock before downstream finishes. In `compose`, think about what `i` equals the second time the same `next()` is invoked.",
+    "Use `return await next()` in `errorBoundary`, `await next()` in `timing`, and make the guard `i <= index`."
+   ],
+   "explanation": "This is the Koa `compose` contract. A `try/catch` only handles errors from awaited promises; un-awaited `next()` makes later code run too early. And the double-call guard must be inclusive: the second call to the same `next` dispatches the same index, which is equal (not less than) to the recorded one.",
+   "tags": [
+    "async-await",
+    "middleware",
+    "error-handling"
+   ],
+   "companies": [
+    "Uber",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "dbg-js-billing-dates",
+   "title": "Billing dates drift to the 29th and mutate subscriptions",
+   "language": "javascript",
+   "difficulty": "Hard",
+   "time_minutes": 28,
+   "bug_count": 3,
+   "scenario": "BILL-3312: A customer who subscribed on Jan 31 is billed on Jan 31, Mar 2, Apr 2 and then the 2nd of each month forever. After we fixed that locally, the next invoice dates were Jan 31, Feb 29, Mar 29, Apr 29, so they permanently lose days. Also the 'trial ends' preview moves the subscription's start date.",
+   "files": {
+    "dates.js": "const DAY = 24 * 60 * 60 * 1000;\n\nfunction pad(n) {\n  return String(n).padStart(2, \"0\");\n}\n\nfunction formatDate(d) {\n  return d.getUTCFullYear() + \"-\" + pad(d.getUTCMonth() + 1) + \"-\" + pad(d.getUTCDate());\n}\n\nfunction parseDate(s) {\n  const [y, m, d] = s.split(\"-\").map(Number);\n  return new Date(Date.UTC(y, m - 1, d));\n}\n\nfunction addDays(d, n) {\n  d.setUTCDate(d.getUTCDate() + n);\n  return d;\n}\n\nfunction addMonths(d, n) {\n  const r = new Date(d.getTime());\n  r.setUTCMonth(r.getUTCMonth() + n);\n  return r;\n}\n\nfunction daysBetween(a, b) {\n  return Math.round((b - a) / DAY);\n}\n\nmodule.exports = { formatDate, parseDate, addDays, addMonths, daysBetween };\n",
+    "schedule.js": "const { addDays, addMonths, daysBetween } = require(\"./dates.js\");\n\nfunction billingDates(start, count) {\n  const out = [];\n  let current = start;\n  for (let i = 0; i < count; i++) {\n    out.push(current);\n    current = addMonths(current, 1);\n  }\n  return out;\n}\n\nfunction trialEnd(start, trialDays) {\n  return addDays(start, trialDays);\n}\n\nfunction nextBillingDate(start, today) {\n  let i = 0;\n  let date = start;\n  while (date <= today) {\n    i++;\n    date = addMonths(start, i);\n  }\n  return date;\n}\n\nfunction daysUntilNextBill(start, today) {\n  return daysBetween(today, nextBillingDate(start, today));\n}\n\nmodule.exports = { billingDates, trialEnd, nextBillingDate, daysUntilNextBill };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { formatDate, parseDate, addDays, addMonths, daysBetween } = require(\"./dates.js\");\nconst { billingDates, trialEnd, nextBillingDate, daysUntilNextBill } = require(\"./schedule.js\");\n\nconst D = parseDate;\nconst F = formatDate;\n\nmodule.exports = {\n  \"parse and format round trip\": () => {\n    assert.strictEqual(F(D(\"2024-03-05\")), \"2024-03-05\");\n    assert.strictEqual(F(D(\"1999-12-31\")), \"1999-12-31\");\n  },\n  \"addDays crosses month and leap boundaries\": () => {\n    assert.strictEqual(F(addDays(D(\"2024-02-28\"), 2)), \"2024-03-01\");\n    assert.strictEqual(F(addDays(D(\"2023-02-28\"), 2)), \"2023-03-02\");\n    assert.strictEqual(F(addDays(D(\"2024-01-01\"), -1)), \"2023-12-31\");\n  },\n  \"addDays does not mutate its input\": () => {\n    const d = D(\"2024-01-30\");\n    const e = addDays(d, 5);\n    assert.strictEqual(F(d), \"2024-01-30\", \"input date was changed to \" + F(d));\n    assert.strictEqual(F(e), \"2024-02-04\");\n  },\n  \"addMonths clamps to the end of a shorter month\": () => {\n    assert.strictEqual(F(addMonths(D(\"2024-01-31\"), 1)), \"2024-02-29\");\n    assert.strictEqual(F(addMonths(D(\"2023-01-31\"), 1)), \"2023-02-28\");\n    assert.strictEqual(F(addMonths(D(\"2024-03-31\"), -1)), \"2024-02-29\");\n    assert.strictEqual(F(addMonths(D(\"2024-05-31\"), 1)), \"2024-06-30\");\n  },\n  \"addMonths handles year rollover\": () => {\n    assert.strictEqual(F(addMonths(D(\"2024-12-15\"), 2)), \"2025-02-15\");\n    assert.strictEqual(F(addMonths(D(\"2024-01-15\"), -2)), \"2023-11-15\");\n    assert.strictEqual(F(addMonths(D(\"2024-01-15\"), 24)), \"2026-01-15\");\n  },\n  \"billing dates stay anchored to the original day\": () => {\n    const dates = billingDates(D(\"2024-01-31\"), 5).map(F);\n    assert.deepStrictEqual(dates, [\"2024-01-31\", \"2024-02-29\", \"2024-03-31\", \"2024-04-30\", \"2024-05-31\"], \"got \" + dates.join(\",\"));\n  },\n  \"trialEnd leaves the start date untouched\": () => {\n    const start = D(\"2024-06-01\");\n    const end = trialEnd(start, 14);\n    assert.strictEqual(F(end), \"2024-06-15\");\n    assert.strictEqual(F(start), \"2024-06-01\", \"trialEnd mutated the subscription start\");\n  },\n  \"next billing date and countdown\": () => {\n    const start = D(\"2024-01-31\");\n    assert.strictEqual(F(nextBillingDate(start, D(\"2024-02-10\"))), \"2024-02-29\");\n    assert.strictEqual(F(nextBillingDate(start, D(\"2024-02-29\"))), \"2024-03-31\");\n    assert.strictEqual(daysUntilNextBill(start, D(\"2024-03-01\")), 30);\n    assert.strictEqual(daysBetween(D(\"2024-01-01\"), D(\"2024-03-01\")), 60);\n  },\n};\n",
+   "solution": {
+    "dates.js": "const DAY = 24 * 60 * 60 * 1000;\n\nfunction pad(n) {\n  return String(n).padStart(2, \"0\");\n}\n\nfunction formatDate(d) {\n  return d.getUTCFullYear() + \"-\" + pad(d.getUTCMonth() + 1) + \"-\" + pad(d.getUTCDate());\n}\n\nfunction parseDate(s) {\n  const [y, m, d] = s.split(\"-\").map(Number);\n  return new Date(Date.UTC(y, m - 1, d));\n}\n\nfunction addDays(d, n) {\n  const r = new Date(d.getTime());\n  r.setUTCDate(r.getUTCDate() + n);\n  return r;\n}\n\nfunction addMonths(d, n) {\n  const r = new Date(d.getTime());\n  const day = r.getUTCDate();\n  r.setUTCDate(1);\n  r.setUTCMonth(r.getUTCMonth() + n);\n  const lastDay = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + 1, 0)).getUTCDate();\n  r.setUTCDate(Math.min(day, lastDay));\n  return r;\n}\n\nfunction daysBetween(a, b) {\n  return Math.round((b - a) / DAY);\n}\n\nmodule.exports = { formatDate, parseDate, addDays, addMonths, daysBetween };\n",
+    "schedule.js": "const { addDays, addMonths, daysBetween } = require(\"./dates.js\");\n\nfunction billingDates(start, count) {\n  const out = [];\n  for (let i = 0; i < count; i++) {\n    out.push(addMonths(start, i));\n  }\n  return out;\n}\n\nfunction trialEnd(start, trialDays) {\n  return addDays(start, trialDays);\n}\n\nfunction nextBillingDate(start, today) {\n  let i = 0;\n  let date = start;\n  while (date <= today) {\n    i++;\n    date = addMonths(start, i);\n  }\n  return date;\n}\n\nfunction daysUntilNextBill(start, today) {\n  return daysBetween(today, nextBillingDate(start, today));\n}\n\nmodule.exports = { billingDates, trialEnd, nextBillingDate, daysUntilNextBill };\n"
+   },
+   "hints": [
+    "Find three defects: one function that changes its argument, one that mishandles month lengths, and one loop that compounds error.",
+    "`setUTCMonth` on Jan 31 asks for 'Feb 31', which JavaScript normalises to Mar 2 (or 3). `addDays` edits the date it is given. `billingDates` feeds each rounded result into the next addition.",
+    "Copy the date in `addDays`; in `addMonths` set the day to 1 first, move the month, then set the day to `min(originalDay, daysInTargetMonth)`; in `billingDates` always add `i` months to the original `start`."
+   ],
+   "explanation": "Date arithmetic traps: Date objects are mutable; month overflow is silently normalised instead of clamped; and iterating 'add one month to the previous result' accumulates clamping losses, so you must compute every occurrence from the anchor date.",
+   "tags": [
+    "dates",
+    "mutation",
+    "calendar-math"
+   ],
+   "companies": [
+    "Stripe",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "dbg-js-deep-merge-config",
+   "title": "Config merge corrupts defaults and crashes on null",
+   "language": "javascript",
+   "difficulty": "Hard",
+   "time_minutes": 28,
+   "bug_count": 3,
+   "scenario": "CFG-872: Our service builds its config with resolveConfig(overrides). After one tenant overrides the database port, every later tenant in the same process also gets that port, because the shared defaults changed. A tenant that sets 'cache: null' to disable caching crashes the loader with a TypeError, and a tenant's 'allowedHosts' list is merged index-by-index with the default list instead of replacing it. Security also flagged that merging untrusted JSON can modify Object.prototype.",
+   "files": {
+    "merge.js": "function isObject(v) {\n  return typeof v === \"object\";\n}\n\nfunction deepMerge(target, ...sources) {\n  for (const src of sources) {\n    for (const key of Object.keys(src)) {\n      if (isObject(src[key]) && isObject(target[key])) {\n        deepMerge(target[key], src[key]);\n      } else {\n        target[key] = src[key];\n      }\n    }\n  }\n  return target;\n}\n\nmodule.exports = { deepMerge, isObject };\n",
+    "config.js": "const { deepMerge } = require(\"./merge.js\");\n\nconst DEFAULTS = {\n  db: { host: \"localhost\", port: 5432, options: { ssl: false } },\n  cache: { ttl: 60 },\n  allowedHosts: [\"localhost\", \"127.0.0.1\"],\n};\n\nfunction resolveConfig(...overrides) {\n  return deepMerge({}, DEFAULTS, ...overrides);\n}\n\nmodule.exports = { DEFAULTS, resolveConfig };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { deepMerge } = require(\"./merge.js\");\nconst { DEFAULTS, resolveConfig } = require(\"./config.js\");\n\nmodule.exports = {\n  \"merges nested objects recursively\": () => {\n    const out = deepMerge({ a: { x: 1, y: 2 }, b: 1 }, { a: { y: 3, z: 4 }, c: 5 });\n    assert.deepStrictEqual(out, { a: { x: 1, y: 3, z: 4 }, b: 1, c: 5 });\n  },\n  \"later sources win\": () => {\n    assert.deepStrictEqual(deepMerge({ a: 1 }, { a: 2 }, { a: 3 }), { a: 3 });\n  },\n  \"does not mutate its inputs\": () => {\n    const a = { n: { x: 1 } };\n    const b = { n: { y: 2 } };\n    const out = deepMerge(a, b);\n    assert.deepStrictEqual(a, { n: { x: 1 } }, \"first argument was modified: \" + JSON.stringify(a));\n    assert.deepStrictEqual(b, { n: { y: 2 } });\n    assert.deepStrictEqual(out, { n: { x: 1, y: 2 } });\n  },\n  \"result does not share nested objects with the inputs\": () => {\n    const b = { n: { y: 2 } };\n    const out = deepMerge({}, b);\n    out.n.y = 99;\n    assert.strictEqual(b.n.y, 2, \"nested object is aliased to the source\");\n  },\n  \"arrays are replaced, not merged by index\": () => {\n    const out = deepMerge({ tags: [\"a\", \"b\", \"c\"] }, { tags: [\"x\"] });\n    assert.deepStrictEqual(out.tags, [\"x\"], \"got \" + JSON.stringify(out.tags));\n  },\n  \"null overrides an object value\": () => {\n    const out = deepMerge({ cache: { ttl: 60 } }, { cache: null });\n    assert.deepStrictEqual(out, { cache: null });\n  },\n  \"resolveConfig leaves the shared defaults untouched\": () => {\n    const first = resolveConfig({ db: { port: 6543, options: { ssl: true } } });\n    assert.strictEqual(first.db.port, 6543);\n    assert.strictEqual(first.db.host, \"localhost\");\n    const second = resolveConfig();\n    assert.strictEqual(second.db.port, 5432, \"defaults leaked from a previous call\");\n    assert.strictEqual(DEFAULTS.db.options.ssl, false, \"DEFAULTS were modified\");\n    assert.deepStrictEqual(DEFAULTS.allowedHosts, [\"localhost\", \"127.0.0.1\"]);\n  },\n  \"tenant can disable the cache and replace host list\": () => {\n    const cfg = resolveConfig({ cache: null, allowedHosts: [\"tenant.example\"] });\n    assert.strictEqual(cfg.cache, null);\n    assert.deepStrictEqual(cfg.allowedHosts, [\"tenant.example\"]);\n  },\n  \"merging untrusted JSON cannot pollute Object.prototype\": () => {\n    const evil = JSON.parse('{\"__proto__\": {\"polluted\": \"yes\"}, \"safe\": 1}');\n    try {\n      const out = deepMerge({}, evil);\n      assert.strictEqual({}.polluted, undefined, \"Object.prototype was polluted\");\n      assert.strictEqual(out.safe, 1);\n    } finally {\n      delete Object.prototype.polluted;\n    }\n  },\n};\n",
+   "solution": {
+    "merge.js": "function isPlainObject(v) {\n  return v !== null && typeof v === \"object\" && !Array.isArray(v);\n}\n\nfunction clone(v) {\n  if (Array.isArray(v)) return v.map(clone);\n  if (isPlainObject(v)) {\n    const out = {};\n    for (const key of Object.keys(v)) {\n      if (key === \"__proto__\") continue;\n      out[key] = clone(v[key]);\n    }\n    return out;\n  }\n  return v;\n}\n\nfunction deepMerge(...objects) {\n  const result = {};\n  for (const src of objects) {\n    for (const key of Object.keys(src)) {\n      if (key === \"__proto__\" || key === \"constructor\" || key === \"prototype\") continue;\n      if (isPlainObject(result[key]) && isPlainObject(src[key])) {\n        result[key] = deepMerge(result[key], src[key]);\n      } else {\n        result[key] = clone(src[key]);\n      }\n    }\n  }\n  return result;\n}\n\nmodule.exports = { deepMerge, isObject: isPlainObject };\n"
+   },
+   "hints": [
+    "`merge.js` is the only file that needs changing. There are three separate problems: the 'is it an object?' test, who owns the result object, and which keys you are willing to copy.",
+    "`typeof null === 'object'` and `typeof [] === 'object'`. Also, `target[key] = src[key]` stores a reference, so later merges write through into the source. And `JSON.parse` can create an own key literally named `__proto__`.",
+    "Make the merge build a fresh result (deep-cloning values it copies), treat only non-null non-array objects as mergeable, replace arrays wholesale, and skip `__proto__` / `constructor` / `prototype` keys."
+   ],
+   "explanation": "Three classic merge bugs: `typeof` is not a plain-object check (null and arrays); copying by reference means the result aliases inputs, so mutating a 'copy' mutates the defaults; and recursively merging into attacker-supplied keys like `__proto__` is prototype pollution (CVE-class issue in several popular libraries).",
+   "tags": [
+    "prototype-pollution",
+    "mutation",
+    "typeof-null"
+   ],
+   "companies": [
+    "Google",
+    "Microsoft"
+   ]
+  },
+  {
+   "id": "dbg-js-json-diff",
+   "title": "JSON diff crashes on null and reports phantom changes",
+   "language": "javascript",
+   "difficulty": "Hard",
+   "time_minutes": 28,
+   "bug_count": 3,
+   "scenario": "AUDIT-540: The audit log diffs old and new records. It throws 'Cannot use in operator' when a field goes from null to an object, reports NaN to NaN as a change on every save of records with an empty numeric field, and says 'toString' was modified rather than added when a customer adds a custom field with that name.",
+   "files": {
+    "diff.js": "function isObj(v) {\n  return typeof v === \"object\";\n}\n\nfunction join(path, key) {\n  return path ? path + \".\" + key : String(key);\n}\n\nfunction diff(a, b, path = \"\") {\n  if (a === b) return [];\n  if (isObj(a) && isObj(b) && Array.isArray(a) === Array.isArray(b)) {\n    const changes = [];\n    for (const key of Object.keys(b)) {\n      const p = join(path, key);\n      if (!(key in a)) {\n        changes.push({ op: \"add\", path: p, value: b[key] });\n      } else {\n        changes.push(...diff(a[key], b[key], p));\n      }\n    }\n    for (const key of Object.keys(a)) {\n      if (!(key in b)) {\n        changes.push({ op: \"remove\", path: join(path, key) });\n      }\n    }\n    return changes;\n  }\n  return [{ op: \"replace\", path, from: a, to: b }];\n}\n\nmodule.exports = { diff };\n",
+    "report.js": "function describe(change) {\n  switch (change.op) {\n    case \"add\":\n      return \"+ \" + change.path + \" = \" + JSON.stringify(change.value);\n    case \"remove\":\n      return \"- \" + change.path;\n    default:\n      return \"~ \" + change.path + \": \" + JSON.stringify(change.from) + \" -> \" + JSON.stringify(change.to);\n  }\n}\n\nfunction report(changes) {\n  if (changes.length === 0) return \"no changes\";\n  return changes.map(describe).join(\"\\n\");\n}\n\nmodule.exports = { describe, report };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { diff } = require(\"./diff.js\");\nconst { report } = require(\"./report.js\");\n\nconst byPath = (list) => [...list].sort((x, y) => (x.path < y.path ? -1 : x.path > y.path ? 1 : 0));\n\nmodule.exports = {\n  \"identical documents have no changes\": () => {\n    const doc = { a: 1, b: { c: [1, 2, { d: \"x\" }] } };\n    assert.deepStrictEqual(diff(doc, JSON.parse(JSON.stringify(doc))), []);\n  },\n  \"replaced nested value\": () => {\n    assert.deepStrictEqual(diff({ a: { b: 1 } }, { a: { b: 2 } }), [{ op: \"replace\", path: \"a.b\", from: 1, to: 2 }]);\n  },\n  \"added and removed keys\": () => {\n    const out = byPath(diff({ keep: 1, gone: 2 }, { keep: 1, fresh: 3 }));\n    assert.deepStrictEqual(out, [\n      { op: \"add\", path: \"fresh\", value: 3 },\n      { op: \"remove\", path: \"gone\" },\n    ]);\n  },\n  \"null to object is a replace, not a crash\": () => {\n    assert.deepStrictEqual(diff({ a: null }, { a: { x: 1 } }), [{ op: \"replace\", path: \"a\", from: null, to: { x: 1 } }]);\n  },\n  \"object to null is a replace\": () => {\n    assert.deepStrictEqual(diff({ a: { x: 1 } }, { a: null }), [{ op: \"replace\", path: \"a\", from: { x: 1 }, to: null }]);\n  },\n  \"NaN equals NaN\": () => {\n    assert.deepStrictEqual(diff({ n: NaN, m: 1 }, { n: NaN, m: 2 }), [{ op: \"replace\", path: \"m\", from: 1, to: 2 }],\n      \"NaN to NaN should not be reported as a change\");\n  },\n  \"keys named like Object.prototype members are plain keys\": () => {\n    const out = diff({}, { toString: 1, constructor: 2 });\n    assert.deepStrictEqual(byPath(out), [\n      { op: \"add\", path: \"constructor\", value: 2 },\n      { op: \"add\", path: \"toString\", value: 1 },\n    ]);\n  },\n  \"arrays are compared by index\": () => {\n    const out = byPath(diff({ l: [1, 2, 3] }, { l: [1, 5] }));\n    assert.deepStrictEqual(out, [\n      { op: \"remove\", path: \"l.2\" },\n      { op: \"replace\", path: \"l.1\", from: 2, to: 5 },\n    ].sort((x, y) => (x.path < y.path ? -1 : 1)));\n  },\n  \"array versus object is a replace\": () => {\n    assert.strictEqual(diff({ a: [] }, { a: {} })[0].op, \"replace\");\n  },\n  \"report renders changes\": () => {\n    const text = report(diff({ a: 1, b: 2 }, { a: 2, c: 3 }));\n    assert.deepStrictEqual(text.split(\"\\n\").sort(), [\"+ c = 3\", \"- b\", \"~ a: 1 -> 2\"].sort());\n    assert.strictEqual(report([]), \"no changes\");\n  },\n};\n",
+   "solution": {
+    "diff.js": "const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);\n\nfunction isObj(v) {\n  return v !== null && typeof v === \"object\";\n}\n\nfunction same(a, b) {\n  return a === b || (Number.isNaN(a) && Number.isNaN(b));\n}\n\nfunction join(path, key) {\n  return path ? path + \".\" + key : String(key);\n}\n\nfunction diff(a, b, path = \"\") {\n  if (same(a, b)) return [];\n  if (isObj(a) && isObj(b) && Array.isArray(a) === Array.isArray(b)) {\n    const changes = [];\n    for (const key of Object.keys(b)) {\n      const p = join(path, key);\n      if (!hasOwn(a, key)) {\n        changes.push({ op: \"add\", path: p, value: b[key] });\n      } else {\n        changes.push(...diff(a[key], b[key], p));\n      }\n    }\n    for (const key of Object.keys(a)) {\n      if (!hasOwn(b, key)) {\n        changes.push({ op: \"remove\", path: join(path, key) });\n      }\n    }\n    return changes;\n  }\n  return [{ op: \"replace\", path, from: a, to: b }];\n}\n\nmodule.exports = { diff };\n"
+   },
+   "hints": [
+    "All three bugs are in `diff.js` and each is a one-line misconception about a JavaScript primitive: `typeof`, `===`, and `in`.",
+    "`typeof null` is `'object'`, so null is treated as a container. `NaN === NaN` is false. And `'toString' in {}` is true because `in` also walks the prototype chain.",
+    "Define `isObj` as `v !== null && typeof v === 'object'`, compare scalars with a helper that also treats two NaNs as equal (not `Object.is`, which would split 0 and -0), and use `Object.prototype.hasOwnProperty.call` instead of `in`."
+   ],
+   "explanation": "`typeof null === 'object'` is the oldest wart in the language; `NaN` is the only value not equal to itself, so equality checks on data that can hold NaN need a special case; and the `in` operator includes inherited properties, so for data-as-dictionary code you want an own-property check.",
+   "tags": [
+    "typeof-null",
+    "NaN",
+    "in-operator",
+    "diff"
+   ],
+   "companies": [
+    "Google",
+    "Bloomberg"
+   ]
+  },
+  {
+   "id": "dbg-js-token-bucket",
+   "title": "Rate limiter starves clients and lets bursts through",
+   "language": "javascript",
+   "difficulty": "Hard",
+   "time_minutes": 30,
+   "bug_count": 3,
+   "scenario": "EDGE-2207: Support says a client polling every 400 ms against a 1 request/second limit is blocked forever even though it is well within its quota. Meanwhile a cron client that was idle all night fires 50 requests at 9:00 and gets all of them through, and the Retry-After header we return says '1' for clients that must wait 2.5 seconds.",
+   "files": {
+    "bucket.js": "class TokenBucket {\n  constructor({ capacity, refillPerSec, now = Date.now }) {\n    this.capacity = capacity;\n    this.refillPerSec = refillPerSec;\n    this.now = now;\n    this.buckets = new Map();\n  }\n\n  _bucket(key) {\n    const t = this.now();\n    let b = this.buckets.get(key);\n    if (!b) {\n      b = { tokens: this.capacity, last: t };\n      this.buckets.set(key, b);\n      return b;\n    }\n    const elapsedSec = (t - b.last) / 1000;\n    b.tokens = Math.floor(b.tokens + elapsedSec * this.refillPerSec);\n    b.last = t;\n    return b;\n  }\n\n  tryTake(key, cost = 1) {\n    const b = this._bucket(key);\n    if (b.tokens >= cost) {\n      b.tokens -= cost;\n      return true;\n    }\n    return false;\n  }\n\n  retryAfterMs(key, cost = 1) {\n    const b = this._bucket(key);\n    if (b.tokens >= cost) return 0;\n    return Math.ceil((cost - b.tokens) / this.refillPerSec);\n  }\n}\n\nmodule.exports = { TokenBucket };\n",
+    "guard.js": "function check(bucket, key, cost = 1) {\n  if (bucket.tryTake(key, cost)) {\n    return { status: 200, headers: {} };\n  }\n  const ms = bucket.retryAfterMs(key, cost);\n  return { status: 429, headers: { \"Retry-After\": String(Math.ceil(ms / 1000)) } };\n}\n\nmodule.exports = { check };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { TokenBucket } = require(\"./bucket.js\");\nconst { check } = require(\"./guard.js\");\n\nfunction make(opts) {\n  const clock = { t: 0 };\n  const bucket = new TokenBucket({ now: () => clock.t, ...opts });\n  return { clock, bucket };\n}\n\nmodule.exports = {\n  \"starts full and allows a burst up to capacity\": () => {\n    const { bucket } = make({ capacity: 3, refillPerSec: 1 });\n    const results = [1, 2, 3, 4].map(() => bucket.tryTake(\"c\"));\n    assert.deepStrictEqual(results, [true, true, true, false]);\n  },\n  \"refills over time\": () => {\n    const { clock, bucket } = make({ capacity: 2, refillPerSec: 1 });\n    bucket.tryTake(\"c\");\n    bucket.tryTake(\"c\");\n    assert.strictEqual(bucket.tryTake(\"c\"), false);\n    clock.t = 1000;\n    assert.strictEqual(bucket.tryTake(\"c\"), true);\n    assert.strictEqual(bucket.tryTake(\"c\"), false);\n  },\n  \"fractional refill accumulates across frequent polls\": () => {\n    const { clock, bucket } = make({ capacity: 2, refillPerSec: 1 });\n    bucket.tryTake(\"c\");\n    bucket.tryTake(\"c\");\n    const results = [];\n    for (const t of [400, 800, 1200]) {\n      clock.t = t;\n      results.push(bucket.tryTake(\"c\"));\n    }\n    assert.deepStrictEqual(results, [false, false, true], \"polling every 400ms should succeed at 1200ms, got \" + JSON.stringify(results));\n  },\n  \"idle time never exceeds capacity\": () => {\n    const { clock, bucket } = make({ capacity: 3, refillPerSec: 1 });\n    bucket.tryTake(\"c\");\n    clock.t = 100000;\n    const results = [1, 2, 3, 4, 5].map(() => bucket.tryTake(\"c\"));\n    assert.deepStrictEqual(results, [true, true, true, false, false], \"tokens grew past capacity\");\n  },\n  \"keys have independent buckets\": () => {\n    const { bucket } = make({ capacity: 1, refillPerSec: 1 });\n    assert.strictEqual(bucket.tryTake(\"a\"), true);\n    assert.strictEqual(bucket.tryTake(\"a\"), false);\n    assert.strictEqual(bucket.tryTake(\"b\"), true);\n  },\n  \"retryAfterMs is reported in milliseconds\": () => {\n    const { bucket } = make({ capacity: 1, refillPerSec: 0.4 });\n    bucket.tryTake(\"c\");\n    assert.strictEqual(bucket.retryAfterMs(\"c\"), 2500);\n  },\n  \"retryAfterMs shrinks as time passes and is 0 when allowed\": () => {\n    const { clock, bucket } = make({ capacity: 1, refillPerSec: 1 });\n    assert.strictEqual(bucket.retryAfterMs(\"c\"), 0);\n    bucket.tryTake(\"c\");\n    clock.t = 250;\n    assert.strictEqual(bucket.retryAfterMs(\"c\"), 750);\n  },\n  \"guard returns 200 or 429 with Retry-After in seconds\": () => {\n    const { bucket } = make({ capacity: 1, refillPerSec: 0.4 });\n    assert.strictEqual(check(bucket, \"c\").status, 200);\n    const denied = check(bucket, \"c\");\n    assert.strictEqual(denied.status, 429);\n    assert.strictEqual(denied.headers[\"Retry-After\"], \"3\", \"2.5 s should round up to 3, got \" + denied.headers[\"Retry-After\"]);\n  },\n};\n",
+   "solution": {
+    "bucket.js": "class TokenBucket {\n  constructor({ capacity, refillPerSec, now = Date.now }) {\n    this.capacity = capacity;\n    this.refillPerSec = refillPerSec;\n    this.now = now;\n    this.buckets = new Map();\n  }\n\n  _bucket(key) {\n    const t = this.now();\n    let b = this.buckets.get(key);\n    if (!b) {\n      b = { tokens: this.capacity, last: t };\n      this.buckets.set(key, b);\n      return b;\n    }\n    const elapsedSec = (t - b.last) / 1000;\n    b.tokens = Math.min(this.capacity, b.tokens + elapsedSec * this.refillPerSec);\n    b.last = t;\n    return b;\n  }\n\n  tryTake(key, cost = 1) {\n    const b = this._bucket(key);\n    if (b.tokens >= cost) {\n      b.tokens -= cost;\n      return true;\n    }\n    return false;\n  }\n\n  retryAfterMs(key, cost = 1) {\n    const b = this._bucket(key);\n    if (b.tokens >= cost) return 0;\n    return Math.ceil(((cost - b.tokens) / this.refillPerSec) * 1000);\n  }\n}\n\nmodule.exports = { TokenBucket };\n"
+   },
+   "hints": [
+    "All three defects are in `_bucket` and `retryAfterMs` in `bucket.js`. Think about what the refill line does to a fraction of a token, what stops it growing, and what unit `retryAfterMs` returns.",
+    "`Math.floor` on every refill throws away partial progress, but `last` is still moved forward, so a client polling faster than one token interval never accrues anything. Nothing caps `tokens` at `capacity`. `(cost - tokens) / refillPerSec` is seconds, not milliseconds.",
+    "Keep tokens fractional, clamp with `Math.min(this.capacity, ...)`, and multiply the wait by 1000 before `Math.ceil`."
+   ],
+   "explanation": "Token-bucket correctness rests on three invariants: tokens are continuous (don't round on refill, or frequent callers lose progress), tokens never exceed capacity (otherwise idle clients accumulate unlimited bursts), and units are consistent (seconds vs. milliseconds in the retry hint).",
+   "tags": [
+    "rate-limiting",
+    "units",
+    "rounding",
+    "invariants"
+   ],
+   "companies": [
+    "Stripe",
+    "Uber"
+   ]
+  },
+  {
+   "id": "dbg-js-batch-loader",
+   "title": "Batch loader fetches duplicates and mishandles per-key errors",
+   "language": "javascript",
+   "difficulty": "Expert",
+   "time_minutes": 40,
+   "bug_count": 3,
+   "scenario": "GQL-6401: Our GraphQL resolvers use a DataLoader-style BatchLoader to avoid N+1 queries. After a refactor, requests for the same user in one tick produce duplicate IDs in the batched SQL ('WHERE id IN (7,7,8)'), loadMany(ids) throws 'Cannot read properties of undefined', and when one user in a batch is missing, the resolver receives an Error object as if it were a user and renders 'undefined' fields instead of failing that one field.",
+   "files": {
+    "loader.js": "// Collects load(key) calls made in the same tick and resolves them with one\n// batchFn(keys) call. batchFn must return an array with one entry per key, in\n// the same order. An entry that is an Error instance rejects only that key.\nclass BatchLoader {\n  constructor(batchFn, { maxBatch = 100 } = {}) {\n    this.batchFn = batchFn;\n    this.maxBatch = maxBatch;\n    this.cache = new Map();\n    this.queue = [];\n    this.scheduled = false;\n  }\n\n  load(key) {\n    if (this.cache.has(key)) return Promise.resolve(this.cache.get(key));\n    return new Promise((resolve, reject) => {\n      this.queue.push({ key, resolve, reject });\n      if (!this.scheduled) {\n        this.scheduled = true;\n        Promise.resolve().then(() => this._dispatch());\n      }\n    });\n  }\n\n  loadMany(keys) {\n    return Promise.all(keys.map(this.load));\n  }\n\n  clear(key) {\n    this.cache.delete(key);\n  }\n\n  async _dispatch() {\n    const batch = this.queue;\n    this.queue = [];\n    this.scheduled = false;\n    for (let i = 0; i < batch.length; i += this.maxBatch) {\n      const chunk = batch.slice(i, i + this.maxBatch);\n      const keys = chunk.map((job) => job.key);\n      let values;\n      try {\n        values = await this.batchFn(keys);\n        if (!Array.isArray(values) || values.length !== keys.length) {\n          throw new Error(\"batchFn must return one value per key\");\n        }\n      } catch (err) {\n        chunk.forEach((job) => job.reject(err));\n        continue;\n      }\n      chunk.forEach((job, idx) => {\n        this.cache.set(job.key, values[idx]);\n        job.resolve(values[idx]);\n      });\n    }\n  }\n}\n\nmodule.exports = { BatchLoader };\n",
+    "users.js": "const { BatchLoader } = require(\"./loader.js\");\n\nfunction createUserService({ fetchUsers }) {\n  const loader = new BatchLoader(async (ids) => {\n    const rows = await fetchUsers(ids);\n    const byId = new Map(rows.map((u) => [u.id, u]));\n    return ids.map((id) => byId.get(id) || new Error(\"user \" + id + \" not found\"));\n  });\n\n  return {\n    getUser: (id) => loader.load(id),\n    getUsers: (ids) => loader.loadMany(ids),\n    invalidate: (id) => loader.clear(id),\n  };\n}\n\nmodule.exports = { createUserService };\n"
+   },
+   "tests": "const assert = require(\"assert\");\nconst { BatchLoader } = require(\"./loader.js\");\nconst { createUserService } = require(\"./users.js\");\n\nconst tick = () => new Promise((r) => setTimeout(r, 1));\n\nfunction spy(fn) {\n  const calls = [];\n  const wrapped = async (keys) => {\n    calls.push([...keys]);\n    return fn(keys);\n  };\n  wrapped.calls = calls;\n  return wrapped;\n}\n\nmodule.exports = {\n  \"loads in the same tick are one batch\": async () => {\n    const fn = spy((keys) => keys.map((k) => k * 10));\n    const loader = new BatchLoader(fn);\n    const out = await Promise.all([loader.load(1), loader.load(2), loader.load(3)]);\n    assert.deepStrictEqual(out, [10, 20, 30]);\n    assert.deepStrictEqual(fn.calls, [[1, 2, 3]]);\n  },\n  \"duplicate keys in one tick are fetched once\": async () => {\n    const fn = spy((keys) => keys.map((k) => k * 10));\n    const loader = new BatchLoader(fn);\n    const out = await Promise.all([loader.load(7), loader.load(7), loader.load(8)]);\n    assert.deepStrictEqual(out, [70, 70, 80]);\n    assert.deepStrictEqual(fn.calls, [[7, 8]], \"batch keys were \" + JSON.stringify(fn.calls));\n  },\n  \"results are cached across batches\": async () => {\n    const fn = spy((keys) => keys.map((k) => k + 1));\n    const loader = new BatchLoader(fn);\n    await loader.load(1);\n    await tick();\n    assert.strictEqual(await loader.load(1), 2);\n    assert.strictEqual(fn.calls.length, 1);\n  },\n  \"loadMany works and preserves order\": async () => {\n    const fn = spy((keys) => keys.map((k) => \"v\" + k));\n    const loader = new BatchLoader(fn);\n    assert.deepStrictEqual(await loader.loadMany([3, 1, 2]), [\"v3\", \"v1\", \"v2\"]);\n    assert.deepStrictEqual(fn.calls, [[3, 1, 2]]);\n  },\n  \"maxBatch splits large batches\": async () => {\n    const fn = spy((keys) => keys);\n    const loader = new BatchLoader(fn, { maxBatch: 2 });\n    await loader.loadMany([1, 2, 3, 4, 5]);\n    assert.deepStrictEqual(fn.calls.map((c) => c.length), [2, 2, 1]);\n  },\n  \"an Error entry rejects only that key\": async () => {\n    const loader = new BatchLoader(async (keys) => keys.map((k) => (k === 2 ? new Error(\"missing 2\") : k)));\n    const [a, b] = await Promise.allSettled([loader.load(1), loader.load(2)]);\n    assert.strictEqual(a.status, \"fulfilled\");\n    assert.strictEqual(a.value, 1);\n    assert.strictEqual(b.status, \"rejected\", \"an Error value must reject, not resolve\");\n    assert.strictEqual(b.reason.message, \"missing 2\");\n  },\n  \"a failed key is not cached and can be retried\": async () => {\n    let attempt = 0;\n    const loader = new BatchLoader(async (keys) => {\n      attempt++;\n      return keys.map((k) => (attempt === 1 ? new Error(\"flaky\") : \"ok\" + k));\n    });\n    await assert.rejects(() => loader.load(5), /flaky/);\n    await tick();\n    assert.strictEqual(await loader.load(5), \"ok5\", \"failed lookups must be evicted from the cache\");\n  },\n  \"a whole-batch failure rejects every key and can be retried\": async () => {\n    let fail = true;\n    const loader = new BatchLoader(async (keys) => {\n      if (fail) throw new Error(\"db down\");\n      return keys;\n    });\n    const results = await Promise.allSettled([loader.load(1), loader.load(2)]);\n    assert.deepStrictEqual(results.map((r) => r.status), [\"rejected\", \"rejected\"]);\n    fail = false;\n    await tick();\n    assert.strictEqual(await loader.load(1), 1);\n  },\n  \"keys requested while a batch is running form the next batch\": async () => {\n    let late;\n    const fn = spy(async (keys) => {\n      if (keys[0] === \"first\") late = loader.load(\"late\");\n      await tick();\n      return keys.map((k) => k.toUpperCase());\n    });\n    const loader = new BatchLoader(fn);\n    assert.strictEqual(await loader.load(\"first\"), \"FIRST\");\n    assert.strictEqual(await late, \"LATE\");\n    assert.deepStrictEqual(fn.calls, [[\"first\"], [\"late\"]]);\n  },\n  \"user service maps unordered rows and reports missing users\": async () => {\n    const seen = [];\n    const svc = createUserService({\n      fetchUsers: async (ids) => {\n        seen.push(ids);\n        return [{ id: 8, name: \"Ben\" }, { id: 7, name: \"Ann\" }];\n      },\n    });\n    const [u7, u8] = await svc.getUsers([7, 8]);\n    assert.strictEqual(u7.name, \"Ann\");\n    assert.strictEqual(u8.name, \"Ben\");\n    await assert.rejects(() => svc.getUser(9), /user 9 not found/);\n    assert.deepStrictEqual(seen, [[7, 8], [9]]);\n  },\n};\n",
+   "solution": {
+    "loader.js": "// Collects load(key) calls made in the same tick and resolves them with one\n// batchFn(keys) call. batchFn must return an array with one entry per key, in\n// the same order. An entry that is an Error instance rejects only that key.\nclass BatchLoader {\n  constructor(batchFn, { maxBatch = 100 } = {}) {\n    this.batchFn = batchFn;\n    this.maxBatch = maxBatch;\n    this.cache = new Map();\n    this.queue = [];\n    this.scheduled = false;\n  }\n\n  load(key) {\n    if (this.cache.has(key)) return this.cache.get(key);\n    const promise = new Promise((resolve, reject) => {\n      this.queue.push({ key, resolve, reject });\n    });\n    this.cache.set(key, promise);\n    if (!this.scheduled) {\n      this.scheduled = true;\n      Promise.resolve().then(() => this._dispatch());\n    }\n    return promise;\n  }\n\n  loadMany(keys) {\n    return Promise.all(keys.map((key) => this.load(key)));\n  }\n\n  clear(key) {\n    this.cache.delete(key);\n  }\n\n  async _dispatch() {\n    const batch = this.queue;\n    this.queue = [];\n    this.scheduled = false;\n    for (let i = 0; i < batch.length; i += this.maxBatch) {\n      const chunk = batch.slice(i, i + this.maxBatch);\n      const keys = chunk.map((job) => job.key);\n      let values;\n      try {\n        values = await this.batchFn(keys);\n        if (!Array.isArray(values) || values.length !== keys.length) {\n          throw new Error(\"batchFn must return one value per key\");\n        }\n      } catch (err) {\n        chunk.forEach((job) => {\n          this.cache.delete(job.key);\n          job.reject(err);\n        });\n        continue;\n      }\n      chunk.forEach((job, idx) => {\n        const value = values[idx];\n        if (value instanceof Error) {\n          this.cache.delete(job.key);\n          job.reject(value);\n        } else {\n          job.resolve(value);\n        }\n      });\n    }\n  }\n}\n\nmodule.exports = { BatchLoader };\n"
+   },
+   "hints": [
+    "Three separate faults in `loader.js`: how in-flight lookups are remembered, how `loadMany` calls `load`, and what happens to Error entries returned by `batchFn`.",
+    "The cache is only filled after the batch returns, so a second `load(7)` in the same tick finds nothing and queues a duplicate. `keys.map(this.load)` passes an unbound method. The documented contract says an Error entry rejects only its own key, but the code resolves with it.",
+    "Cache the promise itself immediately in `load` (so duplicates share it), call `keys.map((k) => this.load(k))`, and reject jobs whose value is an `Error`. Because you now cache promises, remember to evict a key from the cache whenever its promise rejects, otherwise one failure is cached forever."
+   ],
+   "explanation": "This is the DataLoader design: memoize the in-flight promise rather than the value so same-tick duplicates collapse; keep `this` bound when passing methods as callbacks; and honour the per-key error contract. A promise cache introduces one more obligation: rejected entries must be evicted so transient errors are retryable.",
+   "tags": [
+    "batching",
+    "promise-cache",
+    "this-binding",
+    "dataloader"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix"
+   ]
+  }
+ ]
+}

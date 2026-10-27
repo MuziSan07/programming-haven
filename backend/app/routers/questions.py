@@ -8,7 +8,9 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import QuestionAttempt, User
 from ..routers.auth import user_out
+from ..routers.flashcards import add_card
 from ..services import ai
+from ..services.gamification import evaluate
 from ..services.scoring import XP_QUESTION, award
 
 router = APIRouter(prefix="/api/questions", tags=["questions"])
@@ -85,5 +87,8 @@ def answer(qid: str, body: AnswerIn, user: User = Depends(get_current_user), db:
     db.add(QuestionAttempt(user_id=user.id, question_id=qid, correct=correct, score=result["score"]))
     xp = XP_QUESTION if correct and first_correct else 0
     award(user, xp)
+    # Wrong answers become flashcards so they come back for spaced review
+    flashcard_added = not correct and add_card(db, user.id, qid)
     db.commit()
-    return {**result, "xp_gained": xp, "user": user_out(user)}
+    return {**result, "xp_gained": xp, "flashcard_added": flashcard_added, "badges": evaluate(db, user),
+            "user": user_out(user)}

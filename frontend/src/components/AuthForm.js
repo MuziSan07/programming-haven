@@ -17,7 +17,8 @@ export default function AuthForm({ mode }) {
   const { login, register, user } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/dashboard";
+  // New signups start with the career coach onboarding
+  const next = params.get("next") || (isRegister ? "/coach?onboarding=1" : "/dashboard");
   const [form, setForm] = useState({ name: "", email: "", password: "", target_role: ROLES[0], gender: "unspecified" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

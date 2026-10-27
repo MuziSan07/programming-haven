@@ -1,0 +1,1897 @@
+{
+ "review_rounds": [
+  {
+   "id": "rev-py-login-endpoint",
+   "title": "PR #231: new /login endpoint with JWT",
+   "language": "python",
+   "difficulty": "Easy",
+   "time_minutes": 12,
+   "context": "Adds a /login endpoint so the mobile app can stop using the legacy session cookie. Passwords are hashed so we are safe. Tested manually with Postman against my local DB, works great. Please merge before Friday's release.",
+   "files": {
+    "auth/login.py": "import hashlib\nimport logging\nimport time\n\nimport jwt\nfrom fastapi import APIRouter, HTTPException\nfrom pydantic import BaseModel\n\nfrom db import get_user_by_email\n\nrouter = APIRouter()\nlog = logging.getLogger(\"auth\")\n\nJWT_SECRET = \"pH-prod-secret-2024\"\nALGO = \"HS256\"\n\n\nclass LoginBody(BaseModel):\n    email: str\n    password: str\n\n\ndef hash_password(password: str) -> str:\n    return hashlib.md5(password.encode()).hexdigest()\n\n\n@router.post(\"/login\")\ndef login(body: LoginBody):\n    log.info(\"login attempt %s %s\", body.email, body.password)\n    user = get_user_by_email(body.email)\n    if user is None:\n        raise HTTPException(status_code=404, detail=\"No account with that email\")\n    if user[\"password_hash\"] != hash_password(body.password):\n        return {\"error\": \"Wrong password\"}\n    token = jwt.encode(\n        {\"sub\": user[\"id\"], \"role\": user[\"role\"]},\n        JWT_SECRET,\n        algorithm=ALGO,\n    )\n    return {\"token\": token}"
+   },
+   "issues": [
+    {
+     "id": "s1",
+     "file": "auth/login.py",
+     "line": 14,
+     "category": "security",
+     "severity": "critical",
+     "description": "JWT signing secret is hard-coded in source and committed to the repo; anyone with repo access can forge tokens.",
+     "fix": "Load it from an environment variable or secret manager, rotate the leaked value, and fail startup if it is missing."
+    },
+    {
+     "id": "s2",
+     "file": "auth/login.py",
+     "line": 24,
+     "category": "security",
+     "severity": "critical",
+     "description": "MD5 is a fast, unsalted hash, so leaked hashes can be cracked in seconds with rainbow tables or GPUs.",
+     "fix": "Use bcrypt, scrypt or argon2 (for example passlib) with a per-user salt and a work factor."
+    },
+    {
+     "id": "s3",
+     "file": "auth/login.py",
+     "line": 29,
+     "category": "security",
+     "severity": "high",
+     "description": "The plaintext password is written to the application logs on every attempt.",
+     "fix": "Never log credentials. Log only a user id or a masked email, and only on failure or success events."
+    },
+    {
+     "id": "s4",
+     "file": "auth/login.py",
+     "line": 32,
+     "category": "security",
+     "severity": "medium",
+     "description": "A distinct 404 for unknown emails lets attackers enumerate which emails are registered.",
+     "fix": "Return the same 401 with a generic 'Invalid email or password' message for both unknown user and wrong password."
+    },
+    {
+     "id": "s5",
+     "file": "auth/login.py",
+     "line": 33,
+     "category": "security",
+     "severity": "medium",
+     "description": "Comparison with != is not constant-time and the whole approach has no throttling or lockout, enabling brute force and timing attacks.",
+     "fix": "Use the hashing library's verify function (constant-time) and add rate limiting / lockout on /login."
+    },
+    {
+     "id": "s6",
+     "file": "auth/login.py",
+     "line": 34,
+     "category": "bug",
+     "severity": "medium",
+     "description": "Failed login returns HTTP 200 with an error body; clients and monitoring will treat it as success.",
+     "fix": "Raise HTTPException(status_code=401) for failed authentication."
+    },
+    {
+     "id": "s7",
+     "file": "auth/login.py",
+     "line": 36,
+     "category": "security",
+     "severity": "medium",
+     "description": "The token has no exp claim (time is imported but never used), so a stolen token is valid forever.",
+     "fix": "Add exp and iat claims, for example exp = now + 15 minutes, plus a refresh flow."
+    }
+   ],
+   "explanation": "The headline problems are credential handling: hard-coded secret, MD5, and logging passwords. A strong reviewer also notices the behavioural leaks (user enumeration, 200 on failure) and the non-expiring token, and asks for tests of the failure paths.",
+   "tags": [
+    "security",
+    "auth",
+    "fastapi"
+   ],
+   "companies": [
+    "Stripe",
+    "Okta",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "rev-py-avatar-upload",
+   "title": "PR #482: avatar upload endpoint",
+   "language": "python",
+   "difficulty": "Easy",
+   "time_minutes": 15,
+   "context": "Lets users upload a profile picture. Files are stored under /srv/uploads and served by nginx. I added a size check so people can't upload huge things. Content type is checked too.",
+   "files": {
+    "routes/avatar.py": "import os\nimport uuid\n\nfrom flask import Blueprint, request, jsonify, session\n\nbp = Blueprint(\"avatar\", __name__)\nUPLOAD_DIR = \"/srv/uploads/avatars\"\nMAX_BYTES = 2 * 1024 * 1024\n\n\n@bp.route(\"/api/avatar\", methods=[\"POST\"])\ndef upload_avatar():\n    f = request.files.get(\"file\")\n    if f is None:\n        return jsonify(error=\"no file\"), 400\n\n    if f.mimetype not in (\"image/png\", \"image/jpeg\"):\n        return jsonify(error=\"bad type\"), 400\n\n    data = f.read()\n    if len(data) > MAX_BYTES:\n        return jsonify(error=\"too large\"), 413\n\n    user_id = request.form.get(\"user_id\")\n    path = os.path.join(UPLOAD_DIR, user_id + \"_\" + f.filename)\n    with open(path, \"wb\") as out:\n        out.write(data)\n\n    return jsonify(url=\"/uploads/avatars/\" + os.path.basename(path)), 200\n\n\n@bp.route(\"/api/avatar/<name>\", methods=[\"DELETE\"])\ndef delete_avatar(name):\n    path = os.path.join(UPLOAD_DIR, name)\n    if os.path.exists(path):\n        os.remove(path)\n    return jsonify(ok=True)"
+   },
+   "issues": [
+    {
+     "id": "a1",
+     "file": "routes/avatar.py",
+     "line": 17,
+     "category": "security",
+     "severity": "medium",
+     "description": "The type check trusts the client-supplied Content-Type header; an attacker can upload an HTML or SVG payload labelled image/png.",
+     "fix": "Sniff the real file type from the bytes (for example Pillow or python-magic) and re-encode the image before storing."
+    },
+    {
+     "id": "a2",
+     "file": "routes/avatar.py",
+     "line": 24,
+     "category": "security",
+     "severity": "high",
+     "description": "user_id comes from the form body instead of the authenticated session, so any user can overwrite another user's avatar (IDOR). `session` is imported but never used.",
+     "fix": "Take the user id from the authenticated session/token and require login on the route."
+    },
+    {
+     "id": "a3",
+     "file": "routes/avatar.py",
+     "line": 25,
+     "category": "security",
+     "severity": "critical",
+     "description": "The client-controlled filename is joined into the path with no sanitisation: '../../etc/cron.d/x' escapes UPLOAD_DIR (path traversal), and user_id is also unsanitised.",
+     "fix": "Ignore the original name; generate it server-side (uuid + validated extension) or use werkzeug secure_filename, then verify the resolved path stays inside UPLOAD_DIR."
+    },
+    {
+     "id": "a4",
+     "file": "routes/avatar.py",
+     "line": 36,
+     "category": "security",
+     "severity": "critical",
+     "description": "DELETE has no authentication or ownership check and the name segment is joined unsanitised, allowing arbitrary file deletion via traversal and deletion of other users' files.",
+     "fix": "Require auth, look up the avatar by the user's stored record rather than a raw filename, and validate the resolved path."
+    }
+   ],
+   "explanation": "This is a classic upload endpoint: trusting filename, content-type and user_id from the client. A good review leads with path traversal and missing authorisation, then the content sniffing and test gaps. Note also that uuid is imported but unused, a hint the safe naming was dropped.",
+   "tags": [
+    "security",
+    "file-upload",
+    "flask"
+   ],
+   "companies": [
+    "Google",
+    "Dropbox",
+    "Meta"
+   ]
+  },
+  {
+   "id": "rev-py-search-pagination",
+   "title": "PR #917: product search with pagination",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "context": "Adds /search for the storefront with page/size params and sorting. I benchmarked it on my laptop with 200 products and it's instant. Supports sorting by any column so the frontend team can be flexible.",
+   "files": {
+    "search/views.py": "from django.db import connection\nfrom django.http import JsonResponse\n\nfrom .models import Product, Category\n\nMAX_SIZE = 100  # documented limit in the API guide\nDEFAULT_SORT = \"name\"\n\n\ndef _to_dict(row, category):\n    return {\"id\": row[0], \"name\": row[1], \"price\": row[2], \"category\": category}\n\n\ndef search(request):\n    q = request.GET.get(\"q\", \"\")\n    page = int(request.GET.get(\"page\", 1))\n    size = int(request.GET.get(\"size\", 20))\n    sort = request.GET.get(\"sort\", \"name\")\n\n    sql = \"SELECT id, name, price, category_id FROM products WHERE name LIKE '%\" + q + \"%' ORDER BY \" + sort\n    with connection.cursor() as cur:\n        cur.execute(sql)\n        rows = cur.fetchall()\n\n    start = page * size\n    rows = rows[start:start + size]\n\n    results = []\n    for r in rows:\n        cat = Category.objects.get(id=r[3])\n        results.append({\"id\": r[0], \"name\": r[1], \"price\": r[2], \"category\": cat.name})\n\n    return JsonResponse({\"results\": results, \"page\": page})"
+   },
+   "issues": [
+    {
+     "id": "p1",
+     "file": "search/views.py",
+     "line": 16,
+     "category": "bug",
+     "severity": "medium",
+     "description": "int() on raw query input raises ValueError (HTTP 500) for page=abc, and negative or zero pages are not rejected.",
+     "fix": "Validate and clamp: parse in try/except, require page >= 1, return 400 on bad input."
+    },
+    {
+     "id": "p2",
+     "file": "search/views.py",
+     "line": 17,
+     "category": "security",
+     "severity": "medium",
+     "description": "size is unbounded, so size=10000000 pulls the whole table through the endpoint (cheap denial of service).",
+     "fix": "Clamp to a sane maximum such as 100."
+    },
+    {
+     "id": "p3",
+     "file": "search/views.py",
+     "line": 20,
+     "category": "security",
+     "severity": "critical",
+     "description": "The query string and sort column are concatenated into SQL: SQL injection via q (and via sort, which cannot be parameterised).",
+     "fix": "Use the ORM or parameterised queries (LIKE %s) and map sort to a whitelist of allowed column names."
+    },
+    {
+     "id": "p4",
+     "file": "search/views.py",
+     "line": 25,
+     "category": "bug",
+     "severity": "high",
+     "description": "Pages are 1-based by default but the offset is page * size, so page 1 skips the first `size` results (off-by-one).",
+     "fix": "Use (page - 1) * size."
+    },
+    {
+     "id": "p5",
+     "file": "search/views.py",
+     "line": 26,
+     "category": "performance",
+     "severity": "high",
+     "description": "All matching rows are fetched and then sliced in Python; pagination is not pushed down to the database.",
+     "fix": "Use LIMIT/OFFSET (or keyset pagination) in the query, and add a total count query."
+    },
+    {
+     "id": "p6",
+     "file": "search/views.py",
+     "line": 30,
+     "category": "performance",
+     "severity": "high",
+     "description": "N+1 query: a Category lookup per row, up to `size` extra queries per request.",
+     "fix": "Join the category in the SQL / use select_related, or prefetch categories in one query."
+    },
+    {
+     "id": "p7",
+     "file": "search/views.py",
+     "line": 33,
+     "category": "design",
+     "severity": "low",
+     "description": "Response lacks total count or next-page info, and the view mixes raw SQL, pagination and serialisation in one function with no tests.",
+     "fix": "Return total/has_next, split into query and serializer layers, and add tests for boundary pages."
+    }
+   ],
+   "explanation": "Multiple layers of failure: injection, wrong offset maths and fetching everything. The best reviews also call out the N+1 and the lack of input validation and tests, and ask for a benchmark with realistic data volume rather than 200 rows.",
+   "tags": [
+    "sql-injection",
+    "pagination",
+    "django",
+    "n+1"
+   ],
+   "companies": [
+    "Amazon",
+    "Shopify",
+    "Etsy"
+   ]
+  },
+  {
+   "id": "rev-py-celery-email-job",
+   "title": "PR #1204: background job to send digest emails",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 22,
+   "context": "Moves the nightly digest into a Celery task so the web request doesn't block. Retries on failure so users always get their email. Verified by running it twice locally.",
+   "files": {
+    "jobs/digest.py": "import smtplib\nfrom email.message import EmailMessage\n\nfrom celery import shared_task\n\nfrom app.models import User, Event\nfrom app.db import session\n\nSMTP_HOST = \"smtp.internal\"\n\n\n@shared_task(bind=True, max_retries=None)\ndef send_digest(self, user_id):\n    user = session.query(User).get(user_id)\n    events = session.query(Event).filter(Event.user_id == user_id).all()\n    if not events:\n        return\n\n    body = \"\\n\".join(e.title for e in events)\n    msg = EmailMessage()\n    msg[\"To\"] = user.email\n    msg[\"From\"] = \"digest@example.com\"\n    msg[\"Subject\"] = \"Your digest\"\n    msg.set_content(body)\n\n    try:\n        with smtplib.SMTP(SMTP_HOST) as s:\n            s.send_message(msg)\n    except Exception as exc:\n        raise self.retry(exc=exc, countdown=0)\n\n    for e in events:\n        e.sent = True\n    session.commit()\n\n\n@shared_task\ndef send_all_digests():\n    for user in session.query(User).all():\n        send_digest.delay(user.id)"
+   },
+   "issues": [
+    {
+     "id": "j1",
+     "file": "jobs/digest.py",
+     "line": 12,
+     "category": "bug",
+     "severity": "high",
+     "description": "max_retries=None means infinite retries. A permanently failing address (or a down SMTP server) retries forever and floods the queue.",
+     "fix": "Set a finite max_retries (e.g. 5) and route exhausted tasks to a dead-letter/alert path."
+    },
+    {
+     "id": "j2",
+     "file": "jobs/digest.py",
+     "line": 15,
+     "category": "bug",
+     "severity": "high",
+     "description": "The task is not idempotent: it selects all events, not just unsent ones, and marks them sent only after sending. A retry after a partial failure, or a duplicate delivery, re-sends the same events.",
+     "fix": "Filter on sent == False and mark sent atomically, or use an idempotency key per (user, day)."
+    },
+    {
+     "id": "j3",
+     "file": "jobs/digest.py",
+     "line": 27,
+     "category": "bug",
+     "severity": "medium",
+     "description": "No timeout on the SMTP connection; a hung server blocks the worker indefinitely.",
+     "fix": "Pass timeout=10 and use TLS/auth as configured for the relay."
+    },
+    {
+     "id": "j4",
+     "file": "jobs/digest.py",
+     "line": 29,
+     "category": "readability",
+     "severity": "medium",
+     "description": "Catching bare Exception treats programming errors the same as transient network errors, hiding bugs and retrying things that will never succeed.",
+     "fix": "Catch smtplib.SMTPException / OSError for retry and let other exceptions fail loudly."
+    },
+    {
+     "id": "j5",
+     "file": "jobs/digest.py",
+     "line": 30,
+     "category": "bug",
+     "severity": "high",
+     "description": "countdown=0 retries immediately with no backoff, hammering a struggling SMTP server.",
+     "fix": "Use exponential backoff with jitter, e.g. countdown=2 ** self.request.retries * 30."
+    },
+    {
+     "id": "j6",
+     "file": "jobs/digest.py",
+     "line": 33,
+     "category": "bug",
+     "severity": "medium",
+     "description": "The email is sent before the flag commit; if the commit fails the user gets duplicate digests, and a long-lived global session is shared across tasks.",
+     "fix": "Use a scoped session per task, commit in a transaction, and design for at-least-once delivery."
+    },
+    {
+     "id": "j7",
+     "file": "jobs/digest.py",
+     "line": 39,
+     "category": "performance",
+     "severity": "medium",
+     "description": "Loads every User into memory and enqueues one task per user at once; at scale this is a memory and thundering-herd problem.",
+     "fix": "Iterate with yield_per / chunked ID ranges and rate-limit or stagger enqueueing."
+    }
+   ],
+   "explanation": "Retries are only safe if the task is idempotent and bounded. A strong reviewer asks what happens on the second run, on partial failure, and when SMTP is down for an hour, and requests tests that simulate those cases.",
+   "tags": [
+    "background-jobs",
+    "celery",
+    "idempotency"
+   ],
+   "companies": [
+    "Uber",
+    "Airbnb",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "rev-py-csv-import",
+   "title": "PR #655: bulk CSV import for customers",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "context": "Allows admins to upload a CSV of customers. It handles quoted fields and everything. It imported my sample file of 30 rows in under a second so performance is fine.",
+   "files": {
+    "importer/customers.py": "import csv\nimport io\n\nfrom fastapi import UploadFile\nfrom sqlalchemy.orm import Session\n\nfrom models import Customer\n\n\ndef import_customers(file: UploadFile, db: Session):\n    text = file.file.read().decode(\"utf-8\")\n    reader = csv.reader(io.StringIO(text))\n    next(reader)\n    created = 0\n    errors = []\n\n    for i, row in enumerate(reader):\n        try:\n            name, email, balance = row[0], row[1], row[2]\n            existing = db.query(Customer).filter_by(email=email).first()\n            if existing:\n                existing.name = name\n            else:\n                db.add(Customer(name=name, email=email.lower(), balance=float(balance)))\n                created += 1\n            db.commit()\n        except Exception as e:\n            errors.append(f\"row {i}: {e}\")\n            db.rollback()\n\n    return {\"created\": created, \"errors\": errors}\n\n\ndef export_row(c):\n    return f\"{c.name},{c.email},{c.balance}\""
+   },
+   "issues": [
+    {
+     "id": "c1",
+     "file": "importer/customers.py",
+     "line": 11,
+     "category": "performance",
+     "severity": "medium",
+     "description": "The whole upload is read and decoded into memory and there is no size limit; also a non-UTF-8 or BOM file raises an unhandled error.",
+     "fix": "Stream the file, enforce a max size, and decode with utf-8-sig with a clear 400 on failure."
+    },
+    {
+     "id": "c6",
+     "file": "importer/customers.py",
+     "line": 17,
+     "category": "readability",
+     "severity": "low",
+     "description": "Row numbers are zero-based and skip the header, so error messages (f'row {i}') point at the wrong line for the admin.",
+     "fix": "Use enumerate(reader, start=2) so errors match spreadsheet line numbers."
+    },
+    {
+     "id": "c2",
+     "file": "importer/customers.py",
+     "line": 19,
+     "category": "bug",
+     "severity": "medium",
+     "description": "Short rows raise IndexError that gets reported as a vague row error, and there is no header validation; columns are matched by position.",
+     "fix": "Use csv.DictReader, validate required headers and required fields explicitly."
+    },
+    {
+     "id": "c3",
+     "file": "importer/customers.py",
+     "line": 20,
+     "category": "performance",
+     "severity": "high",
+     "description": "One SELECT per row (N+1) for the existing-email check; 100k rows means 100k round trips.",
+     "fix": "Load existing emails in one query up front or use INSERT ... ON CONFLICT upsert in batches."
+    },
+    {
+     "id": "c4",
+     "file": "importer/customers.py",
+     "line": 24,
+     "category": "bug",
+     "severity": "high",
+     "description": "Lookup uses the raw email but insert stores email.lower(), so 'A@x.com' and 'a@x.com' create duplicates; balance parsed with float() loses precision for money.",
+     "fix": "Normalise email once before lookup and storage; use Decimal for monetary values."
+    },
+    {
+     "id": "c5",
+     "file": "importer/customers.py",
+     "line": 26,
+     "category": "design",
+     "severity": "high",
+     "description": "Committing per row is slow and means a failed import leaves the database half-applied with no way to retry cleanly.",
+     "fix": "Process in batches within a transaction (or an all-or-nothing mode) and report row errors."
+    },
+    {
+     "id": "c7",
+     "file": "importer/customers.py",
+     "line": 35,
+     "category": "security",
+     "severity": "high",
+     "description": "export_row builds CSV by string formatting: commas in names break the format and values starting with = + - @ enable CSV/formula injection in Excel.",
+     "fix": "Use csv.writer and prefix dangerous leading characters with an apostrophe."
+    }
+   ],
+   "explanation": "Typical import code works on the happy path. Reviewers should push on malformed rows, duplicates by case, money as float, per-row commits and output escaping, and ask for tests with a nasty fixture file.",
+   "tags": [
+    "csv",
+    "import",
+    "sqlalchemy",
+    "testing"
+   ],
+   "companies": [
+    "Stripe",
+    "Salesforce",
+    "HubSpot"
+   ]
+  },
+  {
+   "id": "rev-py-webhook-handler",
+   "title": "PR #340: payment provider webhook",
+   "language": "python",
+   "difficulty": "Hard",
+   "time_minutes": 25,
+   "context": "Handles webhooks from PayCo: marks orders paid and credits the user's wallet. I tested by replaying the sample payload from their docs. It is idempotent because we just set status = paid.",
+   "files": {
+    "webhooks/payco.py": "import json\nimport hmac\nimport hashlib\n\nfrom flask import Blueprint, request, abort\n\nfrom models import db, Order, Wallet\n\nbp = Blueprint(\"payco\", __name__)\nSECRET = b\"whsec_live_8f2a1c\"\n\n\ndef verify(payload, sig):\n    expected = hmac.new(SECRET, payload, hashlib.sha256).hexdigest()\n    return expected == sig\n\n\n@bp.route(\"/webhooks/payco\", methods=[\"POST\"])\ndef payco():\n    payload = request.get_data()\n    sig = request.headers.get(\"X-Signature\", \"\")\n    if not verify(payload, sig):\n        abort(400)\n\n    event = json.loads(payload)\n    if event[\"type\"] == \"payment.succeeded\":\n        order = Order.query.get(event[\"data\"][\"order_id\"])\n        if order.status != \"paid\":\n            order.status = \"paid\"\n            wallet = Wallet.query.filter_by(user_id=order.user_id).first()\n            wallet.balance += event[\"data\"][\"amount\"]\n            db.session.commit()\n    elif event[\"type\"] == \"payment.refunded\":\n        order = Order.query.get(event[\"data\"][\"order_id\"])\n        order.status = \"refunded\"\n        db.session.commit()\n    return \"ok\"\n\n\n@bp.route(\"/webhooks/payco/replay\", methods=[\"POST\"])\ndef replay():\n    # internal tool used by support\n    url = request.json[\"callback_url\"]\n    import requests\n    requests.post(url, json={\"replayed\": True}, timeout=5)\n    return \"sent\""
+   },
+   "issues": [
+    {
+     "id": "w1",
+     "file": "webhooks/payco.py",
+     "line": 10,
+     "category": "security",
+     "severity": "critical",
+     "description": "The live webhook secret is committed in source.",
+     "fix": "Read it from configuration/secret store and rotate the exposed secret."
+    },
+    {
+     "id": "w2",
+     "file": "webhooks/payco.py",
+     "line": 15,
+     "category": "security",
+     "severity": "high",
+     "description": "Signature compared with == (timing side channel) and there is no timestamp in the signed data, so a captured valid request can be replayed indefinitely.",
+     "fix": "Use hmac.compare_digest, include and check a timestamp tolerance, and reject old events."
+    },
+    {
+     "id": "w3",
+     "file": "webhooks/payco.py",
+     "line": 28,
+     "category": "bug",
+     "severity": "critical",
+     "description": "The status check/update is a read-modify-write without a lock. Two concurrent deliveries of the same event (providers retry aggressively) can both see 'unpaid' and credit the wallet twice.",
+     "fix": "Record processed event ids with a unique constraint, or use SELECT ... FOR UPDATE / an atomic conditional UPDATE."
+    },
+    {
+     "id": "w4",
+     "file": "webhooks/payco.py",
+     "line": 31,
+     "category": "bug",
+     "severity": "high",
+     "description": "wallet.balance += amount is a Python-side read-modify-write (lost updates under concurrency), amount is trusted from the event instead of the order total, and a missing wallet/order raises a 500.",
+     "fix": "Use an atomic SQL update (balance = balance + :a), take the amount from the Order, and handle missing records."
+    },
+    {
+     "id": "w5",
+     "file": "webhooks/payco.py",
+     "line": 37,
+     "category": "bug",
+     "severity": "medium",
+     "description": "Unknown or failing events return 200 'ok' and unhandled exceptions return 500; refunds do not reverse the wallet credit, and unknown order ids crash. Wrong status codes make the provider retry or drop events.",
+     "fix": "Return 4xx for bad payloads, 2xx only once durably processed, handle every event type explicitly, and reverse credits on refunds."
+    },
+    {
+     "id": "w6",
+     "file": "webhooks/payco.py",
+     "line": 45,
+     "category": "security",
+     "severity": "critical",
+     "description": "SSRF: an endpoint that POSTs to an arbitrary caller-supplied URL (internal metadata services, localhost) with no authentication.",
+     "fix": "Remove it or require staff auth and validate the URL against an allowlist; never fetch arbitrary user URLs from the server network."
+    }
+   ],
+   "explanation": "Webhook handlers must be authenticated, replay-safe and idempotent. The subtle bug is the race between concurrent retries double-crediting the wallet; the loudest is the SSRF helper and committed secret.",
+   "tags": [
+    "webhooks",
+    "payments",
+    "idempotency",
+    "ssrf"
+   ],
+   "companies": [
+    "Stripe",
+    "PayPal",
+    "Square"
+   ]
+  },
+  {
+   "id": "rev-py-permissions-cache",
+   "title": "PR #778: cache user permissions",
+   "language": "python",
+   "difficulty": "Hard",
+   "time_minutes": 25,
+   "context": "Permission checks were hitting the DB on every request, so I added an in-process cache with a TTL. Dashboard latency dropped 40%. Admins can now be demoted from the admin UI and it takes effect right away (it calls invalidate).",
+   "files": {
+    "authz/permissions.py": "import time\nfrom functools import wraps\n\nfrom flask import g, abort\n\n_cache = {}\nTTL = 3600\n\n\ndef get_permissions(user_id, db):\n    entry = _cache.get(user_id)\n    if entry and time.time() - entry[\"at\"] < TTL:\n        return entry[\"perms\"]\n    rows = db.execute(\n        \"SELECT permission FROM user_permissions WHERE user_id = %s\", (user_id,)\n    ).fetchall()\n    perms = {r[0] for r in rows}\n    _cache[user_id] = {\"perms\": perms, \"at\": time.time()}\n    return perms\n\n\ndef invalidate(user_id):\n    _cache.pop(user_id, None)\n\n\ndef require(permission):\n    def deco(fn):\n        @wraps(fn)\n        def wrapper(*args, **kwargs):\n            perms = get_permissions(g.user[\"id\"], g.db)\n            if \"admin\" in perms or permission in perms:\n                return fn(*args, **kwargs)\n            abort(403)\n        return wrapper\n    return deco\n\n\n@require(\"users.write\")\ndef update_user(user_id, data):\n    ...\n\n\ndef delete_user(user_id):\n    g.db.execute(\"DELETE FROM users WHERE id = %s\", (user_id,))\n    invalidate(user_id)\n\n\ndef export_all(user_id):\n    perms = get_permissions(user_id, g.db)\n    perms.add(\"exports.run\")\n    return perms"
+   },
+   "issues": [
+    {
+     "id": "x1",
+     "file": "authz/permissions.py",
+     "line": 18,
+     "category": "bug",
+     "severity": "high",
+     "description": "The cache is a module-level dict per process, unbounded in size, and not thread-safe. With multiple gunicorn workers each has its own copy, so invalidation in one process leaves stale permissions in the others for up to an hour.",
+     "fix": "Use a shared cache (Redis) with short TTL and versioned keys, or a bounded cache with pub/sub invalidation."
+    },
+    {
+     "id": "x2",
+     "file": "authz/permissions.py",
+     "line": 23,
+     "category": "security",
+     "severity": "high",
+     "description": "invalidate only clears the local process; revoked admin rights stay effective on other workers for the full TTL (3600s). A one-hour window of privilege after demotion is a security bug.",
+     "fix": "Invalidate through a shared store, shorten the TTL for privileged roles, or check a permission version number on each request."
+    },
+    {
+     "id": "x5",
+     "file": "authz/permissions.py",
+     "line": 31,
+     "category": "security",
+     "severity": "medium",
+     "description": "The blanket 'admin' short-circuit makes every permission check implicitly pass for admin, bypassing least-privilege and per-permission audit.",
+     "fix": "Model admin as an explicit set of permissions, or document and test the override."
+    },
+    {
+     "id": "x3",
+     "file": "authz/permissions.py",
+     "line": 43,
+     "category": "security",
+     "severity": "critical",
+     "description": "delete_user has no @require decorator, so any authenticated user can delete any account (missing authorisation check).",
+     "fix": "Decorate with @require('users.delete') and add a test that a normal user receives 403."
+    },
+    {
+     "id": "x4",
+     "file": "authz/permissions.py",
+     "line": 50,
+     "category": "bug",
+     "severity": "high",
+     "description": "get_permissions returns the cached set itself; adding to it mutates the shared cache entry, silently granting exports.run to that user for the TTL.",
+     "fix": "Return a frozenset or a copy."
+    }
+   ],
+   "explanation": "Caching authorization data trades correctness for speed. A senior reviewer asks about invalidation across processes, staleness windows for revoked rights, shared mutable cache values, and notices the unprotected delete function.",
+   "tags": [
+    "caching",
+    "authz",
+    "concurrency"
+   ],
+   "companies": [
+    "Google",
+    "Okta",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "rev-js-rate-limiter",
+   "title": "PR #88: simple rate limiting middleware",
+   "language": "javascript",
+   "difficulty": "Easy",
+   "time_minutes": 15,
+   "context": "Adds rate limiting to the public API: 100 requests per minute per client. Very small and no new dependencies. Load tested with curl in a loop and it blocks after 100.",
+   "files": {
+    "middleware/rateLimit.js": "const hits = {};\nconst LIMIT = 100;\nconst WINDOW_MS = 60 * 1000;\n\nfunction rateLimit(req, res, next) {\n  const key = req.headers[\"x-forwarded-for\"] || req.ip;\n  const now = Date.now();\n\n  if (!hits[key]) {\n    hits[key] = { count: 0, start: now };\n  }\n\n  const entry = hits[key];\n  if (now - entry.start > WINDOW_MS) {\n    entry.count = 0;\n    entry.start = now;\n  }\n\n  entry.count++;\n  if (entry.count > LIMIT) {\n    return res.status(500).json({ error: \"Too many requests\" });\n  }\n\n  res.setHeader(\"X-RateLimit-Remaining\", LIMIT - entry.count);\n  next();\n}\n\nfunction resetClient(req, res) {\n  delete hits[req.query.key];\n  res.send(\"ok\");\n}\n\nmodule.exports = { rateLimit, resetClient };"
+   },
+   "issues": [
+    {
+     "id": "r1",
+     "file": "middleware/rateLimit.js",
+     "line": 6,
+     "category": "security",
+     "severity": "high",
+     "description": "X-Forwarded-For is client-controlled unless set by a trusted proxy, so an attacker rotates the header value to get a fresh bucket on every request and bypass the limiter entirely.",
+     "fix": "Use req.ip with Express 'trust proxy' configured for your actual proxy chain; never trust the raw header."
+    },
+    {
+     "id": "r2",
+     "file": "middleware/rateLimit.js",
+     "line": 10,
+     "category": "performance",
+     "severity": "medium",
+     "description": "The in-memory hits object grows forever (entries are never evicted) and is per-process, so limits multiply with the number of instances and memory leaks with unique IPs.",
+     "fix": "Evict expired entries on an interval, or use a shared store such as Redis with TTL keys (INCR + EXPIRE)."
+    },
+    {
+     "id": "r3",
+     "file": "middleware/rateLimit.js",
+     "line": 21,
+     "category": "bug",
+     "severity": "medium",
+     "description": "Rate limiting responds with 500; the correct status is 429 and a Retry-After header, otherwise clients and alerts treat it as a server fault.",
+     "fix": "Return 429 with Retry-After."
+    },
+    {
+     "id": "r4",
+     "file": "middleware/rateLimit.js",
+     "line": 24,
+     "category": "bug",
+     "severity": "low",
+     "description": "Remaining can be set to a negative number on later paths and the header is only set for allowed requests; also fixed-window counting allows 2x bursts at window boundaries.",
+     "fix": "Clamp with Math.max(0, ...) and consider a sliding window or token bucket."
+    },
+    {
+     "id": "r5",
+     "file": "middleware/rateLimit.js",
+     "line": 29,
+     "category": "security",
+     "severity": "high",
+     "description": "resetClient is an unauthenticated endpoint that lets anyone clear any client's counter, defeating the limiter.",
+     "fix": "Remove it or protect it with admin authentication; do not take the key from the query string."
+    }
+   ],
+   "explanation": "Looks tidy, but a limiter that can be bypassed with a header and reset by anyone is theatre. Good reviewers test the trust boundary (who sets X-Forwarded-For), then memory growth, multi-instance behaviour and status codes.",
+   "tags": [
+    "rate-limiting",
+    "express",
+    "security"
+   ],
+   "companies": [
+    "Cloudflare",
+    "Stripe",
+    "Twitter"
+   ]
+  },
+  {
+   "id": "rev-js-xss-comments",
+   "title": "PR #301: comment widget for blog posts",
+   "language": "javascript",
+   "difficulty": "Easy",
+   "time_minutes": 12,
+   "context": "Adds a comment widget so readers can discuss posts. Comments render instantly after posting. I made sure to trim whitespace from comments.",
+   "files": {
+    "static/comments.js": "async function loadComments(postId) {\n  const res = await fetch(\"/api/posts/\" + postId + \"/comments\");\n  const comments = await res.json();\n  const list = document.getElementById(\"comments\");\n  list.innerHTML = \"\";\n  comments.forEach((c) => {\n    list.innerHTML += `<li><b>${c.author}</b>: ${c.text}</li>`;\n  });\n}\n\nasync function postComment(postId) {\n  const input = document.getElementById(\"comment-input\");\n  const text = input.value.trim();\n  if (text.length == 0) return;\n\n  await fetch(\"/api/posts/\" + postId + \"/comments\", {\n    method: \"POST\",\n    headers: { \"Content-Type\": \"application/json\" },\n    body: JSON.stringify({ text, author: localStorage.getItem(\"username\") }),\n  });\n  input.value = \"\";\n  loadComments(postId);\n}\n\nfunction showError(msg) {\n  document.getElementById(\"error\").innerHTML = \"Failed: \" + msg;\n}\n\ndocument.getElementById(\"send\").addEventListener(\"click\", () => {\n  postComment(new URLSearchParams(location.search).get(\"post\"));\n});"
+   },
+   "issues": [
+    {
+     "id": "x1",
+     "file": "static/comments.js",
+     "line": 7,
+     "category": "security",
+     "severity": "critical",
+     "description": "Stored XSS: author and text come from other users and are interpolated into innerHTML unescaped. A comment containing <img onerror=...> runs in every reader's session. Rebuilding the whole list with += on each item is also quadratic.",
+     "fix": "Build nodes with createElement/textContent (or escape), and set innerHTML once at most."
+    },
+    {
+     "id": "x2",
+     "file": "static/comments.js",
+     "line": 19,
+     "category": "security",
+     "severity": "high",
+     "description": "The author is taken from client-side localStorage, so anyone can post as any user; identity must come from the server session.",
+     "fix": "Ignore client-supplied author; derive it from the authenticated session on the server."
+    },
+    {
+     "id": "x3",
+     "file": "static/comments.js",
+     "line": 22,
+     "category": "bug",
+     "severity": "medium",
+     "description": "The POST response is never checked (no res.ok handling) and failures are silent; the input is cleared even if the request failed, losing the user's comment, and errors from loadComments are unhandled.",
+     "fix": "Check response.ok, only clear on success, and surface errors."
+    },
+    {
+     "id": "x4",
+     "file": "static/comments.js",
+     "line": 26,
+     "category": "security",
+     "severity": "medium",
+     "description": "The error message (which may include server or user-controlled text) is assigned via innerHTML, another XSS sink; showError is also never called.",
+     "fix": "Use textContent, and actually wire up error handling."
+    },
+    {
+     "id": "x5",
+     "file": "static/comments.js",
+     "line": 30,
+     "category": "bug",
+     "severity": "low",
+     "description": "The post id is read from the query string without validation and may be null, producing requests to /api/posts/null/comments; it is also concatenated into the URL without encoding.",
+     "fix": "Validate the id and use encodeURIComponent."
+    }
+   ],
+   "explanation": "An easy catch if you search for innerHTML. Strong answers state the exploit (stored XSS affecting other readers), fix it with textContent, and note that client-supplied identity and swallowed failures need server-side fixes and tests.",
+   "tags": [
+    "xss",
+    "frontend",
+    "security"
+   ],
+   "companies": [
+    "Meta",
+    "Shopify",
+    "Reddit"
+   ]
+  },
+  {
+   "id": "rev-ts-react-data-fetching",
+   "title": "PR #1512: user dashboard data fetching hook",
+   "language": "typescript",
+   "difficulty": "Medium",
+   "time_minutes": 22,
+   "context": "Replaces the Redux thunk with a custom hook, which is a lot simpler. The dashboard now refreshes every 5 seconds so it feels live. Works on my machine with the mock API.",
+   "files": {
+    "src/useUserStats.ts": "import { useEffect, useState } from \"react\";\n\ninterface Stats {\n  visits: number;\n  revenue: number;\n}\n\nexport function useUserStats(userId: string, filters: { range: string }) {\n  const [stats, setStats] = useState<Stats | null>(null);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState<any>(null);\n\n  useEffect(() => {\n    const id = setInterval(async () => {\n      const res = await fetch(`/api/users/${userId}/stats?range=${filters.range}`);\n      const data = await res.json();\n      setStats(data);\n      setLoading(false);\n    }, 5000);\n  }, [userId, filters]);\n\n  if (error) {\n    console.error(error);\n  }\n\n  return { stats, loading, error };\n}\n\nexport function UserStats({ userId }: { userId: string }) {\n  const { stats, loading } = useUserStats(userId, { range: \"7d\" });\n\n  if (loading) return <p>Loading...</p>;\n  return <div>Revenue: {stats!.revenue}</div>;\n}"
+   },
+   "issues": [
+    {
+     "id": "h1",
+     "file": "src/useUserStats.ts",
+     "line": 11,
+     "category": "readability",
+     "severity": "low",
+     "description": "error is typed any and setError is never called, so error handling code below is dead and failures are invisible.",
+     "fix": "Type errors as Error | null and set them in a catch block."
+    },
+    {
+     "id": "h2",
+     "file": "src/useUserStats.ts",
+     "line": 14,
+     "category": "bug",
+     "severity": "high",
+     "description": "The interval does not fetch immediately (first data arrives after 5s, loading spinner for 5s) and the effect returns no cleanup, so intervals leak after unmount and stack up on each re-run, causing duplicate requests and setState on unmounted components.",
+     "fix": "Fetch on mount, return () => clearInterval(id), and use an AbortController to cancel in-flight requests."
+    },
+    {
+     "id": "h3",
+     "file": "src/useUserStats.ts",
+     "line": 16,
+     "category": "bug",
+     "severity": "high",
+     "description": "No res.ok check or try/catch: a 500 or network error throws inside the async callback as an unhandled rejection and the UI stays 'Loading' forever. Out-of-order responses can also overwrite newer data with older data (race condition).",
+     "fix": "Wrap in try/catch, check res.ok, set error state, and ignore stale responses with an abort flag."
+    },
+    {
+     "id": "h4",
+     "file": "src/useUserStats.ts",
+     "line": 20,
+     "category": "performance",
+     "severity": "high",
+     "description": "filters is an object literal created on every render by the caller (see UserStats), so the dependency changes on every render and the effect re-subscribes continuously, a re-render/request storm.",
+     "fix": "Depend on primitive values (filters.range) or memoise the object with useMemo."
+    },
+    {
+     "id": "h5",
+     "file": "src/useUserStats.ts",
+     "line": 26,
+     "category": "design",
+     "severity": "low",
+     "description": "The hook returns a new object each render and exposes no refetch function; consumers cannot retry after errors.",
+     "fix": "Return a stable shape with a refetch callback, or use a data library such as React Query / SWR that gives caching, dedupe and retry."
+    },
+    {
+     "id": "h6",
+     "file": "src/useUserStats.ts",
+     "line": 30,
+     "category": "performance",
+     "severity": "medium",
+     "description": "A fresh { range: '7d' } object is passed every render, which triggers the effect loop described above.",
+     "fix": "Hoist constants outside the component or memoise them."
+    },
+    {
+     "id": "h7",
+     "file": "src/useUserStats.ts",
+     "line": 33,
+     "category": "bug",
+     "severity": "medium",
+     "description": "Non-null assertion stats! crashes with a TypeError when loading is false but stats is null (e.g. after an error) and the component has no error UI.",
+     "fix": "Handle the error and empty states explicitly and drop the assertion."
+    }
+   ],
+   "explanation": "The review should explain how the interval, missing cleanup and unstable dependency compound. Experienced reviewers recommend a data-fetching library and ask for tests with fake timers that cover unmount, errors and out-of-order responses.",
+   "tags": [
+    "react",
+    "hooks",
+    "data-fetching",
+    "typescript"
+   ],
+   "companies": [
+    "Meta",
+    "Netflix",
+    "Airbnb"
+   ]
+  },
+  {
+   "id": "rev-js-notification-sender",
+   "title": "PR #412: notification fan-out service",
+   "language": "javascript",
+   "difficulty": "Medium",
+   "time_minutes": 22,
+   "context": "Sends push + email notifications when an order ships. Each user gets both. I used Promise.all so it's fast. Tested with 3 users.",
+   "files": {
+    "services/notify.js": "const db = require(\"../db\");\nconst mailer = require(\"../mailer\");\nconst push = require(\"../push\");\n\nasync function notifyShipped(orderId) {\n  const order = await db.query(\"SELECT * FROM orders WHERE id = \" + orderId);\n  const followers = await db.query(\n    \"SELECT user_id FROM followers WHERE order_id = $1\", [orderId]\n  );\n\n  const results = await Promise.all(\n    followers.rows.map(async (f) => {\n      const user = await db.query(\"SELECT * FROM users WHERE id = $1\", [f.user_id]);\n      await mailer.send(user.rows[0].email, \"Order shipped\", renderBody(order.rows[0], user.rows[0]));\n      await push.send(user.rows[0].device_token, \"Your order shipped\");\n      return true;\n    })\n  );\n\n  await db.query(\"UPDATE orders SET notified = true WHERE id = $1\", [orderId]);\n  return results.length;\n}\n\nfunction renderBody(order, user) {\n  return `<p>Hi ${user.name}, order ${order.id} has shipped to ${order.address}</p>`;\n}\n\nasync function retryOnce(fn) {\n  try {\n    return await fn();\n  } catch (e) {\n    return await fn();\n  }\n}\n\nmodule.exports = { notifyShipped, retryOnce };"
+   },
+   "issues": [
+    {
+     "id": "n1",
+     "file": "services/notify.js",
+     "line": 6,
+     "category": "security",
+     "severity": "critical",
+     "description": "orderId is concatenated into the SQL string: SQL injection (the next query shows the author knows about parameters).",
+     "fix": "Use a parameterised query: db.query('... WHERE id = $1', [orderId])."
+    },
+    {
+     "id": "n2",
+     "file": "services/notify.js",
+     "line": 12,
+     "category": "performance",
+     "severity": "high",
+     "description": "Promise.all over every follower fires unbounded concurrent DB, SMTP and push calls; with thousands of followers this exhausts the pool and trips provider rate limits. One rejection also rejects the whole batch while other sends continue, leaving it unclear who was notified.",
+     "fix": "Process in bounded batches (p-limit or a queue), use Promise.allSettled, and record per-user results."
+    },
+    {
+     "id": "n3",
+     "file": "services/notify.js",
+     "line": 13,
+     "category": "performance",
+     "severity": "medium",
+     "description": "N+1 query: one SELECT per follower for users.",
+     "fix": "Fetch all users in a single JOIN or WHERE id = ANY($1) query."
+    },
+    {
+     "id": "n4",
+     "file": "services/notify.js",
+     "line": 15,
+     "category": "bug",
+     "severity": "high",
+     "description": "The email is sent before the push and each is awaited sequentially without isolation; if push fails after the email succeeded, the user is marked failed and a retry will send the email again (duplicates). A user without a device token also throws.",
+     "fix": "Send channels independently with allSettled, make sends idempotent (per user/order key), and skip missing tokens."
+    },
+    {
+     "id": "n7",
+     "file": "services/notify.js",
+     "line": 20,
+     "category": "testing",
+     "severity": "low",
+     "description": "Marks the order notified even if some sends failed, with no test covering partial failure.",
+     "fix": "Only mark success when all sends succeeded, or track per-recipient state, and add tests for partial failure."
+    },
+    {
+     "id": "n5",
+     "file": "services/notify.js",
+     "line": 25,
+     "category": "security",
+     "severity": "high",
+     "description": "User and address fields are interpolated into an HTML email without escaping, allowing HTML/phishing injection through a user-controlled name or address.",
+     "fix": "Escape values or use a template engine with auto-escaping."
+    },
+    {
+     "id": "n6",
+     "file": "services/notify.js",
+     "line": 32,
+     "category": "design",
+     "severity": "medium",
+     "description": "retryOnce retries instantly for any error type, including non-transient ones, with no backoff, and it is not even used by notifyShipped.",
+     "fix": "Retry only transient errors with backoff and jitter, and wire it in or delete the dead code."
+    }
+   ],
+   "explanation": "A few lines hide several scale and correctness hazards: unbounded fan-out, N+1 queries, duplicate sends on retry and injection in both SQL and HTML. Reviewers should ask what the failure semantics are for partial delivery.",
+   "tags": [
+    "notifications",
+    "promises",
+    "sql-injection"
+   ],
+   "companies": [
+    "Uber",
+    "Amazon",
+    "Slack"
+   ]
+  },
+  {
+   "id": "rev-ts-useDebouncedSearch",
+   "title": "PR #2045: type-ahead search component",
+   "language": "typescript",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "context": "Adds type-ahead search to the header. It debounces input so we don't spam the API. I tried typing fast and it feels smooth!",
+   "files": {
+    "src/SearchBox.tsx": "import React, { useState, useEffect, useCallback } from \"react\";\n\ntype Item = { id: number; title: string };\n\nexport default function SearchBox({ onPick }: { onPick: (i: Item) => void }) {\n  const [query, setQuery] = useState(\"\");\n  const [results, setResults] = useState<Item[]>([]);\n  const [timer, setTimer] = useState<any>(null);\n\n  const search = (q: string) => {\n    fetch(`/api/search?q=${q}`)\n      .then((r) => r.json())\n      .then((data) => setResults(data));\n  };\n\n  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {\n    setQuery(e.target.value);\n    clearTimeout(timer);\n    setTimer(setTimeout(() => search(e.target.value), 300));\n  };\n\n  useEffect(() => {\n    document.addEventListener(\"keydown\", (e) => {\n      if (e.key === \"Escape\") setResults([]);\n    });\n  }, []);\n\n  return (\n    <div>\n      <input value={query} onChange={onChange} placeholder=\"Search\" />\n      <ul>\n        {results.map((r, i) => (\n          <li key={i} onClick={() => onPick(r)}>\n            <span dangerouslySetInnerHTML={{ __html: r.title.replace(query, \"<mark>\" + query + \"</mark>\") }} />\n          </li>\n        ))}\n      </ul>\n    </div>\n  );\n}"
+   },
+   "issues": [
+    {
+     "id": "s1",
+     "file": "src/SearchBox.tsx",
+     "line": 8,
+     "category": "design",
+     "severity": "low",
+     "description": "Storing the debounce timer in state triggers needless re-renders and relies on stale closures; timers belong in a ref.",
+     "fix": "Use useRef for the timer or a useDebouncedValue hook."
+    },
+    {
+     "id": "s2",
+     "file": "src/SearchBox.tsx",
+     "line": 11,
+     "category": "bug",
+     "severity": "medium",
+     "description": "The query is interpolated into the URL without encodeURIComponent (breaks on & # or spaces) and empty queries still hit the API.",
+     "fix": "Encode the parameter and skip the request when the query is empty."
+    },
+    {
+     "id": "s3",
+     "file": "src/SearchBox.tsx",
+     "line": 13,
+     "category": "bug",
+     "severity": "high",
+     "description": "No handling of out-of-order responses: a slow response for 'ab' can arrive after the response for 'abc' and overwrite the newer results. There is no error handling and no AbortController.",
+     "fix": "Abort the previous request or compare against the latest query before setting state; handle errors."
+    },
+    {
+     "id": "s4",
+     "file": "src/SearchBox.tsx",
+     "line": 23,
+     "category": "bug",
+     "severity": "medium",
+     "description": "The keydown listener is added on mount but never removed: leaks on unmount and duplicates under React strict mode / remounts.",
+     "fix": "Return a cleanup that calls removeEventListener."
+    },
+    {
+     "id": "s5",
+     "file": "src/SearchBox.tsx",
+     "line": 33,
+     "category": "readability",
+     "severity": "low",
+     "description": "Using the array index as key causes incorrect reconciliation when results change; also the list items are not keyboard accessible (no role, button or focus handling).",
+     "fix": "Use r.id as key and render buttons with proper ARIA (listbox/option) roles."
+    },
+    {
+     "id": "s6",
+     "file": "src/SearchBox.tsx",
+     "line": 34,
+     "category": "security",
+     "severity": "critical",
+     "description": "dangerouslySetInnerHTML with the title and raw query: XSS if a title contains markup, and the user's query is injected as HTML; also String.replace with a string only replaces the first, case-sensitive match and special regex characters are mishandled.",
+     "fix": "Render highlights as React elements by splitting on an escaped match; never inject titles as HTML."
+    }
+   ],
+   "explanation": "The component works in a demo but has the usual type-ahead failure modes: race conditions between responses, leaked listeners and XSS from HTML highlighting. Ask for tests that fire out-of-order responses.",
+   "tags": [
+    "react",
+    "debounce",
+    "xss",
+    "race-condition"
+   ],
+   "companies": [
+    "Google",
+    "Airbnb",
+    "Algolia"
+   ]
+  },
+  {
+   "id": "rev-ts-worker-pool",
+   "title": "PR #77: bounded worker pool for image resizing",
+   "language": "typescript",
+   "difficulty": "Hard",
+   "time_minutes": 30,
+   "context": "Adds a small worker pool so we can resize images in parallel without melting the box. It queues jobs and runs at most N at a time. Handled shutdown too. All good in tests (I ran it 3 times).",
+   "files": {
+    "src/pool.ts": "type Job<T> = () => Promise<T>;\n\nexport class Pool {\n  private running = 0;\n  private queue: Array<() => void> = [];\n  private results: any[] = [];\n  private closed = false;\n\n  constructor(private size: number) {}\n\n  async run<T>(job: Job<T>): Promise<T> {\n    if (this.closed) throw new Error(\"closed\");\n    if (this.running >= this.size) {\n      await new Promise<void>((resolve) => this.queue.push(resolve));\n    }\n    this.running++;\n    try {\n      const r = await job();\n      this.results.push(r);\n      return r;\n    } finally {\n      this.running--;\n      const next = this.queue.shift();\n      if (next) next();\n    }\n  }\n\n  async drain(): Promise<void> {\n    while (this.running > 0 || this.queue.length > 0) {\n      await new Promise((r) => setTimeout(r, 10));\n    }\n  }\n\n  close() {\n    this.closed = true;\n  }\n}\n\nexport async function resizeAll(files: string[], pool: Pool) {\n  const out: string[] = [];\n  for (const f of files) {\n    pool.run(async () => {\n      const dst = await resize(f, 800);\n      out.push(dst);\n    });\n  }\n  await pool.drain();\n  return out;\n}\n\ndeclare function resize(path: string, width: number): Promise<string>;"
+   },
+   "issues": [
+    {
+     "id": "w1",
+     "file": "src/pool.ts",
+     "line": 6,
+     "category": "performance",
+     "severity": "medium",
+     "description": "results retains the return value of every job for the lifetime of the pool: an unbounded memory leak for a long-running service that resizes large buffers.",
+     "fix": "Do not store results in the pool; the caller already gets each result from run()."
+    },
+    {
+     "id": "w2",
+     "file": "src/pool.ts",
+     "line": 16,
+     "category": "bug",
+     "severity": "critical",
+     "description": "Race: after being woken, the waiting job increments running only after resuming, but the finishing job already decremented and woke it. Between the wake-up and increment another new run() call can see running < size and start too, so the pool can exceed its size limit. The check-then-act is not atomic.",
+     "fix": "Hand the slot over directly (do not decrement when passing to a waiter) or increment before awaiting, and loop on the condition."
+    },
+    {
+     "id": "w4",
+     "file": "src/pool.ts",
+     "line": 29,
+     "category": "performance",
+     "severity": "low",
+     "description": "drain polls with a 10ms timer instead of waiting on a signal, burning wakeups and adding latency, and it ignores jobs submitted after it starts.",
+     "fix": "Keep an idle promise/resolver that resolves when running hits zero and the queue is empty."
+    },
+    {
+     "id": "w7",
+     "file": "src/pool.ts",
+     "line": 35,
+     "category": "testing",
+     "severity": "medium",
+     "description": "close() only flips a flag: queued jobs are never rejected or drained, and there are no tests for ordering, limit enforcement or failure.",
+     "fix": "Define shutdown semantics (reject queued jobs or wait) and add concurrency tests that assert the maximum parallelism observed."
+    },
+    {
+     "id": "w5",
+     "file": "src/pool.ts",
+     "line": 42,
+     "category": "bug",
+     "severity": "critical",
+     "description": "The returned promise of pool.run is not awaited or collected, so errors become unhandled rejections and, because jobs enter the queue asynchronously, drain() may observe running === 0 and an empty queue before the first job has even started; resizeAll then returns an incomplete list.",
+     "fix": "Collect the promises and await Promise.allSettled, or make run() register the job synchronously before awaiting."
+    },
+    {
+     "id": "w6",
+     "file": "src/pool.ts",
+     "line": 48,
+     "category": "bug",
+     "severity": "high",
+     "description": "out is populated in completion order, not input order, and failed files are silently dropped, so callers cannot map outputs back to inputs.",
+     "fix": "Return results indexed by input position and report failures explicitly."
+    }
+   ],
+   "explanation": "Hand-rolled concurrency primitives are where bugs hide. A great review asks 'how do I know the limit is honoured?' and demonstrates the interleaving that breaks it, then looks at error propagation and shutdown semantics.",
+   "tags": [
+    "concurrency",
+    "async",
+    "worker-pool",
+    "typescript"
+   ],
+   "companies": [
+    "Google",
+    "Cloudflare",
+    "Vercel"
+   ]
+  },
+  {
+   "id": "rev-java-user-lookup",
+   "title": "PR #1031: user search and registration DAO",
+   "language": "java",
+   "difficulty": "Easy",
+   "time_minutes": 15,
+   "context": "Adds UserDao with search and register. Uses plain JDBC so we avoid the Hibernate overhead. Registered 5 users and found them again with the search box.",
+   "files": {
+    "UserDao.java": "package com.acme.users;\n\nimport java.security.MessageDigest;\nimport java.sql.*;\nimport java.util.ArrayList;\nimport java.util.List;\n\npublic class UserDao {\n    private static final String URL = \"jdbc:postgresql://db.prod.acme.io/users\";\n    private static final String PASS = \"Sup3rS3cret!\";\n\n    public List<String> searchByName(String name) throws SQLException {\n        Connection c = DriverManager.getConnection(URL, \"app\", PASS);\n        Statement st = c.createStatement();\n        ResultSet rs = st.executeQuery(\"SELECT email FROM users WHERE name = '\" + name + \"'\");\n        List<String> out = new ArrayList<>();\n        while (rs.next()) {\n            out.add(rs.getString(1));\n        }\n        return out;\n    }\n\n    public void register(String email, String password) throws Exception {\n        MessageDigest md = MessageDigest.getInstance(\"SHA-1\");\n        String hash = new String(md.digest(password.getBytes()));\n        try (Connection c = DriverManager.getConnection(URL, \"app\", PASS)) {\n            PreparedStatement ps = c.prepareStatement(\"INSERT INTO users(email, pw) VALUES (?, ?)\");\n            ps.setString(1, email);\n            ps.setString(2, hash);\n            ps.executeUpdate();\n        } catch (SQLException e) {\n            e.printStackTrace();\n        }\n    }\n}"
+   },
+   "issues": [
+    {
+     "id": "u1",
+     "file": "UserDao.java",
+     "line": 10,
+     "category": "security",
+     "severity": "critical",
+     "description": "Database credentials are hard-coded in source.",
+     "fix": "Inject from environment/secret manager (e.g. Spring config with Vault) and rotate this password."
+    },
+    {
+     "id": "u3",
+     "file": "UserDao.java",
+     "line": 13,
+     "category": "bug",
+     "severity": "high",
+     "description": "Connection, Statement and ResultSet are never closed, leaking a connection per search and eventually exhausting the database.",
+     "fix": "Use try-with-resources, and a pooled DataSource (HikariCP) instead of DriverManager per call."
+    },
+    {
+     "id": "u2",
+     "file": "UserDao.java",
+     "line": 15,
+     "category": "security",
+     "severity": "critical",
+     "description": "SQL injection: the name argument is concatenated into the statement.",
+     "fix": "Use a PreparedStatement with a bind parameter."
+    },
+    {
+     "id": "u4",
+     "file": "UserDao.java",
+     "line": 24,
+     "category": "security",
+     "severity": "high",
+     "description": "SHA-1 without a salt is a fast hash unsuitable for passwords.",
+     "fix": "Use BCrypt/Argon2 (e.g. Spring Security PasswordEncoder)."
+    },
+    {
+     "id": "u5",
+     "file": "UserDao.java",
+     "line": 25,
+     "category": "bug",
+     "severity": "high",
+     "description": "new String(bytes) of a raw digest uses the platform charset and mangles bytes (lossy and non-deterministic across platforms), so stored hashes may not be verifiable; it also relies on the default charset for the password bytes.",
+     "fix": "Hex or Base64 encode the digest, or use a password encoder that returns an encoded string; specify UTF-8."
+    },
+    {
+     "id": "u6",
+     "file": "UserDao.java",
+     "line": 32,
+     "category": "bug",
+     "severity": "medium",
+     "description": "Registration failures are swallowed with printStackTrace, so the caller thinks the user was created (a duplicate email fails silently).",
+     "fix": "Propagate or translate to a domain exception (e.g. DuplicateEmailException) and log properly."
+    }
+   ],
+   "explanation": "Easy to spot, so the review should be complete: injection, secrets, weak hashing, resource leaks and swallowed exceptions. Mention the missing tests and the lack of a connection pool.",
+   "tags": [
+    "jdbc",
+    "sql-injection",
+    "password-hashing"
+   ],
+   "companies": [
+    "JPMorgan",
+    "Oracle",
+    "Goldman Sachs"
+   ]
+  },
+  {
+   "id": "rev-java-account-transfer",
+   "title": "PR #560: money transfer service",
+   "language": "java",
+   "difficulty": "Hard",
+   "time_minutes": 30,
+   "context": "Implements transfer between accounts. Checks the balance first so overdrafts are impossible. Wrote a unit test that moves 50 from A to B and it passes.",
+   "files": {
+    "TransferService.java": "package com.acme.bank;\n\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.stereotype.Service;\n\nimport java.math.BigDecimal;\n\n@Service\npublic class TransferService {\n    @Autowired private AccountRepository accounts;\n    @Autowired private AuditLog audit;\n\n    public void transfer(Long fromId, Long toId, double amount) {\n        Account from = accounts.findById(fromId).get();\n        Account to = accounts.findById(toId).get();\n\n        if (from.getBalance() >= amount) {\n            from.setBalance(from.getBalance() - amount);\n            accounts.save(from);\n            audit.record(\"debit\", fromId, amount);\n\n            to.setBalance(to.getBalance() + amount);\n            accounts.save(to);\n            audit.record(\"credit\", toId, amount);\n        } else {\n            throw new RuntimeException(\"insufficient funds\");\n        }\n    }\n\n    public String statement(Long accountId) {\n        Account a = accounts.findById(accountId).orElseThrow();\n        StringBuilder sb = new StringBuilder();\n        for (Tx t : a.getTransactions()) {\n            sb.append(t.getDate()).append(\" \").append(t.getAmount()).append(\"\\n\");\n        }\n        return sb.toString();\n    }\n\n    public void refund(Long txId) {\n        Tx tx = accounts.findTx(txId);\n        transfer(tx.getToId(), tx.getFromId(), tx.getAmount());\n    }\n}"
+   },
+   "issues": [
+    {
+     "id": "t1",
+     "file": "TransferService.java",
+     "line": 13,
+     "category": "bug",
+     "severity": "high",
+     "description": "Money is a double, which cannot represent decimal currency exactly and accumulates rounding errors; negative amounts are also not rejected (a negative transfer pulls money from the destination).",
+     "fix": "Use BigDecimal (or integer minor units), validate amount > 0, and reject from == to."
+    },
+    {
+     "id": "t2",
+     "file": "TransferService.java",
+     "line": 14,
+     "category": "bug",
+     "severity": "medium",
+     "description": "Optional.get() throws NoSuchElementException for unknown accounts, producing a 500 instead of a 404/400.",
+     "fix": "Use orElseThrow with a domain exception mapped to the right status."
+    },
+    {
+     "id": "t3",
+     "file": "TransferService.java",
+     "line": 17,
+     "category": "bug",
+     "severity": "critical",
+     "description": "The balance check and the update are a classic check-then-act race: two concurrent transfers both pass the check and overdraw the account (lost update). There is no locking or optimistic version field.",
+     "fix": "Use pessimistic locking (SELECT ... FOR UPDATE, locking in a consistent id order to avoid deadlocks) or optimistic locking with @Version and retry."
+    },
+    {
+     "id": "t4",
+     "file": "TransferService.java",
+     "line": 22,
+     "category": "design",
+     "severity": "critical",
+     "description": "There is no @Transactional: if the credit fails after the debit was saved (or the process crashes), money disappears. The audit records are also written outside any atomic unit.",
+     "fix": "Annotate the method @Transactional so debit, credit and audit commit or roll back together."
+    },
+    {
+     "id": "t5",
+     "file": "TransferService.java",
+     "line": 36,
+     "category": "performance",
+     "severity": "medium",
+     "description": "statement() loads every transaction into memory and builds the string; long-lived accounts will hit memory and latency problems, and it is not paginated.",
+     "fix": "Page or stream the results with a date range."
+    },
+    {
+     "id": "t6",
+     "file": "TransferService.java",
+     "line": 41,
+     "category": "bug",
+     "severity": "high",
+     "description": "refund can be executed repeatedly for the same txId (no refunded flag) and with no authorisation check, so a transaction can be reversed many times; it also swaps the parties without considering partial refunds.",
+     "fix": "Mark transactions as refunded atomically, check authorisation, and make the operation idempotent."
+    }
+   ],
+   "explanation": "The test of balance A to B passing says nothing about concurrency or failure. Strong reviewers walk through two simultaneous transfers and a crash between the debit and the credit, then insist on BigDecimal and idempotent refunds.",
+   "tags": [
+    "transactions",
+    "concurrency",
+    "payments",
+    "spring"
+   ],
+   "companies": [
+    "JPMorgan",
+    "Stripe",
+    "Goldman Sachs"
+   ]
+  },
+  {
+   "id": "rev-java-cache-service",
+   "title": "PR #204: in-memory product cache",
+   "language": "java",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "context": "Caches product lookups in a static map to cut DB load. Prices update every few minutes so I refresh the cache from a scheduled task. Works with our staging traffic.",
+   "files": {
+    "ProductCache.java": "package com.acme.catalog;\n\nimport org.springframework.scheduling.annotation.Scheduled;\nimport org.springframework.stereotype.Component;\n\nimport java.util.HashMap;\nimport java.util.List;\nimport java.util.Map;\n\n@Component\npublic class ProductCache {\n    private static Map<Long, Product> cache = new HashMap<>();\n    private final ProductRepository repo;\n\n    public ProductCache(ProductRepository repo) {\n        this.repo = repo;\n    }\n\n    public Product get(Long id) {\n        if (!cache.containsKey(id)) {\n            Product p = repo.findById(id).orElse(null);\n            cache.put(id, p);\n        }\n        return cache.get(id);\n    }\n\n    @Scheduled(fixedRate = 60000)\n    public void refresh() {\n        cache.clear();\n        List<Product> all = repo.findAll();\n        for (Product p : all) {\n            cache.put(p.getId(), p);\n        }\n    }\n\n    public Product updatePrice(Long id, double price) {\n        Product p = get(id);\n        p.setPrice(price);\n        return repo.save(p);\n    }\n\n    public int size() {\n        return cache.size();\n    }\n}"
+   },
+   "issues": [
+    {
+     "id": "c6",
+     "file": "ProductCache.java",
+     "line": 11,
+     "category": "testing",
+     "severity": "low",
+     "description": "No test covers concurrent access, refresh behaviour or invalidation after writes.",
+     "fix": "Add tests with multiple threads and with a failing repository."
+    },
+    {
+     "id": "c1",
+     "file": "ProductCache.java",
+     "line": 12,
+     "category": "bug",
+     "severity": "high",
+     "description": "A plain HashMap in a static field is shared across threads and mutated by request threads and the scheduler: HashMap is not thread-safe (lost entries, corrupted structure, even infinite loops on older JVMs). Static state also leaks between tests and instances.",
+     "fix": "Use ConcurrentHashMap or a real cache (Caffeine) as an instance field with size limit and TTL."
+    },
+    {
+     "id": "c2",
+     "file": "ProductCache.java",
+     "line": 22,
+     "category": "bug",
+     "severity": "medium",
+     "description": "Missing products are cached as null, so cache.get returns null for ids that are created later until the next refresh, and null values hide errors downstream; unknown ids are also unbounded growth (cache pollution).",
+     "fix": "Do not cache misses (or cache a sentinel with a short TTL) and bound the cache size."
+    },
+    {
+     "id": "c3",
+     "file": "ProductCache.java",
+     "line": 29,
+     "category": "bug",
+     "severity": "high",
+     "description": "clear() followed by a slow findAll() leaves the cache empty for the duration of the reload, so every concurrent request falls through to the DB (a stampede) or sees no data.",
+     "fix": "Build a new map and swap it atomically (volatile reference), or refresh entries in place."
+    },
+    {
+     "id": "c4",
+     "file": "ProductCache.java",
+     "line": 30,
+     "category": "performance",
+     "severity": "medium",
+     "description": "The refresh loads the entire catalog into memory every minute, which does not scale and stores entries nobody reads.",
+     "fix": "Cache on demand with TTL (Caffeine) or invalidate only the changed rows."
+    },
+    {
+     "id": "c5",
+     "file": "ProductCache.java",
+     "line": 38,
+     "category": "bug",
+     "severity": "high",
+     "description": "updatePrice mutates the shared cached object before saving: other threads see a half-updated price, and if save fails the cache keeps a price that the DB never accepted. Price is a double, too.",
+     "fix": "Treat cached objects as immutable, update the DB first, then replace or evict the cache entry; use BigDecimal."
+    }
+   ],
+   "explanation": "Caching bugs are about concurrency and invalidation, not about the happy path. Reviewers should ask who else writes prices (other instances?) and recommend a cache library with TTL over a hand-rolled map.",
+   "tags": [
+    "caching",
+    "concurrency",
+    "spring"
+   ],
+   "companies": [
+    "Netflix",
+    "Amazon",
+    "Walmart"
+   ]
+  },
+  {
+   "id": "rev-java-report-job",
+   "title": "PR #889: nightly invoice report scheduler",
+   "language": "java",
+   "difficulty": "Hard",
+   "time_minutes": 28,
+   "context": "A scheduled job generates PDF invoices for all unpaid orders and emails them. It runs at midnight on every node. Tested on a dataset with 10 orders.",
+   "files": {
+    "InvoiceJob.java": "package com.acme.billing;\n\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.scheduling.annotation.Scheduled;\nimport org.springframework.stereotype.Component;\n\nimport java.util.List;\n\n@Component\npublic class InvoiceJob {\n    @Autowired private OrderRepository orders;\n    @Autowired private CustomerRepository customers;\n    @Autowired private PdfService pdf;\n    @Autowired private Mailer mailer;\n\n    @Scheduled(cron = \"0 0 0 * * *\")\n    public void run() {\n        List<Order> unpaid = orders.findByStatus(\"UNPAID\");\n        for (Order o : unpaid) {\n            Customer c = customers.findById(o.getCustomerId()).get();\n            byte[] doc = pdf.render(o, c);\n            try {\n                mailer.send(c.getEmail(), \"Invoice \" + o.getId(), doc);\n                o.setInvoiceSent(true);\n                orders.save(o);\n            } catch (Exception e) {\n                // ignore\n            }\n        }\n    }\n\n    public void runForCustomer(String customerId, String reportDir) throws Exception {\n        java.io.File f = new java.io.File(reportDir + \"/\" + customerId + \".pdf\");\n        byte[] data = java.nio.file.Files.readAllBytes(f.toPath());\n        mailer.send(\"billing@acme.io\", \"Copy\", data);\n    }\n\n    public String summary(List<Order> list) {\n        String s = \"\";\n        for (Order o : list) {\n            s = s + o.getId() + \",\" + o.getTotal() + \"\\n\";\n        }\n        return s;\n    }\n}"
+   },
+   "issues": [
+    {
+     "id": "j1",
+     "file": "InvoiceJob.java",
+     "line": 16,
+     "category": "design",
+     "severity": "high",
+     "description": "The cron runs on every application node, so with N instances every customer gets N invoices at midnight; the cron is also timezone-less (server default).",
+     "fix": "Use a distributed lock (ShedLock) or a dedicated single-runner job, and set zone explicitly."
+    },
+    {
+     "id": "j2",
+     "file": "InvoiceJob.java",
+     "line": 18,
+     "category": "performance",
+     "severity": "high",
+     "description": "findByStatus loads every unpaid order into memory at once; the job also has no idempotency filter on invoiceSent, so a rerun after a crash re-sends everything.",
+     "fix": "Page through unsent orders (invoiceSent = false) in batches."
+    },
+    {
+     "id": "j3",
+     "file": "InvoiceJob.java",
+     "line": 20,
+     "category": "performance",
+     "severity": "high",
+     "description": "N+1: a customer query per order, plus Optional.get() which throws and aborts the whole run for one orphaned order.",
+     "fix": "Fetch orders with their customers in a join/batch and handle missing customers per order."
+    },
+    {
+     "id": "j4",
+     "file": "InvoiceJob.java",
+     "line": 28,
+     "category": "bug",
+     "severity": "high",
+     "description": "The empty catch swallows every failure: mail errors vanish with no log, metric or retry, and the order will be silently skipped forever. A failure after mailer.send but before save also leads to duplicate emails the next night.",
+     "fix": "Log with context, count failures, retry with backoff, and make sending idempotent (record state before/with sending)."
+    },
+    {
+     "id": "j5",
+     "file": "InvoiceJob.java",
+     "line": 33,
+     "category": "security",
+     "severity": "critical",
+     "description": "customerId and reportDir are concatenated into a file path: path traversal can read any file on the server and email it out.",
+     "fix": "Validate customerId against an id pattern, resolve and check the path stays inside a fixed base directory, and do not accept reportDir from callers."
+    },
+    {
+     "id": "j6",
+     "file": "InvoiceJob.java",
+     "line": 41,
+     "category": "performance",
+     "severity": "low",
+     "description": "String concatenation in a loop is O(n^2); with large reports this creates many intermediate strings, and the CSV output is not escaped.",
+     "fix": "Use StringBuilder (or a CSV library)."
+    }
+   ],
+   "explanation": "A sleepy nightly job is a good place to hide multi-node duplication, swallowed errors and unbounded loads. Strong reviewers ask 'what if it runs twice, or crashes halfway through?' and 'what happens with a million orders?'.",
+   "tags": [
+    "background-jobs",
+    "scheduler",
+    "spring",
+    "n+1"
+   ],
+   "companies": [
+    "Oracle",
+    "SAP",
+    "Intuit"
+   ]
+  },
+  {
+   "id": "rev-go-upload-handler",
+   "title": "PR #143: multipart upload handler",
+   "language": "go",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "context": "Adds POST /upload that stores files under ./data. Returns the stored name so the frontend can link to it. Uploaded a 3MB PDF and a PNG successfully.",
+   "files": {
+    "upload/handler.go": "package upload\n\nimport (\n\t\"fmt\"\n\t\"io\"\n\t\"net/http\"\n\t\"os\"\n\t\"path/filepath\"\n)\n\nconst baseDir = \"./data\"\n\nfunc Handler(w http.ResponseWriter, r *http.Request) {\n\tr.ParseMultipartForm(32 << 20)\n\tfile, header, err := r.FormFile(\"file\")\n\tif err != nil {\n\t\thttp.Error(w, \"bad request\", 400)\n\t\treturn\n\t}\n\n\tdst := filepath.Join(baseDir, header.Filename)\n\tout, err := os.Create(dst)\n\tif err != nil {\n\t\thttp.Error(w, err.Error(), 500)\n\t\treturn\n\t}\n\tdefer out.Close()\n\n\tio.Copy(out, file)\n\tfmt.Fprintf(w, \"stored %s\", header.Filename)\n}\n\nfunc Cleanup(names []string) {\n\tfor _, n := range names {\n\t\tf, err := os.Open(filepath.Join(baseDir, n))\n\t\tif err != nil {\n\t\t\tcontinue\n\t\t}\n\t\tdefer f.Close()\n\t\tinfo, _ := f.Stat()\n\t\tif info.Size() == 0 {\n\t\t\tos.Remove(f.Name())\n\t\t}\n\t}\n}"
+   },
+   "issues": [
+    {
+     "id": "g1",
+     "file": "upload/handler.go",
+     "line": 14,
+     "category": "security",
+     "severity": "high",
+     "description": "No request size limit and the ParseMultipartForm error is ignored: 32MB is only the in-memory threshold, the rest is spilled to temp files, so a client can exhaust disk. Errors from a malformed form are dropped.",
+     "fix": "Wrap the body with http.MaxBytesReader, check the error, and return 400/413."
+    },
+    {
+     "id": "g2",
+     "file": "upload/handler.go",
+     "line": 21,
+     "category": "security",
+     "severity": "critical",
+     "description": "header.Filename is client-controlled and joined into the path: '../../etc/passwd' style names escape ./data (path traversal), and existing files are overwritten.",
+     "fix": "Generate the stored name server-side (uuid), or filepath.Base plus validation, and verify the cleaned path has the base directory as prefix; open with O_EXCL."
+    },
+    {
+     "id": "g3",
+     "file": "upload/handler.go",
+     "line": 24,
+     "category": "security",
+     "severity": "medium",
+     "description": "Returning err.Error() leaks internal paths and system details to the client.",
+     "fix": "Log the error and return a generic message."
+    },
+    {
+     "id": "g4",
+     "file": "upload/handler.go",
+     "line": 29,
+     "category": "bug",
+     "severity": "high",
+     "description": "The io.Copy error is ignored and the uploaded file is never closed; a partial write (disk full, client abort) returns success and leaves a truncated file.",
+     "fix": "Check the error, remove the partial file on failure, close the upload with defer file.Close(), and return 500."
+    },
+    {
+     "id": "g5",
+     "file": "upload/handler.go",
+     "line": 39,
+     "category": "bug",
+     "severity": "medium",
+     "description": "defer inside a loop only runs when the function returns, so all files stay open until the end (descriptor exhaustion for large lists), and the Stat error is ignored.",
+     "fix": "Close the file explicitly in each iteration or move the body into a helper function; handle the Stat error."
+    }
+   ],
+   "explanation": "Go's explicit errors make ignored returns easy to spot. Reviewers should cover traversal, size limits, error handling, and resource lifetime, then ask for table-driven tests with hostile filenames.",
+   "tags": [
+    "go",
+    "file-upload",
+    "path-traversal"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Cloudflare"
+   ]
+  },
+  {
+   "id": "rev-go-worker-pool",
+   "title": "PR #61: concurrent URL checker",
+   "language": "go",
+   "difficulty": "Hard",
+   "time_minutes": 28,
+   "context": "Checks a list of URLs concurrently with a worker pool and prints a summary. Went from 40s to 3s on my list of 200 URLs. Used a mutex-free design with channels.",
+   "files": {
+    "checker/checker.go": "package checker\n\nimport (\n\t\"net/http\"\n\t\"sync\"\n)\n\ntype Result struct {\n\tURL    string\n\tStatus int\n\tErr    error\n}\n\nfunc Check(urls []string, workers int) map[string]int {\n\tresults := make(map[string]int)\n\tjobs := make(chan string)\n\tvar wg sync.WaitGroup\n\n\tfor i := 0; i < workers; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor u := range jobs {\n\t\t\t\tresp, err := http.Get(u)\n\t\t\t\tif err != nil {\n\t\t\t\t\tresults[u] = -1\n\t\t\t\t\tcontinue\n\t\t\t\t}\n\t\t\t\tresults[u] = resp.StatusCode\n\t\t\t}\n\t\t}()\n\t}\n\n\tfor _, u := range urls {\n\t\tjobs <- u\n\t}\n\twg.Wait()\n\treturn results\n}\n\nfunc CheckAll(urls []string) []Result {\n\tvar out []Result\n\tvar wg sync.WaitGroup\n\tfor _, u := range urls {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tresp, err := http.Get(u)\n\t\t\tout = append(out, Result{u, resp.StatusCode, err})\n\t\t}()\n\t}\n\twg.Wait()\n\treturn out\n}"
+   },
+   "issues": [
+    {
+     "id": "w1",
+     "file": "checker/checker.go",
+     "line": 24,
+     "category": "bug",
+     "severity": "high",
+     "description": "http.Get uses the default client with no timeout, so one hung server blocks a worker forever; the response body is never closed, leaking connections and file descriptors.",
+     "fix": "Use an http.Client with a Timeout (or context), and defer resp.Body.Close() / drain it."
+    },
+    {
+     "id": "w2",
+     "file": "checker/checker.go",
+     "line": 26,
+     "category": "bug",
+     "severity": "critical",
+     "description": "The results map is written concurrently by several goroutines with no synchronisation: a data race that panics with 'concurrent map writes'. Channels do not protect a shared map.",
+     "fix": "Send Result values over a results channel collected by a single goroutine, or guard the map with a mutex."
+    },
+    {
+     "id": "w3",
+     "file": "checker/checker.go",
+     "line": 37,
+     "category": "bug",
+     "severity": "critical",
+     "description": "Deadlock: jobs is never closed, so the workers block in range forever and wg.Wait() never returns. The producer loop also blocks the caller until workers drain it.",
+     "fix": "close(jobs) after the send loop and before wg.Wait()."
+    },
+    {
+     "id": "w4",
+     "file": "checker/checker.go",
+     "line": 46,
+     "category": "bug",
+     "severity": "high",
+     "description": "Depending on the Go version (before 1.22) the closure captures the shared loop variable u, so most goroutines check the last URL. It also starts one goroutine per URL with no concurrency bound, which will exhaust sockets for large lists.",
+     "fix": "Pass u as an argument (or shadow it) and bound concurrency with a semaphore or the worker pool above."
+    },
+    {
+     "id": "w5",
+     "file": "checker/checker.go",
+     "line": 49,
+     "category": "bug",
+     "severity": "critical",
+     "description": "append to the shared slice from many goroutines is a data race and loses results; additionally resp is nil when err != nil, so resp.StatusCode panics with a nil pointer dereference.",
+     "fix": "Check err first, write results by index into a pre-sized slice or use a channel, and recover nothing: fix the nil case."
+    }
+   ],
+   "explanation": "The classic Go concurrency checklist: unsynchronised map/slice access, forgetting to close the channel, loop variable capture and unbounded goroutines. Ask for tests run with `go test -race`.",
+   "tags": [
+    "go",
+    "concurrency",
+    "worker-pool",
+    "race-condition"
+   ],
+   "companies": [
+    "Google",
+    "Uber",
+    "Dropbox"
+   ]
+  },
+  {
+   "id": "rev-go-token-bucket",
+   "title": "PR #295: per-user token bucket rate limiter",
+   "language": "go",
+   "difficulty": "Expert",
+   "time_minutes": 35,
+   "context": "Replaces the fixed-window limiter with a token bucket per API key, as discussed in the design doc. It supports bursts and refills smoothly. Benchmarked at 2M ops/s on my laptop single-threaded. Idle buckets are cleaned up by a janitor goroutine.",
+   "files": {
+    "ratelimit/bucket.go": "package ratelimit\n\nimport (\n\t\"sync\"\n\t\"time\"\n)\n\ntype bucket struct {\n\ttokens float64\n\tlast   time.Time\n}\n\ntype Limiter struct {\n\tmu      sync.Mutex\n\tbuckets map[string]*bucket\n\trate    float64\n\tburst   float64\n}\n\nfunc New(rate, burst float64) *Limiter {\n\tl := &Limiter{buckets: map[string]*bucket{}, rate: rate, burst: burst}\n\tgo l.janitor()\n\treturn l\n}\n\nfunc (l *Limiter) Allow(key string) bool {\n\tl.mu.Lock()\n\tdefer l.mu.Unlock()\n\n\tb, ok := l.buckets[key]\n\tif !ok {\n\t\tb = &bucket{tokens: l.burst, last: time.Now()}\n\t\tl.buckets[key] = b\n\t}\n\n\tnow := time.Now()\n\telapsed := now.Sub(b.last).Seconds()\n\tb.tokens += elapsed * l.rate\n\tb.last = now\n\n\tif b.tokens < 1 {\n\t\treturn false\n\t}\n\tb.tokens--\n\treturn true\n}\n\nfunc (l *Limiter) janitor() {\n\tfor {\n\t\ttime.Sleep(time.Minute)\n\t\tfor k, b := range l.buckets {\n\t\t\tif time.Since(b.last) > 10*time.Minute {\n\t\t\t\tdelete(l.buckets, k)\n\t\t\t}\n\t\t}\n\t}\n}\n\nfunc (l *Limiter) Wait(key string) {\n\tfor !l.Allow(key) {\n\t\ttime.Sleep(time.Millisecond)\n\t}\n}\n\nfunc (l *Limiter) Tokens(key string) float64 {\n\treturn l.buckets[key].tokens\n}"
+   },
+   "issues": [
+    {
+     "id": "b1",
+     "file": "ratelimit/bucket.go",
+     "line": 22,
+     "category": "design",
+     "severity": "medium",
+     "description": "The janitor goroutine has no stop mechanism and is started from a constructor, so every New() leaks a goroutine forever (tests and reloads accumulate them) and it keeps the Limiter alive from the GC.",
+     "fix": "Provide Close() with a done channel/context, or use a ticker that is stopped, and document ownership."
+    },
+    {
+     "id": "b2",
+     "file": "ratelimit/bucket.go",
+     "line": 28,
+     "category": "performance",
+     "severity": "high",
+     "description": "A single global mutex serialises every request for every key, making the limiter a bottleneck under contention; the single-threaded benchmark hides it.",
+     "fix": "Shard the map by key hash (N mutexes) or use per-bucket locks / atomic operations, and benchmark with parallel goroutines (b.RunParallel)."
+    },
+    {
+     "id": "b3",
+     "file": "ratelimit/bucket.go",
+     "line": 38,
+     "category": "bug",
+     "severity": "critical",
+     "description": "Tokens are added without capping at burst, so an idle key accumulates unlimited tokens and can later send a huge burst, defeating the limiter. The new-bucket case also double-counts as last == now.",
+     "fix": "Cap with tokens = min(burst, tokens + elapsed*rate)."
+    },
+    {
+     "id": "b4",
+     "file": "ratelimit/bucket.go",
+     "line": 51,
+     "category": "bug",
+     "severity": "critical",
+     "description": "The janitor ranges over and deletes from the map without holding l.mu while Allow mutates it concurrently: a data race (fatal 'concurrent map iteration and map write') and it reads b.last unsynchronised.",
+     "fix": "Lock l.mu in the janitor (ideally in short batches) or use a sharded structure with per-shard locks."
+    },
+    {
+     "id": "b5",
+     "file": "ratelimit/bucket.go",
+     "line": 60,
+     "category": "performance",
+     "severity": "medium",
+     "description": "Wait busy-polls every millisecond with unbounded latency and no context/cancellation; under load thousands of goroutines spin on the global mutex. It can also never return for a rate of 0.",
+     "fix": "Compute the required sleep from the token deficit and rate, accept a context.Context, and return an error on cancel."
+    },
+    {
+     "id": "b6",
+     "file": "ratelimit/bucket.go",
+     "line": 66,
+     "category": "bug",
+     "severity": "high",
+     "description": "Tokens reads the map without locking (data race) and dereferences a nil bucket for an unknown key, panicking.",
+     "fix": "Take the lock and handle missing keys, or remove the method from the public API."
+    }
+   ],
+   "explanation": "The limiter looks fine on a single thread. Expert reviewers spot the unlocked map accesses, the missing burst cap (a semantic bug that tests rarely catch), the goroutine lifecycle and the global lock, and ask for `-race` tests with an injectable clock.",
+   "tags": [
+    "go",
+    "rate-limiting",
+    "concurrency",
+    "data-race"
+   ],
+   "companies": [
+    "Cloudflare",
+    "Stripe",
+    "Google"
+   ]
+  },
+  {
+   "id": "rev-sql-orders-report",
+   "title": "PR #509: monthly revenue report query",
+   "language": "sql",
+   "difficulty": "Easy",
+   "time_minutes": 12,
+   "context": "Query for the finance dashboard: revenue per customer for last month, ordered by biggest. Runs fine on staging in 200ms.",
+   "files": {
+    "reports/monthly_revenue.sql": "-- Monthly revenue report for the finance dashboard.\n-- Owner: data-platform. Expected to run once per day at 02:00.\n-- Section 1: line items for the previous month.\n--\n-- Columns consumed by the dashboard: customer name, order total, order date.\n-- NOTE: the dashboard caches the result for 24h.\n\nSELECT *\nFROM orders o, customers c\nWHERE o.customer_id = c.id\n  AND DATE_FORMAT(o.created_at, '%Y-%m') = '2024-05'\n  AND o.status NOT IN (SELECT status FROM refunds)\n  AND c.country != 'US'\nORDER BY RAND();\n\nSELECT customer_id, SUM(total) / COUNT(*) AS avg_order\nFROM orders\nGROUP BY customer_id\nHAVING customer_id > 0;\n\n-- Section 3: top ten customers (used by the leaderboard widget).\nCREATE OR REPLACE VIEW top_customers AS\nSELECT customer_id, SUM(total) AS revenue\nFROM orders\nGROUP BY customer_id\nORDER BY revenue DESC\nLIMIT 10;\n\n-- Section 4: sanity check, expected to return a single row.\nSELECT COUNT(*) AS order_count FROM orders;"
+   },
+   "issues": [
+    {
+     "id": "q1",
+     "file": "reports/monthly_revenue.sql",
+     "line": 8,
+     "category": "performance",
+     "severity": "medium",
+     "description": "SELECT * pulls every column from both tables (including large text columns) and breaks consumers when columns change; duplicate column names such as id also collide.",
+     "fix": "List only the columns needed (customer id/name, total)."
+    },
+    {
+     "id": "q2",
+     "file": "reports/monthly_revenue.sql",
+     "line": 9,
+     "category": "readability",
+     "severity": "low",
+     "description": "Implicit comma join mixed with the join condition in WHERE is easy to get wrong (forgetting the condition yields a cartesian product) and doesn't say which join semantics are intended.",
+     "fix": "Use explicit JOIN ... ON."
+    },
+    {
+     "id": "q3",
+     "file": "reports/monthly_revenue.sql",
+     "line": 11,
+     "category": "performance",
+     "severity": "high",
+     "description": "Wrapping created_at in DATE_FORMAT makes the predicate non-sargable, so the index on created_at cannot be used and the whole table is scanned; the month is also hard-coded rather than 'last month'.",
+     "fix": "Use a range: created_at >= '2024-05-01' AND created_at < '2024-06-01' (or computed bounds)."
+    },
+    {
+     "id": "q4",
+     "file": "reports/monthly_revenue.sql",
+     "line": 12,
+     "category": "bug",
+     "severity": "high",
+     "description": "The subquery compares order status to the status column of refunds, which is meaningless (it should match refunded order ids). NOT IN also returns no rows if the subquery yields a NULL.",
+     "fix": "Use NOT EXISTS (SELECT 1 FROM refunds r WHERE r.order_id = o.id)."
+    },
+    {
+     "id": "q5",
+     "file": "reports/monthly_revenue.sql",
+     "line": 14,
+     "category": "performance",
+     "severity": "medium",
+     "description": "ORDER BY RAND() sorts the whole result randomly while the PR says 'biggest first'; it should order by revenue, and there is no aggregation by customer in the first query at all.",
+     "fix": "GROUP BY customer and ORDER BY SUM(total) DESC; remove RAND()."
+    },
+    {
+     "id": "q6",
+     "file": "reports/monthly_revenue.sql",
+     "line": 16,
+     "category": "bug",
+     "severity": "medium",
+     "description": "SUM/COUNT can be written as AVG, and integer division in some engines truncates the cents. Filtering with HAVING on a grouping column should be a WHERE, and it ignores the month filter so the second query reports all-time data.",
+     "fix": "Use AVG(total) with the same date range and move the predicate into WHERE."
+    }
+   ],
+   "explanation": "Easy review, but spot the semantic bug (the refunds subquery) in addition to the style problems. Ask for an EXPLAIN plan on production-size data rather than staging.",
+   "tags": [
+    "sql",
+    "performance",
+    "sargability"
+   ],
+   "companies": [
+    "Amazon",
+    "Snowflake",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "rev-sql-migration-users",
+   "title": "PR #1177: migration to split users.name and add email verification",
+   "language": "sql",
+   "difficulty": "Hard",
+   "time_minutes": 30,
+   "context": "Migration for the new onboarding flow: splits name into first/last, adds email_verified, and adds an index. Ran on my dev DB (500 rows) in no time. No down migration needed since we'll never roll back.",
+   "files": {
+    "migrations/0042_user_split_name.sql": "-- 0042: onboarding v2 (split name, email verification).\n-- Author: growth-team. Deploy window: Tuesday, 10:00 UTC (peak traffic).\n-- Related: ONB-318, ONB-322\n-- Rollback: not required, see PR description.\n--\n-- Table sizes in production (approx.): users 48M rows, orders 310M rows.\n\nBEGIN;\n\nALTER TABLE users ADD COLUMN first_name TEXT NOT NULL DEFAULT '';\nALTER TABLE users ADD COLUMN last_name TEXT NOT NULL DEFAULT '';\nALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT false;\n\nUPDATE users\nSET first_name = split_part(name, ' ', 1),\n    last_name = split_part(name, ' ', 2);\n\nCREATE INDEX idx_users_email ON users (email);\n\nALTER TABLE users DROP COLUMN name;\n\nUPDATE users SET email_verified = true WHERE created_at < '2023-01-01';\n\nALTER TABLE orders ADD CONSTRAINT fk_orders_user\n  FOREIGN KEY (user_id) REFERENCES users(id);\n\nALTER TABLE users ALTER COLUMN phone TYPE INTEGER USING phone::INTEGER;\n\nCOMMIT;"
+   },
+   "issues": [
+    {
+     "id": "m7",
+     "file": "migrations/0042_user_split_name.sql",
+     "line": 8,
+     "category": "testing",
+     "severity": "medium",
+     "description": "There is no down migration and no verification step (row counts, null checks), so a bad run can only be recovered from backup; it was only run on 500 rows.",
+     "fix": "Provide a rollback path or documented restore plan, and rehearse on a production-sized snapshot."
+    },
+    {
+     "id": "m1",
+     "file": "migrations/0042_user_split_name.sql",
+     "line": 10,
+     "category": "performance",
+     "severity": "high",
+     "description": "On older Postgres (before 11) adding a column with a default rewrites the whole table under an ACCESS EXCLUSIVE lock; even on newer versions this migration holds locks acquired early until COMMIT because everything runs in a single transaction, blocking all reads and writes of users during the whole migration.",
+     "fix": "Split into small migrations: add nullable column, backfill in batches outside the lock, then set NOT NULL/default; set lock_timeout."
+    },
+    {
+     "id": "m2",
+     "file": "migrations/0042_user_split_name.sql",
+     "line": 16,
+     "category": "bug",
+     "severity": "high",
+     "description": "Unbatched UPDATE of every row in the same transaction as the schema changes: long lock, huge WAL and bloat on a large table. The split also loses data: names with middle names ('Mary Ann Smith') or a single word are mangled, because only the 2nd token is kept.",
+     "fix": "Backfill in batches with a better parsing rule (first token / rest), review samples, and keep the original value until verified."
+    },
+    {
+     "id": "m3",
+     "file": "migrations/0042_user_split_name.sql",
+     "line": 18,
+     "category": "performance",
+     "severity": "high",
+     "description": "CREATE INDEX without CONCURRENTLY blocks writes to users for the duration of the build; inside a transaction CONCURRENTLY is not possible, so this must be its own migration. The index may also duplicate an existing unique index on email.",
+     "fix": "Create it CONCURRENTLY in a separate non-transactional migration after checking existing indexes."
+    },
+    {
+     "id": "m4",
+     "file": "migrations/0042_user_split_name.sql",
+     "line": 20,
+     "category": "design",
+     "severity": "critical",
+     "description": "Dropping users.name in the same release breaks rolling deploys: old application instances still read and write name and will start failing mid-deploy, and the data cannot be recovered without a backup. 'We'll never roll back' ignores that the deploy itself is a rollback window.",
+     "fix": "Use expand/contract: ship code that writes both, backfill, switch reads, and drop the old column in a later release."
+    },
+    {
+     "id": "m5",
+     "file": "migrations/0042_user_split_name.sql",
+     "line": 25,
+     "category": "bug",
+     "severity": "high",
+     "description": "Adding the foreign key validates every existing order and takes a SHARE ROW EXCLUSIVE lock; if any orphan orders exist (likely), the whole migration fails after the expensive steps. There is no ON DELETE behaviour and no index on orders.user_id for the new key.",
+     "fix": "Add the constraint NOT VALID, clean orphans, VALIDATE CONSTRAINT separately, add an index on orders(user_id) and choose ON DELETE behaviour."
+    },
+    {
+     "id": "m6",
+     "file": "migrations/0042_user_split_name.sql",
+     "line": 27,
+     "category": "bug",
+     "severity": "critical",
+     "description": "Casting phone numbers to INTEGER destroys leading zeros and '+' prefixes, overflows 32-bit for international numbers, and fails the entire migration on any non-numeric value; this is unrelated to the PR description.",
+     "fix": "Remove from this PR; keep phone as TEXT and normalise with validation if needed."
+    }
+   ],
+   "explanation": "Schema migrations are about locks, deploy ordering and irreversible data loss. Great reviewers ask how long it holds locks at 50M rows, what the old code does during rollout, and how you recover when step 6 fails.",
+   "tags": [
+    "database",
+    "migration",
+    "postgres",
+    "zero-downtime"
+   ],
+   "companies": [
+    "Stripe",
+    "GitHub",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "rev-cpp-buffer-class",
+   "title": "PR #19: simple byte buffer class",
+   "language": "cpp",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "context": "A small Buffer class for the network layer, with append and a copy helper. No STL overhead and it passes my tests on Linux and Windows.",
+   "files": {
+    "buffer.h": "#include <cstring>\n#include <cstdio>\n\nclass Buffer {\npublic:\n    Buffer(size_t cap) {\n        data_ = new char[cap];\n        cap_ = cap;\n        len_ = 0;\n    }\n\n    ~Buffer() {\n        delete data_;\n    }\n\n    void append(const char* s) {\n        size_t n = strlen(s);\n        if (len_ + n > cap_) {\n            printf(\"buffer full\\n\");\n        }\n        strcpy(data_ + len_, s);\n        len_ += n;\n    }\n\n    Buffer copy() {\n        Buffer b(cap_);\n        b.data_ = data_;\n        b.len_ = len_;\n        return b;\n    }\n\n    char at(int i) { return data_[i]; }\n\n    const char* c_str() { return data_; }\n\nprivate:\n    char* data_;\n    size_t cap_;\n    size_t len_;\n};"
+   },
+   "issues": [
+    {
+     "id": "p1",
+     "file": "buffer.h",
+     "line": 13,
+     "category": "bug",
+     "severity": "high",
+     "description": "Memory allocated with new[] is released with scalar delete: undefined behaviour.",
+     "fix": "Use delete[] (better: std::vector<char> or std::unique_ptr<char[]>)."
+    },
+    {
+     "id": "p2",
+     "file": "buffer.h",
+     "line": 18,
+     "category": "bug",
+     "severity": "high",
+     "description": "Off-by-one: strcpy writes n + 1 bytes including the terminator, so the check should be len_ + n + 1 > cap_; also the check only prints a message and then continues to write.",
+     "fix": "Compare len_ + n + 1 > cap_ and return an error/throw (or grow the buffer) instead of continuing."
+    },
+    {
+     "id": "p3",
+     "file": "buffer.h",
+     "line": 21,
+     "category": "security",
+     "severity": "critical",
+     "description": "strcpy into the buffer after a failed capacity check is a heap buffer overflow, exploitable with attacker-controlled input from the network layer.",
+     "fix": "Use memcpy with a checked length, track length explicitly, and avoid C strings for binary data."
+    },
+    {
+     "id": "p4",
+     "file": "buffer.h",
+     "line": 27,
+     "category": "bug",
+     "severity": "critical",
+     "description": "copy() aliases the same pointer: the temporary Buffer b leaks its own allocation, and when both objects are destroyed the same memory is freed twice (double free). The class lacks a copy constructor/assignment (rule of three/five).",
+     "fix": "Allocate and memcpy in a proper copy constructor, delete or implement the copy/move members, or hold the data in a std::vector."
+    },
+    {
+     "id": "p5",
+     "file": "buffer.h",
+     "line": 32,
+     "category": "bug",
+     "severity": "medium",
+     "description": "at() does no bounds checking and takes an int index (negative values or i >= len_ read out of bounds).",
+     "fix": "Take size_t, check against len_ and throw std::out_of_range."
+    },
+    {
+     "id": "p6",
+     "file": "buffer.h",
+     "line": 34,
+     "category": "bug",
+     "severity": "medium",
+     "description": "The buffer is never guaranteed to be null terminated (constructor does not zero the data and append can fill to capacity), so c_str() may read past the allocation; the method should be const.",
+     "fix": "Allocate cap + 1 bytes, keep data_[len_] = 0, and mark accessors const."
+    }
+   ],
+   "explanation": "Low-level code review: lifetime and ownership first. Show the double free sequence, point out that a hand-rolled buffer reinvents std::vector or std::string, and ask for sanitiser (ASan) test runs.",
+   "tags": [
+    "cpp",
+    "memory-safety",
+    "raii"
+   ],
+   "companies": [
+    "Microsoft",
+    "Bloomberg",
+    "NVIDIA"
+   ]
+  },
+  {
+   "id": "rev-cpp-thread-queue",
+   "title": "PR #402: blocking work queue for the render pipeline",
+   "language": "cpp",
+   "difficulty": "Expert",
+   "time_minutes": 35,
+   "context": "A thread-safe queue for handing frames from the capture thread to the renderers. Uses a mutex and condition variable. Ran for an hour under load with 4 consumers and didn't crash. Shutdown is cooperative.",
+   "files": {
+    "work_queue.h": "#include <condition_variable>\n#include <mutex>\n#include <queue>\n#include <memory>\n\nstruct Frame;\n\nclass WorkQueue {\npublic:\n    void push(std::shared_ptr<Frame> f) {\n        std::lock_guard<std::mutex> lk(m_);\n        q_.push(f);\n        cv_.notify_one();\n    }\n\n    std::shared_ptr<Frame> pop() {\n        std::unique_lock<std::mutex> lk(m_);\n        if (q_.empty()) {\n            cv_.wait(lk);\n        }\n        auto f = q_.front();\n        q_.pop();\n        return f;\n    }\n\n    bool empty() const {\n        return q_.empty();\n    }\n\n    size_t size() const {\n        std::lock_guard<std::mutex> lk(m_);\n        return q_.size();\n    }\n\n    void shutdown() {\n        done_ = true;\n        cv_.notify_all();\n    }\n\n    const std::shared_ptr<Frame>& peek() {\n        std::lock_guard<std::mutex> lk(m_);\n        return q_.front();\n    }\n\nprivate:\n    mutable std::mutex m_;\n    std::condition_variable cv_;\n    std::queue<std::shared_ptr<Frame>> q_;\n    bool done_ = false;\n};"
+   },
+   "issues": [
+    {
+     "id": "t7",
+     "file": "work_queue.h",
+     "line": 8,
+     "category": "testing",
+     "severity": "medium",
+     "description": "'Ran for an hour without crashing' is not evidence: these are data races and rare interleavings. There are no tests under ThreadSanitizer or stress tests for shutdown.",
+     "fix": "Add TSan CI runs and deterministic tests for shutdown with blocked consumers, multiple producers and spurious wakeups."
+    },
+    {
+     "id": "t1",
+     "file": "work_queue.h",
+     "line": 18,
+     "category": "bug",
+     "severity": "critical",
+     "description": "The wait is guarded by `if`, not a predicate loop. Spurious wakeups, or another consumer taking the item between notify and wakeup, make pop() proceed with an empty queue.",
+     "fix": "Use cv_.wait(lk, [&]{ return !q_.empty() || done_; })."
+    },
+    {
+     "id": "t2",
+     "file": "work_queue.h",
+     "line": 21,
+     "category": "bug",
+     "severity": "critical",
+     "description": "front() on an empty queue is undefined behaviour (the consequence of t1 and of shutdown, which wakes waiters with nothing to pop). pop() has no way to signal 'closed and drained' to its callers.",
+     "fix": "After the wait, return nullptr / std::optional when done_ and the queue is empty."
+    },
+    {
+     "id": "t3",
+     "file": "work_queue.h",
+     "line": 27,
+     "category": "bug",
+     "severity": "high",
+     "description": "empty() reads the queue without taking the mutex while other threads push and pop: a data race (undefined behaviour) even though it only 'looks' read-only; the result is also stale as soon as it returns.",
+     "fix": "Lock the mutex in empty() as size() does, and discourage check-then-pop usage."
+    },
+    {
+     "id": "t4",
+     "file": "work_queue.h",
+     "line": 36,
+     "category": "bug",
+     "severity": "critical",
+     "description": "done_ is written without holding the mutex and is not atomic, while the waiters read it: data race, and a lost wakeup is possible if a consumer evaluated the predicate just before the write and blocks after notify_all has fired.",
+     "fix": "Set done_ under the mutex (or make it std::atomic and still take the lock before notifying)."
+    },
+    {
+     "id": "t5",
+     "file": "work_queue.h",
+     "line": 42,
+     "category": "bug",
+     "severity": "high",
+     "description": "peek() returns a reference to the front element after releasing the lock; another thread can pop and destroy it, so the caller holds a dangling reference. It is also UB on an empty queue.",
+     "fix": "Return the shared_ptr by value (copy under the lock) or std::optional, and check for empty."
+    },
+    {
+     "id": "t6",
+     "file": "work_queue.h",
+     "line": 49,
+     "category": "design",
+     "severity": "medium",
+     "description": "The queue is unbounded: if renderers are slower than capture, memory grows without limit; there is no back-pressure or frame-dropping policy for a real-time pipeline.",
+     "fix": "Use a bounded queue with push blocking or dropping the oldest frame; add metrics for queue depth."
+    }
+   ],
+   "explanation": "A concurrency primitive review at expert level: demonstrate the interleavings (if vs while, shutdown lost-wakeup, dangling reference from peek) and insist on ThreadSanitizer. Also ask about the policy decisions (bounded vs unbounded, drop vs block).",
+   "tags": [
+    "cpp",
+    "concurrency",
+    "condition-variable",
+    "tsan"
+   ],
+   "companies": [
+    "NVIDIA",
+    "Apple",
+    "Google"
+   ]
+  }
+ ]
+}

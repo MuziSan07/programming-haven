@@ -16,6 +16,7 @@ import Avatar from "@/components/Avatar";
 import CodeEditor from "@/components/CodeEditor";
 import InterviewReport from "@/components/InterviewReport";
 import ProblemStatement from "@/components/ProblemStatement";
+import Whiteboard from "@/components/interview/Whiteboard";
 import { Badge, Button, ErrorState, PageLoader, Spinner, cx } from "@/components/ui";
 
 /** Camera + screen-share streams with frame capture for the vision model. */
@@ -89,6 +90,8 @@ function useMedia() {
 function Room({ initial, onFinished }) {
   const { setUser } = useAuth();
   const live = initial.mode === "live";
+  const whiteboard = initial.mode === "whiteboard" || initial.kind === "whiteboard";
+  const boardRef = useRef(null);
   const persona = initial.persona;
   const [session, setSession] = useState(initial);
   const [phase, setPhase] = useState("idle"); // idle | speaking | listening | transcribing | thinking | grading
@@ -150,6 +153,8 @@ function Room({ initial, onFinished }) {
     };
     const onVisibility = () => (document.visibilityState === "hidden" ? leave() : back());
     const onPaste = (e) => {
+      // Copy/paste of shapes inside the whiteboard is fine; pasting outside content is not
+      if ((e.clipboardData?.getData("text/plain") || "").includes('"excalidraw/clipboard"')) return;
       e.preventDefault();
       reportIntegrity("paste", "Tried to paste into an answer");
     };
@@ -195,6 +200,10 @@ function Room({ initial, onFinished }) {
     try {
       const body = { text: answer, images: frames() };
       if (live) Object.assign(body, { code, language });
+      if (whiteboard) {
+        const board = await boardRef.current?.capture().catch(() => null);
+        if (board) body.board = board;
+      }
       const r = await api(`/api/interviews/${session.id}/reply`, { body });
       setSession(r);
       if (r.integrity) setNotice(r.integrity);
@@ -202,7 +211,7 @@ function Room({ initial, onFinished }) {
       setError(err.message);
       setPhase("idle");
     }
-  }, [session.id, frames, live, code, language]);
+  }, [session.id, frames, live, whiteboard, code, language]);
 
   async function toggleMic() {
     setError("");
@@ -384,8 +393,13 @@ function Room({ initial, onFinished }) {
         </Button>
       </div>
 
-      {live ? (
+      {live || whiteboard ? (
         <div className="grid min-h-0 flex-1 lg:grid-cols-[1fr_400px]">
+          {whiteboard ? (
+            <div className="h-[70vh] min-h-0 border-r border-line lg:h-auto">
+              <Whiteboard ref={boardRef} interviewer={name} />
+            </div>
+          ) : (
           <div className="flex min-h-0 flex-col border-r border-line">
             <details className="border-b border-line" open>
               <summary className="cursor-pointer px-4 py-2 text-xs font-semibold tracking-wide text-muted uppercase">Problem</summary>
@@ -403,6 +417,7 @@ function Room({ initial, onFinished }) {
               <CodeEditor value={code} onChange={setCode} language={language} />
             </div>
           </div>
+          )}
           <aside className="flex min-h-0 flex-col bg-surface">
             <div className="flex items-center gap-3 border-b border-line p-3">
               <Avatar persona={persona} level={speaker.level} state={avatarState} size={130} utterance={speaker.utterance} />
@@ -416,7 +431,7 @@ function Room({ initial, onFinished }) {
               </div>
             </div>
             <video ref={screenVideo} muted playsInline className="hidden" />
-            {!screenOn && (
+            {live && !screenOn && (
               <button onClick={startScreenGuarded} className="m-3 flex items-center gap-2 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2
                 text-left text-xs text-warn">
                 <MonitorUp className="size-4 shrink-0" /> {name} asked you to share your screen. Click to share.

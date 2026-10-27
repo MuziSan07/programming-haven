@@ -159,3 +159,48 @@ Rubric weights must sum to 100.
  "browser_voice": "female", "personality": "...",
  "appearance": {"skin": "#f1c7a3", "hair": "#3b2416", "hair_style": "long", "outfit": "#7c5cff", "accent": "#22d3ee", "lips": "#c45a6a"}}
 ```
+
+## debug (debugging round)
+
+A small realistic codebase with planted bugs and a test file. The learner fixes the code until the tests pass.
+Bundle key: `debug_rounds`.
+
+```json
+{"id": "dbg-py-cart-totals", "title": "Checkout totals are wrong", "language": "python", "difficulty": "Medium",
+ "time_minutes": 20, "bug_count": 2,
+ "scenario": "Support tickets say discounted carts are overcharged... (2-4 sentences, like a real ticket)",
+ "files": {"cart.py": "...buggy source...", "pricing.py": "..."},
+ "tests": "from cart import total\n\ndef test_discount_applied():\n    assert total(...) == 90\n",
+ "solution": {"cart.py": "...fixed source (only files you change)..."},
+ "hints": ["where to look", "what is wrong", "how to fix"],
+ "explanation": "What the bugs were and why they happened.", "tags": ["off-by-one"], "companies": ["Stripe"]}
+```
+
+- `language`: `python` or `javascript`. Python tests are `def test_*()` functions in the `tests` string
+  (it becomes `tests.py`; import the source modules by name). JavaScript tests are
+  `module.exports = { "test name": () => { ... } }` (it becomes `tests.js`; use `require("assert")` and
+  `require("./file.js")`; tests may be async). Standard library only.
+- Never name a file `main.py`, `main.js`, `tests.py` or `tests.js`. Flat file names only (no folders).
+- The buggy `files` must FAIL at least one test; `files` + `solution` must PASS all tests. The validator runs both.
+- Bugs must be realistic (off-by-one, wrong default, mutation of shared state, timezone/rounding, async race,
+  missing await, wrong comparison, swallowed exception, cache invalidation...), not syntax errors.
+
+## review (code review round)
+
+A pull request with planted issues. The learner writes review comments; AI grades them against the key.
+Bundle key: `review_rounds`.
+
+```json
+{"id": "rev-py-upload-endpoint", "title": "PR #482: add avatar upload endpoint", "language": "python",
+ "difficulty": "Hard", "time_minutes": 25,
+ "context": "PR description as the author wrote it (what it does, how it was tested).",
+ "files": {"routes/avatar.py": "...full file contents shown to the reviewer..."},
+ "issues": [{"id": "i1", "file": "routes/avatar.py", "line": 14, "category": "security", "severity": "critical",
+             "description": "User-controlled filename is joined into the path: path traversal.",
+             "fix": "Generate the filename server-side or sanitise with secure_filename."}],
+ "explanation": "Overall what a strong reviewer would say.", "tags": ["security"], "companies": ["Google"]}
+```
+
+- `language` is the language of the code (python, javascript, typescript, java, go, cpp, sql...).
+- `category`: bug | security | performance | design | readability | testing. `severity`: low | medium | high | critical.
+- `line` is 1-based within that file and must exist. 4–8 issues per review, mixed severities, at least one subtle.

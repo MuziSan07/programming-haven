@@ -1,0 +1,582 @@
+{
+ "debug_rounds": [
+  {
+   "id": "dbg-py-checkout-totals",
+   "title": "Checkout totals are wrong for bulk and coupon orders",
+   "language": "python",
+   "difficulty": "Easy",
+   "time_minutes": 12,
+   "bug_count": 2,
+   "scenario": "SUPPORT-2291: Customers with coupons are being charged more than the cart page promised, and a customer who bought exactly 10 units of a mug says the \"10 or more, 15% off\" banner did not apply. Finance also saw one order with a negative total after a big coupon.",
+   "files": {
+    "pricing.py": "TAX_RATE = 0.08\nBULK_THRESHOLD = 10      # \"10 or more\" units get the bulk discount\nBULK_DISCOUNT = 0.15\n\n\ndef line_total(unit_price, qty):\n    total = unit_price * qty\n    if qty > BULK_THRESHOLD:\n        total = total * (1 - BULK_DISCOUNT)\n    return round(total, 2)\n",
+    "order.py": "from pricing import line_total, TAX_RATE\n\n\ndef order_total(items, coupon=0.0):\n    \"\"\"items: list of (unit_price, qty). coupon: fixed amount off the subtotal.\"\"\"\n    subtotal = sum(line_total(price, qty) for price, qty in items)\n    total = subtotal * (1 + TAX_RATE) - coupon\n    return round(total, 2)\n"
+   },
+   "tests": "from order import order_total\nfrom pricing import line_total\n\n\ndef test_single_item_with_tax():\n    assert order_total([(10.00, 1)]) == 10.8, \"10.00 plus 8% tax should be 10.80\"\n\n\ndef test_bulk_discount_starts_at_ten():\n    assert line_total(4.00, 10) == 34.0, \"10 units qualify for the 15% bulk discount\"\n\n\ndef test_nine_units_not_discounted():\n    assert line_total(4.00, 9) == 36.0, \"9 units must not be discounted\"\n\n\ndef test_coupon_applies_before_tax():\n    assert order_total([(20.00, 1)], coupon=5.00) == 16.2, \"(20 - 5) * 1.08 should be 16.20\"\n\n\ndef test_coupon_cannot_make_total_negative():\n    assert order_total([(20.00, 1)], coupon=50.00) == 0.0, \"total must clamp at zero\"\n\n\ndef test_mixed_order():\n    assert order_total([(4.00, 10), (1.50, 2)]) == 39.96, \"34.00 + 3.00 = 37.00, plus tax = 39.96\"\n",
+   "solution": {
+    "pricing.py": "TAX_RATE = 0.08\nBULK_THRESHOLD = 10      # \"10 or more\" units get the bulk discount\nBULK_DISCOUNT = 0.15\n\n\ndef line_total(unit_price, qty):\n    total = unit_price * qty\n    if qty >= BULK_THRESHOLD:\n        total = total * (1 - BULK_DISCOUNT)\n    return round(total, 2)\n",
+    "order.py": "from pricing import line_total, TAX_RATE\n\n\ndef order_total(items, coupon=0.0):\n    \"\"\"items: list of (unit_price, qty). coupon: fixed amount off the subtotal.\"\"\"\n    subtotal = sum(line_total(price, qty) for price, qty in items)\n    taxable = max(0.0, subtotal - coupon)\n    return round(taxable * (1 + TAX_RATE), 2)\n"
+   },
+   "hints": [
+    "Compare the banner wording ('10 or more') with the comparison operator in pricing.py.",
+    "In order.py, think about the order of operations: should the coupon come off before or after tax is added?",
+    "Use >= for the threshold, and compute max(0, subtotal - coupon) before multiplying by 1 + TAX_RATE."
+   ],
+   "explanation": "Two bugs. The bulk threshold used `>` instead of `>=`, so exactly 10 units missed the discount (classic boundary error). The coupon was subtracted after tax instead of from the taxable subtotal, so customers were taxed on money they never paid, and nothing stopped the total going negative. Fix: `>=`, and clamp subtotal - coupon at zero before applying tax.",
+   "tags": [
+    "boundary",
+    "money",
+    "order-of-operations"
+   ],
+   "companies": [
+    "Shopify",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "dbg-py-retry-backoff",
+   "title": "Retry helper gives up early and sleeps too long",
+   "language": "python",
+   "difficulty": "Easy",
+   "time_minutes": 12,
+   "bug_count": 2,
+   "scenario": "INC-4410: The payments client is configured with attempts=3 but the on-call engineer sees only two upstream calls in the logs before a RetryError. Worse, the pause between calls is 0.2s, 0.4s instead of the documented 0.1s, 0.2s, and the helper also sleeps after the final failure, delaying the error response.",
+   "files": {
+    "retry.py": "import time\n\n\nclass RetryError(Exception):\n    pass\n\n\ndef retry(fn, attempts=3, base_delay=0.1, sleep=time.sleep, retry_on=(Exception,)):\n    \"\"\"Call fn() up to `attempts` times with exponential backoff (base, 2*base, 4*base...).\"\"\"\n    last = None\n    for attempt in range(1, attempts):\n        try:\n            return fn()\n        except retry_on as exc:\n            last = exc\n            sleep(base_delay * 2 ** attempt)\n    raise RetryError(f\"gave up after {attempts} attempts\") from last\n",
+    "client.py": "from retry import retry\n\n\nclass FlakyService:\n    def __init__(self, failures):\n        self.failures = failures\n        self.calls = 0\n\n    def get(self):\n        self.calls += 1\n        if self.calls <= self.failures:\n            raise ConnectionError(\"upstream unavailable\")\n        return {\"status\": \"ok\"}\n\n\ndef fetch(service, sleep, attempts=3):\n    return retry(service.get, attempts=attempts, base_delay=0.1, sleep=sleep, retry_on=(ConnectionError,))\n"
+   },
+   "tests": "from client import FlakyService, fetch\nfrom retry import retry, RetryError\n\n\ndef test_succeeds_on_third_attempt():\n    svc = FlakyService(failures=2)\n    assert fetch(svc, sleep=lambda s: None, attempts=3) == {\"status\": \"ok\"}, \"third call should succeed\"\n    assert svc.calls == 3, f\"expected 3 calls, got {svc.calls}\"\n\n\ndef test_backoff_delays():\n    delays = []\n    svc = FlakyService(failures=2)\n    fetch(svc, sleep=delays.append, attempts=3)\n    assert [round(d, 3) for d in delays] == [0.1, 0.2], f\"unexpected delays {delays}\"\n\n\ndef test_gives_up_after_exactly_attempts_calls():\n    svc = FlakyService(failures=99)\n    try:\n        fetch(svc, sleep=lambda s: None, attempts=4)\n        assert False, \"should raise RetryError\"\n    except RetryError:\n        pass\n    assert svc.calls == 4, f\"expected 4 calls, got {svc.calls}\"\n\n\ndef test_no_sleep_after_last_failure():\n    delays = []\n    svc = FlakyService(failures=99)\n    try:\n        fetch(svc, sleep=delays.append, attempts=3)\n    except RetryError:\n        pass\n    assert len(delays) == 2, f\"3 attempts need only 2 sleeps, got {len(delays)}\"\n\n\ndef test_single_attempt_works():\n    assert retry(lambda: 7, attempts=1) == 7, \"attempts=1 must still call fn once\"\n\n\ndef test_non_retryable_error_propagates_immediately():\n    calls = []\n    def boom():\n        calls.append(1)\n        raise ValueError(\"bad input\")\n    try:\n        retry(boom, attempts=3, sleep=lambda s: None, retry_on=(ConnectionError,))\n        assert False, \"ValueError should propagate\"\n    except ValueError:\n        pass\n    assert len(calls) == 1, \"non-retryable errors must not be retried\"\n",
+   "solution": {
+    "retry.py": "import time\n\n\nclass RetryError(Exception):\n    pass\n\n\ndef retry(fn, attempts=3, base_delay=0.1, sleep=time.sleep, retry_on=(Exception,)):\n    \"\"\"Call fn() up to `attempts` times with exponential backoff (base, 2*base, 4*base...).\"\"\"\n    last = None\n    for attempt in range(1, attempts + 1):\n        try:\n            return fn()\n        except retry_on as exc:\n            last = exc\n            if attempt < attempts:\n                sleep(base_delay * 2 ** (attempt - 1))\n    raise RetryError(f\"gave up after {attempts} attempts\") from last\n"
+   },
+   "hints": [
+    "Count how many times fn is actually called when attempts=3. What does range(1, attempts) iterate over?",
+    "The first delay should be base_delay * 1. Which exponent does that require when attempt starts at 1?",
+    "Loop range(1, attempts + 1), use 2 ** (attempt - 1), and skip the sleep when attempt == attempts."
+   ],
+   "explanation": "range(1, attempts) runs attempts-1 times (off-by-one), so one retry was lost. The backoff exponent used attempt instead of attempt-1 so delays started at 2x base, and the sleep ran even after the final failure, delaying the error. Fixing the loop bounds, exponent and guarding the last sleep resolves all symptoms.",
+   "tags": [
+    "off-by-one",
+    "retry",
+    "backoff"
+   ],
+   "companies": [
+    "Amazon",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "dbg-py-paginator",
+   "title": "Pagination drops the first page and the last partial page",
+   "language": "python",
+   "difficulty": "Easy",
+   "time_minutes": 10,
+   "bug_count": 2,
+   "scenario": "BUG-871: The admin user list starts at the second page of users when you open page 1, and the \"export all\" job is missing the last few users whenever the total is not a multiple of the page size. The API docs say pages are 1-indexed.",
+   "files": {
+    "pagination.py": "def paginate(items, page, per_page=10):\n    \"\"\"Return one page of items. Pages are 1-indexed.\"\"\"\n    total_pages = len(items) // per_page\n    start = page * per_page\n    end = start + per_page\n    return {\n        \"items\": items[start:end],\n        \"page\": page,\n        \"total_pages\": total_pages,\n        \"has_next\": page < total_pages,\n    }\n",
+    "api.py": "from pagination import paginate\n\n\ndef all_pages(items, per_page=10):\n    \"\"\"Collect every item by walking pages until has_next is False (used by the export job).\"\"\"\n    collected = []\n    page = 1\n    while True:\n        result = paginate(items, page, per_page)\n        collected.extend(result[\"items\"])\n        if not result[\"has_next\"]:\n            break\n        page += 1\n    return collected\n"
+   },
+   "tests": "from pagination import paginate\nfrom api import all_pages\n\nDATA = list(range(1, 26))  # 25 items\n\n\ndef test_first_page_starts_at_first_item():\n    assert paginate(DATA, 1, 10)[\"items\"] == list(range(1, 11)), \"page 1 should hold items 1..10\"\n\n\ndef test_last_partial_page():\n    result = paginate(DATA, 3, 10)\n    assert result[\"items\"] == [21, 22, 23, 24, 25], f\"page 3 got {result['items']}\"\n\n\ndef test_total_pages_rounds_up():\n    assert paginate(DATA, 1, 10)[\"total_pages\"] == 3, \"25 items at 10 per page is 3 pages\"\n\n\ndef test_has_next_flags():\n    assert paginate(DATA, 2, 10)[\"has_next\"] is True, \"page 2 of 3 has a next page\"\n    assert paginate(DATA, 3, 10)[\"has_next\"] is False, \"page 3 of 3 is the last\"\n\n\ndef test_exact_multiple():\n    result = paginate(list(range(20)), 2, 10)\n    assert result[\"total_pages\"] == 2 and result[\"has_next\"] is False, \"20 items is exactly 2 pages\"\n\n\ndef test_export_returns_everything_in_order():\n    assert all_pages(DATA, 10) == DATA, \"export must return all 25 items in order\"\n\n\ndef test_empty_list():\n    result = paginate([], 1, 10)\n    assert result[\"items\"] == [] and result[\"total_pages\"] == 0 and result[\"has_next\"] is False, \"empty input\"\n",
+   "solution": {
+    "pagination.py": "def paginate(items, page, per_page=10):\n    \"\"\"Return one page of items. Pages are 1-indexed.\"\"\"\n    total_pages = -(-len(items) // per_page)\n    start = (page - 1) * per_page\n    end = start + per_page\n    return {\n        \"items\": items[start:end],\n        \"page\": page,\n        \"total_pages\": total_pages,\n        \"has_next\": page < total_pages,\n    }\n"
+   },
+   "hints": [
+    "Call paginate(data, 1, 10) in a REPL and look at which items come back.",
+    "Two arithmetic problems: how the start index is derived from a 1-indexed page, and how total_pages is computed for 25 items.",
+    "start = (page - 1) * per_page and total_pages = ceil(len/per_page), e.g. -(-n // size) or math.ceil."
+   ],
+   "explanation": "The code treated pages as 0-indexed when computing the slice (so page 1 skipped the first page of data), and used floor division for total_pages so a partial final page was never counted, which made has_next false one page too early. Use (page - 1) * per_page and ceiling division.",
+   "tags": [
+    "off-by-one",
+    "pagination",
+    "integer-division"
+   ],
+   "companies": [
+    "GitHub",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "dbg-py-config-defaults",
+   "title": "Config changes in one client leak into every other client",
+   "language": "python",
+   "difficulty": "Easy",
+   "time_minutes": 12,
+   "bug_count": 2,
+   "scenario": "INC-5120: After the billing service added an Authorization header to its HTTP client config, the analytics client (created later, in the same process) started sending the billing token too. Separately, the tag list on new clients keeps growing: the third client shows tags from the first two.",
+   "files": {
+    "config.py": "DEFAULTS = {\n    \"timeout\": 30,\n    \"retries\": 3,\n    \"headers\": {\"Accept\": \"application/json\"},\n}\n\n\ndef load_config(overrides=None):\n    cfg = DEFAULTS.copy()\n    if overrides:\n        cfg.update(overrides)\n    return cfg\n\n\ndef with_header(cfg, name, value):\n    cfg[\"headers\"][name] = value\n    return cfg\n",
+    "client.py": "from config import load_config\n\n\ndef build_client(name, tags=[]):\n    tags.append(name)\n    return {\"name\": name, \"tags\": tags, \"config\": load_config()}\n"
+   },
+   "tests": "import config\nfrom client import build_client\n\n\ndef test_header_does_not_leak_into_defaults():\n    cfg = config.load_config()\n    config.with_header(cfg, \"Authorization\", \"Bearer secret\")\n    fresh = config.load_config()\n    assert \"Authorization\" not in fresh[\"headers\"], \"a new config must not contain headers added to another\"\n\n\ndef test_defaults_object_untouched():\n    cfg = config.load_config()\n    config.with_header(cfg, \"X-Trace\", \"1\")\n    assert config.DEFAULTS[\"headers\"] == {\"Accept\": \"application/json\"}, \"DEFAULTS was mutated\"\n\n\ndef test_overrides_applied():\n    cfg = config.load_config({\"timeout\": 5})\n    assert cfg[\"timeout\"] == 5 and cfg[\"retries\"] == 3, \"override should replace only the given keys\"\n\n\ndef test_overrides_do_not_mutate_input():\n    ov = {\"headers\": {\"Accept\": \"text/plain\"}}\n    cfg = config.load_config(ov)\n    config.with_header(cfg, \"A\", \"b\")\n    assert ov == {\"headers\": {\"Accept\": \"text/plain\"}}, \"caller's overrides dict must stay untouched\"\n\n\ndef test_tags_fresh_per_client():\n    a = build_client(\"alpha\")\n    b = build_client(\"beta\")\n    assert b[\"tags\"] == [\"beta\"], f\"beta tags leaked: {b['tags']}\"\n    assert a[\"tags\"] == [\"alpha\"], f\"alpha tags changed: {a['tags']}\"\n\n\ndef test_explicit_tags_are_copied():\n    mine = [\"x\"]\n    c = build_client(\"gamma\", mine)\n    assert c[\"tags\"] == [\"x\", \"gamma\"], \"tags should include provided ones\"\n    assert mine == [\"x\"], \"caller's list should not be mutated\"\n",
+   "solution": {
+    "config.py": "import copy\n\nDEFAULTS = {\n    \"timeout\": 30,\n    \"retries\": 3,\n    \"headers\": {\"Accept\": \"application/json\"},\n}\n\n\ndef load_config(overrides=None):\n    cfg = copy.deepcopy(DEFAULTS)\n    if overrides:\n        cfg.update(copy.deepcopy(overrides))\n    return cfg\n\n\ndef with_header(cfg, name, value):\n    cfg[\"headers\"][name] = value\n    return cfg\n",
+    "client.py": "from config import load_config\n\n\ndef build_client(name, tags=None):\n    tags = list(tags) if tags else []\n    tags.append(name)\n    return {\"name\": name, \"tags\": tags, \"config\": load_config()}\n"
+   },
+   "hints": [
+    "Two different 'shared state' problems: one in config.py, one in client.py's function signature.",
+    "dict.copy() is shallow: the nested 'headers' dict is still the same object. And default argument values are evaluated once, at definition time.",
+    "Use copy.deepcopy for the defaults (and overrides), and use tags=None with a fresh list inside the function."
+   ],
+   "explanation": "`DEFAULTS.copy()` is a shallow copy, so the nested headers dict was shared by every config: adding a header mutated the global defaults. `tags=[]` is a mutable default argument evaluated once, so every call appended to the same list. Deep-copy the defaults and use None-sentinel defaults.",
+   "tags": [
+    "mutable-default",
+    "shallow-copy",
+    "shared-state"
+   ],
+   "companies": [
+    "Dropbox",
+    "Instacart"
+   ]
+  },
+  {
+   "id": "dbg-py-word-frequency",
+   "title": "Top-words report double counts and orders wrongly",
+   "language": "python",
+   "difficulty": "Easy",
+   "time_minutes": 10,
+   "bug_count": 2,
+   "scenario": "TICKET-377: The search team's \"top words\" widget lists \"Cat\" and \"cat\" as separate words, and when two words have the same count the order changes between deploys. It should show highest count first, with ties sorted alphabetically.",
+   "files": {
+    "text.py": "import re\n\nSTOPWORDS = {\"the\", \"a\", \"an\", \"and\", \"of\", \"to\"}\n\n\ndef tokenize(text):\n    return re.findall(r\"[A-Za-z0-9']+\", text)\n\n\ndef word_freq(text, skip_stop=True):\n    freq = {}\n    for tok in tokenize(text):\n        if skip_stop and tok in STOPWORDS:\n            continue\n        freq[tok] = freq.get(tok, 0) + 1\n    return freq\n\n\ndef top_n(freq, n):\n    \"\"\"Return [(word, count)] with the highest counts first; ties sorted alphabetically.\"\"\"\n    return sorted(freq.items(), key=lambda kv: kv[0])[:n]\n"
+   },
+   "tests": "from text import tokenize, word_freq, top_n\n\n\ndef test_case_insensitive_tokens():\n    assert tokenize(\"The Cat\") == [\"the\", \"cat\"], f\"got {tokenize('The Cat')}\"\n\n\ndef test_counts_merge_case_variants():\n    assert word_freq(\"Cat cat CAT dog\")[\"cat\"] == 3, \"case variants must be merged\"\n\n\ndef test_stopwords_removed_regardless_of_case():\n    freq = word_freq(\"The cat AND the dog\")\n    assert \"the\" not in freq and \"and\" not in freq, f\"stopwords leaked: {freq}\"\n\n\ndef test_top_n_orders_by_count_desc():\n    freq = {\"apple\": 1, \"pear\": 5, \"fig\": 3}\n    assert top_n(freq, 2) == [(\"pear\", 5), (\"fig\", 3)], \"highest counts first\"\n\n\ndef test_ties_alphabetical():\n    freq = {\"b\": 2, \"a\": 2, \"c\": 2, \"z\": 9}\n    assert top_n(freq, 3) == [(\"z\", 9), (\"a\", 2), (\"b\", 2)], \"ties should be alphabetical\"\n\n\ndef test_apostrophes_kept():\n    assert word_freq(\"Don't stop, don't\")[\"don't\"] == 2, \"contractions are single tokens\"\n",
+   "solution": {
+    "text.py": "import re\n\nSTOPWORDS = {\"the\", \"a\", \"an\", \"and\", \"of\", \"to\"}\n\n\ndef tokenize(text):\n    return re.findall(r\"[a-z0-9']+\", text.lower())\n\n\ndef word_freq(text, skip_stop=True):\n    freq = {}\n    for tok in tokenize(text):\n        if skip_stop and tok in STOPWORDS:\n            continue\n        freq[tok] = freq.get(tok, 0) + 1\n    return freq\n\n\ndef top_n(freq, n):\n    \"\"\"Return [(word, count)] with the highest counts first; ties sorted alphabetically.\"\"\"\n    return sorted(freq.items(), key=lambda kv: (-kv[1], kv[0]))[:n]\n"
+   },
+   "hints": [
+    "Print tokenize('The Cat'). What case do the tokens have, and what does STOPWORDS contain?",
+    "top_n sorts by the word only. What key would sort by count descending then word ascending?",
+    "Lowercase the text in tokenize; use key=lambda kv: (-kv[1], kv[0]) in top_n."
+   ],
+   "explanation": "Tokens were never normalised, so 'Cat'/'cat' were separate and capitalised stopwords ('The') slipped through. top_n sorted by the word instead of the count; the correct sort key is a tuple (-count, word).",
+   "tags": [
+    "sorting",
+    "normalization",
+    "text"
+   ],
+   "companies": [
+    "Elastic",
+    "Twitter"
+   ]
+  },
+  {
+   "id": "dbg-py-lru-cache",
+   "title": "LRU cache evicts the wrong entries",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 18,
+   "bug_count": 3,
+   "scenario": "PERF-1032: After we introduced the in-process LRU cache for user profiles, hot profiles keep getting evicted while rarely-used ones stay, and the dashboard shows a cache hit rate of 0.0 even though the logs clearly show hits. Expected behaviour is standard LRU: reads and writes both mark a key as most recently used.",
+   "files": {
+    "cache.py": "from collections import OrderedDict\n\n\nclass LRUCache:\n    def __init__(self, capacity):\n        if capacity < 1:\n            raise ValueError(\"capacity must be >= 1\")\n        self.capacity = capacity\n        self._data = OrderedDict()\n        self.hits = 0\n        self.misses = 0\n\n    def get(self, key, default=None):\n        if key in self._data:\n            self.hits += 1\n            return self._data[key]\n        self.misses += 1\n        return default\n\n    def put(self, key, value):\n        if key in self._data:\n            self._data.move_to_end(key)\n        self._data[key] = value\n        if len(self._data) > self.capacity:\n            self._data.popitem(last=True)\n\n    def hit_rate(self):\n        total = self.hits + self.misses\n        return self.hits // total if total else 0.0\n\n    def __len__(self):\n        return len(self._data)\n\n    def keys(self):\n        \"\"\"Keys from least to most recently used.\"\"\"\n        return list(self._data)\n"
+   },
+   "tests": "from cache import LRUCache\n\n\ndef test_evicts_least_recently_used():\n    c = LRUCache(2)\n    c.put(\"a\", 1)\n    c.put(\"b\", 2)\n    c.put(\"c\", 3)\n    assert c.get(\"a\") is None, \"'a' was the oldest and should be evicted\"\n    assert c.get(\"b\") == 2 and c.get(\"c\") == 3, \"newer entries must survive\"\n\n\ndef test_get_refreshes_recency():\n    c = LRUCache(2)\n    c.put(\"a\", 1)\n    c.put(\"b\", 2)\n    c.get(\"a\")\n    c.put(\"c\", 3)\n    assert c.get(\"b\") is None, \"'b' is now least recently used and should go\"\n    assert c.get(\"a\") == 1, \"'a' was read recently and must stay\"\n\n\ndef test_update_existing_key_does_not_evict():\n    c = LRUCache(2)\n    c.put(\"a\", 1)\n    c.put(\"b\", 2)\n    c.put(\"a\", 10)\n    assert len(c) == 2 and c.get(\"b\") == 2, \"updating a key must not evict anything\"\n    assert c.get(\"a\") == 10, \"value should be updated\"\n\n\ndef test_update_refreshes_recency():\n    c = LRUCache(2)\n    c.put(\"a\", 1)\n    c.put(\"b\", 2)\n    c.put(\"a\", 3)\n    c.put(\"c\", 4)\n    assert c.keys() == [\"a\", \"c\"], f\"expected ['a','c'] got {c.keys()}\"\n\n\ndef test_hit_rate_is_fraction():\n    c = LRUCache(2)\n    c.put(\"a\", 1)\n    c.get(\"a\")\n    c.get(\"zzz\")\n    assert c.hit_rate() == 0.5, f\"1 hit and 1 miss should be 0.5, got {c.hit_rate()}\"\n\n\ndef test_hit_rate_empty():\n    assert LRUCache(1).hit_rate() == 0.0, \"no lookups yet means 0.0\"\n\n\ndef test_none_value_counts_as_hit():\n    c = LRUCache(2)\n    c.put(\"k\", None)\n    c.get(\"k\")\n    assert c.hits == 1 and c.misses == 0, \"a stored None is still a hit\"\n",
+   "solution": {
+    "cache.py": "from collections import OrderedDict\n\n\nclass LRUCache:\n    def __init__(self, capacity):\n        if capacity < 1:\n            raise ValueError(\"capacity must be >= 1\")\n        self.capacity = capacity\n        self._data = OrderedDict()\n        self.hits = 0\n        self.misses = 0\n\n    def get(self, key, default=None):\n        if key in self._data:\n            self.hits += 1\n            self._data.move_to_end(key)\n            return self._data[key]\n        self.misses += 1\n        return default\n\n    def put(self, key, value):\n        if key in self._data:\n            self._data.move_to_end(key)\n        self._data[key] = value\n        if len(self._data) > self.capacity:\n            self._data.popitem(last=False)\n\n    def hit_rate(self):\n        total = self.hits + self.misses\n        return self.hits / total if total else 0.0\n\n    def __len__(self):\n        return len(self._data)\n\n    def keys(self):\n        \"\"\"Keys from least to most recently used.\"\"\"\n        return list(self._data)\n"
+   },
+   "hints": [
+    "Trace a cache of capacity 2 by hand: put a, put b, put c. Which key does popitem remove?",
+    "OrderedDict.popitem(last=True) pops the newest item. Also check whether get() does anything to the order.",
+    "Use popitem(last=False), call move_to_end in get(), and use true division in hit_rate()."
+   ],
+   "explanation": "Three bugs: eviction removed the most-recently-used entry (popitem(last=True)); get() never refreshed recency so reads did not protect hot keys; and hit_rate used floor division, which turns 0.5 into 0. Standard LRU semantics: reads and writes both move the key to the MRU end, eviction pops the LRU end.",
+   "tags": [
+    "cache",
+    "ordereddict",
+    "integer-division"
+   ],
+   "companies": [
+    "Google",
+    "Meta"
+   ]
+  },
+  {
+   "id": "dbg-py-rate-limiter",
+   "title": "Sliding-window rate limiter locks users out too long",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "bug_count": 3,
+   "scenario": "INC-6203: Our API allows 100 requests per 60s per key. Customers who hit the limit say they stay blocked long after the window should have passed, and a client sending exactly one request every 60 seconds is intermittently rejected. The /quota endpoint also reports 0 remaining for keys that have been idle for minutes.",
+   "files": {
+    "ratelimit.py": "import time\n\n\nclass RateLimiter:\n    \"\"\"Sliding-window limiter: at most `limit` requests per `window` seconds per key.\"\"\"\n\n    def __init__(self, limit, window, clock=time.monotonic):\n        self.limit = limit\n        self.window = window\n        self.clock = clock\n        self._hits = {}\n\n    def allow(self, key):\n        now = self.clock()\n        hits = self._hits.setdefault(key, [])\n        cutoff = now - self.window\n        while hits and hits[0] < cutoff:\n            hits.pop(0)\n        hits.append(now)\n        return len(hits) <= self.limit\n\n    def remaining(self, key):\n        return max(0, self.limit - len(self._hits.get(key, [])))\n"
+   },
+   "tests": "from ratelimit import RateLimiter\n\n\nclass FakeClock:\n    def __init__(self):\n        self.t = 0.0\n\n    def __call__(self):\n        return self.t\n\n\ndef make(limit, window):\n    clock = FakeClock()\n    return RateLimiter(limit, window, clock=clock), clock\n\n\ndef test_blocks_after_limit():\n    rl, clock = make(2, 10)\n    assert rl.allow(\"u\") and rl.allow(\"u\"), \"first two requests are allowed\"\n    assert not rl.allow(\"u\"), \"third request in the window must be rejected\"\n\n\ndef test_hit_exactly_window_old_has_expired():\n    rl, clock = make(1, 10)\n    assert rl.allow(\"u\"), \"first request\"\n    clock.t = 9.99\n    assert not rl.allow(\"u\"), \"still inside the window\"\n    clock.t = 10.0\n    assert rl.allow(\"u\"), \"a hit exactly `window` seconds old no longer counts\"\n\n\ndef test_rejected_requests_do_not_extend_lockout():\n    rl, clock = make(2, 10)\n    rl.allow(\"u\")\n    clock.t = 1\n    rl.allow(\"u\")\n    clock.t = 5\n    assert not rl.allow(\"u\"), \"over limit\"\n    clock.t = 9\n    assert not rl.allow(\"u\"), \"still over limit\"\n    clock.t = 11\n    assert rl.allow(\"u\"), \"rejected attempts must not be recorded, so at t=11 the old hits are gone\"\n\n\ndef test_keys_are_independent():\n    rl, clock = make(1, 10)\n    assert rl.allow(\"a\") and rl.allow(\"b\"), \"different keys have separate budgets\"\n    assert not rl.allow(\"a\"), \"key a is exhausted\"\n\n\ndef test_remaining_counts_down():\n    rl, clock = make(3, 10)\n    rl.allow(\"u\")\n    assert rl.remaining(\"u\") == 2, \"one used out of three\"\n\n\ndef test_remaining_ignores_expired_hits():\n    rl, clock = make(3, 10)\n    for _ in range(3):\n        rl.allow(\"u\")\n    assert rl.remaining(\"u\") == 0, \"budget used up\"\n    clock.t = 10.0\n    assert rl.remaining(\"u\") == 3, \"after the window passes the full budget is back\"\n    assert rl.remaining(\"never-seen\") == 3, \"unknown key has full budget\"\n",
+   "solution": {
+    "ratelimit.py": "import time\n\n\nclass RateLimiter:\n    \"\"\"Sliding-window limiter: at most `limit` requests per `window` seconds per key.\"\"\"\n\n    def __init__(self, limit, window, clock=time.monotonic):\n        self.limit = limit\n        self.window = window\n        self.clock = clock\n        self._hits = {}\n\n    def _prune(self, key, now):\n        hits = self._hits.setdefault(key, [])\n        cutoff = now - self.window\n        while hits and hits[0] <= cutoff:\n            hits.pop(0)\n        return hits\n\n    def allow(self, key):\n        now = self.clock()\n        hits = self._prune(key, now)\n        if len(hits) >= self.limit:\n            return False\n        hits.append(now)\n        return True\n\n    def remaining(self, key):\n        hits = self._prune(key, self.clock())\n        return max(0, self.limit - len(hits))\n"
+   },
+   "hints": [
+    "Write down the list of timestamps after a rejected request. Is a rejected request supposed to be in it?",
+    "Two boundary questions: is a hit that is exactly `window` seconds old still inside the window, and should remaining() look at stale timestamps?",
+    "Check len(hits) >= limit BEFORE appending, prune with <= cutoff, and share a _prune helper between allow() and remaining()."
+   ],
+   "explanation": "Rejected requests were appended to the hit log before the limit check, so a client hammering the API kept extending its own lockout. The expiry comparison used `<` so a hit exactly `window` old still counted (boundary error). remaining() never pruned old hits and so reported exhausted budgets for idle keys. Fix: check-then-record, `<=` cutoff, and prune in both entry points.",
+   "tags": [
+    "rate-limiting",
+    "boundary",
+    "sliding-window"
+   ],
+   "companies": [
+    "Cloudflare",
+    "Stripe"
+   ]
+  },
+  {
+   "id": "dbg-py-csv-sales-report",
+   "title": "Sales report: wrong averages, missing thousands, wrong ranking",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 20,
+   "bug_count": 3,
+   "scenario": "FIN-742: The regional sales export crashes on rows where the amount is formatted like \"1,200.50\", the 'average price per unit' column is truncated to whole numbers, and the 'top regions' list shows the worst region first. Also \"North\" and \"north \" from two different CRM exports appear as separate regions.",
+   "files": {
+    "report.py": "import csv\nimport io\n\n\ndef parse_amount(text):\n    return float(text.strip())\n\n\ndef load_rows(text):\n    rows = []\n    for rec in csv.DictReader(io.StringIO(text)):\n        rows.append({\n            \"region\": rec[\"region\"].strip(),\n            \"rep\": rec[\"rep\"].strip(),\n            \"amount\": parse_amount(rec[\"amount\"]),\n            \"units\": int(rec[\"units\"]),\n        })\n    return rows\n\n\ndef summarize(rows):\n    summary = {}\n    for r in rows:\n        s = summary.setdefault(r[\"region\"], {\"total\": 0.0, \"units\": 0, \"count\": 0})\n        s[\"total\"] += r[\"amount\"]\n        s[\"units\"] += r[\"units\"]\n        s[\"count\"] += 1\n    for s in summary.values():\n        s[\"avg_unit_price\"] = s[\"total\"] // s[\"units\"] if s[\"units\"] else 0.0\n    return summary\n\n\ndef top_regions(summary, n=3):\n    return sorted(summary, key=lambda r: summary[r][\"total\"])[:n]\n"
+   },
+   "tests": "from report import load_rows, summarize, top_regions, parse_amount\n\nCSV = \"\"\"region,rep,amount,units\nNorth, Ana ,\"1,200.50\",4\nnorth ,Bo,300,2\nSouth,Cy,100,3\nSouth,Di,50,0\n\"\"\"\n\n\ndef test_parse_amount_with_thousands_separator():\n    assert parse_amount('1,200.50') == 1200.5, \"thousands separators must be stripped\"\n\n\ndef test_rows_are_cleaned():\n    rows = load_rows(CSV)\n    assert len(rows) == 4, f\"expected 4 rows, got {len(rows)}\"\n    assert rows[0][\"rep\"] == \"Ana\" and rows[0][\"amount\"] == 1200.5, f\"first row wrong: {rows[0]}\"\n\n\ndef test_regions_normalised():\n    summary = summarize(load_rows(CSV))\n    assert sorted(summary) == [\"North\", \"South\"], f\"regions were {sorted(summary)}\"\n\n\ndef test_totals_and_counts():\n    summary = summarize(load_rows(CSV))\n    assert summary[\"North\"][\"total\"] == 1500.5 and summary[\"North\"][\"count\"] == 2, summary[\"North\"]\n    assert summary[\"South\"][\"units\"] == 3, summary[\"South\"]\n\n\ndef test_average_unit_price_keeps_decimals():\n    summary = summarize(load_rows(CSV))\n    assert summary[\"North\"][\"avg_unit_price\"] == 250.08, f\"got {summary['North']['avg_unit_price']}\"\n    assert summary[\"South\"][\"avg_unit_price\"] == 50.0, f\"got {summary['South']['avg_unit_price']}\"\n\n\ndef test_zero_units_does_not_crash():\n    summary = summarize(load_rows(\"region,rep,amount,units\\nEast,Al,10,0\\n\"))\n    assert summary[\"East\"][\"avg_unit_price\"] == 0.0, \"no units sold means 0.0 average\"\n\n\ndef test_top_regions_best_first_ties_alphabetical():\n    summary = {\"A\": {\"total\": 5}, \"B\": {\"total\": 50}, \"C\": {\"total\": 50}, \"D\": {\"total\": 1}}\n    assert top_regions(summary, 3) == [\"B\", \"C\", \"A\"], f\"got {top_regions(summary, 3)}\"\n",
+   "solution": {
+    "report.py": "import csv\nimport io\n\n\ndef parse_amount(text):\n    return float(text.strip().replace(\",\", \"\"))\n\n\ndef load_rows(text):\n    rows = []\n    for rec in csv.DictReader(io.StringIO(text)):\n        rows.append({\n            \"region\": rec[\"region\"].strip().title(),\n            \"rep\": rec[\"rep\"].strip(),\n            \"amount\": parse_amount(rec[\"amount\"]),\n            \"units\": int(rec[\"units\"]),\n        })\n    return rows\n\n\ndef summarize(rows):\n    summary = {}\n    for r in rows:\n        s = summary.setdefault(r[\"region\"], {\"total\": 0.0, \"units\": 0, \"count\": 0})\n        s[\"total\"] += r[\"amount\"]\n        s[\"units\"] += r[\"units\"]\n        s[\"count\"] += 1\n    for s in summary.values():\n        s[\"avg_unit_price\"] = round(s[\"total\"] / s[\"units\"], 2) if s[\"units\"] else 0.0\n    return summary\n\n\ndef top_regions(summary, n=3):\n    return sorted(summary, key=lambda r: (-summary[r][\"total\"], r))[:n]\n"
+   },
+   "hints": [
+    "Run load_rows on a row with a quoted amount like \"1,200.50\" and on a region typed in different cases.",
+    "`//` is floor division, and sorted() defaults to ascending order.",
+    "Strip commas before float(), normalise region with strip().title(), use round(total / units, 2), and sort by (-total, name)."
+   ],
+   "explanation": "Amounts with thousands separators raised ValueError because float() can't parse commas. Regions were only stripped, never case-normalised, so the same region split into two. avg_unit_price used `//` which floors floats, and top_regions sorted ascending so the lowest earners came first; the fix is a descending key with an alphabetical tie-breaker.",
+   "tags": [
+    "csv",
+    "integer-division",
+    "sorting",
+    "normalization"
+   ],
+   "companies": [
+    "Salesforce",
+    "Datadog"
+   ]
+  },
+  {
+   "id": "dbg-py-permission-checker",
+   "title": "Granting one user a permission grants it to everyone",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 22,
+   "bug_count": 2,
+   "scenario": "SEC-118: After support granted \"doc:write\" to a single viewer account, every other viewer in the org suddenly gained write access. Also, an admin who has been explicitly denied \"doc:delete\" can still delete documents because admins hold the \"*\" wildcard.",
+   "files": {
+    "access.py": "ROLES = {\n    \"viewer\": {\"doc:read\"},\n    \"editor\": {\"doc:write\"},\n    \"admin\": {\"*\"},\n}\nINHERITS = {\n    \"editor\": [\"viewer\"],\n    \"admin\": [\"editor\"],\n}\n\n\ndef role_permissions(role):\n    perms = ROLES.get(role, set())\n    for parent in INHERITS.get(role, []):\n        perms |= role_permissions(parent)\n    return perms\n\n\ndef effective_permissions(user):\n    roles = user.get(\"roles\", [])\n    perms = role_permissions(roles[0]) if roles else set()\n    for role in roles[1:]:\n        perms |= role_permissions(role)\n    perms |= set(user.get(\"grants\", []))\n    perms -= set(user.get(\"denies\", []))\n    return perms\n\n\ndef can(user, action):\n    perms = effective_permissions(user)\n    if \"*\" in perms or action in perms:\n        return True\n    resource = action.split(\":\")[0]\n    return resource + \":*\" in perms\n"
+   },
+   "tests": "import access\nfrom access import can, role_permissions\n\n\ndef user(*roles, grants=(), denies=()):\n    return {\"roles\": list(roles), \"grants\": list(grants), \"denies\": list(denies)}\n\n\ndef test_viewer_can_read_not_write():\n    u = user(\"viewer\")\n    assert can(u, \"doc:read\"), \"viewer reads\"\n    assert not can(u, \"doc:write\"), \"viewer must not write\"\n\n\ndef test_inheritance():\n    assert can(user(\"editor\"), \"doc:read\"), \"editor inherits viewer\"\n    assert can(user(\"admin\"), \"anything:at-all\"), \"admin has wildcard\"\n\n\ndef test_grant_does_not_leak_to_other_users():\n    lucky = user(\"viewer\", grants=[\"doc:write\"])\n    assert can(lucky, \"doc:write\"), \"the granted user can write\"\n    other = user(\"viewer\")\n    assert not can(other, \"doc:write\"), \"another viewer must NOT have gained write access\"\n\n\ndef test_role_definitions_never_mutated():\n    snapshot = {k: set(v) for k, v in access.ROLES.items()}\n    role_permissions(\"admin\")\n    can(user(\"viewer\", grants=[\"x:y\"]), \"x:y\")\n    assert access.ROLES == snapshot, f\"ROLES was mutated: {access.ROLES}\"\n\n\ndef test_explicit_deny_beats_wildcard():\n    admin = user(\"admin\", denies=[\"doc:delete\"])\n    assert not can(admin, \"doc:delete\"), \"an explicit deny must override '*'\"\n    assert can(admin, \"doc:read\"), \"other actions still allowed\"\n\n\ndef test_resource_wildcard_grant():\n    u = user(\"viewer\", grants=[\"billing:*\"])\n    assert can(u, \"billing:refund\"), \"billing:* covers billing:refund\"\n    assert not can(u, \"doc:write\"), \"but not other resources\"\n\n\ndef test_unknown_role_has_nothing():\n    assert not can(user(\"ghost\"), \"doc:read\"), \"unknown role grants nothing\"\n",
+   "solution": {
+    "access.py": "ROLES = {\n    \"viewer\": {\"doc:read\"},\n    \"editor\": {\"doc:write\"},\n    \"admin\": {\"*\"},\n}\nINHERITS = {\n    \"editor\": [\"viewer\"],\n    \"admin\": [\"editor\"],\n}\n\n\ndef role_permissions(role):\n    perms = set(ROLES.get(role, ()))\n    for parent in INHERITS.get(role, []):\n        perms |= role_permissions(parent)\n    return perms\n\n\ndef effective_permissions(user):\n    perms = set()\n    for role in user.get(\"roles\", []):\n        perms |= role_permissions(role)\n    perms |= set(user.get(\"grants\", []))\n    return perms\n\n\ndef can(user, action):\n    if action in user.get(\"denies\", ()):\n        return False\n    perms = effective_permissions(user)\n    if \"*\" in perms or action in perms:\n        return True\n    resource = action.split(\":\")[0]\n    return resource + \":*\" in perms\n"
+   },
+   "hints": [
+    "Does role_permissions() return a fresh set, or the very set stored in ROLES? Think about what `|=` does to a set in place.",
+    "Print ROLES['viewer'] after checking a user that has grants. Separately, trace `perms -= denies` when perms is {'*'}.",
+    "Copy the set (set(ROLES.get(role, ()))) so in-place unions don't touch ROLES; check denies in can() before any allow logic instead of subtracting them from the wildcard."
+   ],
+   "explanation": "`ROLES.get(role, set())` returned the stored set itself and `|=` mutates in place, so per-user grants were written into the shared role definition (and inheritance silently rewrote role sets too). Second, denies were implemented by subtracting from the permission set, which cannot remove a wildcard; deny must be evaluated first and win over any allow.",
+   "tags": [
+    "shared-state",
+    "mutation",
+    "authorization",
+    "set-operations"
+   ],
+   "companies": [
+    "Okta",
+    "AWS"
+   ]
+  },
+  {
+   "id": "dbg-py-inventory-reserve",
+   "title": "Failed reservations leave stock locked",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 22,
+   "bug_count": 2,
+   "scenario": "OPS-554: When a multi-line order fails for one out-of-stock SKU, the other SKUs on that order remain reserved forever, so items show as sold out while sitting on shelves. We also saw negative reserved counts after the checkout service reused and edited the same dict for the next order.",
+   "files": {
+    "inventory.py": "class OutOfStock(Exception):\n    pass\n\n\nclass Inventory:\n    def __init__(self, stock):\n        self.stock = dict(stock)\n        self.reserved = {}\n        self._orders = {}\n\n    def available(self, sku):\n        return self.stock.get(sku, 0) - self.reserved.get(sku, 0)\n\n    def reserve(self, order_id, lines):\n        \"\"\"Reserve every line or none. lines: {sku: qty}.\"\"\"\n        if order_id in self._orders:\n            raise ValueError(f\"order {order_id} already reserved\")\n        for sku, qty in lines.items():\n            if self.available(sku) < qty:\n                raise OutOfStock(sku)\n            self.reserved[sku] = self.reserved.get(sku, 0) + qty\n        self._orders[order_id] = lines\n\n    def release(self, order_id):\n        lines = self._orders.pop(order_id)\n        for sku, qty in lines.items():\n            self.reserved[sku] -= qty\n\n    def commit(self, order_id):\n        lines = self._orders.pop(order_id)\n        for sku, qty in lines.items():\n            self.reserved[sku] -= qty\n            self.stock[sku] -= qty\n"
+   },
+   "tests": "from inventory import Inventory, OutOfStock\n\n\ndef make():\n    return Inventory({\"a\": 5, \"b\": 1, \"c\": 10})\n\n\ndef test_simple_reserve_and_available():\n    inv = make()\n    inv.reserve(\"o1\", {\"a\": 2})\n    assert inv.available(\"a\") == 3, \"2 of 5 reserved leaves 3\"\n\n\ndef test_failed_order_reserves_nothing():\n    inv = make()\n    try:\n        inv.reserve(\"o1\", {\"a\": 2, \"b\": 3})\n        assert False, \"should raise OutOfStock for b\"\n    except OutOfStock as e:\n        assert str(e) == \"b\", f\"wrong sku reported: {e}\"\n    assert inv.available(\"a\") == 5, f\"'a' must not stay reserved, available={inv.available('a')}\"\n\n\ndef test_failed_order_can_be_retried_with_same_id():\n    inv = make()\n    try:\n        inv.reserve(\"o1\", {\"a\": 2, \"b\": 3})\n    except OutOfStock:\n        pass\n    inv.reserve(\"o1\", {\"a\": 2})\n    assert inv.available(\"a\") == 3, \"retry with the same order id should work\"\n\n\ndef test_release_restores_even_if_caller_reuses_dict():\n    inv = make()\n    lines = {\"a\": 2}\n    inv.reserve(\"o1\", lines)\n    lines[\"a\"] = 5  # checkout service reuses the dict for the next order\n    inv.release(\"o1\")\n    assert inv.available(\"a\") == 5, f\"release must give back exactly 2, available={inv.available('a')}\"\n    assert inv.reserved[\"a\"] == 0, f\"reserved should be 0, got {inv.reserved['a']}\"\n\n\ndef test_commit_reduces_stock():\n    inv = make()\n    inv.reserve(\"o1\", {\"c\": 4})\n    inv.commit(\"o1\")\n    assert inv.stock[\"c\"] == 6 and inv.available(\"c\") == 6, \"commit removes stock and reservation\"\n\n\ndef test_duplicate_order_rejected():\n    inv = make()\n    inv.reserve(\"o1\", {\"a\": 1})\n    try:\n        inv.reserve(\"o1\", {\"a\": 1})\n        assert False, \"duplicate id must raise\"\n    except ValueError:\n        pass\n    assert inv.available(\"a\") == 4, \"duplicate must not reserve again\"\n",
+   "solution": {
+    "inventory.py": "class OutOfStock(Exception):\n    pass\n\n\nclass Inventory:\n    def __init__(self, stock):\n        self.stock = dict(stock)\n        self.reserved = {}\n        self._orders = {}\n\n    def available(self, sku):\n        return self.stock.get(sku, 0) - self.reserved.get(sku, 0)\n\n    def reserve(self, order_id, lines):\n        \"\"\"Reserve every line or none. lines: {sku: qty}.\"\"\"\n        if order_id in self._orders:\n            raise ValueError(f\"order {order_id} already reserved\")\n        for sku, qty in lines.items():\n            if self.available(sku) < qty:\n                raise OutOfStock(sku)\n        snapshot = dict(lines)\n        for sku, qty in snapshot.items():\n            self.reserved[sku] = self.reserved.get(sku, 0) + qty\n        self._orders[order_id] = snapshot\n\n    def release(self, order_id):\n        lines = self._orders.pop(order_id)\n        for sku, qty in lines.items():\n            self.reserved[sku] -= qty\n\n    def commit(self, order_id):\n        lines = self._orders.pop(order_id)\n        for sku, qty in lines.items():\n            self.reserved[sku] -= qty\n            self.stock[sku] -= qty\n"
+   },
+   "hints": [
+    "Follow reserve() for {'a': 2, 'b': 3} when only 1 'b' exists. What has already happened to 'a' when the exception is raised?",
+    "There is a second problem in what gets stored in self._orders: is it a copy or the caller's object?",
+    "Validate all lines first, then apply changes; store dict(lines) so later edits by the caller cannot change what release() undoes."
+   ],
+   "explanation": "reserve() validated and mutated in the same loop, so an exception half way left earlier SKUs reserved with no order recorded (a classic non-atomic update). It also stored the caller's dict by reference, so when the caller mutated it later, release/commit subtracted the wrong quantities and drove reserved negative. Validate first, mutate second, and snapshot inputs.",
+   "tags": [
+    "atomicity",
+    "aliasing",
+    "inventory",
+    "validation"
+   ],
+   "companies": [
+    "Shopify",
+    "Walmart"
+   ]
+  },
+  {
+   "id": "dbg-py-event-dedupe",
+   "title": "Duplicate-event filter crashes and drops valid events",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 22,
+   "bug_count": 3,
+   "scenario": "DATA-909: The ingestion service crashes with \"dictionary changed size during iteration\" whenever an old event ID expires. Before that, we found that events from different sources that happen to share a numeric id were silently dropped as duplicates. Events arriving exactly ttl seconds after the first should still count as duplicates.",
+   "files": {
+    "dedupe.py": "class DedupePipeline:\n    \"\"\"Drops events already seen in the last `ttl` seconds (inclusive).\"\"\"\n\n    def __init__(self, ttl=60):\n        self.ttl = ttl\n        self.seen = {}\n        self.dropped = 0\n\n    def _expire(self, now):\n        for key, first_seen in self.seen.items():\n            if now - first_seen >= self.ttl:\n                del self.seen[key]\n\n    def accept(self, event, now):\n        self._expire(now)\n        key = event[\"id\"]\n        if key in self.seen:\n            self.dropped += 1\n            return False\n        self.seen[key] = now\n        return True\n\n    def accept_all(self, events, now):\n        return [e for e in events if self.accept(e, now)]\n"
+   },
+   "tests": "from dedupe import DedupePipeline\n\n\ndef ev(source, id_):\n    return {\"source\": source, \"id\": id_}\n\n\ndef test_first_event_accepted_duplicate_dropped():\n    p = DedupePipeline(ttl=60)\n    assert p.accept(ev(\"web\", 1), now=0) is True, \"first sighting accepted\"\n    assert p.accept(ev(\"web\", 1), now=5) is False, \"same event again is a duplicate\"\n    assert p.dropped == 1, f\"dropped counter was {p.dropped}\"\n\n\ndef test_same_id_from_different_sources_both_accepted():\n    p = DedupePipeline()\n    assert p.accept(ev(\"web\", 7), now=0), \"web/7 is new\"\n    assert p.accept(ev(\"mobile\", 7), now=0), \"mobile/7 is a different event\"\n\n\ndef test_expiry_does_not_crash_and_allows_reuse():\n    p = DedupePipeline(ttl=60)\n    p.accept(ev(\"web\", 1), now=0)\n    p.accept(ev(\"web\", 2), now=10)\n    assert p.accept(ev(\"web\", 1), now=100) is True, \"after ttl the id may be accepted again\"\n\n\ndef test_event_exactly_at_ttl_is_still_duplicate():\n    p = DedupePipeline(ttl=60)\n    p.accept(ev(\"web\", 1), now=0)\n    assert p.accept(ev(\"web\", 1), now=60) is False, \"age == ttl is still inside the window\"\n    assert p.accept(ev(\"web\", 1), now=61) is True, \"age > ttl has expired\"\n\n\ndef test_expiring_many_keys_at_once():\n    p = DedupePipeline(ttl=10)\n    for i in range(20):\n        p.accept(ev(\"s\", i), now=0)\n    assert p.accept(ev(\"s\", 3), now=50) is True, \"all 20 keys expire in a single sweep\"\n    assert len(p.seen) == 1, f\"only the new key should remain, got {len(p.seen)}\"\n\n\ndef test_accept_all_filters_batch():\n    p = DedupePipeline()\n    batch = [ev(\"a\", 1), ev(\"a\", 2), ev(\"a\", 1), ev(\"b\", 1)]\n    kept = p.accept_all(batch, now=0)\n    assert [(e[\"source\"], e[\"id\"]) for e in kept] == [(\"a\", 1), (\"a\", 2), (\"b\", 1)], f\"got {kept}\"\n",
+   "solution": {
+    "dedupe.py": "class DedupePipeline:\n    \"\"\"Drops events already seen in the last `ttl` seconds (inclusive).\"\"\"\n\n    def __init__(self, ttl=60):\n        self.ttl = ttl\n        self.seen = {}\n        self.dropped = 0\n\n    def _expire(self, now):\n        for key, first_seen in list(self.seen.items()):\n            if now - first_seen > self.ttl:\n                del self.seen[key]\n\n    def accept(self, event, now):\n        self._expire(now)\n        key = (event[\"source\"], event[\"id\"])\n        if key in self.seen:\n            self.dropped += 1\n            return False\n        self.seen[key] = now\n        return True\n\n    def accept_all(self, events, now):\n        return [e for e in events if self.accept(e, now)]\n"
+   },
+   "hints": [
+    "Reproduce the crash first: accept one event, then call accept again after the ttl has elapsed.",
+    "There are three separate issues: mutating a dict while iterating it, the identity of an event, and the comparison used for 'inclusive'.",
+    "Iterate over list(self.seen.items()), key on (source, id), and expire only when age is strictly greater than ttl."
+   ],
+   "explanation": "Deleting from a dict during iteration raises RuntimeError, so expiry must iterate over a snapshot. The dedupe key used only `id`, which collides across sources; a composite key (source, id) is the real identity. Finally the docstring says the window is inclusive, but `>=` expired events at exactly ttl; it must be `>`.",
+   "tags": [
+    "dict-mutation",
+    "dedupe",
+    "boundary",
+    "composite-key"
+   ],
+   "companies": [
+    "Segment",
+    "Uber"
+   ]
+  },
+  {
+   "id": "dbg-py-task-scheduler",
+   "title": "Scheduler runs low-priority jobs first and blocks on future jobs",
+   "language": "python",
+   "difficulty": "Medium",
+   "time_minutes": 22,
+   "bug_count": 2,
+   "scenario": "OPS-1177: The nightly job runner executes priority-1 cleanup jobs before priority-9 billing jobs (higher number means more important). Separately, when the most important job is scheduled for later, the runner returns nothing at all even though lower-priority jobs are due now, so the queue stalls.",
+   "files": {
+    "scheduler.py": "import heapq\nimport itertools\n\n\nclass Scheduler:\n    \"\"\"Higher priority number runs first; ties run in insertion order; jobs run only once due.\"\"\"\n\n    def __init__(self):\n        self._heap = []\n        self._counter = itertools.count()\n\n    def add(self, name, priority, run_at=0):\n        heapq.heappush(self._heap, (priority, next(self._counter), name, run_at))\n\n    def pop_ready(self, now):\n        \"\"\"Return the name of the best job whose run_at <= now, or None.\"\"\"\n        if not self._heap:\n            return None\n        if self._heap[0][3] > now:\n            return None\n        return heapq.heappop(self._heap)[2]\n\n    def __len__(self):\n        return len(self._heap)\n"
+   },
+   "tests": "from scheduler import Scheduler\n\n\ndef test_higher_priority_first():\n    s = Scheduler()\n    s.add(\"cleanup\", 1)\n    s.add(\"billing\", 9)\n    s.add(\"email\", 5)\n    order = [s.pop_ready(0), s.pop_ready(0), s.pop_ready(0)]\n    assert order == [\"billing\", \"email\", \"cleanup\"], f\"got {order}\"\n\n\ndef test_ties_are_fifo():\n    s = Scheduler()\n    for name in [\"a\", \"b\", \"c\"]:\n        s.add(name, 5)\n    assert [s.pop_ready(0) for _ in range(3)] == [\"a\", \"b\", \"c\"], \"equal priority should keep insertion order\"\n\n\ndef test_empty_returns_none():\n    assert Scheduler().pop_ready(0) is None, \"empty scheduler yields None\"\n\n\ndef test_future_job_does_not_block_due_jobs():\n    s = Scheduler()\n    s.add(\"big-report\", 9, run_at=100)\n    s.add(\"small\", 1, run_at=0)\n    assert s.pop_ready(10) == \"small\", \"the due low-priority job should run while the big one waits\"\n\n\ndef test_future_job_stays_queued_and_runs_when_due():\n    s = Scheduler()\n    s.add(\"big-report\", 9, run_at=100)\n    s.add(\"small\", 1, run_at=0)\n    s.pop_ready(10)\n    assert len(s) == 1, \"the waiting job must remain queued\"\n    assert s.pop_ready(50) is None, \"not due yet\"\n    assert s.pop_ready(100) == \"big-report\", \"due at exactly run_at\"\n\n\ndef test_skipped_jobs_keep_their_fifo_position():\n    s = Scheduler()\n    s.add(\"late-1\", 5, run_at=50)\n    s.add(\"late-2\", 5, run_at=50)\n    s.add(\"now\", 1, run_at=0)\n    s.pop_ready(0)\n    assert [s.pop_ready(60), s.pop_ready(60)] == [\"late-1\", \"late-2\"], \"order among equals must be preserved\"\n",
+   "solution": {
+    "scheduler.py": "import heapq\nimport itertools\n\n\nclass Scheduler:\n    \"\"\"Higher priority number runs first; ties run in insertion order; jobs run only once due.\"\"\"\n\n    def __init__(self):\n        self._heap = []\n        self._counter = itertools.count()\n\n    def add(self, name, priority, run_at=0):\n        heapq.heappush(self._heap, (-priority, next(self._counter), name, run_at))\n\n    def pop_ready(self, now):\n        \"\"\"Return the name of the best job whose run_at <= now, or None.\"\"\"\n        skipped = []\n        result = None\n        while self._heap:\n            item = heapq.heappop(self._heap)\n            if item[3] <= now:\n                result = item[2]\n                break\n            skipped.append(item)\n        for item in skipped:\n            heapq.heappush(self._heap, item)\n        return result\n\n    def __len__(self):\n        return len(self._heap)\n"
+   },
+   "hints": [
+    "heapq is a min-heap. Which tuple element decides the order, and which direction do you want for 'higher number first'?",
+    "pop_ready only inspects the top of the heap. What if the top item is not due but the next one is?",
+    "Push -priority; in pop_ready pop until you find a due item, then push the skipped ones back."
+   ],
+   "explanation": "heapq pops the smallest tuple first, so pushing the raw priority ran the least important jobs first; negate the priority (the counter keeps ties FIFO). pop_ready only looked at the heap root, so one not-yet-due high priority job blocked everything behind it (head-of-line blocking). Pop until a due job is found and restore the skipped ones.",
+   "tags": [
+    "heap",
+    "priority-queue",
+    "scheduling",
+    "sort-key"
+   ],
+   "companies": [
+    "Airbnb",
+    "Netflix"
+   ]
+  },
+  {
+   "id": "dbg-py-room-booking-timezones",
+   "title": "Room booking double-books across time zones",
+   "language": "python",
+   "difficulty": "Hard",
+   "time_minutes": 28,
+   "bug_count": 3,
+   "scenario": "CAL-3381: Two teams booked the same conference room, one entering 10:00-11:00 UTC and the other 15:00-16:00 in UTC+5, and the system accepted both. Meetings that end exactly when the next starts are rejected as conflicts, and the \"duration\" shown for a booking that spans midnight is wrong (a 28 hour block shows as 4).",
+   "files": {
+    "booking.py": "from datetime import datetime, timedelta, timezone\n\n\ndef parse_iso(text):\n    return datetime.fromisoformat(text)\n\n\ndef to_utc(dt):\n    \"\"\"Normalise to an aware UTC datetime. Naive values are assumed to already be UTC.\"\"\"\n    return dt.replace(tzinfo=timezone.utc)\n\n\ndef overlaps(a_start, a_end, b_start, b_end):\n    return a_start <= b_end and b_start <= a_end\n\n\ndef duration_hours(start, end):\n    return (end - start).seconds / 3600\n",
+    "room.py": "from datetime import timedelta\n\nfrom booking import to_utc, overlaps\n\n\nclass Room:\n    def __init__(self, name, buffer_minutes=0):\n        self.name = name\n        self.buffer_minutes = buffer_minutes\n        self.bookings = []\n\n    def book(self, start, end):\n        \"\"\"Return True and store the booking if it does not clash with an existing one.\"\"\"\n        start, end = to_utc(start), to_utc(end)\n        if end <= start:\n            raise ValueError(\"end must be after start\")\n        pad = timedelta(minutes=self.buffer_minutes)\n        for s, e in self.bookings:\n            if overlaps(start - pad, end + pad, s, e):\n                return False\n        self.bookings.append((start, end))\n        return True\n"
+   },
+   "tests": "from booking import parse_iso, duration_hours\nfrom room import Room\n\n\ndef book(room, a, b):\n    return room.book(parse_iso(a), parse_iso(b))\n\n\ndef test_same_instant_different_offsets_conflict():\n    r = Room(\"Everest\")\n    assert book(r, \"2024-03-01T10:00:00+00:00\", \"2024-03-01T11:00:00+00:00\"), \"first booking\"\n    assert not book(r, \"2024-03-01T15:00:00+05:00\", \"2024-03-01T16:00:00+05:00\"), \\\n        \"15:00+05:00 is 10:00 UTC, it overlaps the first booking\"\n\n\ndef test_back_to_back_is_allowed():\n    r = Room(\"Everest\")\n    assert book(r, \"2024-03-01T10:00:00+00:00\", \"2024-03-01T11:00:00+00:00\")\n    assert book(r, \"2024-03-01T11:00:00+00:00\", \"2024-03-01T12:00:00+00:00\"), \\\n        \"a meeting may start exactly when the previous one ends\"\n\n\ndef test_real_overlap_rejected():\n    r = Room(\"Everest\")\n    assert book(r, \"2024-03-01T10:00:00+00:00\", \"2024-03-01T11:00:00+00:00\")\n    assert not book(r, \"2024-03-01T10:30:00+00:00\", \"2024-03-01T11:30:00+00:00\"), \"half overlap\"\n    assert not book(r, \"2024-03-01T09:00:00+00:00\", \"2024-03-01T12:00:00+00:00\"), \"fully containing\"\n\n\ndef test_buffer_between_meetings():\n    r = Room(\"Everest\", buffer_minutes=15)\n    assert book(r, \"2024-03-01T10:00:00+00:00\", \"2024-03-01T11:00:00+00:00\")\n    assert not book(r, \"2024-03-01T11:00:00+00:00\", \"2024-03-01T12:00:00+00:00\"), \"needs a 15 minute gap\"\n    assert book(r, \"2024-03-01T11:15:00+00:00\", \"2024-03-01T12:15:00+00:00\"), \"exactly 15 minutes is enough\"\n\n\ndef test_naive_input_treated_as_utc():\n    r = Room(\"Everest\")\n    assert book(r, \"2024-03-01T10:00:00\", \"2024-03-01T11:00:00\")\n    assert not book(r, \"2024-03-01T10:00:00+00:00\", \"2024-03-01T11:00:00+00:00\"), \"naive == UTC\"\n\n\ndef test_duration_spans_days():\n    h = duration_hours(parse_iso(\"2024-03-01T22:00:00+00:00\"), parse_iso(\"2024-03-03T02:00:00+00:00\"))\n    assert h == 28.0, f\"expected 28.0 hours, got {h}\"\n\n\ndef test_duration_across_offsets_and_naive():\n    h = duration_hours(parse_iso(\"2024-03-01T10:00:00+00:00\"), parse_iso(\"2024-03-01T20:00:00+05:00\"))\n    assert h == 5.0, f\"20:00+05:00 is 15:00 UTC, so 5.0 hours, got {h}\"\n    h2 = duration_hours(parse_iso(\"2024-03-01T10:00:00\"), parse_iso(\"2024-03-01T12:30:00+00:00\"))\n    assert h2 == 2.5, f\"naive start is UTC, expected 2.5 got {h2}\"\n",
+   "solution": {
+    "booking.py": "from datetime import datetime, timedelta, timezone\n\n\ndef parse_iso(text):\n    return datetime.fromisoformat(text)\n\n\ndef to_utc(dt):\n    \"\"\"Normalise to an aware UTC datetime. Naive values are assumed to already be UTC.\"\"\"\n    if dt.tzinfo is None:\n        return dt.replace(tzinfo=timezone.utc)\n    return dt.astimezone(timezone.utc)\n\n\ndef overlaps(a_start, a_end, b_start, b_end):\n    return a_start < b_end and b_start < a_end\n\n\ndef duration_hours(start, end):\n    return (to_utc(end) - to_utc(start)).total_seconds() / 3600\n"
+   },
+   "hints": [
+    "Print what to_utc returns for 15:00+05:00. Is that the same instant as 10:00 UTC?",
+    "Three separate problems: how offsets are normalised, whether touching intervals count as overlap, and which timedelta attribute carries the full duration.",
+    "Use astimezone for aware datetimes (replace only for naive ones), compare with strict `<`, and use total_seconds() instead of .seconds."
+   ],
+   "explanation": "`replace(tzinfo=utc)` stamps UTC on a value without converting it, so any non-UTC offset silently shifted the meeting by hours (convert aware values with astimezone and only attach UTC to naive ones). overlaps used inclusive comparisons, so intervals that merely touch counted as conflicts; half-open intervals need strict `<`. timedelta.seconds is only the sub-day remainder, so durations over a day wrapped; total_seconds() is the full length.",
+   "tags": [
+    "timezone",
+    "datetime",
+    "interval-overlap",
+    "timedelta"
+   ],
+   "companies": [
+    "Google",
+    "Calendly"
+   ]
+  },
+  {
+   "id": "dbg-py-bank-ledger",
+   "title": "Ledger transfers lose money on failure and round fees down",
+   "language": "python",
+   "difficulty": "Hard",
+   "time_minutes": 28,
+   "bug_count": 3,
+   "scenario": "FIN-2007: Reconciliation found accounts with negative balances after rejected transfers, and a transfer to a mistyped account number that raised KeyError but still debited the sender. Fee revenue is also consistently short by up to one cent per transfer compared with the bank's half-up rounding.",
+   "files": {
+    "ledger.py": "class InsufficientFunds(Exception):\n    pass\n\n\nclass Ledger:\n    \"\"\"In-memory ledger. All amounts are integer cents; fees are given in basis points (1/100 of a percent).\"\"\"\n\n    def __init__(self):\n        self.balances = {}\n        self.fees = 0\n        self.history = []\n\n    def open(self, account, balance=0):\n        if account in self.balances:\n            raise ValueError(f\"{account} already exists\")\n        self.balances[account] = balance\n\n    def transfer(self, src, dst, amount, fee_bps=0):\n        \"\"\"Move `amount` from src to dst; the sender also pays a fee, rounded half-up to the cent.\"\"\"\n        if amount <= 0:\n            raise ValueError(\"amount must be positive\")\n        fee = amount * fee_bps // 10000\n        self.balances[src] -= amount + fee\n        if self.balances[src] < 0:\n            raise InsufficientFunds(src)\n        self.balances[dst] += amount\n        self.fees += fee\n        self.history.append((src, dst, amount, fee))\n\n    def total(self):\n        \"\"\"Money in the system; must never change by transferring.\"\"\"\n        return sum(self.balances.values()) + self.fees\n"
+   },
+   "tests": "from ledger import Ledger, InsufficientFunds\n\n\ndef make():\n    led = Ledger()\n    led.open(\"alice\", 100_00)\n    led.open(\"bob\", 50_00)\n    return led\n\n\ndef test_basic_transfer():\n    led = make()\n    led.transfer(\"alice\", \"bob\", 30_00)\n    assert led.balances == {\"alice\": 70_00, \"bob\": 80_00}, f\"got {led.balances}\"\n\n\ndef test_insufficient_funds_leaves_balances_untouched():\n    led = make()\n    try:\n        led.transfer(\"alice\", \"bob\", 150_00)\n        assert False, \"should raise InsufficientFunds\"\n    except InsufficientFunds:\n        pass\n    assert led.balances == {\"alice\": 100_00, \"bob\": 50_00}, f\"failed transfer changed balances: {led.balances}\"\n    assert led.history == [], \"failed transfers are not recorded\"\n\n\ndef test_unknown_destination_does_not_debit_sender():\n    led = make()\n    try:\n        led.transfer(\"alice\", \"bbo\", 10_00)\n        assert False, \"unknown account should raise KeyError\"\n    except KeyError:\n        pass\n    assert led.balances[\"alice\"] == 100_00, f\"sender was debited: {led.balances['alice']}\"\n\n\ndef test_fee_rounds_half_up():\n    led = make()\n    led.transfer(\"alice\", \"bob\", 10_00, fee_bps=25)   # fee = 2.5 cents -> 3\n    assert led.fees == 3, f\"fee should be 3 cents, got {led.fees}\"\n    assert led.balances[\"alice\"] == 100_00 - 10_00 - 3, f\"sender balance {led.balances['alice']}\"\n\n\ndef test_fee_rounding_near_one_cent():\n    led = make()\n    led.transfer(\"alice\", \"bob\", 19_99, fee_bps=100)  # 19.99 cents -> 20\n    assert led.fees == 20, f\"expected 20, got {led.fees}\"\n\n\ndef test_can_spend_exact_balance_including_fee():\n    led = Ledger()\n    led.open(\"a\", 10_03)\n    led.open(\"b\", 0)\n    led.transfer(\"a\", \"b\", 10_00, fee_bps=30)  # fee 3 cents\n    assert led.balances[\"a\"] == 0 and led.balances[\"b\"] == 10_00, f\"got {led.balances}\"\n\n\ndef test_money_is_conserved_and_history_recorded():\n    led = make()\n    before = led.total()\n    led.transfer(\"alice\", \"bob\", 10_00, fee_bps=50)\n    try:\n        led.transfer(\"bob\", \"alice\", 9999_00)\n    except InsufficientFunds:\n        pass\n    assert led.total() == before, f\"money appeared or vanished: {before} -> {led.total()}\"\n    assert led.history == [(\"alice\", \"bob\", 10_00, 5)], f\"history: {led.history}\"\n",
+   "solution": {
+    "ledger.py": "class InsufficientFunds(Exception):\n    pass\n\n\nclass Ledger:\n    \"\"\"In-memory ledger. All amounts are integer cents; fees are given in basis points (1/100 of a percent).\"\"\"\n\n    def __init__(self):\n        self.balances = {}\n        self.fees = 0\n        self.history = []\n\n    def open(self, account, balance=0):\n        if account in self.balances:\n            raise ValueError(f\"{account} already exists\")\n        self.balances[account] = balance\n\n    def transfer(self, src, dst, amount, fee_bps=0):\n        \"\"\"Move `amount` from src to dst; the sender also pays a fee, rounded half-up to the cent.\"\"\"\n        if amount <= 0:\n            raise ValueError(\"amount must be positive\")\n        for account in (src, dst):\n            if account not in self.balances:\n                raise KeyError(account)\n        fee = (amount * fee_bps + 5000) // 10000\n        if self.balances[src] < amount + fee:\n            raise InsufficientFunds(src)\n        self.balances[src] -= amount + fee\n        self.balances[dst] += amount\n        self.fees += fee\n        self.history.append((src, dst, amount, fee))\n\n    def total(self):\n        \"\"\"Money in the system; must never change by transferring.\"\"\"\n        return sum(self.balances.values()) + self.fees\n"
+   },
+   "hints": [
+    "Walk through a transfer that fails. At which line did the sender's balance change, and was it ever restored?",
+    "Validate everything (amount, both accounts, funds) before you change any balance. Also look at how fee is computed from basis points.",
+    "fee = (amount * fee_bps + 5000) // 10000 rounds half-up using integers; then check funds, then mutate."
+   ],
+   "explanation": "The transfer mutated the sender's balance first and validated afterwards, so InsufficientFunds and the unknown-destination KeyError left the ledger corrupted (the check-after-write anti-pattern); all validation must precede any write. The fee used floor division, which truncates instead of rounding half-up; adding half the divisor before the floor division is the integer idiom.",
+   "tags": [
+    "money",
+    "atomicity",
+    "rounding",
+    "validation"
+   ],
+   "companies": [
+    "Stripe",
+    "Square"
+   ]
+  },
+  {
+   "id": "dbg-py-jwt-expiry",
+   "title": "Signed tokens: padding crashes and expiry boundary errors",
+   "language": "python",
+   "difficulty": "Hard",
+   "time_minutes": 30,
+   "bug_count": 3,
+   "scenario": "AUTH-1544: Some users randomly fail to log in with \"Incorrect padding\" even though their token is valid (depends on their username length). Security also noticed that a token is still accepted at the exact second it expires, and that the configured clock-skew leeway makes tokens expire EARLIER instead of later.",
+   "files": {
+    "tokens.py": "import base64\nimport hashlib\nimport hmac\nimport json\nimport time\n\n\nclass InvalidToken(Exception):\n    pass\n\n\nclass TokenExpired(InvalidToken):\n    pass\n\n\ndef b64url_encode(raw):\n    return base64.urlsafe_b64encode(raw).rstrip(b\"=\").decode()\n\n\ndef b64url_decode(text):\n    return base64.urlsafe_b64decode(text)\n\n\ndef _mac(payload, secret):\n    return b64url_encode(hmac.new(secret.encode(), payload.encode(), hashlib.sha256).digest())\n\n\ndef sign(claims, secret, now=None, ttl=3600):\n    now = int(time.time()) if now is None else now\n    body = dict(claims, iat=now, exp=now + ttl)\n    payload = b64url_encode(json.dumps(body, separators=(\",\", \":\"), sort_keys=True).encode())\n    return payload + \".\" + _mac(payload, secret)\n\n\ndef verify(token, secret, now=None, leeway=0):\n    \"\"\"A token is valid while now < exp (+ leeway seconds of tolerated clock skew).\"\"\"\n    now = int(time.time()) if now is None else now\n    try:\n        payload, sig = token.split(\".\")\n    except ValueError:\n        raise InvalidToken(\"malformed token\")\n    if not hmac.compare_digest(sig, _mac(payload, secret)):\n        raise InvalidToken(\"bad signature\")\n    claims = json.loads(b64url_decode(payload))\n    if now > claims[\"exp\"] - leeway:\n        raise TokenExpired(\"token expired\")\n    return claims\n"
+   },
+   "tests": "from tokens import sign, verify, InvalidToken, TokenExpired\n\n\nSECRET = \"s3cret\"\n\n\ndef test_roundtrip_all_payload_lengths():\n    for n in range(1, 9):\n        name = \"x\" * n\n        token = sign({\"sub\": name}, SECRET, now=1000)\n        claims = verify(token, SECRET, now=1001)\n        assert claims[\"sub\"] == name, f\"round trip failed for sub of length {n}\"\n\n\ndef test_valid_until_last_second():\n    token = sign({\"sub\": \"u\"}, SECRET, now=1000, ttl=60)\n    assert verify(token, SECRET, now=1059)[\"sub\"] == \"u\", \"one second before exp is valid\"\n\n\ndef test_expired_exactly_at_exp():\n    token = sign({\"sub\": \"u\"}, SECRET, now=1000, ttl=60)\n    try:\n        verify(token, SECRET, now=1060)\n        assert False, \"now == exp must be rejected\"\n    except TokenExpired:\n        pass\n\n\ndef test_leeway_extends_validity():\n    token = sign({\"sub\": \"u\"}, SECRET, now=1000, ttl=60)\n    assert verify(token, SECRET, now=1065, leeway=10)[\"sub\"] == \"u\", \"leeway of 10s keeps it valid at exp+5\"\n    try:\n        verify(token, SECRET, now=1070, leeway=10)\n        assert False, \"exp + leeway is the first rejected second\"\n    except TokenExpired:\n        pass\n\n\ndef test_tampered_payload_rejected():\n    token = sign({\"sub\": \"u\"}, SECRET, now=1000)\n    payload, sig = token.split(\".\")\n    forged = sign({\"sub\": \"admin\"}, \"other-secret\", now=1000).split(\".\")[0] + \".\" + sig\n    try:\n        verify(forged, SECRET, now=1001)\n        assert False, \"forged payload must fail signature check\"\n    except InvalidToken as e:\n        assert not isinstance(e, TokenExpired), \"should be a signature failure, not expiry\"\n\n\ndef test_wrong_secret_and_malformed():\n    token = sign({\"sub\": \"u\"}, SECRET, now=1000)\n    for bad in (token, \"not-a-token\", token + \".extra\"):\n        try:\n            verify(bad, \"different\", now=1001)\n            assert False, f\"{bad!r} should be rejected\"\n        except InvalidToken:\n            pass\n",
+   "solution": {
+    "tokens.py": "import base64\nimport hashlib\nimport hmac\nimport json\nimport time\n\n\nclass InvalidToken(Exception):\n    pass\n\n\nclass TokenExpired(InvalidToken):\n    pass\n\n\ndef b64url_encode(raw):\n    return base64.urlsafe_b64encode(raw).rstrip(b\"=\").decode()\n\n\ndef b64url_decode(text):\n    return base64.urlsafe_b64decode(text + \"=\" * (-len(text) % 4))\n\n\ndef _mac(payload, secret):\n    return b64url_encode(hmac.new(secret.encode(), payload.encode(), hashlib.sha256).digest())\n\n\ndef sign(claims, secret, now=None, ttl=3600):\n    now = int(time.time()) if now is None else now\n    body = dict(claims, iat=now, exp=now + ttl)\n    payload = b64url_encode(json.dumps(body, separators=(\",\", \":\"), sort_keys=True).encode())\n    return payload + \".\" + _mac(payload, secret)\n\n\ndef verify(token, secret, now=None, leeway=0):\n    \"\"\"A token is valid while now < exp (+ leeway seconds of tolerated clock skew).\"\"\"\n    now = int(time.time()) if now is None else now\n    try:\n        payload, sig = token.split(\".\")\n    except ValueError:\n        raise InvalidToken(\"malformed token\")\n    if not hmac.compare_digest(sig, _mac(payload, secret)):\n        raise InvalidToken(\"bad signature\")\n    claims = json.loads(b64url_decode(payload))\n    if now >= claims[\"exp\"] + leeway:\n        raise TokenExpired(\"token expired\")\n    return claims\n"
+   },
+   "hints": [
+    "Round-trip tokens with usernames of length 1 to 8. Which ones fail and what do the failing base64 strings have in common?",
+    "Base64 strings must have a length that is a multiple of 4 when decoding; the encoder strips the '=' padding. Then look at the sign of the leeway term and the comparison operator in verify().",
+    "Re-add padding with '=' * (-len(text) % 4); expired when now >= exp + leeway."
+   ],
+   "explanation": "The encoder strips base64 padding (as JWT requires) but the decoder did not restore it, so payloads whose encoded length was not a multiple of 4 crashed with binascii.Error. In verify(), `now > exp - leeway` has two mistakes: leeway was subtracted so it shortened validity rather than extending it, and `>` accepted a token at the very second it expires; the contract is now < exp + leeway.",
+   "tags": [
+    "auth",
+    "base64",
+    "boundary",
+    "clock-skew"
+   ],
+   "companies": [
+    "Auth0",
+    "Okta"
+   ]
+  },
+  {
+   "id": "dbg-py-catalog-cache",
+   "title": "Product catalog cache serves stale and corrupted data",
+   "language": "python",
+   "difficulty": "Hard",
+   "time_minutes": 28,
+   "bug_count": 2,
+   "scenario": "WEB-6120: After a merchandiser changes a product's price or moves it to another category, the category page keeps showing the old price (or the product in the old category) until the next deploy. Also, a promo script that sets price=0 on a fetched product to compute a discount preview ends up permanently zeroing the price for all visitors.",
+   "files": {
+    "repo.py": "class Repo:\n    \"\"\"Fake database. `reads` counts how often the (slow) backend was hit.\"\"\"\n\n    def __init__(self, rows):\n        self.rows = {r[\"id\"]: dict(r) for r in rows}\n        self.reads = 0\n\n    def fetch(self, pid):\n        self.reads += 1\n        return dict(self.rows[pid])\n\n    def query_category(self, category):\n        self.reads += 1\n        return [dict(r) for r in self.rows.values() if r[\"category\"] == category]\n\n    def save(self, pid, fields):\n        self.rows[pid].update(fields)\n",
+    "catalog.py": "class CachedCatalog:\n    def __init__(self, repo):\n        self.repo = repo\n        self._items = {}\n        self._lists = {}\n\n    def get(self, pid):\n        if pid not in self._items:\n            self._items[pid] = self.repo.fetch(pid)\n        return self._items[pid]\n\n    def by_category(self, category):\n        if category not in self._lists:\n            self._lists[category] = self.repo.query_category(category)\n        return self._lists[category]\n\n    def update(self, pid, **fields):\n        self.repo.save(pid, fields)\n        self._items.pop(pid, None)\n"
+   },
+   "tests": "from repo import Repo\nfrom catalog import CachedCatalog\n\nROWS = [\n    {\"id\": 1, \"name\": \"hammer\", \"category\": \"tools\", \"price\": 20},\n    {\"id\": 2, \"name\": \"saw\", \"category\": \"tools\", \"price\": 30},\n    {\"id\": 3, \"name\": \"yoyo\", \"category\": \"toys\", \"price\": 5},\n]\n\n\ndef make():\n    repo = Repo(ROWS)\n    return repo, CachedCatalog(repo)\n\n\ndef names(rows):\n    return sorted(r[\"name\"] for r in rows)\n\n\ndef test_cache_avoids_repeat_reads():\n    repo, cat = make()\n    cat.get(1)\n    cat.get(1)\n    cat.by_category(\"tools\")\n    cat.by_category(\"tools\")\n    assert repo.reads == 2, f\"expected 1 item read + 1 list read, got {repo.reads}\"\n\n\ndef test_item_reflects_update():\n    repo, cat = make()\n    assert cat.get(1)[\"price\"] == 20\n    cat.update(1, price=25)\n    assert cat.get(1)[\"price\"] == 25, \"get() must see the new price after update()\"\n\n\ndef test_category_listing_reflects_price_update():\n    repo, cat = make()\n    cat.by_category(\"tools\")\n    cat.update(1, price=25)\n    prices = {r[\"name\"]: r[\"price\"] for r in cat.by_category(\"tools\")}\n    assert prices[\"hammer\"] == 25, f\"category listing is stale: {prices}\"\n\n\ndef test_moving_product_updates_both_categories():\n    repo, cat = make()\n    assert names(cat.by_category(\"tools\")) == [\"hammer\", \"saw\"]\n    assert names(cat.by_category(\"toys\")) == [\"yoyo\"]\n    cat.update(1, category=\"toys\")\n    assert names(cat.by_category(\"tools\")) == [\"saw\"], \"hammer must leave the old category\"\n    assert names(cat.by_category(\"toys\")) == [\"hammer\", \"yoyo\"], \"hammer must appear in the new category\"\n\n\ndef test_mutating_returned_item_does_not_poison_cache():\n    repo, cat = make()\n    item = cat.get(1)\n    item[\"price\"] = 0\n    assert cat.get(1)[\"price\"] == 20, \"callers get copies; their edits must not change cached data\"\n\n\ndef test_mutating_returned_list_does_not_poison_cache():\n    repo, cat = make()\n    rows = cat.by_category(\"tools\")\n    rows.clear()\n    assert names(cat.by_category(\"tools\")) == [\"hammer\", \"saw\"], \"cached listing was emptied by a caller\"\n    cat.by_category(\"tools\")[0][\"price\"] = 1\n    assert cat.by_category(\"tools\")[0][\"price\"] != 1, \"nested dicts must be copied too\"\n",
+   "solution": {
+    "catalog.py": "class CachedCatalog:\n    def __init__(self, repo):\n        self.repo = repo\n        self._items = {}\n        self._lists = {}\n\n    def get(self, pid):\n        if pid not in self._items:\n            self._items[pid] = self.repo.fetch(pid)\n        return dict(self._items[pid])\n\n    def by_category(self, category):\n        if category not in self._lists:\n            self._lists[category] = self.repo.query_category(category)\n        return [dict(r) for r in self._lists[category]]\n\n    def update(self, pid, **fields):\n        old = self.get(pid)\n        self.repo.save(pid, fields)\n        self._items.pop(pid, None)\n        self._lists.pop(old[\"category\"], None)\n        self._lists.pop(fields.get(\"category\", old[\"category\"]), None)\n"
+   },
+   "hints": [
+    "After update(), which cache entries could contain data derived from the row that just changed?",
+    "A cached listing contains copies of products; and get() hands out the very dict that is stored in the cache.",
+    "Invalidate the old and the new category listing on update, and return copies (dict(...), list of dict copies) from get()/by_category()."
+   ],
+   "explanation": "update() invalidated only the single-item cache, but category listings embed product rows, so they stayed stale; a move between categories needs both the old and the new listing dropped. Separately, the cache returned its own internal dict/list objects, so any caller that mutated the result (the promo script) corrupted the cache for everyone. Return defensive copies and invalidate every derived entry.",
+   "tags": [
+    "cache-invalidation",
+    "aliasing",
+    "defensive-copy"
+   ],
+   "companies": [
+    "Etsy",
+    "Shopify"
+   ]
+  },
+  {
+   "id": "dbg-py-form-validators",
+   "title": "Form validator applies the wrong rule to every field",
+   "language": "python",
+   "difficulty": "Hard",
+   "time_minutes": 25,
+   "bug_count": 2,
+   "scenario": "FORM-285: In the signup form, a 30-character nickname is accepted even though nick has max_len 3, and a name longer than 5 characters is not flagged, yet age errors appear on unrelated fields. QA also found that entering age 0 says \"age is required\" instead of \"must be >= 18\", and a name consisting of spaces passes as filled in.",
+   "files": {
+    "validation.py": "class Validator:\n    \"\"\"Builds one check per field from a rules dict and runs them in rule order.\"\"\"\n\n    def __init__(self, rules):\n        self.checks = []\n        for field, spec in rules.items():\n            self.checks.append(lambda rec: _check(rec, field, spec))\n\n    def validate(self, rec):\n        errors = []\n        for check in self.checks:\n            message = check(rec)\n            if message:\n                errors.append(message)\n        return errors\n\n\ndef _check(rec, field, spec):\n    value = rec.get(field)\n    if not value:\n        return f\"{field} is required\" if spec.get(\"required\") else None\n    if \"max_len\" in spec and len(value) > spec[\"max_len\"]:\n        return f\"{field} must be at most {spec['max_len']} characters\"\n    if \"min\" in spec and value < spec[\"min\"]:\n        return f\"{field} must be >= {spec['min']}\"\n    return None\n"
+   },
+   "tests": "from validation import Validator\n\nRULES = {\n    \"name\": {\"required\": True, \"max_len\": 5},\n    \"nick\": {\"max_len\": 3},\n    \"age\": {\"required\": True, \"min\": 18},\n}\n\n\ndef test_valid_record_has_no_errors():\n    v = Validator(RULES)\n    assert v.validate({\"name\": \"Ann\", \"nick\": \"an\", \"age\": 30}) == [], \"valid input should pass\"\n\n\ndef test_each_field_uses_its_own_rule():\n    v = Validator(RULES)\n    errors = v.validate({\"name\": \"Alexander\", \"nick\": \"abcdef\", \"age\": 30})\n    assert errors == [\"name must be at most 5 characters\", \"nick must be at most 3 characters\"], f\"got {errors}\"\n\n\ndef test_age_below_minimum():\n    v = Validator(RULES)\n    assert v.validate({\"name\": \"Ann\", \"age\": 12}) == [\"age must be >= 18\"], \"12 is too young\"\n\n\ndef test_zero_is_a_value_not_missing():\n    v = Validator(RULES)\n    assert v.validate({\"name\": \"Ann\", \"age\": 0}) == [\"age must be >= 18\"], \"0 was provided; it is below the minimum\"\n\n\ndef test_missing_required_fields():\n    v = Validator(RULES)\n    errors = v.validate({\"nick\": \"ab\"})\n    assert errors == [\"name is required\", \"age is required\"], f\"got {errors}\"\n\n\ndef test_blank_string_counts_as_missing():\n    v = Validator(RULES)\n    errors = v.validate({\"name\": \"   \", \"age\": 20})\n    assert errors == [\"name is required\"], f\"whitespace-only name should be missing, got {errors}\"\n\n\ndef test_optional_field_may_be_absent():\n    v = Validator(RULES)\n    assert v.validate({\"name\": \"Bo\", \"age\": 18}) == [], \"nick is optional and age 18 is on the boundary\"\n",
+   "solution": {
+    "validation.py": "class Validator:\n    \"\"\"Builds one check per field from a rules dict and runs them in rule order.\"\"\"\n\n    def __init__(self, rules):\n        self.checks = []\n        for field, spec in rules.items():\n            self.checks.append(lambda rec, field=field, spec=spec: _check(rec, field, spec))\n\n    def validate(self, rec):\n        errors = []\n        for check in self.checks:\n            message = check(rec)\n            if message:\n                errors.append(message)\n        return errors\n\n\ndef _is_missing(value):\n    return value is None or (isinstance(value, str) and not value.strip())\n\n\ndef _check(rec, field, spec):\n    value = rec.get(field)\n    if _is_missing(value):\n        return f\"{field} is required\" if spec.get(\"required\") else None\n    if \"max_len\" in spec and len(value) > spec[\"max_len\"]:\n        return f\"{field} must be at most {spec['max_len']} characters\"\n    if \"min\" in spec and value < spec[\"min\"]:\n        return f\"{field} must be >= {spec['min']}\"\n    return None\n"
+   },
+   "hints": [
+    "Validate a record with a too-long name only. Which field's rule actually gets evaluated?",
+    "Lambdas look variables up when they are called, not when they are created. Separately, what does `not value` say about 0 and '   '?",
+    "Bind loop variables with default arguments (field=field, spec=spec), and define 'missing' as None or a blank string rather than 'falsy'."
+   ],
+   "explanation": "The lambdas closed over the loop variables `field` and `spec` (late binding), so after the loop every check used the last rule (age). The second bug is truthiness used as a presence test: 0 is a legitimate value but falsy, while a whitespace-only string is truthy yet empty. Bind per-iteration values with default args (or functools.partial) and test presence explicitly.",
+   "tags": [
+    "closure",
+    "late-binding",
+    "truthiness",
+    "validation"
+   ],
+   "companies": [
+    "Stripe",
+    "Atlassian"
+   ]
+  },
+  {
+   "id": "dbg-py-bundle-pricing",
+   "title": "Bundle price engine: stale prices, false cycles, leaking caches",
+   "language": "python",
+   "difficulty": "Expert",
+   "time_minutes": 40,
+   "bug_count": 3,
+   "scenario": "PRICE-9001: Three symptoms in the bundle pricing service. (1) The \"starter\" kit, which contains two sub-bundles that both include the same \"fasteners\" bundle, throws CycleError although there is no cycle. (2) After a price update for a single SKU, bundle prices stay at the old value. (3) In the multi-tenant worker, tenant B sometimes receives tenant A's bundle price. Only fix real defects; real cycles must still be detected.",
+   "files": {
+    "pricing.py": "class CycleError(Exception):\n    pass\n\n\nclass BundlePricer:\n    \"\"\"Prices SKUs and (possibly nested) bundles in integer cents.\n\n    catalog: {sku: cents}\n    bundles: {name: {\"items\": {child: qty}, \"discount_pct\": int}}\n    \"\"\"\n\n    def __init__(self, catalog, bundles, tax_pct=None, memo={}):\n        self.catalog = dict(catalog)\n        self.bundles = bundles\n        self.tax_pct = tax_pct or {\"us\": 0, \"eu\": 20}\n        self._memo = memo\n\n    def update_price(self, sku, cents):\n        if sku not in self.catalog:\n            raise KeyError(sku)\n        self.catalog[sku] = cents\n\n    def price(self, name, region=\"us\"):\n        base = self._base(name, set())\n        return base + base * self.tax_pct[region] // 100\n\n    def _base(self, name, path):\n        if name in path:\n            raise CycleError(name)\n        if name in self._memo:\n            return self._memo[name]\n        if name in self.catalog:\n            return self.catalog[name]\n        if name not in self.bundles:\n            raise KeyError(name)\n        path.add(name)\n        spec = self.bundles[name]\n        total = sum(self._base(child, path) * qty for child, qty in spec[\"items\"].items())\n        total -= total * spec[\"discount_pct\"] // 100\n        self._memo[name] = total\n        return total\n"
+   },
+   "tests": "from pricing import BundlePricer, CycleError\n\nCATALOG = {\"pen\": 100, \"screw\": 10, \"nut\": 5, \"paper\": 400}\nBUNDLES = {\n    \"fasteners\": {\"items\": {\"screw\": 10, \"nut\": 10}, \"discount_pct\": 10},\n    \"office\": {\"items\": {\"pen\": 2, \"fasteners\": 1}, \"discount_pct\": 0},\n    \"home\": {\"items\": {\"pen\": 1, \"fasteners\": 1, \"paper\": 1}, \"discount_pct\": 0},\n    \"starter\": {\"items\": {\"office\": 1, \"home\": 1}, \"discount_pct\": 20},\n}\n\n\ndef test_simple_bundle_price():\n    p = BundlePricer(CATALOG, BUNDLES)\n    assert p.price(\"fasteners\") == 135, \"10*10 + 10*5 = 150, minus 10% = 135\"\n    assert p.price(\"pen\") == 100, \"plain SKUs price at catalog value\"\n\n\ndef test_diamond_dependency_is_not_a_cycle():\n    p = BundlePricer(CATALOG, BUNDLES)\n    assert p.price(\"starter\") == 776, \"office 335 + home 635 = 970, minus 20% = 776\"\n\n\ndef test_region_tax():\n    p = BundlePricer(CATALOG, BUNDLES)\n    assert p.price(\"starter\", region=\"eu\") == 931, \"776 + 20% tax = 931\"\n\n\ndef test_real_cycle_is_detected():\n    loop = {\"x\": {\"items\": {\"y\": 1}, \"discount_pct\": 0}, \"y\": {\"items\": {\"x\": 1}, \"discount_pct\": 0}}\n    p = BundlePricer({}, loop)\n    try:\n        p.price(\"x\")\n        assert False, \"x -> y -> x must raise CycleError\"\n    except CycleError:\n        pass\n    try:\n        p.price(\"y\")\n        assert False, \"second call must still detect the cycle\"\n    except CycleError:\n        pass\n\n\ndef test_update_price_invalidates_dependent_bundles():\n    bundles = {\"pair\": {\"items\": {\"pen\": 2}, \"discount_pct\": 0},\n               \"box\": {\"items\": {\"pair\": 3}, \"discount_pct\": 0}}\n    p = BundlePricer({\"pen\": 100}, bundles)\n    assert p.price(\"box\") == 600, \"3 pairs of 2 pens\"\n    p.update_price(\"pen\", 150)\n    assert p.price(\"pair\") == 300, \"pair must use the new pen price\"\n    assert p.price(\"box\") == 900, \"nested bundle must be recomputed too\"\n\n\ndef test_pricers_do_not_share_caches():\n    bundles = {\"twin\": {\"items\": {\"gem\": 2}, \"discount_pct\": 0}}\n    tenant_a = BundlePricer({\"gem\": 100}, bundles)\n    tenant_b = BundlePricer({\"gem\": 250}, bundles)\n    assert tenant_a.price(\"twin\") == 200, \"tenant A price\"\n    assert tenant_b.price(\"twin\") == 500, \"tenant B must not see tenant A's cached price\"\n\n\ndef test_unknown_item_raises_keyerror():\n    p = BundlePricer(CATALOG, BUNDLES)\n    try:\n        p.price(\"nonexistent\")\n        assert False, \"unknown names raise KeyError\"\n    except KeyError:\n        pass\n",
+   "solution": {
+    "pricing.py": "class CycleError(Exception):\n    pass\n\n\nclass BundlePricer:\n    \"\"\"Prices SKUs and (possibly nested) bundles in integer cents.\n\n    catalog: {sku: cents}\n    bundles: {name: {\"items\": {child: qty}, \"discount_pct\": int}}\n    \"\"\"\n\n    def __init__(self, catalog, bundles, tax_pct=None, memo=None):\n        self.catalog = dict(catalog)\n        self.bundles = bundles\n        self.tax_pct = tax_pct or {\"us\": 0, \"eu\": 20}\n        self._memo = {} if memo is None else memo\n\n    def update_price(self, sku, cents):\n        if sku not in self.catalog:\n            raise KeyError(sku)\n        self.catalog[sku] = cents\n        self._memo.clear()\n\n    def price(self, name, region=\"us\"):\n        base = self._base(name, set())\n        return base + base * self.tax_pct[region] // 100\n\n    def _base(self, name, path):\n        if name in path:\n            raise CycleError(name)\n        if name in self._memo:\n            return self._memo[name]\n        if name in self.catalog:\n            return self.catalog[name]\n        if name not in self.bundles:\n            raise KeyError(name)\n        path.add(name)\n        spec = self.bundles[name]\n        total = sum(self._base(child, path) * qty for child, qty in spec[\"items\"].items())\n        total -= total * spec[\"discount_pct\"] // 100\n        path.discard(name)\n        self._memo[name] = total\n        return total\n"
+   },
+   "hints": [
+    "Three independent defects. Start with the diamond: print `path` right before the CycleError is raised for 'starter'. When is a name removed from it?",
+    "`path` should describe the current recursion stack, not every node visited so far. For the other two: where is the default value `{}` created, and what depends on catalog prices that memo does not know about?",
+    "path.discard(name) after computing a bundle; memo=None defaulting to a fresh dict per instance; clear the memo in update_price (all bundles may depend on the changed SKU)."
+   ],
+   "explanation": "(1) `path` was meant to be the current recursion stack for cycle detection, but nodes were never removed, so a shared sub-bundle reached via two parents (a diamond) looked like a cycle. (2) The memo cached bundle totals but update_price changed catalog prices without invalidating it, so every dependent bundle stayed stale. (3) `memo={}` as a default argument is created once and shared by all instances, leaking one tenant's prices into another's. Use a None sentinel, discard from the stack on exit, and invalidate on writes.",
+   "tags": [
+    "recursion",
+    "memoization",
+    "cache-invalidation",
+    "mutable-default",
+    "graph"
+   ],
+   "companies": [
+    "Google",
+    "Stripe",
+    "Amazon"
+   ]
+  }
+ ]
+}

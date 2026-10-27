@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
-  ArrowRight, BookOpen, CircleCheck, CircleX, ClipboardCheck, Clock, Code, Flame, Map, Mic, Trophy, Zap,
+  ArrowRight, Award, BookOpen, CalendarCheck, Check, CircleCheck, CircleX, ClipboardCheck, Clock, Code, Compass, Flame,
+  Layers, Map, Mic, Shield, Trophy, X, Zap,
 } from "lucide-react";
 import { humanDuration } from "@/lib/useActiveTime";
 import { useApi } from "@/lib/useApi";
-import { Badge, Button, Card, DIFFICULTY_TONE, ErrorState, PageLoader, Progress, Ring } from "@/components/ui";
+import { Badge, Button, Card, DIFFICULTY_TONE, ErrorState, PageLoader, Progress, Ring, cx } from "@/components/ui";
+import { minutesLabel, taskMeta } from "@/components/coach/meta";
 
 const ACTIVITY_ICON = { submission: Code, test: ClipboardCheck, interview: Mic };
 
@@ -84,12 +87,113 @@ function ContinueCard({ href, icon: Icon, color, eyebrow, title, meta }) {
   );
 }
 
+function TodayPlanCard({ plan }) {
+  if (!plan) {
+    return (
+      <Link href="/coach" className="card group flex h-full flex-col justify-center gap-3 p-6 transition hover:border-brand/50">
+        <Compass className="size-6 text-brand" />
+        <div>
+          <h2 className="font-semibold">Get a personal study plan</h2>
+          <p className="mt-1 text-sm text-muted">
+            Tell the coach where you are applying and how much time you have. It schedules every day and adjusts weekly
+            from your results.
+          </p>
+        </div>
+        <span className="flex items-center gap-1 text-sm font-medium text-brand">
+          Build my plan <ArrowRight className="size-4 transition group-hover:translate-x-1" />
+        </span>
+      </Link>
+    );
+  }
+  const tasks = plan.tasks || [];
+  const done = tasks.filter((t) => t.done).length;
+  return (
+    <Card className="flex h-full flex-col p-6">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 font-semibold"><CalendarCheck className="size-4 text-brand" /> Today&apos;s plan</h2>
+        <Badge tone={plan.stats?.on_track ? "ok" : "warn"}>{plan.stats?.on_track ? "On track" : "Behind"}</Badge>
+      </div>
+      <p className="mt-1 text-xs text-muted">
+        {plan.target_label}{tasks.length > 0 && ` · ${done}/${tasks.length} done`}
+      </p>
+      {tasks.length === 0 ? (
+        <p className="flex-1 py-6 text-center text-sm text-muted">Nothing scheduled today.</p>
+      ) : (
+        <ul className="mt-3 flex-1 divide-y divide-line">
+          {tasks.slice(0, 6).map((t) => {
+            const { icon: Icon, color } = taskMeta(t.type);
+            return (
+              <li key={t.id}>
+                <Link href={t.href} className="group flex items-center gap-3 py-2.5">
+                  <span className={cx("flex size-5 shrink-0 items-center justify-center rounded-md border",
+                    t.done ? "border-ok bg-ok text-white" : "border-line")}>
+                    {t.done && <Check className="size-3" />}
+                  </span>
+                  <Icon className="size-4 shrink-0" style={{ color }} />
+                  <span className={cx("flex-1 truncate text-sm group-hover:text-brand", t.done && "text-muted line-through")}>
+                    {t.title}
+                  </span>
+                  <span className="hidden text-xs text-faint sm:block">{minutesLabel(t.minutes)}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <Link href="/coach" className="mt-3 flex items-center gap-1 text-xs font-medium text-brand hover:underline">
+        Open full plan <ArrowRight className="size-3.5" />
+      </Link>
+    </Card>
+  );
+}
+
+const ZONE_LABEL = { promote: ["Promotion zone", "text-ok"], demote: ["Demotion zone", "text-bad"], safe: ["Safe zone", "text-muted"] };
+
+function LeagueCard({ league }) {
+  const [zoneLabel, zoneClass] = ZONE_LABEL[league.zone] || ZONE_LABEL.safe;
+  return (
+    <Link href="/leagues" className="card group flex items-center gap-4 p-5 transition hover:border-brand/50">
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl"
+        style={{ background: `${league.tier_color}22`, color: league.tier_color }}>
+        <Shield className="size-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-muted">Weekly league</p>
+        <p className="truncate font-semibold" style={{ color: league.tier_color }}>{league.tier_name}</p>
+        <p className="text-xs text-faint">
+          {league.rank ? `#${league.rank} of ${league.size}` : "Not ranked yet"} · {league.week_xp} XP this week
+          <span className={cx("ml-1", zoneClass)}>· {zoneLabel}</span>
+        </p>
+      </div>
+      <ArrowRight className="size-4 text-faint transition group-hover:translate-x-1 group-hover:text-brand" />
+    </Link>
+  );
+}
+
+function FlashcardsCard({ due }) {
+  return (
+    <Link href="/flashcards" className="card group flex items-center gap-4 p-5 transition hover:border-brand/50">
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#14b8a6]/15 text-[#14b8a6]">
+        <Layers className="size-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-muted">Flashcards</p>
+        <p className="font-semibold">{due > 0 ? `${due} card${due === 1 ? "" : "s"} due` : "All caught up"}</p>
+        <p className="text-xs text-faint">{due > 0 ? "Spaced repetition keeps answers fresh" : "Nothing due right now"}</p>
+      </div>
+      <ArrowRight className="size-4 text-faint transition group-hover:translate-x-1 group-hover:text-brand" />
+    </Link>
+  );
+}
+
 export default function DashboardPage() {
   const { data, error, loading, reload } = useApi("/api/dashboard");
+  const [badgesDismissed, setBadgesDismissed] = useState(false);
   if (loading) return <PageLoader />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   const { user, readiness, next_lesson: lesson, next_problem: problem, activity, time } = data;
+  const newBadges = data.new_badges || [];
   const s = readiness.stats;
 
   return (
@@ -99,6 +203,21 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">{user.name.split(" ")[0]}</h1>
         <p className="mt-1 text-sm text-muted">Training for <span className="text-text">{user.target_role}</span> roles</p>
       </div>
+
+      {newBadges.length > 0 && !badgesDismissed && (
+        <div className="mb-5 flex animate-fade-up items-center gap-3 rounded-2xl border border-warn/30 bg-warn/5 px-4 py-3">
+          <Award className="size-5 shrink-0 text-warn" />
+          <p className="min-w-0 flex-1 text-sm">
+            <span className="font-semibold">New badge earned: </span>
+            <span className="text-muted">{newBadges.map((b) => b.title).join(", ")}</span>
+          </p>
+          <Link href="/badges" className="shrink-0 text-sm font-medium text-brand hover:underline">View</Link>
+          <button type="button" onClick={() => setBadgesDismissed(true)} aria-label="Dismiss"
+            className="shrink-0 rounded-lg p-1 text-faint hover:bg-surface-2 hover:text-text">
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="relative overflow-hidden p-6 lg:col-span-2">
@@ -133,6 +252,14 @@ export default function DashboardPage() {
           <Stat icon={Code} label="Problems solved" value={`${s.problems_solved}/${s.problems_total}`} color="#22c55e" />
           <Stat icon={Mic} label="Interviews" value={s.interviews_completed} sub={`${s.tests_taken} tests taken`}
             color="#ec4899" />
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2"><TodayPlanCard plan={data.today_plan} /></div>
+        <div className="flex flex-col gap-5">
+          {data.league && <LeagueCard league={data.league} />}
+          <FlashcardsCard due={data.flashcards_due || 0} />
         </div>
       </div>
 

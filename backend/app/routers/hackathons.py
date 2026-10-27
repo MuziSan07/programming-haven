@@ -12,6 +12,7 @@ from ..models import Hackathon, HackathonEnrollment, HackathonSubmission, Post, 
 from ..routers.admin import require_admin
 from ..routers.auth import user_out
 from ..services import ai, moderation
+from ..services.gamification import issue_certificate
 from ..services.scoring import award, level_for
 
 router = APIRouter(tags=["hackathons"])
@@ -339,6 +340,9 @@ def admin_publish_results(hid: int, publish: bool = True, admin: User = Depends(
             for s in subs:
                 if s.rank in XP_HACKATHON_PODIUM:
                     award(s.user, XP_HACKATHON_PODIUM[s.rank])
+                    place = {1: "1st", 2: "2nd", 3: "3rd"}[s.rank]
+                    issue_certificate(db, s.user, "hackathon", h.slug, f"{h.title}: {place} place", score=s.score,
+                                      meta={"rank": s.rank, "project": s.title})
     h.results_published = publish
     db.commit()
     return _hack_out(db, h, full=True)

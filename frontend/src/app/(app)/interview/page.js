@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { ArrowRight, Brain, Camera, Clock, Globe, Laptop, MessageSquare, Mic, MonitorUp, ShieldAlert, Target } from "lucide-react";
+import { ArrowRight, Brain, Camera, Clock, Globe, Laptop, MessageSquare, Mic, MonitorUp, PenTool, ShieldAlert, Target } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/useApi";
@@ -11,7 +11,8 @@ import { usePersona } from "@/lib/usePersona";
 import Avatar from "@/components/Avatar";
 import { Badge, Button, Card, ErrorState, PageHeader, PageLoader, cx, scoreColor } from "@/components/ui";
 
-const KIND_ICON = { technical: Brain, "live-coding": Laptop, behavioral: MessageSquare, english: Globe, "system-design": Target };
+const KIND_ICON = { technical: Brain, "live-coding": Laptop, behavioral: MessageSquare, english: Globe, "system-design": Target,
+  whiteboard: PenTool };
 const ROLES = ["Full Stack Developer", "Frontend Developer", "Backend Developer", "Mobile Developer",
   "AI / ML Engineer", "Data Scientist", "DevOps Engineer"];
 const LEVELS = ["Junior", "Mid-level", "Senior"];
@@ -95,6 +96,9 @@ export default function InterviewSetupPage() {
                     {k.questions} questions
                     {k.mode === "live" && (
                       <span className="flex items-center gap-1 text-warn"><Camera className="size-3" /><Mic className="size-3" /><MonitorUp className="size-3" /> camera, mic & screen</span>
+                    )}
+                    {k.mode === "whiteboard" && (
+                      <span className="flex items-center gap-1 text-brand-2"><PenTool className="size-3" /> live whiteboard</span>
                     )}
                   </p>
                 </button>
