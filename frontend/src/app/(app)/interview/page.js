@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { ArrowRight, Brain, Camera, Clock, Globe, Laptop, MessageSquare, Mic, MonitorUp, PenTool, ShieldAlert, Target } from "lucide-react";
+import {
+  ArrowRight, Brain, Camera, CirclePlay, Clock, CodeXml, Flame, FlaskConical, Globe, Laptop, MessageSquare, Mic, MonitorUp,
+  PenTool, ShieldAlert, Target, UsersRound,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/useApi";
@@ -12,7 +15,7 @@ import Avatar from "@/components/Avatar";
 import { Badge, Button, Card, ErrorState, PageHeader, PageLoader, cx, scoreColor } from "@/components/ui";
 
 const KIND_ICON = { technical: Brain, "live-coding": Laptop, behavioral: MessageSquare, english: Globe, "system-design": Target,
-  whiteboard: PenTool };
+  whiteboard: PenTool, panel: UsersRound, "pair-programming": CodeXml };
 const ROLES = ["Full Stack Developer", "Frontend Developer", "Backend Developer", "Mobile Developer",
   "AI / ML Engineer", "Data Scientist", "DevOps Engineer"];
 const LEVELS = ["Junior", "Mid-level", "Senior"];
@@ -29,6 +32,8 @@ export default function InterviewSetupPage() {
   const [kind, setKind] = useState(params.get("kind") || "technical");
   const [role, setRole] = useState(user?.target_role || ROLES[0]);
   const [level, setLevel] = useState("Mid-level");
+  const [stress, setStress] = useState(false);
+  const [language, setLanguage] = useState("python");
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,7 +44,8 @@ export default function InterviewSetupPage() {
     setStarting(true);
     setError("");
     try {
-      const s = await api("/api/interviews", { body: { kind, role, level, persona_id: persona?.id } });
+      const stressOn = stress && selectedKind?.stress !== false;
+      const s = await api("/api/interviews", { body: { kind, role, level, persona_id: persona?.id, stress: stressOn, language } });
       router.push(`/interview/${s.id}`);
     } catch (err) {
       setError(err.message);
@@ -56,7 +62,9 @@ export default function InterviewSetupPage() {
   }
 
   const name = persona?.name || "your interviewer";
+  const otherPersona = personas.find((p) => p.id !== persona?.id) || null;
   const selectedKind = kinds.data.find((k) => k.id === kind);
+  const stressAllowed = selectedKind?.stress !== false;
 
   return (
     <div className="mx-auto max-w-6xl animate-fade-up">
@@ -100,6 +108,12 @@ export default function InterviewSetupPage() {
                     {k.mode === "whiteboard" && (
                       <span className="flex items-center gap-1 text-brand-2"><PenTool className="size-3" /> live whiteboard</span>
                     )}
+                    {k.mode === "panel" && (
+                      <span className="flex items-center gap-1 text-brand-2"><UsersRound className="size-3" /> two interviewers</span>
+                    )}
+                    {k.mode === "pair" && (
+                      <span className="flex items-center gap-1 text-brand-2"><FlaskConical className="size-3" /> shared editor and tests</span>
+                    )}
                   </p>
                 </button>
               );
@@ -119,13 +133,49 @@ export default function InterviewSetupPage() {
                 {LEVELS.map((l) => <option key={l}>{l}</option>)}
               </select>
             </div>
+            {selectedKind?.mode === "pair" && (
+              <div className="sm:col-span-2">
+                <label className="label" htmlFor="language">Language</label>
+                <select id="language" className="input" value={language} onChange={(e) => setLanguage(e.target.value)}>
+                  <option value="python">Python</option>
+                  <option value="javascript">JavaScript</option>
+                </select>
+              </div>
+            )}
+            <div className="sm:col-span-2">
+              <button type="button" role="switch" aria-checked={stress && stressAllowed} disabled={!stressAllowed}
+                onClick={() => setStress(!stress)}
+                className={cx("flex w-full items-start gap-3 rounded-xl border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50",
+                  stress && stressAllowed ? "border-bad/50 bg-bad/10" : "border-line hover:border-faint")}>
+                <span className={cx("mt-0.5 flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition",
+                  stress && stressAllowed ? "bg-bad" : "bg-surface-3")}>
+                  <span className={cx("size-4 rounded-full bg-white transition", stress && stressAllowed && "translate-x-4")} />
+                </span>
+                <span>
+                  <span className="flex items-center gap-1.5 text-sm font-medium"><Flame className="size-4 text-bad" /> Stress mode</span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    {stressAllowed
+                      ? "A curt interviewer who pushes back on your answers, cuts in when you ramble and changes a requirement mid-way. You also get a composure score."
+                      : "Not available for the English proficiency call."}
+                  </span>
+                </span>
+              </button>
+            </div>
           </Card>
         </div>
 
         <Card className="flex flex-col items-center p-6 text-center">
-          <Avatar persona={persona} size={180} />
-          <p className="mt-4 text-lg font-semibold">{name}</p>
-          <p className="text-sm text-muted">{persona?.title || "AI Interviewer"}</p>
+          {selectedKind?.mode === "panel" && otherPersona ? (
+            <div className="flex gap-3">
+              <Avatar persona={persona} size={130} />
+              <Avatar persona={otherPersona} size={130} />
+            </div>
+          ) : <Avatar persona={persona} size={180} />}
+          <p className="mt-4 text-lg font-semibold">{selectedKind?.mode === "panel" && otherPersona ? `${name} & ${otherPersona.name}` : name}</p>
+          <p className="text-sm text-muted">
+            {selectedKind?.mode === "panel" && otherPersona ? `${name} leads technical, ${otherPersona.name} leads behavioural`
+              : selectedKind?.mode === "pair" ? `${persona?.title || "Engineer"} · your pair partner` : persona?.title || "AI Interviewer"}
+          </p>
           {personas.length > 1 && (
             <div className="mt-3 flex gap-2">
               {personas.map((p) => (
@@ -147,7 +197,9 @@ export default function InterviewSetupPage() {
           </Button>
           {error && <p className="mt-3 text-sm text-bad">{error}</p>}
           <p className="mt-3 text-xs text-faint">
-            {selectedKind?.mode === "live" ? "You'll be asked to turn on your camera and share your screen." : "Use headphones for the best experience."}
+            {selectedKind?.mode === "live" ? "You'll be asked to turn on your camera and share your screen."
+              : selectedKind?.mode === "pair" ? "You'll get a small codebase with failing tests. Talk while you debug."
+                : "Use headphones for the best experience."}
           </p>
         </Card>
       </div>
@@ -157,17 +209,26 @@ export default function InterviewSetupPage() {
           <h2 className="mb-4 font-semibold">Past interviews</h2>
           <ul className="divide-y divide-line">
             {history.data.map((s) => (
-              <li key={s.id}>
-                <Link href={`/interview/${s.id}`} className="flex items-center gap-3 py-3 text-sm hover:text-brand">
-                  <span className="flex-1">{s.title} <span className="text-faint">· {s.role}</span></span>
+              <li key={s.id} className="flex items-center gap-2">
+                <Link href={`/interview/${s.id}`} className="flex min-w-0 flex-1 items-center gap-3 py-3 text-sm hover:text-brand">
+                  <span className="min-w-0 flex-1 truncate">
+                    {s.title} <span className="text-faint">· {s.role}</span>
+                    {s.stress && <Flame className="ml-1.5 inline size-3.5 text-bad" aria-label="Stress mode" />}
+                  </span>
                   {s.completed ? (
                     <>
-                      <Badge tone={s.score >= 70 ? "ok" : s.score >= 50 ? "warn" : "bad"}>{s.verdict}</Badge>
+                      <Badge tone={s.score >= 70 ? "ok" : s.score >= 50 ? "warn" : "bad"} className="hidden sm:inline-flex">{s.verdict}</Badge>
                       <span className="w-14 text-right font-bold" style={{ color: scoreColor(s.score) }}>{s.score}/100</span>
                     </>
                   ) : <Badge>In progress</Badge>}
                   <span className="hidden w-24 text-right text-xs text-faint sm:block">{new Date(s.created_at).toLocaleDateString()}</span>
                 </Link>
+                {s.completed && s.answers > 0 ? (
+                  <Link href={`/interview/${s.id}/replay`} title="Watch replay"
+                    className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs text-muted hover:bg-surface-2 hover:text-text">
+                    <CirclePlay className="size-3.5" /> <span className="hidden sm:inline">Replay</span>
+                  </Link>
+                ) : <span className="w-8 shrink-0 sm:w-[74px]" />}
               </li>
             ))}
           </ul>

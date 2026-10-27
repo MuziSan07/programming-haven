@@ -9,7 +9,7 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import Submission, User
 from ..routers.auth import user_out
-from ..services import ai, polyglot, runner
+from ..services import ai, daily, polyglot, runner
 from ..services.scoring import XP_PROBLEM, award, solved_slugs
 
 router = APIRouter(prefix="/api/dsa", tags=["dsa"])
@@ -80,8 +80,10 @@ def submit(body: CodeIn, user: User = Depends(get_current_user), db: Session = D
     if result["status"] == "Accepted":
         xp = XP_PROBLEM.get(problem["difficulty"], 30) if first_solve else 0
         award(user, xp)
+    daily_bonus = daily.on_submit(db, user, body.slug, body.language, result)
     db.commit()
-    return {**result, "xp_gained": xp, "first_solve": first_solve and xp > 0, "user": user_out(user)}
+    extra = {"daily": daily_bonus} if daily_bonus else {}
+    return {**result, "xp_gained": xp, "first_solve": first_solve and xp > 0, **extra, "user": user_out(user)}
 
 
 class HintIn(CodeIn):

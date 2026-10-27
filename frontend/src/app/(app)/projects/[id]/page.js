@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import {
-  Building, Check, ChevronLeft, ChevronRight, CircleCheck, CircleX, Clock, FolderGit2, ListChecks, Send, Star, Zap,
+  Building, Check, ChevronLeft, ChevronRight, CircleCheck, CircleX, Clock, ClipboardPaste, FolderGit2, ListChecks, Send,
+  Star, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -12,6 +13,7 @@ import { useApi } from "@/lib/useApi";
 import CodeEditor from "@/components/CodeEditor";
 import { Badge, Button, Card, ErrorState, PageLoader, Progress, Ring, RichText, cx, scoreColor } from "@/components/ui";
 import { TechChip } from "@/components/TechLogo";
+import { GitHubMark, RepoReview, RepoReviewList, RepoSubmitPanel } from "@/components/projects/RepoReview";
 
 const LEVEL_TONE = { Basic: "ok", Intermediate: "cyan", Advanced: "warn", Expert: "bad" };
 const VERDICT_TONE = { "Hire-level": "ok", Close: "warn", "Not yet": "bad" };
@@ -99,9 +101,18 @@ export default function ProjectPage() {
   const [submitError, setSubmitError] = useState("");
   const [latest, setLatest] = useState(null);
   const [openSub, setOpenSub] = useState(null);
+  const [mode, setMode] = useState("repo");
 
   if (loading) return <PageLoader />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
+
+  function onRepoReviewed(r) {
+    if (r.user) setUser(r.user);
+    setLatest(r);
+    setData((d) => ({ ...d, submissions: [r, ...(d.submissions || [])] }));
+  }
+
+  const pasted = (p.submissions || []).filter((s) => s.kind !== "repo");
 
   async function submit(e) {
     e.preventDefault();
@@ -184,7 +195,26 @@ export default function ProjectPage() {
 
           <Card className="p-5">
             <h2 className="flex items-center gap-2 font-semibold"><Send className="size-4 text-brand" /> Submit for review</h2>
-            <p className="mt-1 text-xs text-muted">Paste your key files (or the whole thing). The AI reviews them strictly against the rubric.</p>
+            <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl border border-line bg-surface-2 p-1" role="tablist">
+              {[["repo", "GitHub repo", GitHubMark], ["paste", "Paste code", ClipboardPaste]].map(([k, label, Icon]) => (
+                <button key={k} type="button" role="tab" aria-selected={mode === k} onClick={() => setMode(k)}
+                  className={cx("flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition",
+                    mode === k ? "bg-surface text-text shadow-sm" : "text-muted hover:text-text")}>
+                  <Icon className="size-3.5" />{label}
+                </button>
+              ))}
+            </div>
+            {mode === "repo" ? (
+              <div className="mt-4">
+                <p className="mb-3 text-xs text-muted">
+                  Submit your GitHub repo and get reviewed like a hiring manager would: code, tests, README, commit
+                  history and every requirement, with file evidence.
+                </p>
+                <RepoSubmitPanel projectId={p.id} onReviewed={onRepoReviewed} />
+              </div>
+            ) : (
+            <>
+            <p className="mt-3 text-xs text-muted">Paste your key files (or the whole thing). The AI reviews them strictly against the rubric.</p>
             <form onSubmit={submit} className="mt-4 space-y-3">
               <div>
                 <label className="label" htmlFor="repo">Repository URL</label>
@@ -209,11 +239,25 @@ export default function ProjectPage() {
                 <Send className="size-4" /> {busy ? "Reviewing…" : "Submit for review"}
               </Button>
             </form>
+            </>
+            )}
           </Card>
         </div>
       </div>
 
-      {latest && (
+      {latest?.kind === "repo" && (
+        <div className="mt-8 animate-fade-up">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-semibold tracking-tight">Repository review</h2>
+            {latest.xp_gained > 0 && <span className="flex items-center gap-1 text-sm font-semibold text-brand"><Zap className="size-4" />+{latest.xp_gained} XP</span>}
+          </div>
+          <RepoReview submission={latest} rubric={p.rubric} />
+        </div>
+      )}
+
+      <div className="mt-5"><RepoReviewList projectId={p.id} submissions={p.submissions} /></div>
+
+      {latest && latest.kind !== "repo" && (
         <Card className="mt-5 animate-fade-up p-6">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="font-semibold">Review</h2>
@@ -223,11 +267,11 @@ export default function ProjectPage() {
         </Card>
       )}
 
-      {p.submissions?.length > 0 && (
+      {pasted.length > 0 && (
         <Card className="mt-5 p-6">
-          <h2 className="mb-4 font-semibold">Your submissions</h2>
+          <h2 className="mb-4 font-semibold">Pasted submissions</h2>
           <ul className="space-y-2">
-            {p.submissions.map((s) => (
+            {pasted.map((s) => (
               <li key={s.id} className="rounded-xl border border-line">
                 <button onClick={() => setOpenSub(openSub === s.id ? null : s.id)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm">

@@ -527,3 +527,58 @@ class RoundAttempt(Base):
     passed: Mapped[bool] = mapped_column(Boolean, default=False)
     submission: Mapped[dict] = mapped_column(JSON, default=dict)
     result: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+# ---------------------------------------------------------------- daily challenge + duels
+
+class DailySolve(Base):
+    """First accepted solve of the day's shared problem (one row per user per day)."""
+    __tablename__ = "daily_solves"
+    __table_args__ = (UniqueConstraint("user_id", "day"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    day: Mapped[date] = mapped_column(Date, index=True)
+    problem_slug: Mapped[str] = mapped_column(String(120))
+    language: Mapped[str] = mapped_column(String(20), default="python")
+    attempts: Mapped[int] = mapped_column(Integer, default=1)  # submissions up to and including the accepted one
+    runtime_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    bonus_xp: Mapped[int] = mapped_column(Integer, default=0)
+    solved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    user: Mapped[User] = relationship()
+
+
+class Duel(Base):
+    """A 1v1 race on one problem. Opponent may be another user or a simulated bot (opponent_id None, bot set)."""
+    __tablename__ = "duels"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(16), unique=True, index=True)  # invite code
+    problem_slug: Mapped[str] = mapped_column(String(120))
+    difficulty: Mapped[str] = mapped_column(String(12), default="Medium")
+    status: Mapped[str] = mapped_column(String(12), default="waiting")  # waiting | active | finished | cancelled
+    creator_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    opponent_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    bot: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # {name, rating, solve_seconds, ...}
+    is_private: Mapped[bool] = mapped_column(Boolean, default=False)
+    time_limit_minutes: Mapped[int] = mapped_column(Integer, default=30)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    winner_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # user id; -1 = bot; None = draw/none
+    progress: Mapped[dict] = mapped_column(JSON, default=dict)  # {str(user_id)|"bot": {passed, total, attempts, solved_at}}
+    rating_change: Mapped[dict] = mapped_column(JSON, default=dict)  # {str(user_id): delta}
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    creator: Mapped[User] = relationship(foreign_keys=[creator_id])
+    opponent: Mapped[User | None] = relationship(foreign_keys=[opponent_id])
+
+
+class DuelStats(Base):
+    __tablename__ = "duel_stats"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    rating: Mapped[int] = mapped_column(Integer, default=1200)
+    wins: Mapped[int] = mapped_column(Integer, default=0)
+    losses: Mapped[int] = mapped_column(Integer, default=0)
+    draws: Mapped[int] = mapped_column(Integer, default=0)

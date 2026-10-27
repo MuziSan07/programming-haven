@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Keyboard, Mic, MonitorUp, MonitorX, PhoneOff, Send, ShieldAlert, Square, TriangleAlert, Video, VideoOff, Volume2,
+  Flame, Keyboard, Mic, MonitorUp, MonitorX, PhoneOff, Send, ShieldAlert, Square, TriangleAlert, Video, VideoOff, Volume2,
   VolumeX,
 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -16,6 +16,10 @@ import Avatar from "@/components/Avatar";
 import CodeEditor from "@/components/CodeEditor";
 import InterviewReport from "@/components/InterviewReport";
 import ProblemStatement from "@/components/ProblemStatement";
+import PairWorkspace from "@/components/interview/PairWorkspace";
+import PanelStage from "@/components/interview/PanelStage";
+import TranscriptMessage, { spokenText } from "@/components/interview/TranscriptMessage";
+import { useTurnTimer } from "@/components/interview/useTurnTimer";
 import Whiteboard from "@/components/interview/Whiteboard";
 import { Badge, Button, ErrorState, PageLoader, Spinner, cx } from "@/components/ui";
 
@@ -91,8 +95,13 @@ function Room({ initial, onFinished }) {
   const { setUser } = useAuth();
   const live = initial.mode === "live";
   const whiteboard = initial.mode === "whiteboard" || initial.kind === "whiteboard";
+  const panelMode = initial.mode === "panel" && initial.panel?.length > 1;
+  const pair = initial.mode === "pair" && Boolean(initial.round);
   const boardRef = useRef(null);
+  const pairRef = useRef(null);
   const persona = initial.persona;
+  const lead = panelMode ? initial.panel[0] : persona;
+  const second = panelMode ? initial.panel[1] : persona;
   const [session, setSession] = useState(initial);
   const [phase, setPhase] = useState("idle"); // idle | speaking | listening | transcribing | thinking | grading
   const [draft, setDraft] = useState("");
@@ -100,7 +109,19 @@ function Room({ initial, onFinished }) {
   const [error, setError] = useState("");
   const [code, setCode] = useState(() => initial.problem?.starter?.python || "");
   const [language, setLanguage] = useState("python");
-  const speaker = useSpeaker({ voice: persona?.voice, gender: persona?.gender });
+  const speaker = useSpeaker({ voice: lead?.voice, gender: lead?.gender });
+  const speaker2 = useSpeaker({ voice: second?.voice, gender: second?.gender });
+  const { speak: speakLead, stop: stopLead, muted, setMuted } = speaker;
+  const { speak: speakSecond, stop: stopSecond, setMuted: setMutedSecond } = speaker2;
+  const [speakingId, setSpeakingId] = useState(null); // panel: who is talking right now
+  const queueRef = useRef(0); // bumps to cancel the rest of a multi-line panel turn
+  const turnTimer = useTurnTimer();
+  const { questionShown, questionReady } = turnTimer;
+  const allowedPasteRef = useRef("");
+  // Pair programming: the candidate's working copy of the partner's files, plus the latest test run
+  const [files, setFiles] = useState(() => (pair ? { ...initial.round.files, ...(initial.edits || {}) } : {}));
+  const [runResult, setRunResult] = useState(() => initial.last_run || null);
+  const [running, setRunning] = useState(false);
   const recorder = useRecorder();
   const {
     camVideo, screenVideo, cameraOn, screenOn, error: mediaError, startCamera, stopCamera, startScreen, stopScreen, frames,
@@ -154,7 +175,10 @@ function Room({ initial, onFinished }) {
     const onVisibility = () => (document.visibilityState === "hidden" ? leave() : back());
     const onPaste = (e) => {
       // Copy/paste of shapes inside the whiteboard is fine; pasting outside content is not
-      if ((e.clipboardData?.getData("text/plain") || "").includes('"excalidraw/clipboard"')) return;
+      const pasted = e.clipboardData?.getData("text/plain") || "";
+      if (pasted.includes('"excalidraw/clipboard"')) return;
+      // Pasting a code suggestion the interviewer wrote in the chat is fine too
+      if (pasted.trim() && allowedPasteRef.current.includes(pasted.trim())) return;
       e.preventDefault();
       reportIntegrity("paste", "Tried to paste into an answer");
     };
@@ -173,33 +197,66 @@ function Room({ initial, onFinished }) {
   const lastIndex = session.transcript.length - 1;
   const last = session.transcript[lastIndex];
 
+  useEffect(() => {
+    allowedPasteRef.current = session.transcript.filter((t) => t.role === "interviewer").map((t) => t.content).join("\n");
+  }, [session.transcript]);
+
+  const stopSpeaking = useCallback(() => {
+    queueRef.current += 1;
+    stopLead();
+    stopSecond();
+  }, [stopLead, stopSecond]);
+
   // Live rounds start with the camera on, like a real 1:1
   useEffect(() => {
     if (live) startCameraGuarded();
   }, [live, startCameraGuarded]);
 
-  // Speak each new interviewer message once
+  // Speak each new interviewer line once, in order, each in its own persona's voice (panels have two)
   useEffect(() => {
-    if (last?.role !== "interviewer" || spokenRef.current === lastIndex) return;
+    if (last?.role !== "interviewer" || spokenRef.current >= lastIndex) return;
+    const transcript = session.transcript;
+    let lastCandidate = -1;
+    transcript.forEach((t, i) => { if (t.role === "candidate") lastCandidate = i; });
+    const queue = transcript.slice(Math.max(spokenRef.current, lastCandidate) + 1).filter((t) => t.role === "interviewer");
     spokenRef.current = lastIndex;
+    const token = queueRef.current;
+    const turn = questionShown();
     setPhase("speaking");
-    speaker.speak(last.content).then(() => setPhase((p) => (p === "speaking" ? "idle" : p)));
-  }, [last, lastIndex, speaker]);
+    (async () => {
+      for (const line of queue) {
+        if (queueRef.current !== token) break;
+        const id = line.speaker || lead?.id;
+        setSpeakingId(id);
+        await (panelMode && id === second?.id ? speakSecond : speakLead)(spokenText(line.content));
+      }
+      setSpeakingId(null);
+      setPhase((p) => (p === "speaking" ? "idle" : p));
+      questionReady(turn);
+    })();
+  }, [last, lastIndex, session.transcript, panelMode, lead?.id, second?.id, speakLead, speakSecond, questionShown,
+    questionReady]);
 
   useEffect(() => {
     transcriptEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [session.transcript.length, phase]);
 
-  const sendAnswer = useCallback(async (text) => {
+  const edited = useCallback(() => (pair ? Object.fromEntries(
+    Object.entries(files).filter(([n, c]) => c !== initial.round.files[n])) : undefined), [pair, files, initial.round]);
+
+  const sendAnswer = useCallback(async (text, via) => {
     const answer = text.trim();
     if (!answer) return;
+    const meta = turnTimer.collect(via);
     setDraft("");
     setError("");
     setSession((s) => ({ ...s, transcript: [...s.transcript, { role: "candidate", content: answer }] }));
     setPhase("thinking");
     try {
       const body = { text: answer, images: frames() };
+      if (meta) body.meta = meta;
       if (live) Object.assign(body, { code, language });
+      if (pair) body.files = edited();
       if (whiteboard) {
         const board = await boardRef.current?.capture().catch(() => null);
         if (board) body.board = board;
@@ -211,12 +268,28 @@ function Room({ initial, onFinished }) {
       setError(err.message);
       setPhase("idle");
     }
-  }, [session.id, frames, live, whiteboard, code, language]);
+  }, [session.id, frames, live, whiteboard, code, language, pair, edited, turnTimer]);
+
+  async function runTests() {
+    setRunning(true);
+    try {
+      setRunResult(await api(`/api/interviews/${session.id}/run`, { body: { files: edited() } }));
+    } catch (err) {
+      setRunResult({ status: "Error", passed: 0, total: 0, results: [], stderr: err.message });
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  function insertSuggestion(text) {
+    if (!pairRef.current?.insert(text)) setError("Open one of the source files to apply the suggestion.");
+  }
 
   async function toggleMic() {
     setError("");
     if (recorder.recording) {
       const blob = await recorder.stop();
+      turnTimer.recordingStopped();
       if (!blob || blob.size < 2000) {
         setPhase("idle");
         setError("We didn't catch that. Hold the mic a little longer.");
@@ -227,7 +300,7 @@ function Room({ initial, onFinished }) {
         const form = new FormData();
         form.append("file", blob, blob.type.includes("mp4") ? "answer.mp4" : "answer.webm");
         const { text } = await api("/api/ai/transcribe", { form });
-        if (text) await sendAnswer(text);
+        if (text) await sendAnswer(text, "voice");
         else {
           setPhase("idle");
           setError("No speech detected. Try again or type your answer.");
@@ -238,9 +311,10 @@ function Room({ initial, onFinished }) {
         setError(err.message);
       }
     } else {
-      speaker.stop();
+      stopSpeaking();
       try {
         await guard(recorder.start)();
+        turnTimer.recordingStarted();
         setPhase("listening");
       } catch {
         setTyping(true);
@@ -250,13 +324,14 @@ function Room({ initial, onFinished }) {
   }
 
   async function finish() {
-    speaker.stop();
+    stopSpeaking();
     if (recorder.recording) await recorder.stop();
     stopCamera();
     stopScreen();
     setPhase("grading");
     try {
-      const result = await api(`/api/interviews/${session.id}/end`, { method: "POST" });
+      const result = await api(`/api/interviews/${session.id}/end`,
+        pair ? { body: { files: edited() } } : { method: "POST" });
       if (result.user) setUser(result.user);
       onFinished(result);
     } catch (err) {
@@ -276,7 +351,8 @@ function Room({ initial, onFinished }) {
     );
   }
 
-  const name = session.interviewer;
+  const names = panelMode ? Object.fromEntries(initial.panel.map((p) => [p.id, p.name])) : {};
+  const name = panelMode ? (names[speakingId] || "The panel") : session.interviewer;
   const avatarState = phase === "speaking" ? "speaking" : phase === "listening" ? "listening"
     : phase === "thinking" || phase === "transcribing" ? "thinking" : "idle";
   const statusText = {
@@ -285,6 +361,8 @@ function Room({ initial, onFinished }) {
     idle: session.done ? "Interview complete" : "Your turn: tap the mic to answer",
   }[phase];
   const busy = ["thinking", "transcribing"].includes(phase);
+  let lastCandidateIndex = -1;
+  session.transcript.forEach((t, i) => { if (t.role === "candidate") lastCandidateIndex = i; });
   const asked = Math.min(session.questions_asked, session.questions_total);
 
   const controls = !session.done ? (
@@ -310,7 +388,8 @@ function Room({ initial, onFinished }) {
       </div>
       {typing && (
         <form className="flex w-full gap-2" onSubmit={(e) => { e.preventDefault(); sendAnswer(draft); }}>
-          <textarea className="input min-h-16 resize-none" value={draft} onChange={(e) => setDraft(e.target.value)}
+          <textarea className="input min-h-16 resize-none" value={draft}
+            onChange={(e) => { turnTimer.typed(); setDraft(e.target.value); }}
             placeholder="Type your answer…" disabled={busy}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAnswer(draft); } }} />
           <Button type="submit" disabled={busy || !draft.trim()} className="h-auto"><Send className="size-4" /></Button>
@@ -324,12 +403,9 @@ function Room({ initial, onFinished }) {
   const transcript = (
     <div className="space-y-3">
       {session.transcript.map((t, i) => (
-        <div key={i} className={cx("flex", t.role === "candidate" && "justify-end")}>
-          <div className={cx("max-w-[90%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap",
-            t.role === "candidate" ? "bg-brand text-white" : "bg-surface-2")}>
-            {t.role === "candidate" ? t.content.split("\n\n[Code at this moment")[0] : t.content}
-          </div>
-        </div>
+        <TranscriptMessage key={i} turn={t} onInsert={pair ? insertSuggestion : undefined}
+          label={panelMode ? (t.role === "candidate" ? "You" : names[t.speaker] || lead.name) : null}
+          highlight={panelMode && t.role === "interviewer" && i > lastCandidateIndex && t.speaker === speakingId} />
       ))}
       {phase === "thinking" && <p className="flex items-center gap-2 text-xs text-muted"><Spinner className="size-3.5" /> Thinking…</p>}
       <div ref={transcriptEnd} />
@@ -353,7 +429,7 @@ function Room({ initial, onFinished }) {
         )}
         <div className="mt-5 flex justify-end">
           {notice.action === "terminated" ? (
-            <Button variant="danger" onClick={() => { speaker.stop(); onFinished(session); }}>See report</Button>
+            <Button variant="danger" onClick={() => { stopSpeaking(); onFinished(session); }}>See report</Button>
           ) : (
             <Button onClick={() => setNotice(null)}>I understand</Button>
           )}
@@ -370,11 +446,12 @@ function Room({ initial, onFinished }) {
           <span className="size-1.5 animate-pulse rounded-full bg-bad" /> LIVE
         </span>
         <p className="truncate text-sm font-semibold">{session.title}</p>
-        <Badge className="hidden sm:inline-flex">Question {asked}/{session.questions_total}</Badge>
+        {session.stress && <Badge tone="bad"><Flame className="size-3" /> Stress mode</Badge>}
+        <Badge className="hidden sm:inline-flex">{pair ? "Turn" : "Question"} {asked}/{session.questions_total}</Badge>
         <span className="ml-auto font-mono text-sm text-muted tabular-nums" title="Focused time">{formatDuration(timer.seconds)}</span>
-        <Button size="sm" variant="ghost" onClick={() => { speaker.setMuted(!speaker.muted); speaker.stop(); }}
-          title={speaker.muted ? `Unmute ${name}` : `Mute ${name}`}>
-          {speaker.muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+        <Button size="sm" variant="ghost" onClick={() => { setMuted(!muted); setMutedSecond(!muted); stopSpeaking(); }}
+          title={muted ? `Unmute ${session.interviewer}` : `Mute ${session.interviewer}`}>
+          {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
         </Button>
         <Button size="sm" variant={cameraOn ? "secondary" : "ghost"}
           onClick={cameraOn ? stopCamera : startCameraGuarded}
@@ -393,12 +470,15 @@ function Room({ initial, onFinished }) {
         </Button>
       </div>
 
-      {live || whiteboard ? (
+      {live || whiteboard || pair ? (
         <div className="grid min-h-0 flex-1 lg:grid-cols-[1fr_400px]">
           {whiteboard ? (
             <div className="h-[70vh] min-h-0 border-r border-line lg:h-auto">
               <Whiteboard ref={boardRef} interviewer={name} />
             </div>
+          ) : pair ? (
+            <PairWorkspace ref={pairRef} round={session.round} files={files} result={runResult} running={running}
+              onRun={runTests} partner={name} onChange={(file, value) => setFiles((f) => ({ ...f, [file]: value }))} />
           ) : (
           <div className="flex min-h-0 flex-col border-r border-line">
             <details className="border-b border-line" open>
@@ -446,14 +526,32 @@ function Room({ initial, onFinished }) {
         <div className="grid min-h-0 flex-1 lg:grid-cols-[1fr_380px]">
           <div className="relative flex flex-col items-center justify-center gap-5 overflow-hidden px-4 py-8"
             style={{ background: "radial-gradient(ellipse at center, rgba(124,92,255,0.06), transparent 65%)" }}>
-            <Avatar persona={persona} level={speaker.level} state={avatarState} size={280} utterance={speaker.utterance} />
-            <div className="text-center">
-              <p className="text-lg font-semibold">{name}</p>
-              <p className={cx("mt-1 text-sm", phase === "listening" ? "text-ok" : "text-muted")}>{statusText}</p>
-            </div>
+            {panelMode ? (
+              <>
+                <PanelStage panel={initial.panel} speakingId={speakingId} phase={phase}
+                  voices={{ [lead.id]: { level: speaker.level, utterance: speaker.utterance },
+                    [second.id]: { level: speaker2.level, utterance: speaker2.utterance } }} />
+                <p className={cx("text-sm", phase === "listening" ? "text-ok" : "text-muted")}>{statusText}</p>
+              </>
+            ) : (
+              <>
+                <Avatar persona={persona} level={speaker.level} state={avatarState} size={280} utterance={speaker.utterance} />
+                <div className="text-center">
+                  <p className="text-lg font-semibold">{name}</p>
+                  <p className={cx("mt-1 text-sm", phase === "listening" ? "text-ok" : "text-muted")}>{statusText}</p>
+                </div>
+              </>
+            )}
             {last?.role === "interviewer" && (
-              <p className="max-w-2xl rounded-2xl border border-line bg-surface/80 px-5 py-4 text-center text-[15px]
-                leading-relaxed backdrop-blur">{last.content}</p>
+              <div className="max-w-2xl space-y-2 rounded-2xl border border-line bg-surface/80 px-5 py-4 text-center text-[15px]
+                leading-relaxed backdrop-blur">
+                {session.transcript.slice(lastCandidateIndex + 1).map((t, i) => (
+                  <p key={i}>
+                    {panelMode && <span className="mr-1.5 text-xs font-semibold tracking-wide text-brand uppercase">{names[t.speaker] || lead.name}</span>}
+                    {spokenText(t.content)}
+                  </p>
+                ))}
+              </div>
             )}
             <div className="w-full max-w-2xl">{controls}</div>
             {(error || mediaError) && <p className="text-sm text-bad">{error || mediaError}</p>}

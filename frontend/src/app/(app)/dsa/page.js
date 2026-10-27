@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Circle, CircleCheck, CircleDot } from "lucide-react";
+import { Circle, CircleCheck, CircleDot, Flame } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { Badge, Card, DIFFICULTY_TONE, ErrorState, PageHeader, PageLoader, Progress, cx } from "@/components/ui";
 
@@ -14,15 +15,19 @@ const STATUS_ICON = {
 
 export default function DsaPage() {
   const { data, error, loading, reload } = useApi("/api/dsa/problems");
-  const [pattern, setPattern] = useState("All");
+  const searchParams = useSearchParams();
+  const { data: daily } = useApi("/api/daily");
+  const [pattern, setPattern] = useState(() => searchParams.get("pattern") || "All");
   const [difficulty, setDifficulty] = useState("All");
   const [company, setCompany] = useState("All");
   if (loading) return <PageLoader />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   const { problems, patterns, companies } = data;
+  const activePattern = patterns.includes(pattern) ? pattern : "All";
+  const dailySlug = daily?.problem?.slug;
   const solved = problems.filter((p) => p.status === "solved").length;
-  const visible = problems.filter((p) => (pattern === "All" || p.pattern === pattern) &&
+  const visible = problems.filter((p) => (activePattern === "All" || p.pattern === activePattern) &&
     (difficulty === "All" || p.difficulty === difficulty) && (company === "All" || p.companies.includes(company)));
 
   return (
@@ -52,7 +57,7 @@ export default function DsaPage() {
         {["All", ...patterns].map((p) => (
           <button key={p} onClick={() => setPattern(p)}
             className={cx("rounded-full px-3 py-1.5 text-xs font-medium transition",
-              pattern === p ? "bg-brand text-white" : "bg-surface-2 text-muted hover:text-text")}>
+              activePattern === p ? "bg-brand text-white" : "bg-surface-2 text-muted hover:text-text")}>
             {p}
           </button>
         ))}
@@ -83,6 +88,11 @@ export default function DsaPage() {
                 <td className="px-4 py-3.5">{STATUS_ICON[p.status]}</td>
                 <td className="px-4 py-3.5">
                   <Link href={`/dsa/${p.slug}`} className="font-medium hover:text-brand">{p.title}</Link>
+                  {p.slug === dailySlug && (
+                    <Link href="/daily" className="ml-2 inline-flex items-center gap-1 rounded-full bg-warn/15 px-2 py-0.5 align-middle text-[11px] font-medium text-warn">
+                      <Flame className="size-3" /> Daily challenge
+                    </Link>
+                  )}
                   {p.companies.length > 0 && (
                     <p className="mt-0.5 truncate text-[11px] text-faint">{p.companies.slice(0, 4).join(" · ")}</p>
                   )}

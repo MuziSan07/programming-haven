@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
-  Bot, ChevronLeft, CircleCheck, ClipboardCheck, Clock, History, Lightbulb, MessageSquare, Play, RotateCcw, Send, Trophy, Zap,
+  Bot, ChevronLeft, CircleCheck, ClipboardCheck, Clock, Flame, History, Lightbulb, MessageSquare, Play, RotateCcw, Send, Trophy, Zap,
 } from "lucide-react";
 import { formatDuration, useActiveTime } from "@/lib/useActiveTime";
 import { usePersona } from "@/lib/usePersona";
@@ -289,6 +289,11 @@ function Workspace({ problem, setProblem }) {
               <p className="mt-4 flex items-center justify-center gap-1 text-lg font-bold text-brand">
                 <Zap className="size-5" /> +{celebrate.xp_gained} XP
               </p>
+            )}
+            {celebrate.daily && (
+              <Link href="/daily" className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-warn/30 bg-warn/10 px-3 py-2 text-sm font-medium text-warn">
+                <Flame className="size-4" /> Daily challenge complete +{celebrate.daily.bonus_xp} XP, rank #{celebrate.daily.rank}
+              </Link>
             )}
             <div className="mt-6 flex gap-3">
               <Button className="flex-1" onClick={() => { setCelebrate(null); setTab("coach"); }}>Get AI review</Button>

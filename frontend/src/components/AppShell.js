@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import {
-  Award, BookOpen, Briefcase, Bug, ClipboardCheck, Code, Compass, FileUser, Flame, Layers, LayoutDashboard, LogOut, Map,
-  Medal, Menu, MessageSquare, MessagesSquare, Mic, ScanFace, Settings, ShieldCheck, Swords, Trophy, UsersRound, X, Zap,
+  Award, BookOpen, CalendarCheck, Briefcase, Bug, ClipboardCheck, Code, Compass, FileUser, Flame, Layers, LayoutDashboard, LogOut, Map,
+  Medal, Menu, Network, MessageSquare, MessagesSquare, Mic, ScanFace, Settings, ShieldCheck, Sword, Swords, Trophy, UsersRound, X, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -16,6 +16,7 @@ export const NAV = [
   { href: "/dashboard", label: "Dashboard", short: "Home", icon: LayoutDashboard, mobile: true },
   { href: "/coach", label: "Career Coach", short: "Coach", icon: Compass, section: "Plan" },
   { href: "/career", label: "Profile Review", short: "Profile", icon: FileUser, section: "Plan" },
+  { href: "/skills", label: "Skill Tree", short: "Skills", icon: Network, section: "Plan" },
   { href: "/learn", label: "Language Paths", short: "Learn", icon: BookOpen, mobile: true, section: "Practice" },
   { href: "/questions", label: "Question Bank", short: "Questions", icon: MessageSquare, section: "Practice" },
   { href: "/flashcards", label: "Flashcards", short: "Cards", icon: Layers, section: "Practice" },
@@ -25,6 +26,8 @@ export const NAV = [
   { href: "/projects", label: "Take-Home Projects", short: "Projects", icon: Briefcase, section: "Practice" },
   { href: "/interview", label: "AI Interviews", short: "Interview", icon: Mic, mobile: true, section: "Interview" },
   { href: "/mirror", label: "Test Your Interviewer", short: "Mirror", icon: ScanFace, section: "Interview" },
+  { href: "/daily", label: "Daily Challenge", short: "Daily", icon: CalendarCheck, section: "Compete" },
+  { href: "/duels", label: "1v1 Duels", short: "Duels", icon: Sword, section: "Compete" },
   { href: "/leagues", label: "Leagues", short: "Leagues", icon: Medal, section: "Compete" },
   { href: "/contests", label: "Weekly Contests", short: "Contests", icon: Swords, section: "Compete" },
   { href: "/badges", label: "Badges & Certificates", short: "Badges", icon: Award, section: "Compete" },

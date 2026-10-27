@@ -134,3 +134,16 @@ def test_dashboard_includes_growth_widgets(client, auth):
 def test_whiteboard_interview_kind(client, auth):
     kinds = {k["id"]: k for k in client.get("/api/interviews/kinds").json()}
     assert kinds["whiteboard"]["mode"] == "whiteboard"
+
+
+def test_interview_list_tolerates_legacy_sessions(client, auth):
+    """Sessions created before `context` existed have NULL there and must still list."""
+    from app.database import SessionLocal
+    from app.models import InterviewSession, User
+
+    with SessionLocal() as db:
+        uid = db.query(User).filter(User.email == "test@example.com").one().id
+        db.add(InterviewSession(user_id=uid, kind="technical", role="Backend Developer", context=None, transcript=[]))
+        db.commit()
+    r = client.get("/api/interviews", headers=auth)
+    assert r.status_code == 200, r.text
