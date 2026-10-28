@@ -582,3 +582,24 @@ class DuelStats(Base):
     wins: Mapped[int] = mapped_column(Integer, default=0)
     losses: Mapped[int] = mapped_column(Integer, default=0)
     draws: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class VettingRun(Base):
+    """A full mock hiring pipeline for one talent network (Toptal, Turing, Lemon.io), stage by stage.
+
+    `stages` holds one dict per stage: {key, status: locked|ready|active|passed|failed, ref, started_at, deadline,
+    score, note}. Each stage links to the real interview, test attempt or project submission that decided it.
+    """
+    __tablename__ = "vetting_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    platform: Mapped[str] = mapped_column(String(20))
+    role: Mapped[str] = mapped_column(String(80))
+    level: Mapped[str] = mapped_column(String(30), default="Mid-level")
+    language: Mapped[str] = mapped_column(String(20), default="python")
+    status: Mapped[str] = mapped_column(String(12), default="active")  # active | passed | failed | withdrawn
+    stages: Mapped[list] = mapped_column(JSON, default=list)
+    report: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

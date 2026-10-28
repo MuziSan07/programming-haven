@@ -6,6 +6,7 @@ import {
   Trophy, UsersRound,
 } from "lucide-react";
 import { Badge, Button, Card, Progress, Ring, cx, scoreColor } from "./ui";
+import VettingBanner from "@/components/vetting/VettingBanner";
 
 const VERDICT_TONE = { "Strong pass": "ok", "Likely to pass": "ok", Borderline: "warn", "Needs work": "bad" };
 
@@ -21,6 +22,7 @@ export default function InterviewReport({ session }) {
 
   return (
     <div className="mx-auto max-w-5xl animate-fade-up">
+      <VettingBanner />
       {f.terminated && (
         <div className="mb-6 rounded-2xl border border-bad/40 bg-bad/10 p-4 text-sm text-bad">
           <p className="font-semibold">This interview was terminated for an integrity violation.</p>

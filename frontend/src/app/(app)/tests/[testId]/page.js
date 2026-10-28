@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Camera, CircleCheck, ClipboardCheck, Clock, Code, Maximize, Play, ShieldCheck, TriangleAlert, User,
@@ -12,6 +12,7 @@ import { useProctor } from "@/lib/useProctor";
 import CodeEditor from "@/components/CodeEditor";
 import ProblemStatement from "@/components/ProblemStatement";
 import TestResults from "@/components/TestResults";
+import VettingBanner from "@/components/vetting/VettingBanner";
 import { Badge, Button, Card, CodeBlock, ErrorState, PageLoader, RichText, cx } from "@/components/ui";
 
 function formatTime(ms) {
@@ -43,6 +44,7 @@ function PreCheck({ test, proctor, attachVideo, onStart, starting }) {
   const ready = proctor.camera === "on";
   return (
     <div className="mx-auto max-w-4xl animate-fade-up">
+      <VettingBanner />
       <Badge tone="brand">{test.style}</Badge>
       <h1 className="mt-3 text-3xl font-bold">{test.title}</h1>
       <p className="mt-2 text-muted">{test.description}</p>
@@ -90,6 +92,7 @@ function PreCheck({ test, proctor, attachVideo, onStart, starting }) {
 export default function TestRunnerPage() {
   const { testId } = useParams();
   const router = useRouter();
+  const vettingRun = useSearchParams().get("vetting");
   const { setUser } = useAuth();
   const { data: test, error, loading, reload } = useApi(`/api/tests/${testId}`);
   const [session, setSession] = useState(null); // { attempt_id, test, endsAt }
@@ -136,13 +139,13 @@ export default function TestRunnerPage() {
       });
       setUser(result.user);
       proctor.stop();
-      router.push(`/tests/result/${session.attempt_id}`);
+      router.push(`/tests/result/${session.attempt_id}${vettingRun ? `?vetting=${vettingRun}` : ""}`);
     } catch (err) {
       submittedRef.current = false;
       setSubmitting(false);
       setStartError(err.message);
     }
-  }, [session, answers, code, proctor, router, setUser]);
+  }, [session, answers, code, proctor, router, setUser, vettingRun]);
 
   // Countdown + auto-submit
   useEffect(() => {

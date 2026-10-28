@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { CircleCheck, CircleX, Clock, RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useApi } from "@/lib/useApi";
+import VettingBanner from "@/components/vetting/VettingBanner";
 import { Badge, Button, Card, CodeBlock, ErrorState, PageLoader, Ring, RichText, cx, scoreColor } from "@/components/ui";
 
 export default function TestResultPage() {
@@ -15,6 +16,7 @@ export default function TestResultPage() {
 
   return (
     <div className="mx-auto max-w-5xl animate-fade-up">
+      <VettingBanner />
       <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <Badge tone="brand">{r.style}</Badge>

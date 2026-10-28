@@ -14,6 +14,7 @@ import CodeEditor from "@/components/CodeEditor";
 import { Badge, Button, Card, ErrorState, PageLoader, Progress, Ring, RichText, cx, scoreColor } from "@/components/ui";
 import { TechChip } from "@/components/TechLogo";
 import { GitHubMark, RepoReview, RepoReviewList, RepoSubmitPanel } from "@/components/projects/RepoReview";
+import VettingBanner from "@/components/vetting/VettingBanner";
 
 const LEVEL_TONE = { Basic: "ok", Intermediate: "cyan", Advanced: "warn", Expert: "bad" };
 const VERDICT_TONE = { "Hire-level": "ok", Close: "warn", "Not yet": "bad" };
@@ -135,6 +136,7 @@ export default function ProjectPage() {
       <Link href="/projects" className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-text">
         <ChevronLeft className="size-4" /> All projects
       </Link>
+      <VettingBanner />
 
       <div className="mb-8">
         <div className="flex flex-wrap gap-2">

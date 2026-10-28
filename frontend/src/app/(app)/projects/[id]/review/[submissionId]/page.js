@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { ErrorState, PageLoader } from "@/components/ui";
 import { RepoReview, RepoReviewList } from "@/components/projects/RepoReview";
+import VettingBanner from "@/components/vetting/VettingBanner";
 
 export default function RepoReviewPage() {
   const { id, submissionId } = useParams();
@@ -25,6 +26,7 @@ export default function RepoReviewPage() {
       <Link href={`/projects/${id}`} className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-text">
         <ChevronLeft className="size-4" /> {p.title}
       </Link>
+      <VettingBanner />
       <div className="mb-6">
         <p className="mb-1 text-xs font-semibold tracking-widest text-brand uppercase">Repository review</p>
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{s.repo?.full_name || s.repo_url}</h1>

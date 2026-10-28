@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from ..content import store
 from ..models import (Certificate, Comment, ContestEntry, FlashcardReview, HackathonSubmission, InterviewSession,
                       LeagueMembership, LessonProgress, Post, QuestionAttempt, RoundAttempt, Submission, TestAttempt,
-                      User, UserBadge)
+                      User, UserBadge, VettingRun)
 
 # id, title, description, icon (lucide name), tier, metric, threshold
 BADGES = [
@@ -37,6 +37,7 @@ BADGES = [
     ("podium", "Podium Finish", "Finish top 3 in a weekly contest", "Medal", "gold", "contest_podium", 1),
     ("hacker", "Builder", "Submit a hackathon project", "Rocket", "silver", "hackathon_submissions", 1),
     ("promoted", "Moving Up", "Get promoted in the weekly league", "TrendingUp", "bronze", "promotions", 1),
+    ("final-boss", "Final Boss", "Pass a full mock vetting pipeline", "Crown", "gold", "vetting_passed", 1),
 ]
 BADGE_BY_ID = {b[0]: b for b in BADGES}
 
@@ -91,6 +92,8 @@ def metrics(db: Session, user: User) -> dict[str, int]:
                                         .where(HackathonSubmission.user_id == uid)),
         "promotions": _count(db, select(func.count()).select_from(LeagueMembership)
                              .where(LeagueMembership.user_id == uid, LeagueMembership.outcome == "promoted")),
+        "vetting_passed": _count(db, select(func.count()).select_from(VettingRun)
+                                 .where(VettingRun.user_id == uid, VettingRun.status == "passed")),
     }
 
 

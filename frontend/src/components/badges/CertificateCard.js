@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Award, Check, Copy, ExternalLink, Share2, ShieldCheck } from "lucide-react";
 import { Badge, Button } from "@/components/ui";
 
-const KIND_LABEL = { test: "Mock test", hackathon: "Hackathon" };
+const KIND_LABEL = { test: "Mock test", hackathon: "Hackathon", vetting: "Mock vetting" };
 
 export function kindLabel(kind) {
   return KIND_LABEL[kind] || (kind ? kind.charAt(0).toUpperCase() + kind.slice(1) : "Certificate");
