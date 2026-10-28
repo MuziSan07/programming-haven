@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     admin_emails: str = ""
     groq_vision_model: str = "qwen/qwen3.8-27b"
 
+    # Uploaded books (PDF / EPUB) live on disk here, outside git
+    books_dir: str = (BACKEND_DIR / "uploads" / "books").as_posix()
+    max_book_mb: int = 200
+
     # Code runner limits
     run_timeout_seconds: float = 5.0
     run_memory_mb: int = 256

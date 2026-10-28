@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import {
-  Award, BookOpen, Crown, CalendarCheck, Briefcase, Bug, ClipboardCheck, Code, Compass, FileUser, Flame, Layers, LayoutDashboard, LogOut, Map,
+  Award, BookOpen, Crown, Library, CalendarCheck, Briefcase, Bug, ClipboardCheck, Code, Compass, FileUser, Flame, Layers, LayoutDashboard, LogOut, Map,
   Medal, Menu, Network, MessageSquare, MessagesSquare, Mic, ScanFace, Settings, ShieldCheck, Sword, Swords, Trophy, UsersRound, X, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -24,6 +24,7 @@ export const NAV = [
   { href: "/rounds", label: "Debug & Review", short: "Rounds", icon: Bug, section: "Practice" },
   { href: "/tests", label: "Mock Tests", short: "Tests", icon: ClipboardCheck, section: "Practice" },
   { href: "/projects", label: "Take-Home Projects", short: "Projects", icon: Briefcase, section: "Practice" },
+  { href: "/books", label: "Library", short: "Library", icon: Library, section: "Practice" },
   { href: "/interview", label: "AI Interviews", short: "Interview", icon: Mic, mobile: true, section: "Interview" },
   { href: "/vetting", label: "Mock Vetting", short: "Vetting", icon: Crown, section: "Interview" },
   { href: "/mirror", label: "Test Your Interviewer", short: "Mirror", icon: ScanFace, section: "Interview" },

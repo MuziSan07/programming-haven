@@ -603,3 +603,39 @@ class VettingRun(Base):
     report: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+# ---------------------------------------------------------------- library
+
+class Book(Base):
+    """A PDF or EPUB uploaded by an admin. The file itself is stored on disk under settings.books_dir."""
+    __tablename__ = "books"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(300))
+    author: Mapped[str] = mapped_column(String(200), default="")
+    description: Mapped[str] = mapped_column(Text, default="")
+    category: Mapped[str] = mapped_column(String(60), default="General", index=True)
+    tags: Mapped[list] = mapped_column(JSON, default=list)
+    format: Mapped[str] = mapped_column(String(8))  # pdf | epub
+    filename: Mapped[str] = mapped_column(String(120))  # stored name inside books_dir
+    original_name: Mapped[str] = mapped_column(String(300), default="")
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    pages: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cover: Mapped[str | None] = mapped_column(String(120), nullable=True)  # stored cover image name
+    published: Mapped[bool] = mapped_column(Boolean, default=True)
+    uploaded_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class BookProgress(Base):
+    __tablename__ = "book_progress"
+    __table_args__ = (UniqueConstraint("user_id", "book_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    book_id: Mapped[int] = mapped_column(ForeignKey("books.id", ondelete="CASCADE"), index=True)
+    location: Mapped[str] = mapped_column(String(500), default="")  # PDF page number or EPUB CFI
+    percent: Mapped[float] = mapped_column(Float, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

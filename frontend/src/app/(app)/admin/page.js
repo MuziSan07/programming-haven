@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import {
-  BookOpen, Brain, CircleCheck, Database, Download, Eye, EyeOff, Gavel, LayoutDashboard, Plus, RotateCcw, Save, Search, Shield, ShieldAlert, ShieldCheck, Trash, TriangleAlert, Trophy, Upload, Users, X,
+  BookOpen, Brain, CircleCheck, Library, Database, Download, Eye, EyeOff, Gavel, LayoutDashboard, Plus, RotateCcw, Save, Search, Shield, ShieldAlert, ShieldCheck, Trash, TriangleAlert, Trophy, Upload, Users, X,
 } from "lucide-react";
 import { API_URL, getToken } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApi } from "@/lib/useApi";
 import CodeEditor from "@/components/CodeEditor";
+import BooksTab from "@/components/admin/BooksTab";
 import HackathonsTab from "@/components/admin/HackathonsTab";
 import IntegrityTab from "@/components/admin/IntegrityTab";
 import ModerationTab from "@/components/admin/ModerationTab";
@@ -550,6 +551,7 @@ const TABS = [
   { id: "moderation", label: "Moderation", icon: Gavel },
   { id: "integrity", label: "Integrity", icon: ShieldAlert },
   { id: "hackathons", label: "Hackathons", icon: Trophy },
+  { id: "books", label: "Books", icon: Library },
   { id: "knowledge", label: "Interviewer knowledge", icon: Brain },
   { id: "users", label: "Users", icon: Users },
 ];
@@ -587,6 +589,7 @@ export default function AdminPage() {
       {tab === "moderation" && <ModerationTab />}
       {tab === "integrity" && <IntegrityTab />}
       {tab === "hackathons" && <HackathonsTab />}
+      {tab === "books" && <BooksTab />}
       {tab === "knowledge" && <KnowledgeTab />}
       {tab === "users" && <UsersTab />}
     </div>

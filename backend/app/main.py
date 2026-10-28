@@ -8,7 +8,7 @@ from .config import get_settings
 from .content import store
 from .database import SessionLocal
 from .migrate import upgrade
-from .routers import (activity, admin, ai, auth, badges, career, coach, community, compete, daily, dashboard, dsa, duels, flashcards,
+from .routers import (activity, admin, ai, auth, badges, books, career, coach, community, compete, daily, dashboard, dsa, duels, flashcards,
                       groups, hackathons, interviews, learn, paths, projects, questions, rounds, skills, tests,
                       vetting)
 
@@ -37,7 +37,7 @@ app.add_middleware(
 
 for module in (auth, dashboard, learn, dsa, tests, interviews, paths, ai, questions, projects, activity, admin,
                community, hackathons, flashcards, badges, rounds, compete, coach, career, groups, duels, daily, skills,
-               vetting):
+               vetting, books):
     app.include_router(module.router)
 
 
