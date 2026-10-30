@@ -575,7 +575,7 @@ export default function AdminPage() {
     <div className="mx-auto max-w-7xl animate-fade-up">
       <PageHeader eyebrow="Admin" title="Content & platform console"
         description="Manage content, moderate the community, run hackathons and train the interviewer without touching code." />
-      <div className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
+      <div className="mb-6 flex flex-wrap gap-1 border-b border-line">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setTab(id)}
             className={cx("flex shrink-0 items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition",
