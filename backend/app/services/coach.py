@@ -5,6 +5,7 @@ the AI writes the coaching notes and weekly adjustments on top of it.
 """
 
 from datetime import date, timedelta
+from math import ceil
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -12,7 +13,8 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ..content import queries as q
 from ..content import store
-from ..models import InterviewSession, LessonProgress, QuestionAttempt, RoundAttempt, StudyPlan, TestAttempt, User
+from ..models import (DailySolve, InterviewSession, LessonProgress, QuestionAttempt, RoundAttempt, StudyPlan,
+                      TestAttempt, User)
 from . import ai
 from .scoring import solved_slugs
 
@@ -71,6 +73,33 @@ ROLE_NICHE = {"Frontend": "Frontend", "Backend": "Backend", "Full Stack": "Full 
 PROBLEM_MINUTES = {"Easy": 20, "Medium": 35, "Hard": 50, "Expert": 60}
 LEVEL_RANK = {"Easy": 0, "Medium": 1, "Hard": 2, "Expert": 3}
 PREFIX = {"lesson": "l:", "problem": "p:", "test": "t:", "debug": "r:", "review": "r:"}
+ONCE_A_DAY = {"interview", "english", "system", "daily", "revisit"}
+
+# How experience shapes a plan. `unlock` is the share of the plan (0-1) before a category appears at all, so a
+# beginner learns the language before facing mock interviews. `dsa` maps plan progress to the allowed difficulty
+# range (0 Easy .. 3 Expert). `lesson` scales language lessons; `boost` scales other categories.
+EXPERIENCE = {
+    "beginner": {"label": "New to programming", "weeks": 40, "lesson": 3.0, "lesson_until": 0.4,
+                 "boost": {"dsa": 0.8, "revisit": 2.5, "daily": 1.3},
+                 "unlock": {"debug": 0.3, "daily": 0.35, "english": 0.35,
+                            "project": 0.45, "review": 0.5, "interview": 0.55, "test": 0.65, "system": 0.8},
+                 "dsa": [(0.35, 0, 0), (0.75, 0, 1), (1.01, 1, 2)], "project_level": "Basic"},
+    "junior": {"label": "Junior (under 2 years)", "weeks": 20, "lesson": 1.6, "lesson_until": 0.4,
+               "boost": {"revisit": 1.6, "daily": 1.0},
+               "unlock": {"daily": 0.1, "english": 0.15, "interview": 0.2, "project": 0.25, "review": 0.3,
+                          "test": 0.35, "system": 0.5},
+               "dsa": [(0.3, 0, 1), (0.7, 0, 2), (1.01, 1, 3)], "project_level": "Intermediate"},
+    "mid": {"label": "Mid-level (2 to 5 years)", "weeks": 8, "lesson": 1.0, "lesson_until": 1.0,
+            "boost": {"revisit": 0.8, "daily": 0.8}, "unlock": {"revisit": 0.2},
+            "dsa": [(0.34, 0, 1), (0.5, 0, 2), (0.75, 1, 2), (1.01, 1, 3)], "project_level": "Intermediate"},
+    "senior": {"label": "Senior (5+ years)", "weeks": 6, "lesson": 0.25, "lesson_until": 1.0,
+               "boost": {"system": 1.6, "review": 1.3, "revisit": 0.6, "daily": 0.8}, "unlock": {"revisit": 0.2}, "dsa": [(0.5, 1, 2), (1.01, 1, 3)], "project_level": "Advanced"},
+}
+PROJECT_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"]
+
+
+def experience(key: str | None) -> dict:
+    return EXPERIENCE.get(key or "mid", EXPERIENCE["mid"])
 
 
 def role_key(role: str) -> str:
@@ -137,8 +166,9 @@ def analyse(db: Session, user: User) -> dict:
 class _Picker:
     """Hands out the next suitable content item per category without repeats."""
 
-    def __init__(self, db: Session, user: User, target: dict, language: str, analysis: dict):
+    def __init__(self, db: Session, user: User, target: dict, language: str, analysis: dict, level: str = "mid"):
         self.db, self.user, self.target, self.language = db, user, target, language
+        self.exp = experience(level)
         self.used: set[str] = set()
         self.solved = solved_slugs(db, user.id)
         self.done_lessons = set(db.scalars(select(LessonProgress.lesson_id).where(LessonProgress.user_id == user.id)))
@@ -154,12 +184,24 @@ class _Picker:
         self.topic_i = self.interview_i = 0
         self.project = None
         self.project_part = 0
+        self.week, self.day = 0, None
+        self.scheduled: list[tuple[int, dict]] = []  # (week, problem) for spaced re-solving
+        self.revisit_i = 0
 
     def _take(self, key: str) -> bool:
         if key in self.used:
             return False
         self.used.add(key)
         return True
+
+    def lessons_left(self) -> int:
+        return sum(1 for les in q.track_lessons(self.db, self.language)
+                   if les["id"] not in self.done_lessons and "l:" + les["id"] not in self.used)
+
+    def problems_left(self) -> int:
+        top = self.exp["dsa"][-1][2]
+        return sum(1 for p in q.problems(self.db) if not p["slug"].startswith("oa-") and p["slug"] not in self.solved
+                   and "p:" + p["slug"] not in self.used and LEVEL_RANK.get(p["difficulty"], 1) <= top)
 
     def lesson(self, progress: float):
         for les in q.track_lessons(self.db, self.language):
@@ -169,14 +211,14 @@ class _Picker:
         return None
 
     def dsa(self, progress: float):
-        # Early weeks favour Easy/Medium in weak patterns; later weeks push Medium/Hard
-        hi = 1 if progress < 0.34 else 2 if progress < 0.75 else 3
-        lo = 0 if progress < 0.5 else 1
-        pool = [p for p in q.problems(self.db) if not p["slug"].startswith("oa-") and p["slug"] not in self.solved
-                and lo <= LEVEL_RANK.get(p["difficulty"], 1) <= hi and "p:" + p["slug"] not in self.used]
+        # Difficulty rises with plan progress, starting from the candidate's experience level
+        lo, hi = next((lo, hi) for limit, lo, hi in self.exp["dsa"] if progress < limit)
+        fresh = [p for p in q.problems(self.db) if not p["slug"].startswith("oa-") and p["slug"] not in self.solved
+                 and "p:" + p["slug"] not in self.used]
+        pool = [p for p in fresh if lo <= LEVEL_RANK.get(p["difficulty"], 1) <= hi]
         if not pool:
-            pool = [p for p in q.problems(self.db) if p["slug"] not in self.solved and "p:" + p["slug"] not in self.used
-                    and not p["slug"].startswith("oa-")]
+            # Never jump a beginner to harder problems than their phase allows
+            pool = [p for p in fresh if LEVEL_RANK.get(p["difficulty"], 1) <= hi]
         if not pool:
             return None
         weak = {w: i for i, w in enumerate(self.weak_patterns)}
@@ -185,6 +227,7 @@ class _Picker:
         # Rotate through patterns so one week isn't all the same topic
         p = pool[len(self.used) % min(len(pool), 6)]
         self._take("p:" + p["slug"])
+        self.scheduled.append((self.week, p))
         return {"type": "problem", "ref": p["slug"], "title": f"{p['title']} ({p['difficulty']}, {p['pattern']})",
                 "minutes": PROBLEM_MINUTES.get(p["difficulty"], 35), "href": f"/dsa/{p['slug']}"}
 
@@ -242,7 +285,9 @@ class _Picker:
     def project_task(self, progress: float):
         if self.project is None:
             options = [p for p in q.projects(self.db) if p.get("niche") == self.niche] or q.projects(self.db)
-            options.sort(key=lambda p: (p.get("level") != "Intermediate", p.get("hours", 8)))
+            want = PROJECT_LEVELS.index(self.exp["project_level"])
+            options.sort(key=lambda p: (abs(PROJECT_LEVELS.index(p["level"]) - want) if p.get("level") in PROJECT_LEVELS
+                                        else 9, p.get("hours", 8)))
             self.project = options[0] if options else False
         if not self.project:
             return None
@@ -251,6 +296,20 @@ class _Picker:
                 "title": f"Take-home: {self.project['title']} (session {self.project_part})", "minutes": 60,
                 "href": f"/projects/{self.project['id']}"}
 
+    def revisit(self, progress: float):
+        """Re-solve an earlier problem from memory a few weeks later: spaced repetition for coding."""
+        ready = [p for wk, p in self.scheduled if wk < self.week]
+        if not ready:
+            return None
+        p = ready[self.revisit_i % len(ready)]
+        self.revisit_i += 1
+        return {"type": "revisit", "ref": p["slug"], "title": f"Re-solve from memory: {p['title']}", "minutes": 20,
+                "href": f"/dsa/{p['slug']}"}
+
+    def daily(self, progress: float):
+        return {"type": "daily", "ref": self.day.isoformat(), "title": "Daily challenge", "minutes": 30,
+                "href": "/daily"}
+
     def flashcards(self):
         return {"type": "flashcards", "ref": "due", "title": "Review due flashcards", "minutes": 10,
                 "href": "/flashcards"}
@@ -258,11 +317,12 @@ class _Picker:
 
 def build_days(db: Session, user: User, target_id: str, language: str, start: date, weeks: int,
                hours_per_week: int, from_day: date | None = None, analysis: dict | None = None,
-               keep: dict[str, list] | None = None) -> list[dict]:
+               keep: dict[str, list] | None = None, level: str = "mid") -> list[dict]:
     """Return plan weeks. Days before `from_day` are taken from `keep` (an existing plan's days by date)."""
     target = TARGETS[target_id]
+    exp = experience(level)
     analysis = analysis or analyse(db, user)
-    picker = _Picker(db, user, target, language, analysis)
+    picker = _Picker(db, user, target, language, analysis, level)
     keep = keep or {}
     for tasks in keep.values():
         for t in tasks:
@@ -272,21 +332,34 @@ def build_days(db: Session, user: User, target_id: str, language: str, start: da
     for w in range(weeks):
         progress = w / max(1, weeks - 1)
         weights = dict(target["weights"])
+        weights.setdefault("lesson", 0.06)
+        for k, factor in exp["boost"].items():
+            weights[k] = weights.get(k, 0.06) * factor
         # Shift from learning to simulation as the plan goes on, and boost weak areas
-        if "lesson" in weights:
-            weights["lesson"] *= 1.6 - progress * 1.2
+        weights["lesson"] *= exp["lesson"] * max(0.2, 1.6 - progress * 1.2)
         for k in ("interview", "test", "system", "english"):
             if k in weights:
                 weights[k] *= 0.6 + progress
         for k in weights:
             weights[k] *= 1.6 - analysis["areas"].get(k, 50) / 100 if k in analysis["areas"] else 1
-        total = sum(weights.values())
+        # Categories the candidate isn't ready for yet stay out of the plan until their phase
+        for k, starts_at in exp["unlock"].items():
+            if k in weights and progress < starts_at:
+                weights[k] = 0
+        total = sum(weights.values()) or 1
         weights = {k: v / total for k, v in weights.items()}
         used_minutes = {k: 0.0 for k in weights}
+        # Spread scarce content over the plan instead of using it all up in the first weeks
+        lesson_weeks = max(1, round(weeks * exp["lesson_until"]) - w)
+        caps = {"lesson": max(3, ceil(picker.lessons_left() / lesson_weeks)),
+                "dsa": max(3, ceil(picker.problems_left() / (weeks - w)))}
+        counts = {k: 0 for k in caps}
+        picker.week = w
         week_days = []
         for d in range(7):
             day = start + timedelta(days=w * 7 + d)
             key = day.isoformat()
+            picker.day = day
             if from_day and day < from_day:
                 week_days.append({"date": key, "tasks": keep.get(key, [])})
                 continue
@@ -301,9 +374,16 @@ def build_days(db: Session, user: User, target_id: str, language: str, start: da
                 tried += 1
                 # Pick the category furthest behind its share of the week
                 week_spent = sum(used_minutes.values()) + 1
-                cat = max(weights, key=lambda k: weights[k] - used_minutes[k] / week_spent)
-                if cat in ("interview", "english", "system") and interviews:
+                open_cats = [k for k in weights if weights[k] > 0]
+                if not open_cats:
+                    break
+                cat = max(open_cats, key=lambda k: weights[k] - used_minutes[k] / week_spent)
+                if cat in ("interview", "english", "system") and interviews or (
+                        cat in ONCE_A_DAY and any(t["type"] == cat for t in tasks)):
                     used_minutes[cat] += 10
+                    continue
+                if cat in caps and counts[cat] >= caps[cat]:
+                    weights[cat] = 0
                     continue
                 if cat == "test" and (d != 5 or budget < 45):
                     used_minutes[cat] += 10
@@ -318,6 +398,8 @@ def build_days(db: Session, user: User, target_id: str, language: str, start: da
                     picker.used.discard(PREFIX.get(task["type"], "x:") + task["ref"])
                     break
                 interviews += cat in ("interview", "english", "system")
+                if cat in counts:
+                    counts[cat] += 1
                 tasks.append(task)
                 spent += task["minutes"]
                 used_minutes[cat] += task["minutes"]
@@ -326,11 +408,25 @@ def build_days(db: Session, user: User, target_id: str, language: str, start: da
             for ti, t in enumerate(day["tasks"]):
                 t.setdefault("id", f"w{w}d{di}t{ti}-{t['type']}-{t['ref']}"[:120])
                 t.setdefault("done", False)
-        out.append({"week": w + 1, "focus": _focus(progress, target), "days": week_days})
+        out.append({"week": w + 1, "focus": _focus(progress, target, level), "days": week_days})
     return out
 
 
-def _focus(progress: float, target: dict) -> str:
+BEGINNER_FOCUS = [
+    (0.2, "Programming basics: syntax, variables, loops and functions"),
+    (0.4, "Building blocks: data structures and your first easy problems"),
+    (0.6, "Problem solving: easy to medium patterns and debugging"),
+    (0.8, "Becoming job-ready: interview questions, a take-home project and first mock interviews"),
+]
+
+
+def _focus(progress: float, target: dict, level: str = "mid") -> str:
+    if level == "beginner":
+        phase = next((text for limit, text in BEGINNER_FOCUS if progress < limit), None)
+        if phase:
+            return phase
+    if level == "senior" and progress < 0.25:
+        return "Calibration: hard problems, system design and fast recall"
     if progress < 0.25:
         return "Foundations: language fluency and core patterns"
     if progress < 0.55:
@@ -350,7 +446,9 @@ def sync_done(db: Session, user: User, plan: StudyPlan) -> bool:
                                                                         RoundAttempt.submitted_at.is_not(None)))}
     tests = {t.test_id for t in db.scalars(select(TestAttempt).where(TestAttempt.user_id == user.id,
                                                                      TestAttempt.finished_at.is_not(None)))}
-    done_sets = {"problem": solved, "lesson": lessons, "debug": rounds, "review": rounds, "test": tests}
+    dailies = {d.isoformat() for d in db.scalars(select(DailySolve.day).where(DailySolve.user_id == user.id))}
+    done_sets = {"problem": solved, "lesson": lessons, "debug": rounds, "review": rounds, "test": tests,
+                 "daily": dailies}
     changed = False
     data = plan.plan
     for week in data.get("weeks", []):
@@ -379,7 +477,8 @@ def coach_note(user: User, plan: StudyPlan, analysis: dict, week: int, adherence
         {"role": "system", "content": "You are a blunt but encouraging career coach who has placed hundreds of "
                                       "engineers through Toptal, Turing, Lemon.io, A.Team, Braintrust and remote "
                                       "FAANG-style pipelines. Respond only with JSON."},
-        {"role": "user", "content": f"Candidate: {user.name}, aiming for {target['label']} as a {user.target_role}.\n"
+        {"role": "user", "content": f"Candidate: {user.name}, aiming for {target['label']} as a {user.target_role}. "
+                                    f"Experience: {experience(plan.experience)['label']}.\n"
                                     f"Pipeline: {', '.join(target['pipeline'])}.\nPlan: {plan.weeks} weeks, "
                                     f"{plan.hours_per_week} h/week, now in week {week}.\n"
                                     f"Skill scores 0-100 (0 = no data yet): {analysis['areas']}\n"

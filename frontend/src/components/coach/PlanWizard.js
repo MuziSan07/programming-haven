@@ -6,9 +6,9 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import TechLogo from "@/components/TechLogo";
 import { Button, Card, cx } from "@/components/ui";
-import { LANGUAGES, ROLES } from "./meta";
+import { LANGUAGES, LEVELS, ROLES, lengthLabel } from "./meta";
 
-const STEPS = ["Target", "Role & language", "Schedule"];
+const STEPS = ["Target", "Experience", "Role & language", "Schedule"];
 
 function StepBar({ step }) {
   return (
@@ -46,11 +46,15 @@ export default function PlanWizard({ targets, onboarding, onCreated }) {
   const initialRole = user?.target_role || ROLES[0];
   const roles = ROLES.includes(initialRole) ? ROLES : [initialRole, ...ROLES];
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ target: "", target_role: initialRole, language: "python", weeks: 6, hours_per_week: 10 });
+  const [form, setForm] = useState({
+    target: "", experience: "", target_role: initialRole, language: "python", weeks: 8, hours_per_week: 10,
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   const chosen = targets.find((t) => t.id === form.target);
+  const level = LEVELS.find((l) => l.id === form.experience);
+  const chooseLevel = (l) => setForm((f) => ({ ...f, experience: l.id, weeks: l.weeks }));
 
   async function submit() {
     setBusy(true);
@@ -77,7 +81,7 @@ export default function PlanWizard({ targets, onboarding, onCreated }) {
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           {onboarding
-            ? "Answer three quick questions and your coach turns them into a day-by-day plan for the network you are aiming at. It adjusts every week from your real results."
+            ? "Answer four quick questions and your coach turns them into a day-by-day plan for the network you are aiming at. It adjusts every week from your real results."
             : "Pick where you are applying and how much time you have. The coach schedules problems, questions, mock interviews and tests around that pipeline, and re-plans weekly from your results."}
         </p>
       </div>
@@ -114,6 +118,29 @@ export default function PlanWizard({ targets, onboarding, onCreated }) {
         )}
 
         {step === 1 && (
+          <div className="animate-fade-up">
+            <h2 className="font-semibold">How much programming experience do you have?</h2>
+            <p className="mt-1 text-sm text-muted">Be honest: a beginner plan teaches the language first, a senior plan skips straight to hard rounds.</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {LEVELS.map((l) => {
+                const active = form.experience === l.id;
+                return (
+                  <button key={l.id} type="button" onClick={() => chooseLevel(l)}
+                    className={cx("relative rounded-2xl border p-4 text-left transition",
+                      active ? "border-brand bg-brand/10 ring-2 ring-brand/30" : "border-line bg-surface-2 hover:border-faint")}>
+                    {active && <CircleCheck className="absolute top-3 right-3 size-4 text-brand" />}
+                    <span className="pr-6 font-semibold">{l.label}</span>
+                    {l.sub && <span className="ml-1.5 text-xs text-faint">{l.sub}</span>}
+                    <p className="mt-1.5 text-xs text-muted">{l.description}</p>
+                    <p className="mt-2 text-[11px] text-faint">Suggested length: {lengthLabel(l.weeks)}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
           <div className="animate-fade-up space-y-6">
             <div>
               <label className="label" htmlFor="role">Target role</label>
@@ -138,26 +165,35 @@ export default function PlanWizard({ targets, onboarding, onCreated }) {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="animate-fade-up">
             <div className="grid gap-6 sm:grid-cols-2">
-              <Slider id="weeks" label="Plan length" value={form.weeks} min={2} max={16} unit="weeks"
-                onChange={(v) => set("weeks", v)} hint="6 is typical" />
+              <Slider id="weeks" label="Plan length" value={form.weeks} min={2} max={52} unit="weeks"
+                onChange={(v) => set("weeks", v)} hint={level ? `${level.weeks} suggested` : null} />
               <Slider id="hours" label="Study time" value={form.hours_per_week} min={3} max={50} unit="h / week"
                 onChange={(v) => set("hours_per_week", v)} hint={intensity} />
             </div>
             <div className="mt-6 rounded-2xl border border-line bg-surface-2 p-4 text-sm">
               <p className="flex items-center gap-2 font-semibold"><Compass className="size-4 text-brand-2" /> Your plan</p>
-              <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {[["Target", chosen?.label || "-"], ["Role", form.target_role],
-                  ["Total", `${form.weeks * form.hours_per_week} hours`], ["Per study day", `about ${daily} min`]].map(([k, v]) => (
+              <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {[["Target", chosen?.label || "-"], ["Experience", level?.label || "-"], ["Role", form.target_role],
+                  ["Length", lengthLabel(form.weeks)], ["Total", `${form.weeks * form.hours_per_week} hours`],
+                  ["Per study day", `about ${daily} min`]].map(([k, v]) => (
                   <div key={k}>
                     <dt className="text-[11px] text-faint">{k}</dt>
                     <dd className="truncate font-medium">{v}</dd>
                   </div>
                 ))}
               </dl>
-              <p className="mt-3 text-xs text-muted">Six study days a week plus a light review day. Early weeks build foundations; later weeks are full mock pipelines.</p>
+              <p className="mt-3 text-xs text-muted">
+                Six study days a week plus a light review day.{" "}
+                {form.experience === "beginner"
+                  ? "You start with language lessons and easy problems; interviews and mock tests unlock once the basics are in place."
+                  : "Early weeks build foundations; later weeks are full mock pipelines."}
+                {level && form.weeks < level.weeks / 2 && (
+                  <span className="mt-1 block text-warn">That is short for this experience level. The plan will be dense; consider {level.weeks} weeks.</span>
+                )}
+              </p>
             </div>
           </div>
         )}
@@ -169,7 +205,7 @@ export default function PlanWizard({ targets, onboarding, onCreated }) {
             <Button variant="ghost" onClick={() => setStep(step - 1)} disabled={busy}><ArrowLeft className="size-4" /> Back</Button>
           ) : <span />}
           {step < STEPS.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)} disabled={step === 0 && !form.target}>
+            <Button onClick={() => setStep(step + 1)} disabled={(step === 0 && !form.target) || (step === 1 && !form.experience)}>
               Continue <ArrowRight className="size-4" />
             </Button>
           ) : (

@@ -273,6 +273,7 @@ export default function PlanView({ plan, onPlan, onReset }) {
               <span>{plan.finished ? `Finished · ${plan.weeks} weeks` : `Week ${plan.current_week} of ${plan.weeks}`}</span>
               <span className="text-faint">·</span>
               <span>{plan.hours_per_week} h/week</span>
+              {plan.experience_label && <><span className="text-faint">·</span><span>{plan.experience_label}</span></>}
               <span className="text-faint">·</span>
               <span>{language}</span>
               {plan.finished ? (

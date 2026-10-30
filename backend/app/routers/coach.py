@@ -1,6 +1,7 @@
 """AI career coach: personal study plan for a target network, with weekly adjustment."""
 
 from datetime import date, timedelta
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -33,6 +34,7 @@ def _out(plan: StudyPlan, today: date) -> dict:
     return {"id": plan.id, "target": plan.target, "target_label": plan.target_label,
             "pipeline": coach.TARGETS.get(plan.target, {}).get("pipeline", []), "weeks": plan.weeks,
             "hours_per_week": plan.hours_per_week, "language": plan.language,
+            "experience": plan.experience or "mid", "experience_label": coach.experience(plan.experience)["label"],
             "start_date": plan.start_date.isoformat(),
             "end_date": (plan.start_date + timedelta(days=7 * plan.weeks - 1)).isoformat(),
             "current_week": week, "finished": today > plan.start_date + timedelta(days=7 * plan.weeks - 1),
@@ -42,6 +44,11 @@ def _out(plan: StudyPlan, today: date) -> dict:
 @router.get("/targets")
 def targets():
     return [{"id": k, "label": v["label"], "pipeline": v["pipeline"]} for k, v in coach.TARGETS.items()]
+
+
+@router.get("/levels")
+def levels():
+    return [{"id": k, "label": v["label"], "weeks": v["weeks"]} for k, v in coach.EXPERIENCE.items()]
 
 
 @router.get("/analysis")
@@ -68,10 +75,11 @@ def get_plan(user: User = Depends(get_current_user), db: Session = Depends(get_d
 
 class PlanIn(BaseModel):
     target: str
-    weeks: int = Field(default=6, ge=2, le=16)
+    weeks: int = Field(default=6, ge=2, le=52)
     hours_per_week: int = Field(default=10, ge=3, le=50)
     language: str = "python"
     target_role: str | None = Field(default=None, max_length=60)
+    experience: Literal["beginner", "junior", "mid", "senior"] = "mid"
 
 
 @router.post("/plan")
@@ -87,10 +95,10 @@ def create_plan(body: PlanIn, user: User = Depends(get_current_user), db: Sessio
     today = date.today()
     analysis_data = coach.analyse(db, user)
     weeks = coach.build_days(db, user, body.target, body.language, today, body.weeks, body.hours_per_week,
-                             analysis=analysis_data)
+                             analysis=analysis_data, level=body.experience)
     plan = StudyPlan(user_id=user.id, target=body.target, target_label=coach.TARGETS[body.target]["label"],
                      weeks=body.weeks, hours_per_week=body.hours_per_week, language=body.language, start_date=today,
-                     plan={"weeks": weeks})
+                     experience=body.experience, plan={"weeks": weeks})
     note = coach.coach_note(user, plan, analysis_data, 1, coach.plan_stats(plan, today))
     plan.coach = {"adjusted_week": 1, "notes": [note], "analysis": analysis_data}
     db.add(plan)
@@ -104,7 +112,7 @@ def _replan(db: Session, user: User, plan: StudyPlan, today: date) -> None:
     done_today = [t for t in keep.get(today.isoformat(), []) if t.get("done")]
     analysis_data = coach.analyse(db, user)
     weeks = coach.build_days(db, user, plan.target, plan.language, plan.start_date, plan.weeks, plan.hours_per_week,
-                             from_day=today, analysis=analysis_data, keep=keep)
+                             from_day=today, analysis=analysis_data, keep=keep, level=plan.experience or "mid")
     done_refs = {t["ref"] for t in done_today}
     for w in weeks:
         for d in w["days"]:

@@ -388,6 +388,7 @@ class StudyPlan(Base):
     weeks: Mapped[int] = mapped_column(Integer)
     hours_per_week: Mapped[int] = mapped_column(Integer)
     language: Mapped[str] = mapped_column(String(20), default="python")
+    experience: Mapped[str] = mapped_column(String(12), default="mid")  # beginner | junior | mid | senior
     start_date: Mapped[date] = mapped_column(Date)
     plan: Mapped[dict] = mapped_column(JSON, default=dict)  # {weeks: [{week, focus, days: [{date, tasks: [...]}]}]}
     coach: Mapped[dict] = mapped_column(JSON, default=dict)  # AI notes per week, weak spots

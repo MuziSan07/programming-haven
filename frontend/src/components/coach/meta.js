@@ -1,5 +1,5 @@
 import {
-  BookOpen, Briefcase, Bug, ClipboardCheck, Code, Layers, MessageSquare, Mic, ScanSearch,
+  BookOpen, Briefcase, Bug, CalendarCheck, ClipboardCheck, Code, Layers, MessageSquare, Mic, RotateCcw, ScanSearch,
 } from "lucide-react";
 
 /** Icon, label and accent colour for each plan task type. */
@@ -13,6 +13,8 @@ export const TASK_META = {
   review: { icon: ScanSearch, label: "Code review", color: "#22d3ee" },
   project: { icon: Briefcase, label: "Project", color: "#a78bfa" },
   flashcards: { icon: Layers, label: "Flashcards", color: "#14b8a6" },
+  revisit: { icon: RotateCcw, label: "Re-solve", color: "#84cc16" },
+  daily: { icon: CalendarCheck, label: "Daily", color: "#f97316" },
 };
 
 export function taskMeta(type) {
@@ -38,6 +40,24 @@ export const LANGUAGES = [
   { id: "cpp", label: "C++" },
   { id: "go", label: "Go" },
 ];
+
+/** Experience levels; `weeks` is the suggested plan length (kept in step with the backend). */
+export const LEVELS = [
+  { id: "beginner", label: "New to programming", weeks: 40,
+    description: "Start from zero: syntax, variables and loops first. Interviews come once the basics are solid." },
+  { id: "junior", label: "Junior", sub: "under 2 years", weeks: 20,
+    description: "You can code but haven't been through tough screens. Fill the gaps, then practise interviews." },
+  { id: "mid", label: "Mid-level", sub: "2 to 5 years", weeks: 8,
+    description: "You ship real work. Sharpen problem solving and run the full mock pipeline." },
+  { id: "senior", label: "Senior", sub: "5+ years", weeks: 6,
+    description: "Skip the basics: hard problems, system design and code review from day one." },
+];
+
+export function lengthLabel(weeks) {
+  if (weeks < 8) return `${weeks} weeks`;
+  const months = Math.round((weeks * 7) / 30.4);
+  return `${weeks} weeks, about ${months} month${months === 1 ? "" : "s"}`;
+}
 
 export const ROLES = [
   "Full Stack Developer", "Frontend Developer", "Backend Developer", "Mobile Developer",
