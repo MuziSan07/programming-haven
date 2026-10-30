@@ -29,3 +29,7 @@ Thumbs.db
 
 # Local tool settings
 .claude/
+
+# Personal books kept in the project folder (never commit)
+/*.pdf
+/*.epub
