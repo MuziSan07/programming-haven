@@ -6,6 +6,7 @@ the AI writes the coaching notes and weekly adjustments on top of it.
 
 from datetime import date, timedelta
 from math import ceil
+from urllib.parse import quote
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -79,16 +80,16 @@ ONCE_A_DAY = {"interview", "english", "system", "daily", "revisit"}
 # beginner learns the language before facing mock interviews. `dsa` maps plan progress to the allowed difficulty
 # range (0 Easy .. 3 Expert). `lesson` scales language lessons; `boost` scales other categories.
 EXPERIENCE = {
-    "beginner": {"label": "New to programming", "weeks": 40, "lesson": 3.0, "lesson_until": 0.4,
+    "beginner": {"label": "New to programming", "weeks": 40, "lesson": 3.0, "lesson_until": 0.3,
                  "boost": {"dsa": 0.8, "revisit": 2.5, "daily": 1.3},
                  "unlock": {"debug": 0.3, "daily": 0.35, "english": 0.35,
                             "project": 0.45, "review": 0.5, "interview": 0.55, "test": 0.65, "system": 0.8},
-                 "dsa": [(0.35, 0, 0), (0.75, 0, 1), (1.01, 1, 2)], "project_level": "Basic"},
+                 "dsa": [(0.35, 0, 0), (0.75, 0, 1), (1.01, 1, 2)], "project_level": "Basic", "basics": True},
     "junior": {"label": "Junior (under 2 years)", "weeks": 20, "lesson": 1.6, "lesson_until": 0.4,
                "boost": {"revisit": 1.6, "daily": 1.0},
                "unlock": {"daily": 0.1, "english": 0.15, "interview": 0.2, "project": 0.25, "review": 0.3,
                           "test": 0.35, "system": 0.5},
-               "dsa": [(0.3, 0, 1), (0.7, 0, 2), (1.01, 1, 3)], "project_level": "Intermediate"},
+               "dsa": [(0.3, 0, 1), (0.7, 0, 2), (1.01, 1, 3)], "project_level": "Intermediate", "basics": True},
     "mid": {"label": "Mid-level (2 to 5 years)", "weeks": 8, "lesson": 1.0, "lesson_until": 1.0,
             "boost": {"revisit": 0.8, "daily": 0.8}, "unlock": {"revisit": 0.2},
             "dsa": [(0.34, 0, 1), (0.5, 0, 2), (0.75, 1, 2), (1.01, 1, 3)], "project_level": "Intermediate"},
@@ -117,7 +118,7 @@ def analyse(db: Session, user: User) -> dict:
     problems = q.problems(db)
     by_pattern: dict[str, list[int]] = {}
     for p in problems:
-        if p["slug"].startswith("oa-"):
+        if p["slug"].startswith(("oa-", "basics-")):
             continue
         s = by_pattern.setdefault(p["pattern"].split(" / ")[0], [0, 0])
         s[1] += 1
@@ -179,7 +180,10 @@ class _Picker:
         self.weak_patterns = analysis["weak_patterns"]
         role = role_key(user.target_role)
         topics = [LANG_TOPIC.get(language, "Python"), "Data Structures & Algorithms"] + ROLE_TOPICS[role]
-        self.topics = list(dict.fromkeys(analysis["weak_topics"][:2] + topics))
+        weak = [t for t in analysis["weak_topics"][:2] if t != "Programming Basics"]
+        self.topics = list(dict.fromkeys(weak + topics))
+        if self.exp.get("basics"):
+            self.topics.insert(0, "Programming Basics")
         self.niche = ROLE_NICHE[role]
         self.topic_i = self.interview_i = 0
         self.project = None
@@ -198,10 +202,14 @@ class _Picker:
         return sum(1 for les in q.track_lessons(self.db, self.language)
                    if les["id"] not in self.done_lessons and "l:" + les["id"] not in self.used)
 
+    def _practice(self) -> list[dict]:
+        skip = ("oa-",) if self.exp.get("basics") else ("oa-", "basics-")
+        return [p for p in q.problems(self.db) if not p["slug"].startswith(skip) and p["slug"] not in self.solved
+                and "p:" + p["slug"] not in self.used]
+
     def problems_left(self) -> int:
         top = self.exp["dsa"][-1][2]
-        return sum(1 for p in q.problems(self.db) if not p["slug"].startswith("oa-") and p["slug"] not in self.solved
-                   and "p:" + p["slug"] not in self.used and LEVEL_RANK.get(p["difficulty"], 1) <= top)
+        return sum(1 for p in self._practice() if LEVEL_RANK.get(p["difficulty"], 1) <= top)
 
     def lesson(self, progress: float):
         for les in q.track_lessons(self.db, self.language):
@@ -213,8 +221,7 @@ class _Picker:
     def dsa(self, progress: float):
         # Difficulty rises with plan progress, starting from the candidate's experience level
         lo, hi = next((lo, hi) for limit, lo, hi in self.exp["dsa"] if progress < limit)
-        fresh = [p for p in q.problems(self.db) if not p["slug"].startswith("oa-") and p["slug"] not in self.solved
-                 and "p:" + p["slug"] not in self.used]
+        fresh = self._practice()
         pool = [p for p in fresh if lo <= LEVEL_RANK.get(p["difficulty"], 1) <= hi]
         if not pool:
             # Never jump a beginner to harder problems than their phase allows
@@ -222,20 +229,32 @@ class _Picker:
         if not pool:
             return None
         weak = {w: i for i, w in enumerate(self.weak_patterns)}
-        pool.sort(key=lambda p: (weak.get(p["pattern"].split(" / ")[0], 99), LEVEL_RANK.get(p["difficulty"], 1),
-                                 p["slug"]))
-        # Rotate through patterns so one week isn't all the same topic
-        p = pool[len(self.used) % min(len(pool), 6)]
+        pool.sort(key=lambda p: (p["pattern"] != "Basics", weak.get(p["pattern"].split(" / ")[0], 99),
+                                 LEVEL_RANK.get(p["difficulty"], 1), p["slug"]))
+        warmups = [p for p in fresh if p["pattern"] == "Basics" and p in pool]
+        if warmups:
+            # Warm-ups go in their written order, simplest first
+            p = warmups[0]
+        else:
+            # Rotate through patterns so one week isn't all the same topic
+            p = pool[len(self.used) % min(len(pool), 6)]
         self._take("p:" + p["slug"])
         self.scheduled.append((self.week, p))
         return {"type": "problem", "ref": p["slug"], "title": f"{p['title']} ({p['difficulty']}, {p['pattern']})",
                 "minutes": PROBLEM_MINUTES.get(p["difficulty"], 35), "href": f"/dsa/{p['slug']}"}
 
     def questions(self, progress: float):
-        topic = self.topics[self.topic_i % len(self.topics)]
+        topics = self.topics
+        if self.exp.get("basics"):
+            # Beginners stay on basics and their language first; DSA, then role topics, come later
+            topics = topics[:2] if progress < 0.3 else topics[:3] if progress < 0.5 else topics
+        topic = topics[self.topic_i % len(topics)]
         self.topic_i += 1
+        if self.exp.get("basics") and progress < 0.5 and topic != "Programming Basics":
+            return {"type": "questions", "ref": topic, "title": f"Answer 5 basic {topic} questions", "minutes": 15,
+                    "href": f"/questions?topic={quote(topic)}&level=Basic"}
         return {"type": "questions", "ref": topic, "title": f"Answer 5 {topic} interview questions", "minutes": 15,
-                "href": f"/questions?topic={topic}"}
+                "href": f"/questions?topic={quote(topic)}"}
 
     def interview(self, progress: float, kinds: list[str] | None = None):
         kinds = kinds or [k for k in self.target["interviews"] if k not in ("english", "system-design")] or ["technical"]
@@ -379,11 +398,17 @@ def build_days(db: Session, user: User, target_id: str, language: str, start: da
                     break
                 cat = max(open_cats, key=lambda k: weights[k] - used_minutes[k] / week_spent)
                 if cat in ("interview", "english", "system") and interviews or (
-                        cat in ONCE_A_DAY and any(t["type"] == cat for t in tasks)):
+                        cat in ONCE_A_DAY and any(t["type"] == cat for t in tasks)) or (
+                        cat == "questions" and sum(t["type"] == "questions" for t in tasks) >= 2):
                     used_minutes[cat] += 10
                     continue
                 if cat in caps and counts[cat] >= caps[cat]:
                     weights[cat] = 0
+                    continue
+                # Spread the weekly allowance over the study days instead of front-loading Monday
+                if cat in caps and sum(PREFIX.get(t["type"], "") == ("l:" if cat == "lesson" else "p:")
+                                       for t in tasks) >= ceil(caps[cat] / 6):
+                    used_minutes[cat] += 10
                     continue
                 if cat == "test" and (d != 5 or budget < 45):
                     used_minutes[cat] += 10

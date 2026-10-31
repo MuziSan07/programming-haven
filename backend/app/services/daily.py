@@ -38,7 +38,7 @@ def _aware(dt: datetime) -> datetime:
 # ---------------------------------------------------------------- selection
 
 def _pools(db: Session) -> dict[str, tuple[str, ...]]:
-    problems = [p for p in q.problems(db) if not p["slug"].startswith("oa-")]
+    problems = [p for p in q.problems(db) if not p["slug"].startswith(("oa-", "basics-"))]
     every = tuple(sorted(p["slug"] for p in problems))
     pools = {}
     for key, diffs in POOL_DIFFICULTIES.items():

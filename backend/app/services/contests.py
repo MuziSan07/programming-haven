@@ -48,7 +48,7 @@ def ensure_weekly(db: Session) -> Contest:
     if contest:
         return contest
     rng = random.Random(slug)
-    pool = [p for p in q.problems(db) if not p["slug"].startswith("oa-")]
+    pool = [p for p in q.problems(db) if not p["slug"].startswith(("oa-", "basics-"))]
     chosen = []
     for difficulty, points in SLOTS:
         options = [p["slug"] for p in pool if p["difficulty"] == difficulty and p["slug"] not in

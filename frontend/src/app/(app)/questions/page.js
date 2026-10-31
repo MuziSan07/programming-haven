@@ -200,7 +200,7 @@ function Practice({ question, onAnswered, onNext, onBack }) {
 export default function QuestionBankPage() {
   const searchParams = useSearchParams();
   const [topic, setTopic] = useState(() => searchParams.get("topic") || "");
-  const [level, setLevel] = useState("");
+  const [level, setLevel] = useState(() => searchParams.get("level") || "");
   const [type, setType] = useState("");
   const [activeId, setActiveId] = useState(null);
   const [statusOverride, setStatusOverride] = useState({});

@@ -1,0 +1,866 @@
+{
+ "lessons": [
+  {
+   "id": "py-u0-what-is-programming",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "What Programming Is",
+   "minutes": 5,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "A program is a list of instructions",
+     "body": "A computer does nothing on its own. A **program** is a list of instructions that it follows exactly, one after another, from top to bottom. It never guesses what you meant: if an instruction is wrong, the result is wrong.\n\n**Python** is a programming language: a way of writing those instructions that is readable for people and precise enough for the computer. It is one of the most popular first languages and is used at Google, Netflix, Instagram and in most data and AI teams."
+    },
+    {
+     "type": "concept",
+     "title": "Running code",
+     "body": "When you run a Python program, a tool called the **interpreter** reads your file line by line and carries out each instruction. The simplest instruction is `print()`, which shows text on the screen. Text in code goes inside quotes so Python knows it is text and not an instruction.",
+     "code": "print(\"Hello\")\nprint(\"I am learning Python\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "In what order does Python run these lines?",
+     "options": [
+      "Bottom to top",
+      "Top to bottom, one line at a time",
+      "All lines at the same time",
+      "In a random order"
+     ],
+     "answer": 1,
+     "explanation": "Python runs a file from the first line to the last, one instruction at a time. Later you will learn ways to repeat or skip lines, but the default is always top to bottom.",
+     "code": "print(\"first\")\nprint(\"second\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Why does the text in `print(\"Hi\")` need quotes?",
+     "options": [
+      "Quotes make the text bold",
+      "So Python treats it as text, not as an instruction or a name",
+      "Quotes are optional decoration",
+      "Quotes make the program run faster"
+     ],
+     "answer": 1,
+     "explanation": "Without quotes Python would look for something *named* `Hi`, fail to find it and stop with an error. Quotes mark the start and end of a piece of text."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Run your first program. Make it print exactly: `Hello, world`",
+     "starter": "# Type your instruction below\n",
+     "solution": "print(\"Hello, world\")\n",
+     "expected_output": "Hello, world",
+     "hint": "Use print() with the text inside quotes."
+    }
+   ]
+  },
+  {
+   "id": "py-u0-first-program",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Your First Program: print()",
+   "minutes": 5,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "print() shows output",
+     "body": "`print()` displays whatever you put between its brackets. Each call prints on a **new line**. You can give it several things separated by commas and it puts a space between them.",
+     "code": "print(\"Good morning\")\nprint(\"Score:\", 10)\n"
+    },
+    {
+     "type": "concept",
+     "title": "Comments are notes for humans",
+     "body": "Anything after a `#` on a line is a **comment**. Python ignores it completely. Programmers use comments to explain *why* the code does something.",
+     "code": "# This line is ignored\nprint(\"This line runs\")  # and this note is ignored too\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "Score: 10",
+      "Score:10",
+      "\"Score:\", 10",
+      "Score: 1 0"
+     ],
+     "answer": 0,
+     "explanation": "Items separated by commas are printed with one space between them, so the result is `Score: 10`.",
+     "code": "print(\"Score:\", 10)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "How many lines of output does this program produce?",
+     "options": [
+      "1",
+      "2",
+      "3",
+      "0"
+     ],
+     "answer": 1,
+     "explanation": "The first line is a comment, so it is ignored. The two `print()` calls produce two lines.",
+     "code": "# greeting\nprint(\"Hi\")\nprint(\"Bye\")\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the code so it shows the word Ready on the screen.",
+     "code": "____(\"Ready\")",
+     "answer": [
+      "print"
+     ],
+     "explanation": "`print` is the built-in instruction that writes to the screen."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Print these two lines, in this order:\n\n`Name: Sam`\n`Age: 25`",
+     "starter": "# Two print() calls, one per line\n",
+     "solution": "print(\"Name: Sam\")\nprint(\"Age: 25\")\n",
+     "expected_output": "Name: Sam\nAge: 25",
+     "hint": "Each print() call writes one line."
+    }
+   ]
+  },
+  {
+   "id": "py-u0-numbers-math",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Numbers & Math",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Python as a calculator",
+     "body": "Numbers are written without quotes. Python does maths with these operators:\n\n- `+` add, `-` subtract, `*` multiply, `/` divide\n- `//` divide and drop the remainder (whole-number division)\n- `%` the remainder after division\n- `**` power, so `2 ** 3` is 8\n\nBrackets work like in school maths: `(2 + 3) * 4` is 20.",
+     "code": "print(7 + 3)\nprint(7 / 2)\nprint(7 // 2)\nprint(7 % 2)\n"
+    },
+    {
+     "type": "concept",
+     "title": "Whole numbers and decimals",
+     "body": "Whole numbers like `5` are called **integers** (`int`). Numbers with a decimal point like `3.5` are **floats**. Normal division `/` always gives a float, even `10 / 2` which prints `5.0`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `print(10 % 3)` show?",
+     "options": [
+      "3",
+      "1",
+      "3.33",
+      "0"
+     ],
+     "answer": 1,
+     "explanation": "`%` gives the remainder: 10 divided by 3 is 3 with 1 left over, so the answer is 1."
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "14",
+      "20",
+      "24",
+      "16"
+     ],
+     "answer": 0,
+     "explanation": "Multiplication happens before addition, just like in maths: `3 * 4` is 12, plus 2 is 14.",
+     "code": "print(2 + 3 * 4)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which line prints `4` (not `4.5`)?",
+     "options": [
+      "print(9 / 2)",
+      "print(9 // 2)",
+      "print(9 % 2)",
+      "print(9 ** 2)"
+     ],
+     "answer": 1,
+     "explanation": "`//` divides and throws away the remainder, so `9 // 2` is 4. `/` would give 4.5."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "A shop sells pens for 3 each. Print the cost of 12 pens.",
+     "starter": "# Use * to multiply\n",
+     "solution": "print(12 * 3)\n",
+     "expected_output": "36"
+    }
+   ]
+  },
+  {
+   "id": "py-u0-variables",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Variables: Giving Values a Name",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Store a value, use it later",
+     "body": "A **variable** is a name for a value. You create one with `=`, which means *store*, not *equals*. After that you can use the name anywhere you would use the value.",
+     "code": "price = 20\nquantity = 3\ntotal = price * quantity\nprint(total)\n"
+    },
+    {
+     "type": "concept",
+     "title": "Variables can change",
+     "body": "Assigning again replaces the old value. A common pattern is updating a variable using its own value, like adding to a running total.\n\nNames may use letters, digits and `_`, but cannot start with a digit. Python style uses lowercase words joined by underscores: `total_price`.",
+     "code": "points = 10\npoints = points + 5\nprint(points)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "5",
+      "8",
+      "3",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "`x` starts as 5, then the second line stores 5 + 3 in `x`, replacing the old value.",
+     "code": "x = 5\nx = x + 3\nprint(x)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which is a valid variable name?",
+     "options": [
+      "2nd_place",
+      "total price",
+      "total_price",
+      "total-price"
+     ],
+     "answer": 2,
+     "explanation": "Names cannot start with a digit, contain spaces or contain `-` (Python would read it as minus)."
+    },
+    {
+     "type": "fill",
+     "prompt": "Store the number 100 in a variable called balance.",
+     "code": "balance ____ 100",
+     "answer": [
+      "="
+     ],
+     "explanation": "`=` stores the value on the right in the name on the left."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Create a variable `hours` with value 8 and a variable `rate` with value 15. Print how much is earned (hours multiplied by rate).",
+     "starter": "hours = 8\n# create rate and print the result\n",
+     "solution": "hours = 8\nrate = 15\nprint(hours * rate)\n",
+     "expected_output": "120"
+    }
+   ]
+  },
+  {
+   "id": "py-u0-text",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Working with Text",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Strings",
+     "body": "Text values are called **strings** (`str`). You can join strings with `+`, repeat them with `*`, and find their length with `len()`.",
+     "code": "first = \"Ada\"\nlast = \"Lovelace\"\nprint(first + \" \" + last)\nprint(len(first))\n"
+    },
+    {
+     "type": "concept",
+     "title": "f-strings put values inside text",
+     "body": "Put an `f` before the quotes and write variable names inside `{}`. Python fills them in. This is the easiest way to build messages.",
+     "code": "name = \"Sam\"\nage = 25\nprint(f\"{name} is {age} years old\")\n"
+    },
+    {
+     "type": "concept",
+     "title": "Handy string tools",
+     "body": "Strings come with built-in tools called **methods**, used with a dot: `.upper()`, `.lower()`, `.strip()` (removes spaces at both ends) and `.replace(old, new)`.",
+     "code": "word = \"  Python  \"\nprint(word.strip().upper())\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "5",
+      "6",
+      "4",
+      "Error"
+     ],
+     "answer": 0,
+     "explanation": "`len()` counts characters: c-o-d-e-s is 5.",
+     "code": "print(len(\"codes\"))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "Hi Sam",
+      "Hi {name}",
+      "f\"Hi Sam\"",
+      "Hi name"
+     ],
+     "answer": 0,
+     "explanation": "Because of the `f` before the quotes, `{name}` is replaced by the value of `name`.",
+     "code": "name = \"Sam\"\nprint(f\"Hi {name}\")\n"
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Given `city = \"lahore\"`, print it in capital letters.",
+     "starter": "city = \"lahore\"\n",
+     "solution": "city = \"lahore\"\nprint(city.upper())\n",
+     "expected_output": "LAHORE",
+     "hint": "Use the .upper() method."
+    }
+   ]
+  },
+  {
+   "id": "py-u0-types-converting",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Types & Converting Between Them",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Every value has a type",
+     "body": "So far you have seen `int` (whole numbers), `float` (decimals), `str` (text) and `bool` (`True` or `False`). `type()` tells you which one a value is. The type decides what you can do: you can multiply numbers, but `\"5\" + 5` is an error because text and numbers don't mix.",
+     "code": "print(type(5))\nprint(type(\"5\"))\n"
+    },
+    {
+     "type": "concept",
+     "title": "Converting",
+     "body": "Use `int()`, `float()` and `str()` to convert. Text typed by a user always arrives as a string, so converting is something you will do constantly.",
+     "code": "age_text = \"30\"\nage = int(age_text)\nprint(age + 1)\nprint(\"Age: \" + str(age))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `print(\"3\" + \"4\")` show?",
+     "options": [
+      "7",
+      "34",
+      "Error",
+      "3 4"
+     ],
+     "answer": 1,
+     "explanation": "Both values are strings, so `+` joins them into `\"34\"`. To add them as numbers, convert with `int()`."
+    },
+    {
+     "type": "mcq",
+     "question": "Which line causes an error?",
+     "options": [
+      "print(int(\"8\") + 2)",
+      "print(\"8\" + \"2\")",
+      "print(\"8\" + 2)",
+      "print(str(8) + \"2\")"
+     ],
+     "answer": 2,
+     "explanation": "Python refuses to add text and a number: you must convert one of them first."
+    },
+    {
+     "type": "fill",
+     "prompt": "Convert the text \"42\" into a whole number.",
+     "code": "n = ____(\"42\")",
+     "answer": [
+      "int"
+     ],
+     "explanation": "`int()` turns text that looks like a whole number into an `int`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "`price_text = \"250\"` came from a form. Convert it and print the price plus 50.",
+     "starter": "price_text = \"250\"\n",
+     "solution": "price_text = \"250\"\nprint(int(price_text) + 50)\n",
+     "expected_output": "300"
+    }
+   ]
+  },
+  {
+   "id": "py-u0-if-else",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Making Decisions with if / else",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Run code only when something is true",
+     "body": "`if` checks a condition. If it is `True`, the **indented** lines below it run. `else` covers every other case. Indentation (4 spaces) is how Python knows which lines belong to the `if`.",
+     "code": "temperature = 31\nif temperature > 30:\n    print(\"Hot day\")\nelse:\n    print(\"Nice day\")\n"
+    },
+    {
+     "type": "concept",
+     "title": "More than two choices: elif",
+     "body": "`elif` (short for *else if*) adds more checks. Python tests them from top to bottom and runs only the **first** one that is true.",
+     "code": "score = 72\nif score >= 80:\n    print(\"A\")\nelif score >= 60:\n    print(\"B\")\nelse:\n    print(\"C\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "Big",
+      "Small",
+      "Big and Small",
+      "Nothing"
+     ],
+     "answer": 1,
+     "explanation": "`3 > 10` is false, so the `if` block is skipped and the `else` block runs.",
+     "code": "n = 3\nif n > 10:\n    print(\"Big\")\nelse:\n    print(\"Small\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "A",
+      "B",
+      "A then B",
+      "C"
+     ],
+     "answer": 0,
+     "explanation": "Python stops at the first true condition. 95 >= 80 is true, so it prints A and skips the rest even though 95 >= 60 is also true.",
+     "code": "score = 95\nif score >= 80:\n    print(\"A\")\nelif score >= 60:\n    print(\"B\")\nelse:\n    print(\"C\")\n"
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "`age = 17`. Print `Adult` if age is 18 or more, otherwise print `Minor`.",
+     "starter": "age = 17\n",
+     "solution": "age = 17\nif age >= 18:\n    print(\"Adult\")\nelse:\n    print(\"Minor\")\n",
+     "expected_output": "Minor",
+     "hint": "Use >= to mean 'greater than or equal to'."
+    }
+   ]
+  },
+  {
+   "id": "py-u0-conditions",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Comparisons, and / or / not",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Comparison operators",
+     "body": "Comparisons produce `True` or `False`: `==` equal, `!=` not equal, `<`, `>`, `<=`, `>=`.\n\nCareful: `=` stores a value, `==` compares two values. Mixing them up is the most common beginner bug.",
+     "code": "print(5 == 5)\nprint(5 != 3)\nprint(\"a\" == \"A\")\n"
+    },
+    {
+     "type": "concept",
+     "title": "Combining conditions",
+     "body": "`and` is true only if **both** sides are true. `or` is true if **at least one** side is true. `not` flips true and false.",
+     "code": "age = 25\nhas_ticket = True\nif age >= 18 and has_ticket:\n    print(\"Welcome\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does `print(4 > 2 and 3 > 5)` show?",
+     "options": [
+      "True",
+      "False",
+      "Error",
+      "None"
+     ],
+     "answer": 1,
+     "explanation": "`4 > 2` is true but `3 > 5` is false. `and` needs both sides true, so the result is `False`."
+    },
+    {
+     "type": "mcq",
+     "question": "What does `print(not 10 == 10)` show?",
+     "options": [
+      "True",
+      "False",
+      "10",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "`10 == 10` is `True`, and `not` flips it to `False`."
+    },
+    {
+     "type": "mcq",
+     "question": "Which line checks whether `x` equals 7?",
+     "options": [
+      "if x = 7:",
+      "if x == 7:",
+      "if x === 7:",
+      "if x is 7 then:"
+     ],
+     "answer": 1,
+     "explanation": "`==` compares. `=` assigns and is a syntax error inside `if`."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "`day = \"Sat\"`. Print `Weekend` if day is \"Sat\" or \"Sun\", otherwise print `Weekday`.",
+     "starter": "day = \"Sat\"\n",
+     "solution": "day = \"Sat\"\nif day == \"Sat\" or day == \"Sun\":\n    print(\"Weekend\")\nelse:\n    print(\"Weekday\")\n",
+     "expected_output": "Weekend"
+    }
+   ]
+  },
+  {
+   "id": "py-u0-for-loops",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Repeating with for and range()",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Loops repeat work",
+     "body": "A `for` loop runs its indented block once for each item. `range(n)` produces the numbers 0, 1, 2 ... up to **but not including** n.",
+     "code": "for i in range(3):\n    print(\"Round\", i)\n"
+    },
+    {
+     "type": "concept",
+     "title": "Choosing where to start and stop",
+     "body": "`range(start, stop)` starts at `start` and stops before `stop`. A third value sets the step: `range(0, 10, 2)` gives 0, 2, 4, 6, 8. Loops are often used to build a total step by step.",
+     "code": "total = 0\nfor n in range(1, 5):\n    total = total + n\nprint(total)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "How many times does this print?",
+     "options": [
+      "4",
+      "5",
+      "6",
+      "Forever"
+     ],
+     "answer": 1,
+     "explanation": "`range(5)` is 0, 1, 2, 3, 4: five numbers, so the block runs five times.",
+     "code": "for i in range(5):\n    print(\"hi\")\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What is the last number printed?",
+     "options": [
+      "5",
+      "4",
+      "6",
+      "1"
+     ],
+     "answer": 1,
+     "explanation": "`range(1, 5)` stops *before* 5, so the numbers are 1, 2, 3, 4.",
+     "code": "for n in range(1, 5):\n    print(n)\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the loop so it runs for i = 0, 1, 2, 3, 4.",
+     "code": "for i in ____(5):\n    print(i)",
+     "answer": [
+      "range"
+     ],
+     "explanation": "`range(5)` produces 0 to 4."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Print the numbers 1 to 5, each on its own line.",
+     "starter": "# use a for loop with range\n",
+     "solution": "for n in range(1, 6):\n    print(n)\n",
+     "expected_output": "1\n2\n3\n4\n5",
+     "hint": "range(1, 6) stops before 6."
+    }
+   ]
+  },
+  {
+   "id": "py-u0-while-loops",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "while Loops",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Repeat while a condition is true",
+     "body": "A `while` loop keeps running as long as its condition is `True`. Use it when you don't know in advance how many repeats you need.",
+     "code": "count = 3\nwhile count > 0:\n    print(count)\n    count = count - 1\nprint(\"Go!\")\n"
+    },
+    {
+     "type": "concept",
+     "title": "Avoid infinite loops",
+     "body": "Something inside the loop must eventually make the condition false. If you forget to update `count` above, the loop never ends. `break` exits a loop immediately."
+    },
+    {
+     "type": "mcq",
+     "question": "What is wrong with this loop?",
+     "options": [
+      "Nothing",
+      "It never ends because n never changes",
+      "It runs zero times",
+      "while needs a range()"
+     ],
+     "answer": 1,
+     "explanation": "`n` stays 1 forever, so `n < 5` is always true: an infinite loop. Add `n = n + 1` inside.",
+     "code": "n = 1\nwhile n < 5:\n    print(n)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print last?",
+     "options": [
+      "16",
+      "8",
+      "32",
+      "4"
+     ],
+     "answer": 0,
+     "explanation": "x goes 1, 2, 4, 8, 16. At 16 the loop body prints it and doubles to 32; then `32 < 20` is false.",
+     "code": "x = 1\nwhile x < 20:\n    print(x)\n    x = x * 2\n"
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Start with `savings = 100`. Each year it grows by 50. Use a while loop to print how many years until savings is at least 300.",
+     "starter": "savings = 100\nyears = 0\n",
+     "solution": "savings = 100\nyears = 0\nwhile savings < 300:\n    savings = savings + 50\n    years = years + 1\nprint(years)\n",
+     "expected_output": "4",
+     "hint": "Loop while savings < 300, adding 50 and counting a year each time."
+    }
+   ]
+  },
+  {
+   "id": "py-u0-lists",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Lists: Many Values in One Place",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Making a list",
+     "body": "A **list** holds several values in order, inside square brackets. Each item has a position called an **index**, starting at **0**. `len()` gives the number of items.",
+     "code": "fruits = [\"apple\", \"banana\", \"cherry\"]\nprint(fruits[0])\nprint(len(fruits))\n"
+    },
+    {
+     "type": "concept",
+     "title": "Changing and looping over a list",
+     "body": "`.append(x)` adds to the end. `fruits[1] = \"kiwi\"` replaces an item. A `for` loop visits every item. `sum()`, `max()` and `min()` work on lists of numbers.",
+     "code": "marks = [70, 85, 90]\nmarks.append(60)\nfor m in marks:\n    print(m)\nprint(sum(marks))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "10",
+      "20",
+      "30",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "Indexes start at 0, so `nums[1]` is the second item: 20.",
+     "code": "nums = [10, 20, 30]\nprint(nums[1])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "3",
+      "4",
+      "[1, 2, 3, 4]",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "`.append(4)` adds a fourth item, so the length is 4.",
+     "code": "items = [1, 2, 3]\nitems.append(4)\nprint(len(items))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which index gives the last item of a 5-item list?",
+     "options": [
+      "5",
+      "4",
+      "0",
+      "-0"
+     ],
+     "answer": 1,
+     "explanation": "Indexes run 0 to 4 for five items. (Python also allows `-1` for the last item.)"
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "`prices = [120, 80, 45, 300]`. Print the most expensive price.",
+     "starter": "prices = [120, 80, 45, 300]\n",
+     "solution": "prices = [120, 80, 45, 300]\nprint(max(prices))\n",
+     "expected_output": "300"
+    }
+   ]
+  },
+  {
+   "id": "py-u0-functions",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Functions: Reusable Steps",
+   "minutes": 7,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Define once, use many times",
+     "body": "A **function** groups steps under a name. `def` defines it; the values it needs are **parameters**; `return` sends a result back. Calling the function runs its steps.",
+     "code": "def area(width, height):\n    return width * height\n\nprint(area(3, 4))\nprint(area(10, 2))\n"
+    },
+    {
+     "type": "concept",
+     "title": "return vs print",
+     "body": "`return` hands a value back to whoever called the function, so it can be stored or used in more maths. `print` only shows it on screen. In coding interviews you almost always **return**.",
+     "code": "def double(n):\n    return n * 2\n\nresult = double(5) + 1\nprint(result)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "5",
+      "8",
+      "15",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "`add(3, 5)` returns 3 + 5 = 8.",
+     "code": "def add(a, b):\n    return a + b\n\nprint(add(3, 5))\n"
+    },
+    {
+     "type": "mcq",
+     "question": "What does this print?",
+     "options": [
+      "10",
+      "None",
+      "Error",
+      "5"
+     ],
+     "answer": 1,
+     "explanation": "The function prints nothing and has no `return`, so it returns `None` by default. Forgetting `return` is a very common bug.",
+     "code": "def half(n):\n    n / 2\n\nprint(half(10))\n"
+    },
+    {
+     "type": "fill",
+     "prompt": "Complete the function so it sends back the square of n.",
+     "code": "def square(n):\n    ____ n * n",
+     "answer": [
+      "return"
+     ],
+     "explanation": "`return` sends the value back to the caller."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "Write a function `greet(name)` that returns `\"Hello, \"` followed by the name. Then print `greet(\"Ali\")`.",
+     "starter": "def greet(name):\n    # return the greeting\n    pass\n\nprint(greet(\"Ali\"))\n",
+     "solution": "def greet(name):\n    return \"Hello, \" + name\n\nprint(greet(\"Ali\"))\n",
+     "expected_output": "Hello, Ali"
+    }
+   ]
+  },
+  {
+   "id": "py-u0-errors",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Reading Error Messages",
+   "minutes": 6,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Errors are messages, not failures",
+     "body": "When Python can't continue it stops and prints a **traceback**. Read it from the **bottom**: the last line names the error type and what went wrong; the lines above show where.\n\n- `SyntaxError`: the code isn't written correctly (a missing `:` or bracket)\n- `NameError`: you used a name that doesn't exist (often a typo)\n- `TypeError`: wrong kind of value, like adding text to a number\n- `IndexError`: a list position that doesn't exist\n- `IndentationError`: spaces at the start of a line are wrong"
+    },
+    {
+     "type": "concept",
+     "title": "Debugging habit",
+     "body": "When something is wrong: read the last line of the error, go to the line number it mentions, and `print()` the values just before that line to see what they really are. Professional developers do exactly this every day."
+    },
+    {
+     "type": "mcq",
+     "question": "Which error does this code raise?",
+     "options": [
+      "SyntaxError",
+      "NameError",
+      "TypeError",
+      "IndexError"
+     ],
+     "answer": 1,
+     "explanation": "`totl` was never created (the variable is `total`), so Python raises `NameError: name 'totl' is not defined`.",
+     "code": "total = 10\nprint(totl)\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which error does this code raise?",
+     "options": [
+      "IndexError",
+      "TypeError",
+      "NameError",
+      "No error"
+     ],
+     "answer": 0,
+     "explanation": "The list has indexes 0, 1 and 2, so index 3 doesn't exist: `IndexError`.",
+     "code": "colors = [\"red\", \"green\", \"blue\"]\nprint(colors[3])\n"
+    },
+    {
+     "type": "mcq",
+     "question": "Which part of a traceback should you read first?",
+     "options": [
+      "The first line",
+      "The last line",
+      "The middle",
+      "None of it"
+     ],
+     "answer": 1,
+     "explanation": "The last line names the error and the reason. Then follow the line number above it."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "This code should print `15` but crashes. Fix it so it prints `15`.",
+     "starter": "count = \"5\"\nprint(count + 10)\n",
+     "solution": "count = \"5\"\nprint(int(count) + 10)\n",
+     "expected_output": "15",
+     "hint": "count is text. Convert it with int() before adding."
+    }
+   ]
+  },
+  {
+   "id": "py-u0-mini-project",
+   "track_id": "python",
+   "unit_id": "py-u0",
+   "title": "Putting It Together: A Small Program",
+   "minutes": 8,
+   "steps": [
+    {
+     "type": "concept",
+     "title": "Combining what you know",
+     "body": "Real programs combine variables, lists, loops, conditions and functions. Here is a tiny report for a list of exam marks. Read it line by line and predict the output before running it.",
+     "code": "def grade(mark):\n    if mark >= 80:\n        return \"A\"\n    elif mark >= 60:\n        return \"B\"\n    return \"C\"\n\nmarks = [92, 67, 45]\nfor m in marks:\n    print(m, grade(m))\n"
+    },
+    {
+     "type": "concept",
+     "title": "Break problems into steps",
+     "body": "Before you code, write the steps in plain words: *go through each mark, decide its grade, count how many passed*. Each step usually becomes a line or two of code. This habit is exactly what interviewers want to hear you say out loud."
+    },
+    {
+     "type": "mcq",
+     "question": "In the example above, what is printed for 67?",
+     "options": [
+      "67 A",
+      "67 B",
+      "67 C",
+      "B"
+     ],
+     "answer": 1,
+     "explanation": "67 is not >= 80 but is >= 60, so `grade` returns \"B\" and the loop prints `67 B`."
+    },
+    {
+     "type": "mcq",
+     "question": "You need to count how many marks are 50 or more. Which plan is right?",
+     "options": [
+      "Use max() on the list",
+      "Loop over the marks and add 1 to a counter when a mark is >= 50",
+      "Use len() on the list",
+      "Print every mark"
+     ],
+     "answer": 1,
+     "explanation": "`len()` counts all marks and `max()` finds only the biggest. A loop with a counter counts only the ones that match the condition."
+    },
+    {
+     "type": "code",
+     "language": "python",
+     "prompt": "`marks = [92, 67, 45, 50, 38]`. Print how many marks are 50 or more.",
+     "starter": "marks = [92, 67, 45, 50, 38]\npassed = 0\n# loop and count\n",
+     "solution": "marks = [92, 67, 45, 50, 38]\npassed = 0\nfor m in marks:\n    if m >= 50:\n        passed = passed + 1\nprint(passed)\n",
+     "expected_output": "3",
+     "hint": "Start a counter at 0 and add 1 inside an if."
+    }
+   ]
+  }
+ ]
+}

@@ -10,6 +10,12 @@
    "description": "From first variable to CPython internals: everything Python interviews test, Basic to Expert.",
    "units": [
     {
+     "id": "py-u0",
+     "title": "Start Here: Your First Programs",
+     "description": "For complete beginners: print, numbers, variables, decisions, loops, lists, functions and errors",
+     "level": "Basic"
+    },
+    {
      "id": "py-u1",
      "title": "Foundations",
      "description": "Syntax, variables, types, strings, numbers",

@@ -61,9 +61,9 @@ def stats_for(db: Session, user_id: int) -> DuelStats:
 def pick_problem(db: Session, difficulty: str, user_ids: list[int]) -> str:
     """A random problem of this difficulty, avoiding OA problems and anything either player already solved."""
     pool = [p for p in q.problems(db)
-            if p["difficulty"] == difficulty and not p["slug"].startswith("oa-") and p.get("tests")]
+            if p["difficulty"] == difficulty and not p["slug"].startswith(("oa-", "basics-")) and p.get("tests")]
     if not pool:
-        pool = [p for p in q.problems(db) if not p["slug"].startswith("oa-") and p.get("tests")]
+        pool = [p for p in q.problems(db) if not p["slug"].startswith(("oa-", "basics-")) and p.get("tests")]
     solved: set[str] = set()
     for uid in user_ids:
         solved |= solved_slugs(db, uid)

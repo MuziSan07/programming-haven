@@ -1,0 +1,468 @@
+{
+ "questions": [
+  {
+   "id": "q-basics-what-is-program",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is a computer program?",
+   "options": [
+    "A list of instructions the computer follows exactly",
+    "A computer that thinks for itself",
+    "A website",
+    "A type of keyboard shortcut"
+   ],
+   "answer": 0,
+   "explanation": "A program is a precise list of instructions. The computer follows them literally and never guesses.",
+   "tags": [
+    "concepts"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-interpreter",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does the Python interpreter do?",
+   "options": [
+    "Translates English into Python",
+    "Reads your code and carries out each instruction",
+    "Designs the user interface",
+    "Connects to the internet"
+   ],
+   "answer": 1,
+   "explanation": "The interpreter reads Python code and runs it line by line.",
+   "tags": [
+    "concepts"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-print-output",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "options": [
+    "Hi there",
+    "\"Hi\" \"there\"",
+    "Hi\nthere",
+    "Hithere"
+   ],
+   "answer": 0,
+   "explanation": "`print` separates multiple items with one space.",
+   "tags": [
+    "print"
+   ],
+   "companies": [],
+   "code": "print(\"Hi\", \"there\")\n"
+  },
+  {
+   "id": "q-basics-comment",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What happens to a line that starts with `#`?",
+   "options": [
+    "It is printed",
+    "It is ignored by Python",
+    "It causes an error",
+    "It runs twice"
+   ],
+   "answer": 1,
+   "explanation": "`#` starts a comment: a note for humans that Python skips.",
+   "tags": [
+    "syntax"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-int-division",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does `print(17 // 5)` show?",
+   "options": [
+    "3.4",
+    "3",
+    "2",
+    "4"
+   ],
+   "answer": 1,
+   "explanation": "`//` divides and drops the remainder: 17 / 5 is 3 remainder 2, so the result is 3.",
+   "tags": [
+    "numbers"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-modulo",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does `print(17 % 5)` show?",
+   "options": [
+    "3",
+    "2",
+    "3.4",
+    "5"
+   ],
+   "answer": 1,
+   "explanation": "`%` returns the remainder of the division: 17 = 3 x 5 + 2.",
+   "tags": [
+    "numbers"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-power",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does `print(2 ** 4)` show?",
+   "options": [
+    "8",
+    "6",
+    "16",
+    "24"
+   ],
+   "answer": 2,
+   "explanation": "`**` is power: 2 x 2 x 2 x 2 = 16.",
+   "tags": [
+    "numbers"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-assign-vs-compare",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What is the difference between `=` and `==`?",
+   "options": [
+    "They are the same",
+    "`=` stores a value; `==` compares two values",
+    "`==` stores a value; `=` compares",
+    "`==` is only for text"
+   ],
+   "answer": 1,
+   "explanation": "Mixing them up is the most common beginner bug. `x = 5` stores; `x == 5` asks a yes/no question.",
+   "tags": [
+    "operators"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-variable-update",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "options": [
+    "3",
+    "6",
+    "9",
+    "Error"
+   ],
+   "answer": 2,
+   "explanation": "`n` becomes 3, then 3 x 3 = 9 is stored back in `n`.",
+   "tags": [
+    "variables"
+   ],
+   "companies": [],
+   "code": "n = 3\nn = n * 3\nprint(n)\n"
+  },
+  {
+   "id": "q-basics-string-plus",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does `print(\"2\" + \"2\")` show?",
+   "options": [
+    "4",
+    "22",
+    "Error",
+    "2 2"
+   ],
+   "answer": 1,
+   "explanation": "Both are strings, so `+` joins them. To get 4 you would convert with `int()` first.",
+   "tags": [
+    "strings",
+    "types"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-type-error",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why does `print(\"Age: \" + 30)` fail?",
+   "options": [
+    "Missing brackets",
+    "You can't add text and a number without converting",
+    "30 is too big",
+    "print needs two lines"
+   ],
+   "answer": 1,
+   "explanation": "Python won't guess: convert with `str(30)` or use an f-string like `f\"Age: {30}\"`.",
+   "tags": [
+    "types"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-bool-values",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Which are the two boolean values in Python?",
+   "options": [
+    "Yes and No",
+    "1 and 0 only",
+    "True and False",
+    "On and Off"
+   ],
+   "answer": 2,
+   "explanation": "`True` and `False`, with capital letters. Comparisons like `5 > 3` produce them.",
+   "tags": [
+    "types"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-and-or",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does `print(True or False)` show?",
+   "options": [
+    "True",
+    "False",
+    "None",
+    "Error"
+   ],
+   "answer": 0,
+   "explanation": "`or` is true when at least one side is true.",
+   "tags": [
+    "logic"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-if-indent",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "How does Python know which lines belong inside an `if`?",
+   "options": [
+    "They are in curly braces",
+    "They are indented under it",
+    "They end with a semicolon",
+    "They are in capitals"
+   ],
+   "answer": 1,
+   "explanation": "Python uses indentation (usually 4 spaces). Lines indented under `if ...:` run only when the condition is true.",
+   "tags": [
+    "syntax",
+    "conditions"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-elif-first-match",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "options": [
+    "Big",
+    "Medium",
+    "Big then Medium",
+    "Small"
+   ],
+   "answer": 0,
+   "explanation": "Python runs only the first branch whose condition is true. 50 > 10 is true, so later branches are skipped.",
+   "tags": [
+    "conditions"
+   ],
+   "companies": [],
+   "code": "n = 50\nif n > 10:\n    print(\"Big\")\nelif n > 5:\n    print(\"Medium\")\nelse:\n    print(\"Small\")\n"
+  },
+  {
+   "id": "q-basics-range-count",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "How many numbers does `range(2, 6)` produce?",
+   "options": [
+    "4",
+    "5",
+    "6",
+    "3"
+   ],
+   "answer": 0,
+   "explanation": "It produces 2, 3, 4, 5: it starts at 2 and stops before 6.",
+   "tags": [
+    "loops"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-loop-total",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "options": [
+    "6",
+    "10",
+    "15",
+    "5"
+   ],
+   "answer": 1,
+   "explanation": "The loop adds 0 + 1 + 2 + 3 + 4 = 10.",
+   "tags": [
+    "loops"
+   ],
+   "companies": [],
+   "code": "total = 0\nfor i in range(5):\n    total += i\nprint(total)\n"
+  },
+  {
+   "id": "q-basics-infinite-loop",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why might a `while` loop never stop?",
+   "options": [
+    "The condition never becomes false",
+    "It has too many lines",
+    "It uses print",
+    "while loops always stop"
+   ],
+   "answer": 0,
+   "explanation": "Something inside the loop must change so the condition eventually becomes false.",
+   "tags": [
+    "loops"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-list-index",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "In `colors = [\"red\", \"green\", \"blue\"]`, what is `colors[0]`?",
+   "options": [
+    "\"green\"",
+    "\"red\"",
+    "\"blue\"",
+    "Error"
+   ],
+   "answer": 1,
+   "explanation": "List positions (indexes) start at 0, so index 0 is the first item.",
+   "tags": [
+    "lists"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-list-append",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does `.append()` do to a list?",
+   "options": [
+    "Removes the last item",
+    "Sorts it",
+    "Adds an item to the end",
+    "Empties it"
+   ],
+   "answer": 2,
+   "explanation": "`.append(x)` adds `x` as the new last item.",
+   "tags": [
+    "lists"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-function-return",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What does this print?",
+   "options": [
+    "7",
+    "None",
+    "Error",
+    "34"
+   ],
+   "answer": 0,
+   "explanation": "`add(3, 4)` returns 7, which is printed.",
+   "tags": [
+    "functions"
+   ],
+   "companies": [],
+   "code": "def add(a, b):\n    return a + b\n\nprint(add(3, 4))\n"
+  },
+  {
+   "id": "q-basics-return-vs-print",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "Why do interview problems ask you to `return` a result instead of printing it?",
+   "options": [
+    "Printing is slower",
+    "The caller (and the tests) can use a returned value; a printed one is only shown on screen",
+    "return makes the code shorter",
+    "print does not work inside functions"
+   ],
+   "answer": 1,
+   "explanation": "Automated tests call your function and check the value it returns. A printed value can't be checked or reused.",
+   "tags": [
+    "functions"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-name-error",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "What usually causes a `NameError`?",
+   "options": [
+    "Dividing by zero",
+    "Using a name that was never created, often a typo",
+    "A list that is too long",
+    "Forgetting quotes around a number"
+   ],
+   "answer": 1,
+   "explanation": "`NameError` means Python can't find that name. Check the spelling.",
+   "tags": [
+    "errors"
+   ],
+   "companies": []
+  },
+  {
+   "id": "q-basics-read-traceback",
+   "topic": "Programming Basics",
+   "level": "Basic",
+   "type": "mcq",
+   "question": "An error message appears. What should you do first?",
+   "options": [
+    "Delete the code and start again",
+    "Read the last line of the error and go to the line number it mentions",
+    "Restart the computer",
+    "Add more print statements everywhere"
+   ],
+   "answer": 1,
+   "explanation": "The last line says what went wrong; the line number says where. That is the starting point of every debug.",
+   "tags": [
+    "errors",
+    "debugging"
+   ],
+   "companies": []
+  }
+ ]
+}

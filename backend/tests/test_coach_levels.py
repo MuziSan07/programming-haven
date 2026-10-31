@@ -40,6 +40,14 @@ def test_beginner_year_plan(client):
     assert not early_types & {"interview", "test", "project", "review"}  # no mock pipeline while learning basics
     assert all(DIFFICULTY.get(t["ref"]) == "Easy" for t in early if t["type"] == "problem")
 
+    # The very first weeks are the "Start Here" unit and warm-up problems, with beginner-level questions only
+    first = [t for w in weeks[:2] for t in _tasks(w)]
+    assert [t["ref"] for t in first if t["type"] == "lesson"][0] == "py-u0-what-is-programming"
+    assert all(t["ref"].startswith("py-u0-") for t in first if t["type"] == "lesson")
+    assert all(t["ref"].startswith("basics-") for t in first if t["type"] == "problem")
+    assert {t["ref"] for t in first if t["type"] == "questions"} <= {"Programming Basics", "Python"}
+    assert all("level=Basic" in t["href"] for t in first if t["type"] == "questions" and t["ref"] == "Python")
+
     late_types = {t["type"] for w in weeks[-10:] for t in _tasks(w)}
     assert "interview" in late_types
     # Every study day still has real work even after lessons and easy problems run out
@@ -55,6 +63,8 @@ def test_senior_plan_skews_to_hard_work(client):
     tasks = [t for w in plan["plan"]["weeks"] for t in _tasks(w)]
     problems = [t for t in tasks if t["type"] == "problem"]
     assert problems and all(DIFFICULTY.get(t["ref"]) != "Easy" for t in problems)
+    assert not any(t["ref"] == "Programming Basics" for t in tasks)
+    assert not any(t["ref"].startswith("basics-") for t in tasks if t["type"] in ("problem", "revisit"))
     assert any(t["type"] == "interview" and t["ref"] in ("whiteboard", "system-design") for t in tasks)
 
 
