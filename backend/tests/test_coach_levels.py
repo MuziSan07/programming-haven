@@ -74,3 +74,30 @@ def test_plan_length_limits(client):
     assert bad.status_code == 422
     bad = client.post("/api/coach/plan", headers=h, json={"target": "toptal", "weeks": 8, "experience": "guru"})
     assert bad.status_code == 422
+
+
+def test_plan_can_start_later(client):
+    from datetime import date, timedelta
+
+    from app.routers.coach import start_date_for
+
+    today = date.today()
+    assert start_date_for("today", today) == today
+    assert start_date_for("tomorrow", today) == today + timedelta(days=1)
+    monday = start_date_for("monday", today)
+    assert monday.weekday() == 0 and 1 <= (monday - today).days <= 7
+
+    h = _register(client, "tomorrow@example.com")
+    plan = client.post("/api/coach/plan", headers=h, json={"target": "toptal", "weeks": 4, "experience": "beginner",
+                                                           "start": "tomorrow"}).json()["plan"]
+    tomorrow = (today + timedelta(days=1)).isoformat()
+    assert plan["start_date"] == tomorrow and plan["upcoming"] and plan["days_until_start"] == 1
+    assert plan["plan"]["weeks"][0]["days"][0]["date"] == tomorrow
+    assert plan["today"] is None and plan["first_day"]["date"] == tomorrow and plan["first_day"]["tasks"]
+    assert client.get("/api/dashboard", headers=h).json()["today_plan"]["starts_on"] == tomorrow
+    assert client.get("/api/coach/plan", headers=h).json()["plan"]["upcoming"]  # visiting early doesn't re-plan
+
+    now = client.post("/api/coach/plan", headers=h, json={"target": "toptal", "weeks": 4, "start": "today"}).json()["plan"]
+    assert now["start_date"] == today.isoformat() and not now["upcoming"] and now["first_day"] is None
+    bad = client.post("/api/coach/plan", headers=h, json={"target": "toptal", "weeks": 4, "start": "someday"})
+    assert bad.status_code == 422

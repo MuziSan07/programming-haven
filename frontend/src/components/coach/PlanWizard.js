@@ -9,6 +9,11 @@ import { Button, Card, cx } from "@/components/ui";
 import { LANGUAGES, LEVELS, ROLES, lengthLabel } from "./meta";
 
 const STEPS = ["Target", "Experience", "Role & language", "Schedule"];
+const START_OPTIONS = [
+  ["today", "Today", "Day 1 is today"],
+  ["tomorrow", "Tomorrow", "A fresh start"],
+  ["monday", "Next Monday", "Begin with a full week"],
+];
 
 function StepBar({ step }) {
   return (
@@ -48,6 +53,7 @@ export default function PlanWizard({ targets, onboarding, onCreated }) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     target: "", experience: "", target_role: initialRole, language: "python", weeks: 8, hours_per_week: 10,
+    start: "today",
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -173,10 +179,24 @@ export default function PlanWizard({ targets, onboarding, onCreated }) {
               <Slider id="hours" label="Study time" value={form.hours_per_week} min={3} max={50} unit="h / week"
                 onChange={(v) => set("hours_per_week", v)} hint={intensity} />
             </div>
+            <div className="mt-6">
+              <p className="label">When do you want to start?</p>
+              <div className="grid grid-cols-3 gap-2">
+                {START_OPTIONS.map(([id, label, sub]) => (
+                  <button key={id} type="button" onClick={() => set("start", id)}
+                    className={cx("rounded-xl border px-3 py-2.5 text-left transition",
+                      form.start === id ? "border-brand bg-brand/10" : "border-line bg-surface-2 hover:border-faint")}>
+                    <span className="block text-sm font-medium">{label}</span>
+                    <span className="block text-[11px] text-faint">{sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="mt-6 rounded-2xl border border-line bg-surface-2 p-4 text-sm">
               <p className="flex items-center gap-2 font-semibold"><Compass className="size-4 text-brand-2" /> Your plan</p>
               <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {[["Target", chosen?.label || "-"], ["Experience", level?.label || "-"], ["Role", form.target_role],
+                {[["Target", chosen?.label || "-"], ["Experience", level?.label || "-"],
+                  ["Starts", START_OPTIONS.find(([id]) => id === form.start)[1]], ["Role", form.target_role],
                   ["Length", lengthLabel(form.weeks)], ["Total", `${form.weeks * form.hours_per_week} hours`],
                   ["Per study day", `about ${daily} min`]].map(([k, v]) => (
                   <div key={k}>

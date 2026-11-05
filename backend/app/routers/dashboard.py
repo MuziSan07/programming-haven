@@ -66,7 +66,8 @@ def dashboard(user: User = Depends(get_current_user), db: Session = Depends(get_
         day = next((d for w in plan.plan.get("weeks", []) for d in w["days"] if d["date"] == date.today().isoformat()),
                    None)
         today_plan = {"target_label": plan.target_label, "tasks": day["tasks"] if day else [],
-                      "stats": coach.plan_stats(plan, date.today())}
+                      "stats": coach.plan_stats(plan, date.today()),
+                      "starts_on": plan.start_date.isoformat() if date.today() < plan.start_date else None}
     league = leagues.standings(db, user)
     db.commit()
     me = next((r for r in league["standings"] if r["me"]), None)

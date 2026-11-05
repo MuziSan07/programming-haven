@@ -27,10 +27,20 @@ def _week_of(plan: StudyPlan, today: date) -> int:
     return max(1, min(plan.weeks, (today - plan.start_date).days // 7 + 1))
 
 
+def start_date_for(choice: str, today: date) -> date:
+    """today | tomorrow | monday (the next Monday after today)."""
+    if choice == "tomorrow":
+        return today + timedelta(days=1)
+    if choice == "monday":
+        return today + timedelta(days=7 - today.weekday())
+    return today
+
+
 def _out(plan: StudyPlan, today: date) -> dict:
     week = _week_of(plan, today)
     days = [d for w in plan.plan.get("weeks", []) for d in w["days"]]
     today_day = next((d for d in days if d["date"] == today.isoformat()), None)
+    upcoming = today < plan.start_date
     return {"id": plan.id, "target": plan.target, "target_label": plan.target_label,
             "pipeline": coach.TARGETS.get(plan.target, {}).get("pipeline", []), "weeks": plan.weeks,
             "hours_per_week": plan.hours_per_week, "language": plan.language,
@@ -38,7 +48,9 @@ def _out(plan: StudyPlan, today: date) -> dict:
             "start_date": plan.start_date.isoformat(),
             "end_date": (plan.start_date + timedelta(days=7 * plan.weeks - 1)).isoformat(),
             "current_week": week, "finished": today > plan.start_date + timedelta(days=7 * plan.weeks - 1),
-            "today": today_day, "plan": plan.plan, "coach": plan.coach, "stats": coach.plan_stats(plan, today)}
+            "today": today_day, "plan": plan.plan, "coach": plan.coach, "stats": coach.plan_stats(plan, today),
+            "upcoming": upcoming, "days_until_start": (plan.start_date - today).days if upcoming else 0,
+            "first_day": days[0] if upcoming and days else None}
 
 
 @router.get("/targets")
@@ -80,6 +92,7 @@ class PlanIn(BaseModel):
     language: str = "python"
     target_role: str | None = Field(default=None, max_length=60)
     experience: Literal["beginner", "junior", "mid", "senior"] = "mid"
+    start: Literal["today", "tomorrow", "monday"] = "today"
 
 
 @router.post("/plan")
@@ -93,11 +106,12 @@ def create_plan(body: PlanIn, user: User = Depends(get_current_user), db: Sessio
     for old in db.scalars(select(StudyPlan).where(StudyPlan.user_id == user.id, StudyPlan.active.is_(True))):
         old.active = False
     today = date.today()
+    start = start_date_for(body.start, today)
     analysis_data = coach.analyse(db, user)
-    weeks = coach.build_days(db, user, body.target, body.language, today, body.weeks, body.hours_per_week,
+    weeks = coach.build_days(db, user, body.target, body.language, start, body.weeks, body.hours_per_week,
                              analysis=analysis_data, level=body.experience)
     plan = StudyPlan(user_id=user.id, target=body.target, target_label=coach.TARGETS[body.target]["label"],
-                     weeks=body.weeks, hours_per_week=body.hours_per_week, language=body.language, start_date=today,
+                     weeks=body.weeks, hours_per_week=body.hours_per_week, language=body.language, start_date=start,
                      experience=body.experience, plan={"weeks": weeks})
     note = coach.coach_note(user, plan, analysis_data, 1, coach.plan_stats(plan, today))
     plan.coach = {"adjusted_week": 1, "notes": [note], "analysis": analysis_data}

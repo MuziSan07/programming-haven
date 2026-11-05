@@ -33,3 +33,4 @@ Thumbs.db
 # Personal books kept in the project folder (never commit)
 /*.pdf
 /*.epub
+/*.docx

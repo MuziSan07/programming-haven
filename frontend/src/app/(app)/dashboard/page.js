@@ -116,7 +116,12 @@ function TodayPlanCard({ plan }) {
       <p className="mt-1 text-xs text-muted">
         {plan.target_label}{tasks.length > 0 && ` · ${done}/${tasks.length} done`}
       </p>
-      {tasks.length === 0 ? (
+      {plan.starts_on ? (
+        <p className="flex-1 py-6 text-center text-sm text-muted">
+          Your plan starts on {new Date(`${plan.starts_on}T00:00`).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}.
+          <Link href="/coach" className="mt-1 block text-brand hover:underline">Preview day 1</Link>
+        </p>
+      ) : tasks.length === 0 ? (
         <p className="flex-1 py-6 text-center text-sm text-muted">Nothing scheduled today.</p>
       ) : (
         <ul className="mt-3 flex-1 divide-y divide-line">

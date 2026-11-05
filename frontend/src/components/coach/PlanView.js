@@ -34,17 +34,29 @@ function TaskRow({ task, busy, onToggle }) {
   );
 }
 
+function startLabel(plan) {
+  if (plan.days_until_start === 1) return "tomorrow";
+  return dayLabel(plan.start_date, { weekday: "long", day: "numeric", month: "long" });
+}
+
 function TodayCard({ plan, busyId, onToggle }) {
-  const day = plan.today;
+  const day = plan.upcoming ? plan.first_day : plan.today;
   const tasks = day?.tasks || [];
   const done = tasks.filter((t) => t.done).length;
   const minutes = tasks.reduce((n, t) => n + (t.minutes || 0), 0);
   return (
     <Card className="p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 font-semibold"><CalendarDays className="size-4 text-brand" /> Today</h2>
+        <h2 className="flex items-center gap-2 font-semibold">
+          <CalendarDays className="size-4 text-brand" /> {plan.upcoming ? "Day 1" : "Today"}
+        </h2>
         {tasks.length > 0 && <span className="text-xs text-muted">{done}/{tasks.length} done · {minutesLabel(minutes)}</span>}
       </div>
+      {plan.upcoming && (
+        <p className="mt-2 rounded-xl bg-brand/10 px-3 py-2 text-xs text-muted">
+          Your plan starts <span className="font-medium text-text">{startLabel(plan)}</span>. This is what your first day looks like; you can get a head start if you like.
+        </p>
+      )}
       {day?.rest && (
         <p className="mt-2 flex items-center gap-1.5 text-xs text-muted"><Coffee className="size-3.5" /> Light review day: keep it short and rest.</p>
       )}
@@ -270,7 +282,11 @@ export default function PlanView({ plan, onPlan, onReset }) {
               <Target className="size-6 text-brand" /> {plan.target_label}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
-              <span>{plan.finished ? `Finished · ${plan.weeks} weeks` : `Week ${plan.current_week} of ${plan.weeks}`}</span>
+              <span>
+                {plan.finished ? `Finished · ${plan.weeks} weeks`
+                  : plan.upcoming ? `Starts ${startLabel(plan)} · ${plan.weeks} weeks`
+                    : `Week ${plan.current_week} of ${plan.weeks}`}
+              </span>
               <span className="text-faint">·</span>
               <span>{plan.hours_per_week} h/week</span>
               {plan.experience_label && <><span className="text-faint">·</span><span>{plan.experience_label}</span></>}
