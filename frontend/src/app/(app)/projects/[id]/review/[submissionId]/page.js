@@ -7,8 +7,13 @@ import { useApi } from "@/lib/useApi";
 import { ErrorState, PageLoader } from "@/components/ui";
 import { RepoReview, RepoReviewList } from "@/components/projects/RepoReview";
 import VettingBanner from "@/components/vetting/VettingBanner";
+import { SeekerResultGate } from "@/components/jobs/StageBanner";
 
 export default function RepoReviewPage() {
+  return <SeekerResultGate what="your project"><RepoReviewContent /></SeekerResultGate>;
+}
+
+function RepoReviewContent() {
   const { id, submissionId } = useParams();
   const sub = useApi(`/api/projects/${id}/submissions/${submissionId}`);
   const project = useApi(`/api/projects/${id}`);

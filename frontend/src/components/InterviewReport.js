@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Badge, Button, Card, Progress, Ring, cx, scoreColor } from "./ui";
 import VettingBanner from "@/components/vetting/VettingBanner";
+import { SeekerResultGate } from "@/components/jobs/StageBanner";
 
 const VERDICT_TONE = { "Strong pass": "ok", "Likely to pass": "ok", Borderline: "warn", "Needs work": "bad" };
 
@@ -15,6 +16,10 @@ function label(key) {
 }
 
 export default function InterviewReport({ session }) {
+  return <SeekerResultGate what="your interview"><Report session={session} /></SeekerResultGate>;
+}
+
+function Report({ session }) {
   const f = session.feedback;
   const [open, setOpen] = useState(0);
   const speakerNames = Object.fromEntries((session.panel || []).map((p) => [p.id, p.name]));

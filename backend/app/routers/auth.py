@@ -20,6 +20,7 @@ class RegisterIn(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     target_role: str = "Full Stack Developer"
     gender: str = Field(default="unspecified", pattern="^(male|female|other|unspecified)$")
+    account_type: str = Field(default="learner", pattern="^(learner|seeker)$")
 
 
 class LoginIn(BaseModel):
@@ -43,6 +44,7 @@ def user_out(user: User) -> dict:
         "gender": user.gender,
         "persona_id": user.persona_id,
         "is_admin": user.is_admin,
+        "account_type": user.account_type or "learner",
         "xp": user.xp,
         "streak": user.streak,
         **level_for(user.xp),
@@ -56,7 +58,7 @@ def register(body: RegisterIn, db: Session = Depends(get_db)):
         raise HTTPException(409, "An account with this email already exists")
     user = User(email=email, name=body.name.strip(), password_hash=hash_password(body.password),
                 target_role=body.target_role, gender=body.gender,
-                persona_id=q.default_persona_id(db, body.gender),
+                persona_id=q.default_persona_id(db, body.gender), account_type=body.account_type,
                 is_admin=email in get_settings().admin_email_set)
     touch_activity(user)
     db.add(user)

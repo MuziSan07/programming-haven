@@ -21,6 +21,8 @@ class User(Base):
     gender: Mapped[str] = mapped_column(String(20), default="unspecified")
     persona_id: Mapped[str | None] = mapped_column(String(40), nullable=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    # "learner" uses the training platform; "seeker" is a free job-seeker account that applies for jobs
+    account_type: Mapped[str] = mapped_column(String(12), default="learner")
     xp: Mapped[int] = mapped_column(Integer, default=0)
     streak: Mapped[int] = mapped_column(Integer, default=0)
     last_active: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -693,3 +695,82 @@ class MindHabit(Base):
     title: Mapped[str] = mapped_column(String(80))
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+# ---------------------------------------------------------------- jobs (admin-posted roles, AI-vetted applicants)
+
+class SeekerProfile(Base):
+    __tablename__ = "seeker_profiles"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    headline: Mapped[str] = mapped_column(String(160), default="")
+    location: Mapped[str] = mapped_column(String(120), default="")
+    timezone: Mapped[str] = mapped_column(String(60), default="")
+    primary_role: Mapped[str] = mapped_column(String(80), default="")
+    years_experience: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    skills: Mapped[list] = mapped_column(JSON, default=list)
+    english_level: Mapped[str] = mapped_column(String(20), default="")
+    availability: Mapped[str] = mapped_column(String(40), default="")
+    expected_rate: Mapped[str] = mapped_column(String(80), default="")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    phone: Mapped[str] = mapped_column(String(40), default="")
+    links: Mapped[dict] = mapped_column(JSON, default=dict)  # {github, linkedin, portfolio}
+    resume_file: Mapped[str | None] = mapped_column(String(120), nullable=True)  # stored name in resumes_dir
+    resume_name: Mapped[str] = mapped_column(String(200), default="")
+    resume_text: Mapped[str] = mapped_column(Text, default="")
+    resume_uploaded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class Job(Base):
+    """A role posted by the Programming Haven team. The client is optional, internal by default."""
+    __tablename__ = "jobs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(160))
+    client_name: Mapped[str] = mapped_column(String(160), default="")
+    show_client: Mapped[bool] = mapped_column(Boolean, default=False)
+    location: Mapped[str] = mapped_column(String(120), default="Remote")
+    employment_type: Mapped[str] = mapped_column(String(30), default="Full-time")
+    seniority: Mapped[str] = mapped_column(String(30), default="Mid-level")
+    salary: Mapped[str] = mapped_column(String(120), default="")
+    skills: Mapped[list] = mapped_column(JSON, default=list)
+    summary: Mapped[str] = mapped_column(String(400), default="")
+    description: Mapped[str] = mapped_column(Text, default="")  # markdown job description
+    role: Mapped[str] = mapped_column(String(80), default="Full Stack Developer")  # drives interview questions
+    language: Mapped[str] = mapped_column(String(20), default="python")
+    stages: Mapped[list] = mapped_column(JSON, default=list)  # vetting stage definitions
+    status: Mapped[str] = mapped_column(String(12), default="draft", index=True)  # draft | open | closed
+    openings: Mapped[int] = mapped_column(Integer, default=1)
+    closes_on: Mapped[date | None] = mapped_column(Date, nullable=True)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class JobApplication(Base):
+    """One seeker's application to one job, with the vetting stages it runs through.
+
+    `stages` mirrors the job's stage list: {key, status: locked|ready|active|passed|failed|skipped, ref,
+    started_at, deadline, score, note, finished_at}. `report` is for the admin team only.
+    """
+    __tablename__ = "job_applications"
+    __table_args__ = (UniqueConstraint("job_id", "user_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("jobs.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(String(16), default="vetting", index=True)
+    stages: Mapped[list] = mapped_column(JSON, default=list)
+    cover_note: Mapped[str] = mapped_column(Text, default="")
+    score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    report: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    feedback: Mapped[str] = mapped_column(Text, default="")  # what the seeker sees
+    admin_note: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    vetted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    job: Mapped[Job] = relationship()
+    user: Mapped[User] = relationship()

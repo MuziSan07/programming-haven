@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     books_dir: str = (BACKEND_DIR / "uploads" / "books").as_posix()
     max_book_mb: int = 200
 
+    # Job seekers' resumes, outside git
+    resumes_dir: str = (BACKEND_DIR / "uploads" / "resumes").as_posix()
+    max_resume_mb: int = 5
+
     # Code runner limits
     run_timeout_seconds: float = 5.0
     run_memory_mb: int = 256

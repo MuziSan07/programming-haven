@@ -3,6 +3,7 @@ import {
   ArrowRight, BookOpen, Bot, Building2, ClipboardCheck, Code, Gauge, Globe, Laptop, Mic, ShieldCheck, Smartphone, Target, Trophy,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { OpenRoles } from "@/components/jobs/public";
 
 const PIPELINE = [
   { stage: "English proficiency", train: "AI voice conversations scored on fluency & clarity", icon: Globe },
@@ -85,6 +86,7 @@ export default function Landing() {
           <a href="#pipeline" className="hover:text-text">Pipeline</a>
           <a href="#features" className="hover:text-text">Features</a>
           <a href="#companies" className="hover:text-text">Companies</a>
+          <Link href="/jobs" className="hover:text-text">Jobs</Link>
         </nav>
         <div className="flex items-center gap-2">
           <Link href="/login" className="px-3 py-2 text-sm text-muted hover:text-text">Sign in</Link>
@@ -112,6 +114,8 @@ export default function Landing() {
               font-medium text-white hover:bg-brand/90">
               Start preparing free <ArrowRight className="size-4" />
             </Link>
+            <Link href="/jobs" className="inline-flex h-12 items-center rounded-xl border border-line bg-surface
+              px-6 font-medium hover:bg-surface-2">Find a job</Link>
             <a href="#pipeline" className="inline-flex h-12 items-center rounded-xl border border-line bg-surface
               px-6 font-medium hover:bg-surface-2">See how it works</a>
           </div>
@@ -127,6 +131,8 @@ export default function Landing() {
         </div>
         <HeroVisual />
       </section>
+
+      <OpenRoles />
 
       <section id="pipeline" className="relative z-10 mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <p className="text-xs font-semibold tracking-widest text-brand uppercase">The problem</p>

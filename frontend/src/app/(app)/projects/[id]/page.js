@@ -15,6 +15,7 @@ import { Badge, Button, Card, ErrorState, PageLoader, Progress, Ring, RichText, 
 import { TechChip } from "@/components/TechLogo";
 import { GitHubMark, RepoReview, RepoReviewList, RepoSubmitPanel } from "@/components/projects/RepoReview";
 import VettingBanner from "@/components/vetting/VettingBanner";
+import { SeekerResultGate } from "@/components/jobs/StageBanner";
 
 const LEVEL_TONE = { Basic: "ok", Intermediate: "cyan", Advanced: "warn", Expert: "bad" };
 const VERDICT_TONE = { "Hire-level": "ok", Close: "warn", "Not yet": "bad" };
@@ -95,7 +96,8 @@ function ListBlock({ title, items, icon: Icon, tone = "text-brand-2" }) {
 
 export default function ProjectPage() {
   const { id } = useParams();
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
+  const seeker = user?.account_type === "seeker";
   const { data: p, error, loading, reload, setData } = useApi(`/api/projects/${id}`);
   const [form, setForm] = useState({ repo_url: "", notes: "", code: "" });
   const [busy, setBusy] = useState(false);
@@ -106,6 +108,8 @@ export default function ProjectPage() {
 
   if (loading) return <PageLoader />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
+  // Job Seekers hand in the project for the hiring team; the review isn't shown to them
+  if (seeker && latest) return <SeekerResultGate what="your project" />;
 
   function onRepoReviewed(r) {
     if (r.user) setUser(r.user);
@@ -257,7 +261,7 @@ export default function ProjectPage() {
         </div>
       )}
 
-      <div className="mt-5"><RepoReviewList projectId={p.id} submissions={p.submissions} /></div>
+      {!seeker && <div className="mt-5"><RepoReviewList projectId={p.id} submissions={p.submissions} /></div>}
 
       {latest && latest.kind !== "repo" && (
         <Card className="mt-5 animate-fade-up p-6">
@@ -269,7 +273,7 @@ export default function ProjectPage() {
         </Card>
       )}
 
-      {pasted.length > 0 && (
+      {!seeker && pasted.length > 0 && (
         <Card className="mt-5 p-6">
           <h2 className="mb-4 font-semibold">Pasted submissions</h2>
           <ul className="space-y-2">

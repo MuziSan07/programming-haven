@@ -92,7 +92,9 @@ function PreCheck({ test, proctor, attachVideo, onStart, starting }) {
 export default function TestRunnerPage() {
   const { testId } = useParams();
   const router = useRouter();
-  const vettingRun = useSearchParams().get("vetting");
+  const params = useSearchParams();
+  const vettingRun = params.get("vetting");
+  const applicationId = params.get("application");
   const { setUser } = useAuth();
   const { data: test, error, loading, reload } = useApi(`/api/tests/${testId}`);
   const [session, setSession] = useState(null); // { attempt_id, test, endsAt }
@@ -139,13 +141,13 @@ export default function TestRunnerPage() {
       });
       setUser(result.user);
       proctor.stop();
-      router.push(`/tests/result/${session.attempt_id}${vettingRun ? `?vetting=${vettingRun}` : ""}`);
+      router.push(`/tests/result/${session.attempt_id}${vettingRun ? `?vetting=${vettingRun}` : applicationId ? `?application=${applicationId}` : ""}`);
     } catch (err) {
       submittedRef.current = false;
       setSubmitting(false);
       setStartError(err.message);
     }
-  }, [session, answers, code, proctor, router, setUser, vettingRun]);
+  }, [session, answers, code, proctor, router, setUser, vettingRun, applicationId]);
 
   // Countdown + auto-submit
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  BookOpen, Brain, CircleCheck, Library, Database, Download, Eye, EyeOff, Gavel, LayoutDashboard, Plus, RotateCcw, Save, Search, Shield, ShieldAlert, ShieldCheck, Trash, TriangleAlert, Trophy, Upload, Users, X,
+  BookOpen, Brain, BriefcaseBusiness, CircleCheck, Library, Database, Download, Eye, EyeOff, Gavel, LayoutDashboard, Plus, RotateCcw, Save, Search, Shield, ShieldAlert, ShieldCheck, Trash, TriangleAlert, Trophy, Upload, Users, X,
 } from "lucide-react";
 import { API_URL, getToken } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -10,6 +10,7 @@ import { useApi } from "@/lib/useApi";
 import CodeEditor from "@/components/CodeEditor";
 import BooksTab from "@/components/admin/BooksTab";
 import HackathonsTab from "@/components/admin/HackathonsTab";
+import JobsTab from "@/components/admin/JobsTab";
 import IntegrityTab from "@/components/admin/IntegrityTab";
 import ModerationTab from "@/components/admin/ModerationTab";
 import { Badge, Button, Card, ErrorState, PageHeader, PageLoader, Spinner, cx } from "@/components/ui";
@@ -547,6 +548,7 @@ function UsersTab() {
 
 const TABS = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "jobs", label: "Jobs", icon: BriefcaseBusiness },
   { id: "content", label: "Content", icon: Database },
   { id: "moderation", label: "Moderation", icon: Gavel },
   { id: "integrity", label: "Integrity", icon: ShieldAlert },
@@ -585,6 +587,7 @@ export default function AdminPage() {
         ))}
       </div>
       {tab === "overview" && <Overview />}
+      {tab === "jobs" && <JobsTab />}
       {tab === "content" && <ContentTab />}
       {tab === "moderation" && <ModerationTab />}
       {tab === "integrity" && <IntegrityTab />}

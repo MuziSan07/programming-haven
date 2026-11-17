@@ -5,6 +5,7 @@ import tempfile
 # Must be set before the app is imported.
 _db_dir = tempfile.mkdtemp(prefix="haven-test-")
 os.environ["DATABASE_URL"] = f"sqlite:///{_db_dir}/test.db"
+os.environ["RESUMES_DIR"] = f"{_db_dir}/resumes"  # never write test resumes into the real uploads folder
 os.environ["GROQ_API_KEY"] = ""
 os.environ["OLLAMA_URL"] = ""
 

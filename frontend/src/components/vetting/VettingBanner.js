@@ -4,10 +4,16 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Crown } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import { Button } from "@/components/ui";
+import { ApplicationBanner } from "@/components/jobs/StageBanner";
 
 /** Shown on interview, test and project pages opened from a mock vetting run (`?vetting=<runId>`). */
 export default function VettingBanner({ className = "mb-6" }) {
-  const runId = useSearchParams().get("vetting");
+  const params = useSearchParams();
+  if (params.get("application")) return <ApplicationBanner className={className} />;
+  return <VettingRunBanner className={className} runId={params.get("vetting")} />;
+}
+
+function VettingRunBanner({ className, runId }) {
   const { data: run } = useApi(runId ? `/api/vetting/runs/${runId}` : null);
   if (!run) return null;
 

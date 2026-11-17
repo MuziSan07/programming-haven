@@ -17,8 +17,10 @@ export default function AuthForm({ mode }) {
   const { login, register, user } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
-  // New signups start with the career coach onboarding
-  const next = params.get("next") || (isRegister ? "/coach?onboarding=1" : "/dashboard");
+  const [accountType, setAccountType] = useState(params.get("type") === "seeker" ? "seeker" : "learner");
+  const seeker = accountType === "seeker";
+  // New learners start with the career coach onboarding; Job Seekers start on their profile
+  const next = params.get("next") || (isRegister ? (seeker ? "/seeker/profile" : "/coach?onboarding=1") : "/dashboard");
   const [form, setForm] = useState({ name: "", email: "", password: "", target_role: ROLES[0], gender: "unspecified" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,7 +36,7 @@ export default function AuthForm({ mode }) {
     setError("");
     setBusy(true);
     try {
-      if (isRegister) await register(form);
+      if (isRegister) await register({ ...form, account_type: accountType });
       else await login(form.email, form.password);
     } catch (err) {
       setError(err.message);
@@ -51,10 +53,24 @@ export default function AuthForm({ mode }) {
           <Logo />
         </div>
         <div className="card glow p-8">
-          <h1 className="text-2xl font-bold">{isRegister ? "Create your account" : "Welcome back"}</h1>
+          <h1 className="text-2xl font-bold">
+            {isRegister ? (seeker ? "Create your Job Seeker account" : "Create your account") : "Welcome back"}
+          </h1>
           <p className="mt-1 text-sm text-muted">
-            {isRegister ? "Start your path to a remote role." : "Pick up where you left off."}
+            {isRegister
+              ? (seeker ? "Free. Build your profile, apply for jobs and get vetted by our AI." : "Start your path to a remote role.")
+              : "Pick up where you left off."}
           </p>
+          {isRegister && (
+            <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1" role="tablist" aria-label="Account type">
+              {[["learner", "Prepare for interviews"], ["seeker", "Find a job"]].map(([id, label]) => (
+                <button key={id} type="button" role="tab" aria-selected={accountType === id} onClick={() => setAccountType(id)}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition ${accountType === id ? "bg-brand text-white" : "text-muted hover:text-text"}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
             {isRegister && (
               <div>
@@ -74,7 +90,7 @@ export default function AuthForm({ mode }) {
                 value={form.password} onChange={set("password")} placeholder={isRegister ? "At least 8 characters" : ""}
                 autoComplete={isRegister ? "new-password" : "current-password"} />
             </div>
-            {isRegister && (
+            {isRegister && !seeker && (
               <div>
                 <label className="label" htmlFor="role">Target role</label>
                 <select id="role" className="input" value={form.target_role} onChange={set("target_role")}>
@@ -101,7 +117,8 @@ export default function AuthForm({ mode }) {
           </form>
           <p className="mt-6 text-center text-sm text-muted">
             {isRegister ? "Already have an account? " : "New to Programming Haven? "}
-            <Link href={isRegister ? "/login" : "/register"} className="font-medium text-brand hover:underline">
+            <Link href={`${isRegister ? "/login" : "/register"}${params.get("next") ? `?next=${encodeURIComponent(params.get("next"))}${seeker ? "&type=seeker" : ""}` : seeker ? "?type=seeker" : ""}`}
+              className="font-medium text-brand hover:underline">
               {isRegister ? "Sign in" : "Create one"}
             </Link>
           </p>

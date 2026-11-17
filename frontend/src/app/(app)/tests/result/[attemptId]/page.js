@@ -4,9 +4,14 @@ import { useParams } from "next/navigation";
 import { CircleCheck, CircleX, Clock, RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useApi } from "@/lib/useApi";
 import VettingBanner from "@/components/vetting/VettingBanner";
+import { SeekerResultGate } from "@/components/jobs/StageBanner";
 import { Badge, Button, Card, CodeBlock, ErrorState, PageLoader, Ring, RichText, cx, scoreColor } from "@/components/ui";
 
 export default function TestResultPage() {
+  return <SeekerResultGate what="your test"><TestResult /></SeekerResultGate>;
+}
+
+function TestResult() {
   const { attemptId } = useParams();
   const { data: r, error, loading, reload } = useApi(`/api/tests/attempts/${attemptId}`);
   if (loading) return <PageLoader />;

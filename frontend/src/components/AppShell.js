@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import {
-  Award, BookOpen, Brain, Crown, Library, CalendarCheck, Briefcase, Bug, ClipboardCheck, Code, Compass, FileUser, Flame, Layers, LayoutDashboard, LogOut, Map,
+  Award, BookOpen, Brain, BriefcaseBusiness, Crown, Search, UserRound, Library, CalendarCheck, Briefcase, Bug, ClipboardCheck, Code, Compass, FileUser, Flame, Layers, LayoutDashboard, LogOut, Map,
   Medal, Menu, Network, MessageSquare, MessagesSquare, Mic, ScanFace, Settings, ShieldCheck, Sword, Swords, Trophy, UsersRound, X, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -42,16 +42,30 @@ export const NAV = [
   { href: "/admin", label: "Admin", short: "Admin", icon: ShieldCheck, admin: true, section: "More" },
 ];
 
-function NavLinks({ mobile, isAdmin, onNavigate }) {
-  const pathname = usePathname();
-  return <NavList mobile={mobile} pathname={pathname} isAdmin={isAdmin} onNavigate={onNavigate} />;
+// Job Seekers have their own small area: jobs, applications and their profile
+const SEEKER_NAV = [
+  { href: "/seeker", label: "My applications", short: "Home", icon: BriefcaseBusiness, mobile: true, exact: true },
+  { href: "/seeker/jobs", label: "Browse jobs", short: "Jobs", icon: Search, mobile: true },
+  { href: "/seeker/profile", label: "Profile & resume", short: "Profile", icon: UserRound, mobile: true },
+];
+// Pages a Job Seeker may open: their area plus the vetting steps (interviews, tests, projects)
+const SEEKER_PATHS = ["/seeker", "/interview/", "/tests/", "/projects/"];
+
+export function isSeekerPath(pathname) {
+  return SEEKER_PATHS.some((p) => pathname === p || pathname.startsWith(p.endsWith("/") ? p : `${p}/`));
 }
 
-function NavList({ mobile, pathname = "", isAdmin, onNavigate }) {
-  const items = NAV.filter((n) => (mobile ? n.mobile : !n.admin || isAdmin));
+function NavLinks({ mobile, isAdmin, seeker, onNavigate }) {
+  const pathname = usePathname();
+  return <NavList mobile={mobile} pathname={pathname} isAdmin={isAdmin} seeker={seeker} onNavigate={onNavigate} />;
+}
+
+function NavList({ mobile, pathname = "", isAdmin, seeker, onNavigate }) {
+  const items = seeker ? SEEKER_NAV : NAV.filter((n) => (mobile ? n.mobile : !n.admin || isAdmin));
   let section = null;
-  return items.map(({ href, label, short, icon: Icon, section: group }) => {
-    const active = pathname === href || pathname.startsWith(`${href}/`);
+  return items.map(({ href, label, short, icon: Icon, section: group, exact }) => {
+    const active = pathname === href || (!exact && pathname.startsWith(`${href}/`))
+      || (exact && pathname.startsWith(`${href}/applications`));
     if (mobile) {
       return (
         <Link key={href} href={href}
@@ -152,9 +166,21 @@ function XpBadge({ user }) {
   );
 }
 
+/** Keeps each account type in its own area. Reads the path, so it lives inside Suspense. */
+function AreaGuard({ seeker, children }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const misplaced = seeker ? !isSeekerPath(pathname) : pathname === "/seeker" || pathname.startsWith("/seeker/");
+  useEffect(() => {
+    if (misplaced) router.replace(seeker ? "/seeker" : "/dashboard");
+  }, [misplaced, seeker, router]);
+  return misplaced ? <PageLoader label="Opening your haven" /> : children;
+}
+
 export default function AppShell({ children }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const seeker = user?.account_type === "seeker";
 
   useEffect(() => {
     if (!loading && !user) {
@@ -163,22 +189,23 @@ export default function AppShell({ children }) {
   }, [loading, user, router]);
 
   if (loading || !user) return <PageLoader label="Opening your haven" />;
+  const home = seeker ? "/seeker" : "/dashboard";
 
   return (
     <div className="flex min-h-screen">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-surface/60 p-4
         backdrop-blur-xl lg:flex">
         <div className="px-2 py-3">
-          <Logo href="/dashboard" />
+          <Logo href={home} />
         </div>
         <nav className="mt-2 flex min-h-0 flex-col gap-0.5 overflow-y-auto pb-2">
-          <Suspense fallback={<NavList isAdmin={user.is_admin} />}>
-            <NavLinks isAdmin={user.is_admin} />
+          <Suspense fallback={<NavList isAdmin={user.is_admin} seeker={seeker} />}>
+            <NavLinks isAdmin={user.is_admin} seeker={seeker} />
           </Suspense>
         </nav>
         <div className="mt-auto shrink-0 rounded-2xl border border-line bg-surface-2 p-4">
           <p className="text-sm font-semibold">{user.name}</p>
-          <p className="truncate text-xs text-muted">{user.target_role}</p>
+          <p className="truncate text-xs text-muted">{seeker ? "Job Seeker" : user.target_role}</p>
           <button onClick={() => { logout(); router.replace("/"); }}
             className="mt-3 flex items-center gap-2 text-xs text-muted hover:text-text">
             <LogOut className="size-3.5" /> Sign out
@@ -190,22 +217,33 @@ export default function AppShell({ children }) {
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b border-line
           bg-bg/80 px-4 backdrop-blur-xl sm:px-6">
           <div className="lg:hidden">
-            <Logo href="/dashboard" />
+            <Logo href={home} />
           </div>
           <div className="hidden lg:block" />
-          <div className="flex items-center gap-4">
-            <AiStatus />
-            <XpBadge user={user} />
-          </div>
+          {seeker ? (
+            <div className="flex items-center gap-3">
+              <span className="rounded-full bg-brand-2/10 px-3 py-1 text-xs font-medium text-brand-2">Job Seeker</span>
+              <button onClick={() => { logout(); router.replace("/"); }} className="text-xs text-muted hover:text-text lg:hidden">Sign out</button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <AiStatus />
+              <XpBadge user={user} />
+            </div>
+          )}
         </header>
-        <main className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-10 lg:py-8 lg:pb-10">{children}</main>
+        <main className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-10 lg:py-8 lg:pb-10">
+          <Suspense fallback={<PageLoader label="Opening your haven" />}>
+            <AreaGuard seeker={seeker}>{children}</AreaGuard>
+          </Suspense>
+        </main>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface/95 backdrop-blur-xl lg:hidden">
-        <Suspense fallback={<NavList mobile />}>
-          <NavLinks mobile />
+        <Suspense fallback={<NavList mobile seeker={seeker} />}>
+          <NavLinks mobile seeker={seeker} />
         </Suspense>
-        <MobileMore isAdmin={user.is_admin} />
+        {!seeker && <MobileMore isAdmin={user.is_admin} />}
       </nav>
     </div>
   );
