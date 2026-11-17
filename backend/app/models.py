@@ -640,3 +640,56 @@ class BookProgress(Base):
     location: Mapped[str] = mapped_column(String(500), default="")  # PDF page number or EPUB CFI
     percent: Mapped[float] = mapped_column(Float, default=0)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+# ---------------------------------------------------------------- mind training
+
+class MindSession(Base):
+    """One run of a mind drill (or a mindset lesson check). `items` keeps the answers server-side until the end."""
+    __tablename__ = "mind_sessions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    drill: Mapped[str] = mapped_column(String(60), index=True)
+    status: Mapped[str] = mapped_column(String(10), default="active")  # active | done
+    level: Mapped[int] = mapped_column(Integer, default=1)
+    items: Mapped[list] = mapped_column(JSON, default=list)
+    score: Mapped[int] = mapped_column(Integer, default=0)  # 0-100
+    correct: Mapped[int] = mapped_column(Integer, default=0)
+    total: Mapped[int] = mapped_column(Integer, default=0)
+    duration_ms: Mapped[int] = mapped_column(Integer, default=0)
+    details: Mapped[dict] = mapped_column(JSON, default=dict)
+    xp: Mapped[int] = mapped_column(Integer, default=0)
+    day: Mapped[date] = mapped_column(Date, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class MindDay(Base):
+    """A learner's mind log for one day: check-in, habits ticked, focus minutes and breathing sessions."""
+    __tablename__ = "mind_days"
+    __table_args__ = (UniqueConstraint("user_id", "day"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    day: Mapped[date] = mapped_column(Date, index=True)
+    mood: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1-5
+    energy: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1-5
+    nerves: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1-5, 5 = very nervous
+    sleep_hours: Mapped[float | None] = mapped_column(Float, nullable=True)
+    note: Mapped[str] = mapped_column(Text, default="")
+    habits_done: Mapped[list] = mapped_column(JSON, default=list)  # habit ids
+    focus_minutes: Mapped[int] = mapped_column(Integer, default=0)
+    focus_sessions: Mapped[int] = mapped_column(Integer, default=0)
+    breathing_sessions: Mapped[int] = mapped_column(Integer, default=0)
+    xp: Mapped[int] = mapped_column(Integer, default=0)  # mind XP earned today (capped)
+
+
+class MindHabit(Base):
+    __tablename__ = "mind_habits"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(80))
+    archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

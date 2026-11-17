@@ -17,6 +17,8 @@ from ..content import store
 from ..models import (DailySolve, InterviewSession, LessonProgress, QuestionAttempt, RoundAttempt, StudyPlan,
                       TestAttempt, User)
 from . import ai
+from . import mind_drills
+from .mind import active_days as mind_days
 from .scoring import solved_slugs
 
 # Category weights describe what each network's pipeline actually tests
@@ -191,6 +193,9 @@ class _Picker:
         self.week, self.day = 0, None
         self.scheduled: list[tuple[int, dict]] = []  # (week, problem) for spaced re-solving
         self.revisit_i = 0
+        self.mind_i = 0
+        self.lessons_planned: set[str] = set()
+        self.level = level
 
     def _take(self, key: str) -> bool:
         if key in self.used:
@@ -329,6 +334,25 @@ class _Picker:
         return {"type": "daily", "ref": self.day.isoformat(), "title": "Daily challenge", "minutes": 30,
                 "href": "/daily"}
 
+    def mind(self, progress: float, rest: bool = False):
+        """A short daily mind drill; every third study day a mindset lesson until they've all been planned."""
+        self.mind_i += 1
+        if rest:
+            return {"type": "mind", "ref": self.day.isoformat(), "title": "Weekly reset: check-in, breathing and habits",
+                    "minutes": 10, "href": "/mind?tab=calm"}
+        lessons = [l for l in mind_drills.content("mindset") if l["id"] not in self.lessons_planned]
+        if lessons and self.mind_i % 3 == 0:
+            lesson = lessons[0]
+            self.lessons_planned.add(lesson["id"])
+            return {"type": "mind", "ref": self.day.isoformat(), "title": f"Mindset: {lesson['title']}",
+                    "minutes": lesson["minutes"], "href": f"/mind/lessons/{lesson['id']}"}
+        pool = mind_drills.DRILLS
+        if self.level == "beginner" and progress < 0.3:  # capacity maths and puzzles come later
+            pool = [d for d in pool if d["id"] not in ("estimation", "logic")]
+        drill = pool[self.mind_i % len(pool)]
+        return {"type": "mind", "ref": self.day.isoformat(), "title": f"Mind drill: {drill['title']}",
+                "minutes": drill["minutes"], "href": f"/mind/drills/{drill['id']}"}
+
     def flashcards(self):
         return {"type": "flashcards", "ref": "due", "title": "Review due flashcards", "minutes": 10,
                 "href": "/flashcards"}
@@ -382,7 +406,7 @@ def build_days(db: Session, user: User, target_id: str, language: str, start: da
             if from_day and day < from_day:
                 week_days.append({"date": key, "tasks": keep.get(key, [])})
                 continue
-            tasks = [picker.flashcards()]
+            tasks = [picker.flashcards(), picker.mind(progress, rest=d == 6)]
             if d == 6:
                 tasks.append(picker.questions(progress))
                 week_days.append({"date": key, "rest": True, "tasks": tasks})
@@ -472,8 +496,9 @@ def sync_done(db: Session, user: User, plan: StudyPlan) -> bool:
     tests = {t.test_id for t in db.scalars(select(TestAttempt).where(TestAttempt.user_id == user.id,
                                                                      TestAttempt.finished_at.is_not(None)))}
     dailies = {d.isoformat() for d in db.scalars(select(DailySolve.day).where(DailySolve.user_id == user.id))}
+    minds = {d.isoformat() for d in mind_days(db, user.id, plan.start_date)}
     done_sets = {"problem": solved, "lesson": lessons, "debug": rounds, "review": rounds, "test": tests,
-                 "daily": dailies}
+                 "daily": dailies, "mind": minds}
     changed = False
     data = plan.plan
     for week in data.get("weeks", []):

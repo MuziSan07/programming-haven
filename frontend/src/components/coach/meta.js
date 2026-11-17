@@ -1,5 +1,5 @@
 import {
-  BookOpen, Briefcase, Bug, CalendarCheck, ClipboardCheck, Code, Layers, MessageSquare, Mic, RotateCcw, ScanSearch,
+  BookOpen, Brain, Briefcase, Bug, CalendarCheck, ClipboardCheck, Code, Layers, MessageSquare, Mic, RotateCcw, ScanSearch,
 } from "lucide-react";
 
 /** Icon, label and accent colour for each plan task type. */
@@ -15,6 +15,7 @@ export const TASK_META = {
   flashcards: { icon: Layers, label: "Flashcards", color: "#14b8a6" },
   revisit: { icon: RotateCcw, label: "Re-solve", color: "#84cc16" },
   daily: { icon: CalendarCheck, label: "Daily", color: "#f97316" },
+  mind: { icon: Brain, label: "Mind", color: "#e879f9" },
 };
 
 export function taskMeta(type) {

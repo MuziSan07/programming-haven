@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api", tags=["activity"])
 
 
 class HeartbeatIn(BaseModel):
-    area: str = Field(pattern="^(learn|dsa|test|interview|project|questions|mirror)$")
+    area: str = Field(pattern="^(learn|dsa|test|interview|project|questions|mirror|mind)$")
     ref: str = Field(default="", max_length=120)
     seconds: int = Field(ge=1, le=60)  # visible, focused seconds since the last heartbeat
 

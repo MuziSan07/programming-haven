@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  Award, BookOpen, Bug, ClipboardCheck, Code, Flame, HandHelping, Languages, Layers, Lock, Medal, MessageSquare, Mic,
+  Award, BookOpen, Brain, Bug, ClipboardCheck, Code, Crown, Flame, HeartPulse, Timer, Wind, Zap, HandHelping, Languages, Layers, Lock, Medal, MessageSquare, Mic,
   Mountain, Rocket, ScanSearch, ShieldCheck, TrendingUp, Trophy,
 } from "lucide-react";
 import { Progress, cx } from "@/components/ui";
 
 const ICONS = {
-  BookOpen, Bug, ClipboardCheck, Code, Flame, HandHelping, Languages, Layers, Medal, MessageSquare, Mic, Mountain, Rocket,
+  BookOpen, Brain, Bug, ClipboardCheck, Code, Crown, Flame, HeartPulse, Timer, Wind, Zap, HandHelping, Languages, Layers, Medal, MessageSquare, Mic, Mountain, Rocket,
   ScanSearch, ShieldCheck, TrendingUp, Trophy,
 };
 

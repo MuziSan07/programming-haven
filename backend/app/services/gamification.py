@@ -38,6 +38,12 @@ BADGES = [
     ("hacker", "Builder", "Submit a hackathon project", "Rocket", "silver", "hackathon_submissions", 1),
     ("promoted", "Moving Up", "Get promoted in the weekly league", "TrendingUp", "bronze", "promotions", 1),
     ("final-boss", "Final Boss", "Pass a full mock vetting pipeline", "Crown", "gold", "vetting_passed", 1),
+    ("mind-first", "Warm Mind", "Finish your first mind drill", "Brain", "bronze", "mind_drills", 1),
+    ("mind-50", "Sharp Mind", "Finish 50 mind drills", "Brain", "silver", "mind_drills", 50),
+    ("mind-elite", "Elite Focus", "Score 90+ on 5 different mind drills", "Zap", "gold", "mind_elite", 5),
+    ("calm-10", "Calm Under Pressure", "Finish 10 breathing sessions", "Wind", "bronze", "breathing", 10),
+    ("deep-work", "Deep Work", "Log 10 hours of focus time", "Timer", "silver", "focus_hours", 10),
+    ("mindset", "Steady Mindset", "Pass all 8 mindset lessons", "HeartPulse", "gold", "mindset_lessons", 8),
 ]
 BADGE_BY_ID = {b[0]: b for b in BADGES}
 
@@ -94,7 +100,14 @@ def metrics(db: Session, user: User) -> dict[str, int]:
                              .where(LeagueMembership.user_id == uid, LeagueMembership.outcome == "promoted")),
         "vetting_passed": _count(db, select(func.count()).select_from(VettingRun)
                                  .where(VettingRun.user_id == uid, VettingRun.status == "passed")),
+        **mind_metrics(db, uid),
     }
+
+
+def mind_metrics(db: Session, user_id: int) -> dict[str, int]:
+    from .mind import badge_metrics  # mind imports this module
+
+    return badge_metrics(db, user_id)
 
 
 def contest_podiums(db: Session, user_id: int) -> int:

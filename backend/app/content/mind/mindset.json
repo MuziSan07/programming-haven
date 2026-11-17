@@ -1,0 +1,130 @@
+[
+  {
+    "id": "blank-mind", "title": "When your mind goes blank", "minutes": 6,
+    "summary": "A five-step recovery script for the moment you freeze on a problem.",
+    "body": "Freezing is not a sign you are bad at this. It is your stress response narrowing your attention, and almost every strong engineer has felt it in an interview. What separates candidates is not whether they freeze but what they do in the next sixty seconds.\n\n**The recovery script**\n\n1. **Say it out loud.** \"Let me take a moment to restate the problem.\" Silence makes the interviewer guess; a sentence buys you time and shows control.\n2. **Restate the problem in your own words**, including inputs, outputs and limits. Half of all freezes end here because you notice the detail you skipped.\n3. **Write two small examples by hand**, one normal and one edge case (empty input, one element, duplicates). Working an example by hand often shows the algorithm.\n4. **Say the brute force first.** \"The simple way is to check every pair, which is O(n²).\" A correct slow answer is a foothold; a perfect answer you never reach is worth nothing.\n5. **Ask one specific question.** Not \"can you give me a hint?\" but \"Is the input sorted?\" or \"Can I use extra memory?\" Specific questions read as engineering, not rescue.\n\n**What not to do**\n\n- Don't apologise repeatedly. Once is enough; then work.\n- Don't start coding to look busy. Code written while panicking is the hardest code to fix.\n- Don't hide that you are stuck. Interviewers grade how you handle being stuck, because that is most of the actual job.\n\n**Practise it**: next time you open a DSA problem, run the script before reading any hint, even if you are not stuck.",
+    "checks": [
+      {"prompt": "Ten seconds into a live round your mind goes blank. Which first move does the most for you?",
+       "options": ["Stay quiet until you have an idea, so you don't say something wrong", "Say you need a moment, then restate the problem in your own words", "Start writing a function signature so the interviewer sees progress", "Ask the interviewer for a hint straight away"],
+       "answer": 1, "why": "Narrating keeps the interviewer with you, and restating often reveals the missed detail. Silence and busy-coding both hide your thinking; a vague hint request gives away points you didn't need to lose."},
+      {"prompt": "You see an O(n²) solution but suspect an O(n) one exists. What should you do?",
+       "options": ["Keep quiet about O(n²) since it isn't optimal", "State the O(n²) approach and its cost, then look for the faster one", "Code O(n²) immediately without discussing it", "Tell the interviewer you only know a slow approach and stop"],
+       "answer": 1, "why": "Naming the brute force with its complexity is a scored step in most rubrics and gives you a fallback. Coding it before discussing wastes time if a better idea is close."},
+      {"prompt": "Which question to the interviewer shows the most engineering judgement while stuck?",
+       "options": ["\"Can you just tell me the approach?\"", "\"Is this a dynamic programming problem?\"", "\"Can the array contain negative numbers, and how large can n get?\"", "\"Am I on the right track?\""],
+       "answer": 2, "why": "Constraint questions change the algorithm you choose and read as normal engineering. Asking for the category or for reassurance outsources the thinking."}
+    ]
+  },
+  {
+    "id": "think-aloud", "title": "Thinking out loud without rambling", "minutes": 6,
+    "summary": "A structure for narrating your work so silence never costs you a pass.",
+    "body": "Remote screening networks repeatedly name silence as a top reason candidates fail live rounds. The interviewer can't grade thinking they can't hear. But narrating every keystroke is just as bad: it buries your reasoning in noise.\n\n**Narrate decisions, not keystrokes.** Good narration sounds like a commit message: what you are doing and why.\n\n- Weak: \"Now I'm typing for i in range...\"\n- Strong: \"I'll scan once and keep a running minimum, because the best sell day must come after the best buy day.\"\n\n**Use the six-beat structure**\n\n1. **Understand**: restate, ask about limits.\n2. **Examples**: one normal, one edge case.\n3. **Approach**: brute force, then the improvement, with complexity.\n4. **Agree**: \"Does that approach sound good before I code it?\"\n5. **Code**: narrate only decisions and tricky lines.\n6. **Test**: walk through your example line by line, out loud, then the edge cases.\n\n**Signpost transitions**: \"I'm happy with the approach, I'll code it now.\" \"Code's done, let me test it.\" Signposts let the interviewer follow you without interrupting.\n\n**Thinking quietly is allowed** if you say so: \"Give me twenty seconds to think about the edge cases.\" Announced silence is fine; unexplained silence is not.",
+    "checks": [
+      {"prompt": "Which narration line is strongest during coding?",
+       "options": ["\"Now I'm writing a for loop over the array.\"", "\"I'll use a hash map from value to index so each lookup is O(1) and the whole pass is O(n).\"", "\"Hmm, okay, so, let me see, yes.\"", "\"This part is easy so I'll skip explaining it.\""],
+       "answer": 1, "why": "It states a decision and the reason for it, which is exactly what the rubric scores. Describing keystrokes or filler adds nothing."},
+      {"prompt": "You need thirty seconds of quiet to think about edge cases. Best move?",
+       "options": ["Just go quiet; interviewers understand", "Say \"Give me a moment to think through edge cases\" and then think", "Keep talking about anything so there's no silence", "Start testing random inputs in your head silently"],
+       "answer": 1, "why": "Announced silence keeps trust. Filling the silence with noise hurts clarity, and unexplained silence looks like being stuck."},
+      {"prompt": "When is the best moment to ask \"Does this approach sound good?\"",
+       "options": ["After you finish coding", "Before writing any code, once you've stated the approach and complexity", "Never; it looks unsure", "Only if the interviewer looks confused"],
+       "answer": 1, "why": "Checking the approach before coding catches a wrong direction while it is cheap to change, and interviewers often nudge you here. After coding, the time is already spent."}
+    ]
+  },
+  {
+    "id": "dont-know", "title": "Handling a question you can't answer", "minutes": 5,
+    "summary": "How to say \"I don't know\" and still score points.",
+    "body": "Every interview eventually hits something you don't know. Bluffing is the worst response: experienced interviewers spot it fast, and one detected bluff makes them doubt everything else you said.\n\n**The honest-reasoning answer has three parts**\n\n1. **Be clear about the limit.** \"I haven't used Kafka in production.\"\n2. **Reason from what you do know.** \"But I've used RabbitMQ. I'd expect Kafka to differ in that it keeps messages in a log consumers can replay, so...\"\n3. **Say how you'd close the gap.** \"I'd check the docs on consumer groups before designing around it.\"\n\nThis shows the three things the interviewer is really testing: honesty, transferable understanding and how you learn.\n\n**Partial knowledge counts.** \"I don't remember the exact syntax, but the idea is to...\" earns most of the credit on syntax questions. Nobody expects you to have the docs memorised.\n\n**Don't over-apologise or collapse.** One unknown question is a normal data point. Candidates often lose more on the next three questions because they are still shaken than on the one they didn't know.",
+    "checks": [
+      {"prompt": "You're asked how database index B-trees rebalance, which you've never studied. Best answer?",
+       "options": ["Describe a plausible-sounding mechanism confidently", "\"I don't know\" and wait for the next question", "Say you haven't studied the internals, explain what you know about why indexes speed up reads and slow down writes, and how you'd find out", "Change the subject to a database topic you know well"],
+       "answer": 2, "why": "It is honest, shows related understanding and shows how you learn. Bluffing risks your credibility for the rest of the interview."},
+      {"prompt": "After fumbling one question, what matters most for your result?",
+       "options": ["Apologising for it again later so they know you care", "Resetting fully for the next question", "Going back to fix the answer at the end", "Asking how badly it went"],
+       "answer": 1, "why": "One miss is rarely decisive. Carrying the stress into the next questions is what turns a single miss into a fail."},
+      {"prompt": "You can't remember the exact method name in a language's standard library during live coding. Best move?",
+       "options": ["Stop and try hard to recall it", "Say what the method does, write a reasonable name, and note you'd confirm it in the docs", "Rewrite the whole function to avoid needing it", "Ask the interviewer to look it up"],
+       "answer": 1, "why": "Interviewers grade problem solving, not memorised APIs. Stating the intent and moving on keeps your momentum."}
+    ]
+  },
+  {
+    "id": "clock", "title": "Working against the clock", "minutes": 6,
+    "summary": "Pacing a timed test so you always leave with points.",
+    "body": "Timed tests punish perfectionism. A candidate who fully solves one problem out of three often scores below one who gets solid partial credit on all three.\n\n**Before you start**\n\n- Read every problem first (two minutes total). Sort them from most to least confident.\n- Divide the time and write the checkpoints down: e.g. 70 minutes for 3 problems means about 20 minutes each with 10 to spare.\n\n**While solving**\n\n- **Get something passing first.** A brute force that passes the visible tests beats an elegant solution that doesn't compile.\n- **At each checkpoint, decide**: am I close (finish), or stuck (submit what passes and move on)?\n- **Hidden tests decide your score.** Spend your spare minutes on edge cases: empty input, one element, duplicates, negative numbers, very large n.\n\n**The two biggest timing mistakes**\n\n1. Sinking 45 minutes into the hardest problem first.\n2. Re-optimising a working solution while another problem is still blank.\n\n**Practise it**: run mock tests with the timer visible and write your checkpoint times on paper before you start.",
+    "checks": [
+      {"prompt": "A 90-minute test has 3 problems. At minute 40 you're still stuck on problem 1 with a brute force that passes most visible tests. Best move?",
+       "options": ["Keep pushing for the optimal answer since you've invested so much", "Submit the passing brute force and move to problem 2", "Delete it and restart problem 1 with a different approach", "Skip to problem 3 without submitting anything"],
+       "answer": 1, "why": "Locked-in partial credit plus fresh attempts at the other problems beats an all-in bet. You can return if time remains."},
+      {"prompt": "You have 8 minutes left and one working solution. What usually gains the most points?",
+       "options": ["Refactoring for readability", "Testing edge cases such as empty input, one element and duplicates", "Rewriting it in a faster language", "Adding comments"],
+       "answer": 1, "why": "Automated scoring runs hidden edge-case tests. A single missed empty-input case can cost a large share of the problem's points."},
+      {"prompt": "What should you do in the first two minutes of a multi-problem timed test?",
+       "options": ["Start coding problem 1 immediately", "Read every problem and order them by confidence, then set checkpoint times", "Read only the first problem carefully", "Check the hardest problem first to get it out of the way"],
+       "answer": 1, "why": "A quick read of all problems lets you bank easy points first and pace the rest. Starting on whatever comes first is how candidates sink their time into the hardest one."}
+    ]
+  },
+  {
+    "id": "rejection", "title": "Turning a rejection into a plan", "minutes": 5,
+    "summary": "How to process a failed screen without losing weeks of momentum.",
+    "body": "Selective networks reject most applicants, including many strong engineers, often on timing, a single bad round or plain variance. A rejection says how one session went, not what you're capable of.\n\n**The 24-hour rule**: let yourself be disappointed for a day. Then do the review.\n\n**The review (30 minutes, written down)**\n\n1. Which stage did I fail and what exactly happened?\n2. What would I do differently in the first five minutes?\n3. Which one skill, if improved, would most change the result? (Pick one, not five.)\n\n**Turn it into practice**\n\n- Failed live coding: three timed problems a week with narration recorded.\n- Failed the English or communication call: two spoken mock interviews a week.\n- Failed the take-home: one small project with tests and a README.\n\n**Check the reapply window.** Many networks let you reapply after a set period. Put the date in your calendar and plan backwards from it.\n\n**Separate identity from outcome.** \"I failed a screen\" is information. \"I'm not good enough\" is a conclusion the data doesn't support.",
+    "checks": [
+      {"prompt": "You fail a live coding round. What is the most useful first written note?",
+       "options": ["\"I'm just not cut out for this.\"", "\"Froze for 4 minutes on the edge case of an empty list and never stated a brute force.\"", "\"The interviewer was unfair.\"", "\"Need to study everything again.\""],
+       "answer": 1, "why": "A specific, observable description leads to a specific fix. Conclusions about your worth, blame and \"study everything\" lead nowhere you can act on."},
+      {"prompt": "After a rejection, how many skills should your next practice block focus on?",
+       "options": ["As many as possible to be safe", "The single skill that would most change the result", "None; wait for motivation to return", "Only the ones you're already strong in, to rebuild confidence"],
+       "answer": 1, "why": "One clear focus gets real practice volume. Spreading across everything dilutes the effort that would move the result."},
+      {"prompt": "Which statement fits how selective screens actually work?",
+       "options": ["A rejection proves you aren't good enough", "Strong engineers are rejected too; one session's result carries a lot of variance", "If you fail once you can never pass", "Rejections are always about English level"],
+       "answer": 1, "why": "Single sessions are noisy measurements. Treating one as a verdict is the thinking error this lesson is about."}
+    ]
+  },
+  {
+    "id": "imposter", "title": "Imposter feelings and evidence", "minutes": 5,
+    "summary": "Replacing \"everyone is better than me\" with a record you can check.",
+    "body": "Imposter feelings are common among capable developers, partly because the field is huge and you see everyone else's highlights. The feeling isn't evidence; you need actual evidence to argue with it.\n\n**Keep an evidence log.** Every week write three lines:\n\n- One thing I can do now that I couldn't a month ago.\n- One problem I solved that was hard for me.\n- One thing someone thanked me for or relied on me for.\n\nAfter a month you have a dated record that's hard to argue with.\n\n**Compare your process, not people.** Comparing your behind-the-scenes to someone's polished profile is rigged. Compare your solve time, accuracy and readiness score with your own last month instead.\n\n**Unknowns are normal.** Senior engineers look things up constantly. Knowing how to find out is the skill; knowing everything isn't a real standard.\n\n**Act before you feel ready.** Readiness feelings usually lag behind actual readiness. If your mock scores clear the bar, book the real screen.",
+    "checks": [
+      {"prompt": "Your mock interview scores have been above 75 for three weeks but you don't feel ready to apply. What does this lesson suggest?",
+       "options": ["Wait until you feel confident", "Trust the evidence and book the real screen", "Start over from the basics", "Only apply once you score 100"],
+       "answer": 1, "why": "Feeling ready usually lags behind actual readiness. Waiting for the feeling can delay you indefinitely."},
+      {"prompt": "Which comparison is most useful for tracking progress?",
+       "options": ["Your skills vs. a top engineer's portfolio", "Your accuracy and speed this month vs. last month", "Your GitHub stars vs. a friend's", "Your title vs. people who graduated with you"],
+       "answer": 1, "why": "Self-comparison over time measures real change under the same conditions. Comparing with others' highlights is skewed by survivorship and selection."},
+      {"prompt": "What is the purpose of the weekly evidence log?",
+       "options": ["To post on social media", "To build a dated record of real progress you can check against the feeling", "To list your weaknesses", "To impress interviewers"],
+       "answer": 1, "why": "Feelings are vivid but unreliable. A written log with dates gives you evidence to check them against."}
+    ]
+  },
+  {
+    "id": "routine", "title": "The pre-interview routine", "minutes": 5,
+    "summary": "A repeatable 24-hour routine that removes avoidable risk.",
+    "body": "Most interview disasters that aren't about skill are avoidable: broken microphones, cramming until 2 a.m., arriving flustered. A fixed routine removes them so all your attention goes to the problem.\n\n**The day before**\n\n- Stop learning new material by the afternoon. Light review only: your own notes, a few solved problems.\n- Test the full setup: camera, microphone, screen sharing, the coding platform, a charger, a backup internet option.\n- Prepare a 60-second introduction and two project stories (problem, your action, result).\n- Aim for a normal night's sleep. Tiredness tends to hurt recall and focus more than one extra evening of cramming helps.\n\n**The hour before**\n\n- Solve one easy problem you've done before, out loud. It warms up the narration habit.\n- Do two to three minutes of slow breathing (the Calm tab has a guided version).\n- Close everything except what you need. Phone on silent, notifications off.\n- Join five minutes early.\n\n**In the first minute**\n\nSmile, say hello and confirm they can hear you. It sounds trivial, but it settles both of you.",
+    "checks": [
+      {"prompt": "It's 10 p.m. the night before your interview. You haven't covered graphs. Best choice?",
+       "options": ["Study graphs until 2 a.m.", "Do light review of what you know and sleep normally", "Skip sleep and do practice problems all night", "Postpone the interview by a month"],
+       "answer": 1, "why": "Cramming a new topic late usually costs more in tiredness and stress than it gains in knowledge. Rested recall of what you already know is worth more."},
+      {"prompt": "What is the purpose of solving an easy, familiar problem in the hour before?",
+       "options": ["To learn something new", "To warm up the habit of thinking out loud under low pressure", "To check your typing speed", "To prove to yourself you're ready"],
+       "answer": 1, "why": "It rehearses the narration flow so it starts automatically in the real round, without the risk of shaking your confidence on something new."},
+      {"prompt": "Which check prevents the most common avoidable failure in remote interviews?",
+       "options": ["Testing camera, microphone, screen sharing and the coding platform the day before", "Buying a new laptop", "Learning a new framework", "Writing a long introduction script"],
+       "answer": 0, "why": "Technical problems in the first minutes burn time and composure. A full setup test removes most of them."}
+    ]
+  },
+  {
+    "id": "debrief", "title": "The post-interview debrief", "minutes": 5,
+    "summary": "Capture what happened within an hour so every interview makes you better.",
+    "body": "Memory of an interview fades fast and gets rewritten by how you felt about it. Write it down within the hour, before you know the result, so the outcome doesn't change your memory of what happened.\n\n**The 15-minute debrief**\n\n1. **Questions asked**, as close to word for word as you can.\n2. **What went well**: be specific (\"stated complexity before coding\").\n3. **Where I lost time or stumbled**, with the exact moment.\n4. **One change for next time.**\n\n**Turn it into practice**\n\n- Every question you couldn't answer becomes a flashcard.\n- Every problem type you struggled with gets three similar problems next week.\n- Every communication slip gets one mock interview focused on it.\n\n**Review debriefs monthly.** Patterns appear quickly: the same edge cases missed, the same nervous first five minutes. Patterns are what you fix.",
+    "checks": [
+      {"prompt": "When should you write your interview debrief?",
+       "options": ["After you get the result, so you know what mattered", "Within an hour, before the result arrives", "Only if you failed", "At the end of the month"],
+       "answer": 1, "why": "Writing before the result keeps your notes about what happened, not shaped by how the outcome made you feel."},
+      {"prompt": "You couldn't answer a question about HTTP caching headers. What's the best follow-up?",
+       "options": ["Re-read an entire networking book", "Turn it into flashcards and answer a few related questions this week", "Ignore it; it may not come up again", "Avoid jobs that need HTTP knowledge"],
+       "answer": 1, "why": "A small, specific practice task closes the exact gap. A whole book is too broad to finish, and ignoring it leaves the gap open."},
+      {"prompt": "What is the main value of reviewing debriefs monthly?",
+       "options": ["To feel bad about mistakes", "To spot repeated patterns worth fixing", "To count how many interviews you did", "To decide whether to quit"],
+       "answer": 1, "why": "Single mistakes are noise; repeated ones are the real weaknesses, and they only show up when you look across several debriefs."}
+    ]
+  }
+]
